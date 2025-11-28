@@ -1,0 +1,4 @@
+﻿src/components/DashboardLayout.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/components/Sidebar.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/Pages/Dashboard/Profile.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/Pages/Home.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
