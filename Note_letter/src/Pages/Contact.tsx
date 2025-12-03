@@ -15,14 +15,15 @@ const Contact = () => {
                         <img src="/logo.png" alt="Logo" className="h-10 w-10 object-contain" />
                         <span className="text-xl font-bold tracking-tight">SendTheLetter</span>
                     </Link>
-                    <nav className="hidden md:flex gap-8 items-center">
+                    <nav className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
                         <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">About</Link>
+                        <Link to="/creator" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Creator</Link>
                         <Link to="/services" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Services</Link>
                         <Link to="/contact" className="text-sm font-medium text-primary transition-colors">Contact</Link>
-                        <Link to="/login">
-                            <Button variant="ghost" className="font-semibold">Login</Button>
-                        </Link>
                     </nav>
+                    <Link to="/login" className="hidden md:block">
+                        <Button variant="ghost" className="font-semibold">Login</Button>
+                    </Link>
                 </div>
             </header>
 

@@ -1,16 +1,38 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Mail, Shield, Zap, Heart, Globe, Lock } from 'lucide-react';
+import { ArrowRight, Shield, Zap, Globe, Lock, Heart, Star, Music } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { motion, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring, useMotionValue, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { letters } from '../constants/letters';
 import { MouseEvent } from 'react';
 import LetterSlideshow from '../components/LetterSlideshow';
+import { Input } from '../components/ui/input';
+import { Search } from 'lucide-react';
+import { useAuthStore } from '../store/authStore';
+import { useNavigate } from 'react-router-dom';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from "../components/ui/dialog";
 
 const Hero3DCard = () => {
     const x = useMotionValue(0);
     const y = useMotionValue(0);
+    const [currentIndex, setCurrentIndex] = useState(0);
 
     const rotateX = useTransform(y, [-100, 100], [30, -30]);
     const rotateY = useTransform(x, [-100, 100], [-30, 30]);
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentIndex((prev) => (prev + 1) % letters.length);
+        }, 4000);
+        return () => clearInterval(timer);
+    }, []);
 
     function handleMouseMove(event: MouseEvent<HTMLDivElement>) {
         const rect = event.currentTarget.getBoundingClientRect();
@@ -29,32 +51,109 @@ const Hero3DCard = () => {
         y.set(0);
     }
 
+    console.log('Home rendering', { letters, currentIndex });
+    const currentLetter = letters[currentIndex];
+
+    if (!currentLetter) {
+        console.error('No letter found at index', currentIndex);
+        return null;
+    }
+
+    const Icon = currentLetter.icon;
+
     return (
         <motion.div
             style={{
                 rotateX,
                 rotateY,
                 transformStyle: "preserve-3d",
+                background: `linear-gradient(135deg, 
+                    hsl(var(--primary) / 0.15) 0%, 
+                    hsl(var(--primary) / 0.05) 50%, 
+                    transparent 100%),
+                    linear-gradient(180deg, 
+                    rgba(30, 41, 59, 0.95) 0%, 
+                    rgba(15, 23, 42, 0.98) 100%)`,
             }}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
-            className="relative w-64 h-80 md:w-80 md:h-96 bg-gradient-to-br from-primary/80 to-purple-600/80 rounded-xl shadow-2xl cursor-pointer backdrop-blur-md border border-white/10"
+            className="relative w-[450px] h-80 md:w-[520px] md:h-96 rounded-3xl shadow-2xl cursor-pointer border-2 border-white/20 overflow-hidden"
         >
+            {/* Gradient Background Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-800/50 via-slate-900/50 to-slate-950/80" />
+
+            {/* Inner Card Border Glow */}
+            <div className="absolute inset-[1px] rounded-3xl bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={currentIndex}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.5 }}
+                    style={{ transform: "translateZ(50px)" }}
+                    className="relative h-full flex flex-col items-center justify-center p-8 text-center"
+                >
+                    {/* Type Badge at Top */}
+                    <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.2, duration: 0.5 }}
+                        className="mb-6"
+                    >
+                        <span className="px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-xs font-medium border border-white/20 text-white uppercase tracking-wider">
+                            {currentLetter.type}
+                        </span>
+                    </motion.div>
+
+                    {/* Circular Image */}
+                    <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.3, duration: 0.5 }}
+                        className="mb-6"
+                    >
+                        <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white/30 shadow-2xl shadow-primary/20 relative">
+                            <img
+                                src={currentLetter.image}
+                                alt={currentLetter.type}
+                                className="w-full h-full object-cover"
+                            />
+                            <div className={`absolute inset-0 bg-gradient-to-br ${currentLetter.color} opacity-20 mix-blend-overlay`} />
+                        </div>
+                    </motion.div>
+
+                    {/* Title */}
+                    <motion.h3
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.4, duration: 0.5 }}
+                        className="text-3xl font-bold text-white mb-3"
+                    >
+                        {currentLetter.title}
+                    </motion.h3>
+
+                    {/* Preview Quote */}
+                    <motion.p
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.5, duration: 0.5 }}
+                        className="text-sm text-slate-300 italic leading-relaxed"
+                    >
+                        "{currentLetter.preview}"
+                    </motion.p>
+                </motion.div>
+            </AnimatePresence>
+
+            {/* Decorative blur orbs */}
             <div
-                style={{ transform: "translateZ(75px)" }}
-                className="absolute inset-4 bg-black/20 rounded-lg border border-white/10 flex flex-col items-center justify-center p-6 text-center"
-            >
-                <Mail className="w-16 h-16 text-white mb-4 drop-shadow-lg" />
-                <h3 className="text-2xl font-bold text-white mb-2 drop-shadow-md">Your Letter</h3>
-                <p className="text-white/80 text-sm">Sent safely across the digital universe.</p>
-            </div>
-            <div
-                style={{ transform: "translateZ(50px)" }}
-                className="absolute -bottom-10 -right-10 w-24 h-24 bg-blue-500/30 rounded-full blur-2xl"
+                style={{ transform: "translateZ(30px)" }}
+                className="absolute -bottom-10 -right-10 w-24 h-24 bg-primary/20 rounded-full blur-2xl pointer-events-none"
             />
             <div
-                style={{ transform: "translateZ(50px)" }}
-                className="absolute -top-10 -left-10 w-32 h-32 bg-purple-500/30 rounded-full blur-2xl"
+                style={{ transform: "translateZ(30px)" }}
+                className="absolute -top-10 -left-10 w-32 h-32 bg-primary/20 rounded-full blur-2xl pointer-events-none"
             />
         </motion.div>
     );
@@ -87,6 +186,41 @@ const Home = () => {
         restDelta: 0.001
     });
 
+    const [searchQuery, setSearchQuery] = useState("");
+    const [showLoginDialog, setShowLoginDialog] = useState(false);
+    const [selectedNote, setSelectedNote] = useState<any>(null);
+    const [showNoteDialog, setShowNoteDialog] = useState(false);
+
+    const { isAuthenticated } = useAuthStore();
+    const navigate = useNavigate();
+
+    const [selectedMood, setSelectedMood] = useState('all');
+
+    const moods = [
+        { id: 'all', label: 'All', icon: Globe, color: 'text-foreground', bg: 'bg-foreground/5', border: 'border-foreground/10' },
+        { id: 'Love Letter', label: 'Love', icon: Heart, color: 'text-pink-500', bg: 'bg-pink-500/10', border: 'border-pink-500/20' },
+        { id: 'Gratitude', label: 'Gratitude', icon: Star, color: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
+        { id: 'Apology', label: 'Apology', icon: Shield, color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
+        { id: 'Musical Note', label: 'Music', icon: Music, color: 'text-purple-500', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
+    ];
+
+    const filteredLetters = letters.filter(letter => {
+        const matchesSearch = letter.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            letter.preview.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            letter.type.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesMood = selectedMood === 'all' || letter.type === selectedMood;
+        return matchesSearch && matchesMood;
+    });
+
+    const handleNoteClick = (note: any) => {
+        if (!isAuthenticated) {
+            setShowLoginDialog(true);
+        } else {
+            setSelectedNote(note);
+            setShowNoteDialog(true);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/30">
             <motion.div
@@ -101,14 +235,15 @@ const Home = () => {
                         <img src="/logo.png" alt="Logo" className="h-10 w-10 object-contain" />
                         <span className="text-xl font-bold tracking-tight">SendTheLetter</span>
                     </div>
-                    <nav className="hidden md:flex gap-8 items-center">
+                    <nav className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
                         <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">About</Link>
+                        <Link to="/creator" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Creator</Link>
                         <Link to="/services" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Services</Link>
                         <Link to="/contact" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Contact</Link>
-                        <Link to="/login">
-                            <Button variant="ghost" className="font-semibold">Login</Button>
-                        </Link>
                     </nav>
+                    <Link to="/login" className="hidden md:block">
+                        <Button variant="ghost" className="font-semibold">Login</Button>
+                    </Link>
                 </div>
             </header>
 
@@ -120,7 +255,7 @@ const Home = () => {
                     <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-[100px] animate-pulse delay-1000" />
                 </div>
 
-                <div className="container mx-auto px-6 grid md:grid-cols-2 gap-12 items-center relative z-10">
+                <div className="container mx-auto px-6 grid md:grid-cols-2 gap-16 lg:gap-24 items-center relative z-10 max-w-7xl">
                     <motion.div
                         initial={{ opacity: 0, x: -50 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -165,7 +300,7 @@ const Home = () => {
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.8 }}
-                        className="flex justify-center md:justify-end perspective-1000"
+                        className="flex justify-center md:justify-start perspective-1000 md:pl-8"
                     >
                         <Hero3DCard />
                     </motion.div>
@@ -177,9 +312,43 @@ const Home = () => {
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-5xl font-bold mb-4">Examples of Love</h2>
-                        <p className="text-muted-foreground text-lg">See how others are using SendTheLetter to connect.</p>
+                        <p className="text-muted-foreground text-lg mb-8">See how others are using SendTheLetter to connect.</p>
+
+                        {/* Mood Explorer Chips */}
+                        <div className="flex flex-wrap justify-center gap-3 mb-8">
+                            {moods.map((mood) => {
+                                const Icon = mood.icon;
+                                const isSelected = selectedMood === mood.id;
+                                return (
+                                    <button
+                                        key={mood.id}
+                                        onClick={() => setSelectedMood(mood.id)}
+                                        className={`
+                                            flex items-center gap-2 px-6 py-3 rounded-full border transition-all duration-300
+                                            ${isSelected
+                                                ? `${mood.bg} ${mood.border} ${mood.color} shadow-lg scale-105`
+                                                : 'bg-card/30 border-white/5 text-muted-foreground hover:bg-card/50 hover:text-foreground'
+                                            }
+                                        `}
+                                    >
+                                        <Icon size={18} className={isSelected ? 'animate-pulse' : ''} />
+                                        <span className="font-medium">{mood.label}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <div className="max-w-md mx-auto relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                            <Input
+                                placeholder="Search public letters..."
+                                className="pl-10 bg-background/50 backdrop-blur-sm border-white/10"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
                     </div>
-                    <LetterSlideshow />
+                    <LetterSlideshow letters={filteredLetters} onNoteClick={handleNoteClick} />
                 </div>
             </section>
 
@@ -253,6 +422,37 @@ const Home = () => {
                     </div>
                 </div>
             </footer>
+            <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Login Required</DialogTitle>
+                        <DialogDescription>
+                            You need to be logged in to view the full content of this letter.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowLoginDialog(false)}>Cancel</Button>
+                        <Button onClick={() => navigate('/login')}>Login / Signup</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={showNoteDialog} onOpenChange={setShowNoteDialog}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            {selectedNote?.icon && <selectedNote.icon className="w-5 h-5 text-primary" />}
+                            {selectedNote?.title}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {selectedNote?.type} • {selectedNote?.preview}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 text-lg leading-relaxed">
+                        {selectedNote?.content}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

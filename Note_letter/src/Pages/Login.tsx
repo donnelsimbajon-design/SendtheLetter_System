@@ -12,15 +12,21 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Simulate login
-        login({
-            id: '1',
-            name: 'Demo User',
-            email: email,
-        });
-        navigate('/dashboard');
+        setError('');
+        setLoading(true);
+        try {
+            await login({ email, password });
+            navigate('/dashboard');
+        } catch (err: any) {
+            setError(err.message || 'Login failed');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -34,6 +40,12 @@ const Login = () => {
                     <h1 className="text-3xl font-bold text-primary mb-2">Welcome Back</h1>
                     <p className="text-muted-foreground">Sign in to your account to continue</p>
                 </div>
+
+                {error && (
+                    <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm text-center">
+                        {error}
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-2">
@@ -69,8 +81,9 @@ const Login = () => {
                     <Button
                         type="submit"
                         className="w-full py-6 text-lg"
+                        disabled={loading}
                     >
-                        Sign In
+                        {loading ? 'Signing in...' : 'Sign In'}
                     </Button>
                 </form>
 

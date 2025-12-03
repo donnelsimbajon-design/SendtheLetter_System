@@ -1,48 +1,17 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Heart, Music, Shield, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
 
-const letters = [
-    {
-        id: 1,
-        type: 'Love Letter',
-        icon: Heart,
-        color: 'from-pink-500 to-rose-500',
-        title: 'To My Future Self',
-        preview: "I hope you're doing well. Remember that time we...",
-        image: 'https://images.unsplash.com/photo-1518621736915-f3b1c41bfd00?q=80&w=600&auto=format&fit=crop'
-    },
-    {
-        id: 2,
-        type: 'Gratitude',
-        icon: Star,
-        color: 'from-amber-400 to-orange-500',
-        title: 'Thank You Mom',
-        preview: "For all the sacrifices you made, I want to say...",
-        image: 'https://images.unsplash.com/photo-1499744663557-3708d1453915?q=80&w=600&auto=format&fit=crop'
-    },
-    {
-        id: 3,
-        type: 'Apology',
-        icon: Shield,
-        color: 'from-blue-400 to-indigo-500',
-        title: 'I am Sorry',
-        preview: "I never meant to hurt you. I've been thinking...",
-        image: 'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?q=80&w=600&auto=format&fit=crop'
-    },
-    {
-        id: 4,
-        type: 'Musical Note',
-        icon: Music,
-        color: 'from-purple-500 to-violet-500',
-        title: 'Our Song',
-        preview: "Every time I hear this track, I think of you...",
-        image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=600&auto=format&fit=crop'
-    }
-];
+import { letters as defaultLetters } from '../constants/letters';
 
-const LetterSlideshow = () => {
+interface LetterSlideshowProps {
+    letters?: any[];
+    onNoteClick?: (note: any) => void;
+}
+
+const LetterSlideshow = ({ letters: propLetters, onNoteClick }: LetterSlideshowProps) => {
+    const displayLetters = propLetters || defaultLetters;
     const [currentIndex, setCurrentIndex] = useState(0);
     const [direction, setDirection] = useState(0);
 
@@ -51,16 +20,16 @@ const LetterSlideshow = () => {
             nextSlide();
         }, 5000);
         return () => clearInterval(timer);
-    }, [currentIndex]);
+    }, [currentIndex, displayLetters]);
 
     const nextSlide = () => {
         setDirection(1);
-        setCurrentIndex((prev) => (prev + 1) % letters.length);
+        setCurrentIndex((prev) => (prev + 1) % displayLetters.length);
     };
 
     const prevSlide = () => {
         setDirection(-1);
-        setCurrentIndex((prev) => (prev - 1 + letters.length) % letters.length);
+        setCurrentIndex((prev) => (prev - 1 + displayLetters.length) % displayLetters.length);
     };
 
     const variants = {
@@ -86,14 +55,20 @@ const LetterSlideshow = () => {
         }),
     };
 
+    if (!displayLetters || displayLetters.length === 0) {
+        return <div className="text-center text-muted-foreground">No letters found.</div>;
+    }
+
+    const currentLetter = displayLetters[currentIndex];
+
     return (
-        <div className="relative w-full max-w-5xl mx-auto h-[500px] flex items-center justify-center perspective-1000">
+        <div className="relative w-full max-w-2xl mx-auto h-[600px] flex items-center justify-center perspective-1000">
             <div className="absolute inset-0 flex items-center justify-between z-20 px-4 pointer-events-none">
                 <Button
                     variant="ghost"
                     size="icon"
                     onClick={prevSlide}
-                    className="pointer-events-auto rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-md text-white border border-white/10"
+                    className="pointer-events-auto rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/20"
                 >
                     <ChevronLeft size={24} />
                 </Button>
@@ -101,7 +76,7 @@ const LetterSlideshow = () => {
                     variant="ghost"
                     size="icon"
                     onClick={nextSlide}
-                    className="pointer-events-auto rounded-full bg-background/20 hover:bg-background/40 backdrop-blur-md text-white border border-white/10"
+                    className="pointer-events-auto rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/20"
                 >
                     <ChevronRight size={24} />
                 </Button>
@@ -121,48 +96,87 @@ const LetterSlideshow = () => {
                             opacity: { duration: 0.2 },
                             rotateY: { duration: 0.4 }
                         }}
-                        className="absolute w-[300px] md:w-[800px] h-[400px] bg-card rounded-3xl shadow-2xl overflow-hidden border border-white/10 flex flex-col md:flex-row"
+                        className="absolute w-[90%] max-w-md h-[500px] rounded-3xl shadow-2xl overflow-hidden border-2 border-white/20 cursor-pointer"
+                        onClick={() => onNoteClick && onNoteClick(currentLetter)}
+                        style={{
+                            background: `linear-gradient(135deg, 
+                                hsl(var(--primary) / 0.15) 0%, 
+                                hsl(var(--primary) / 0.05) 50%, 
+                                transparent 100%),
+                                linear-gradient(180deg, 
+                                rgba(30, 41, 59, 0.95) 0%, 
+                                rgba(15, 23, 42, 0.98) 100%)`,
+                        }}
                     >
-                        {/* Image Section */}
-                        <div className="w-full md:w-1/2 h-48 md:h-full relative overflow-hidden">
-                            <img
-                                src={letters[currentIndex].image}
-                                alt={letters[currentIndex].type}
-                                className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
-                            />
-                            <div className={`absolute inset-0 bg-gradient-to-br ${letters[currentIndex].color} opacity-40 mix-blend-overlay`} />
-                            <div className="absolute bottom-4 left-4 text-white">
-                                <span className="px-3 py-1 rounded-full bg-black/30 backdrop-blur-md text-xs font-medium border border-white/20">
-                                    {letters[currentIndex].type}
+                        {/* Gradient Background Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-slate-800/50 via-slate-900/50 to-slate-950/80" />
+
+                        {/* Inner Card Border Glow */}
+                        <div className="absolute inset-[1px] rounded-3xl bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+
+                        <div className="relative h-full flex flex-col items-center justify-center p-10 text-center">
+                            {/* Circular Image */}
+                            <motion.div
+                                initial={{ scale: 0.8, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ delay: 0.2, duration: 0.5 }}
+                                className="mb-8"
+                            >
+                                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white/30 shadow-2xl shadow-primary/20 relative">
+                                    <img
+                                        src={currentLetter.image}
+                                        alt={currentLetter.type}
+                                        className="w-full h-full object-cover"
+                                    />
+                                    <div className={`absolute inset-0 bg-gradient-to-br ${currentLetter.color} opacity-20 mix-blend-overlay`} />
+                                </div>
+                            </motion.div>
+
+                            {/* Title */}
+                            <motion.h3
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.3, duration: 0.5 }}
+                                className="text-4xl font-bold mb-4 text-white"
+                            >
+                                {currentLetter.title}
+                            </motion.h3>
+
+                            {/* Quote/Preview */}
+                            <motion.p
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.4, duration: 0.5 }}
+                                className="text-lg text-slate-300 leading-relaxed max-w-sm mb-8 italic"
+                            >
+                                "{currentLetter.preview}"
+                            </motion.p>
+
+                            {/* Type Badge */}
+                            <motion.div
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.5, duration: 0.5 }}
+                            >
+                                <span className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-md text-sm font-medium border border-white/20 text-white">
+                                    {currentLetter.type}
                                 </span>
-                            </div>
-                        </div>
+                            </motion.div>
 
-                        {/* Content Section */}
-                        <div className="w-full md:w-1/2 p-8 flex flex-col justify-center bg-card/95 backdrop-blur-xl relative">
-                            <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${letters[currentIndex].color} opacity-10 blur-3xl rounded-full -mr-10 -mt-10`} />
-
-                            <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${letters[currentIndex].color} flex items-center justify-center text-white mb-6 shadow-lg`}>
-                                {(() => {
-                                    const Icon = letters[currentIndex].icon;
-                                    return <Icon size={24} />;
-                                })()}
-                            </div>
-
-                            <h3 className="text-3xl font-bold mb-2 text-foreground">{letters[currentIndex].title}</h3>
-                            <p className="text-muted-foreground mb-8 text-lg leading-relaxed">
-                                "{letters[currentIndex].preview}"
-                            </p>
-
-                            <div className="flex items-center gap-4">
-                                <div className="h-10 w-10 rounded-full bg-muted overflow-hidden">
-                                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${currentIndex}`} alt="Avatar" />
-                                </div>
-                                <div className="text-sm">
-                                    <p className="font-medium text-foreground">Anonymous User</p>
-                                    <p className="text-muted-foreground text-xs">Sent via SendTheLetter</p>
-                                </div>
-                            </div>
+                            {/* Read Button */}
+                            <motion.div
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.6, duration: 0.5 }}
+                                className="mt-auto"
+                            >
+                                <Button
+                                    variant="secondary"
+                                    className="pointer-events-auto bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 text-white"
+                                >
+                                    Read Full Letter
+                                </Button>
+                            </motion.div>
                         </div>
                     </motion.div>
                 </AnimatePresence>
@@ -170,14 +184,14 @@ const LetterSlideshow = () => {
 
             {/* Dots */}
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-                {letters.map((_, index) => (
+                {displayLetters.map((_, index) => (
                     <button
                         key={index}
                         onClick={() => {
                             setDirection(index > currentIndex ? 1 : -1);
                             setCurrentIndex(index);
                         }}
-                        className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentIndex ? 'bg-primary w-6' : 'bg-muted-foreground/30 hover:bg-primary/50'
+                        className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentIndex ? 'bg-primary w-6' : 'bg-white/30 hover:bg-primary/50'
                             }`}
                     />
                 ))}

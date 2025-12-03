@@ -1,95 +1,304 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from './ui/dialog';
 import { Button } from './ui/button';
-import { Music, X } from 'lucide-react';
+import { Music, X, Heart, MessageCircle, Send } from 'lucide-react';
 import { Note } from '../types/note';
-import { cn } from '../lib/utils';
+import { cn, getImageUrl } from '../lib/utils';
+import { useAuthStore } from '../store/authStore';
+import { useNoteStore } from '../store/noteStore';
+import { formatDistanceToNow } from 'date-fns';
 
 interface LetterViewModalProps {
     isOpen: boolean;
     onClose: () => void;
     note: Note | null;
+    onAuthorClick?: (username: string) => void;
 }
 
-const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note }) => {
+import socketService from '../services/socketService';
+
+const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note, onAuthorClick }) => {
+    const user = useAuthStore((state) => state.user);
+    const { toggleLike, addComment } = useNoteStore();
+    const [commentText, setCommentText] = useState('');
+    const [comments, setComments] = useState<any[]>([]);
+    const [isLiked, setIsLiked] = useState(false);
+    const [likeCount, setLikeCount] = useState(0);
+
+    useEffect(() => {
+        if (note && isOpen) {
+            setIsLiked(note.isLikedByUser || false);
+            setLikeCount(note.likeCount || 0);
+
+            // Join real-time room
+            socketService.joinLetterRoom(String(note.id));
+
+            // Fetch comments
+            const fetchComments = async () => {
+                try {
+                    const response = await fetch(`http://localhost:5000/api/letters/${note.id}/comments`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        setComments(data);
+                    }
+                } catch (error) {
+                    console.error('Error fetching comments:', error);
+                }
+            };
+            fetchComments();
+
+            // Listen for new comments
+            const handleNewComment = (newComment: any) => {
+                if (newComment.letterId === note.id) {
+                    setComments(prev => {
+                        // Avoid duplicates if we optimistically added it
+                        if (prev.some(c => c.id === newComment.id)) return prev;
+                        return [newComment, ...prev];
+                    });
+                }
+            };
+
+            // Listen for like updates
+            const handleLikeUpdate = (data: { letterId: string; likeCount: number }) => {
+                if (String(data.letterId) === String(note.id)) {
+                    setLikeCount(data.likeCount);
+                }
+            };
+
+            socketService.onNewComment(handleNewComment);
+            socketService.onLikeUpdate(handleLikeUpdate);
+
+            return () => {
+                socketService.leaveLetterRoom(String(note.id));
+                socketService.offNewComment();
+                socketService.offLikeUpdate();
+            };
+        }
+    }, [note, isOpen]);
+
+    const handleLike = async () => {
+        if (!note || !user) return;
+
+        // Optimistic update
+        const newIsLiked = !isLiked;
+        setIsLiked(newIsLiked);
+        setLikeCount(prev => newIsLiked ? prev + 1 : prev - 1);
+
+        try {
+            await toggleLike(String(note.id));
+        } catch (error) {
+            console.error('Error liking note:', error);
+            // Revert on error
+            setIsLiked(!newIsLiked);
+            setLikeCount(prev => !newIsLiked ? prev + 1 : prev - 1);
+        }
+    };
+
+    const handleComment = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!note || !user || !commentText.trim()) return;
+
+        try {
+            await addComment(String(note.id), commentText);
+            setCommentText('');
+            // No need to manually add to comments state here if socket works, 
+            // but for immediate feedback we can, or just wait for socket.
+            // Let's wait for socket to avoid complexity with IDs.
+        } catch (error) {
+            console.error('Error adding comment:', error);
+        }
+    };
+
+    const handleAuthorClick = () => {
+        if (note && !note.isAnonymous && note.authorName && onAuthorClick) {
+            onClose();
+            onAuthorClick(note.authorName);
+        }
+    };
+
     if (!note) return null;
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-3xl h-[90vh] overflow-y-auto bg-[#fdfbf7] border-none shadow-2xl sm:rounded-xl p-0 gap-0">
-                {/* Toolbar / Header */}
-                <div className="sticky top-0 z-10 bg-[#fdfbf7]/95 backdrop-blur supports-[backdrop-filter]:bg-[#fdfbf7]/60 border-b border-stone-200 p-4 flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                        {/* Category Badge */}
-                        <div className="px-3 py-1 rounded-full bg-stone-100 border border-stone-200 text-stone-600 text-sm font-medium">
-                            {note.category || 'Letter'}
+            <DialogContent className="max-w-4xl h-[90vh] p-0 gap-0 bg-[#fdfbf7] overflow-hidden flex flex-col md:flex-row">
+
+                {/* Left Side: Letter Content */}
+                <div className="flex-1 overflow-y-auto custom-scrollbar border-r border-stone-200">
+                    {/* Toolbar / Header */}
+                    <div className="sticky top-0 z-10 bg-[#fdfbf7]/95 backdrop-blur border-b border-stone-200 p-4 flex justify-between items-center">
+                        <div className="flex items-center gap-4">
+                            <div className="px-3 py-1 rounded-full bg-stone-100 border border-stone-200 text-stone-600 text-sm font-medium">
+                                {note.category || 'Letter'}
+                            </div>
+                            {note.spotifyLink && (
+                                <a
+                                    href={note.spotifyLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 text-stone-600 hover:text-[#1DB954] transition-colors"
+                                    title="Open in Spotify"
+                                >
+                                    <Music size={18} />
+                                </a>
+                            )}
+                        </div>
+                        <Button variant="ghost" onClick={onClose} className="md:hidden text-stone-500">
+                            <X size={20} />
+                        </Button>
+                    </div>
+
+                    <div className={cn("p-8 md:p-12 space-y-8", note.font || 'font-serif')}>
+                        {/* Header: Sender & Date */}
+                        <div className="space-y-1 text-stone-600 text-sm">
+                            <button
+                                onClick={handleAuthorClick}
+                                disabled={note.isAnonymous}
+                                className={cn("font-bold text-stone-900 text-left", !note.isAnonymous && "hover:underline cursor-pointer")}
+                            >
+                                {note.isAnonymous ? 'Anonymous Writer' : note.authorName || 'A Writer'}
+                            </button>
+                            <p className="text-xs text-stone-400">
+                                {formatDistanceToNow(new Date(note.createdAt), { addSuffix: true })}
+                            </p>
                         </div>
 
-                        {/* Spotify Link Display */}
+                        {/* Salutation */}
+                        <div className="font-bold text-stone-900 text-lg">
+                            Dear {note.recipientName ? note.recipientName.split(' ')[0] : 'Friend'},
+                        </div>
+
+                        {/* Body */}
+                        <div className="min-h-[200px] text-stone-900 leading-relaxed text-lg whitespace-pre-wrap">
+                            {note.content}
+                        </div>
+
+                        {/* Spotify Player - Show if letter has music */}
                         {note.spotifyLink && (
-                            <a
-                                href={note.spotifyLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-2 text-stone-600 hover:text-[#1DB954] transition-colors"
-                                title="Open in Spotify"
+                            <div className="mt-8 pt-6 border-t border-stone-200">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Music size={18} className="text-stone-600" />
+                                    <span className="text-sm font-medium text-stone-700">Letter Soundtrack</span>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    {/* Spinning Vinyl Record */}
+                                    <div className="relative w-24 h-24 flex-shrink-0">
+                                        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 shadow-xl animate-spin-slow">
+                                            <div className="absolute inset-3 rounded-full bg-gradient-to-br from-stone-700 to-stone-900">
+                                                <div className="absolute inset-2 rounded-full bg-stone-950 flex items-center justify-center">
+                                                    <div className="w-3 h-3 rounded-full bg-stone-800"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* Spotify Embed */}
+                                    <div className="flex-1">
+                                        <iframe
+                                            src={note.spotifyLink.replace('open.spotify.com', 'open.spotify.com/embed')}
+                                            width="100%"
+                                            height="80"
+                                            frameBorder="0"
+                                            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                                            loading="lazy"
+                                            className="rounded-xl"
+                                        ></iframe>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Closing */}
+                        <div className="space-y-2 pt-8">
+                            <p className="text-stone-800">Kind regards,</p>
+                            <p className="font-bold text-xl signature text-stone-900">
+                                {note.isAnonymous ? 'A Friend' : note.authorName || 'Me'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Side: Interactions & Comments */}
+                <div className="w-full md:w-96 bg-white flex flex-col h-[40vh] md:h-full border-t md:border-t-0 md:border-l border-stone-200">
+                    <div className="p-4 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
+                        <h3 className="font-semibold text-stone-800">Comments</h3>
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={handleLike}
+                                className="flex items-center gap-1.5 text-stone-600 hover:text-rose-500 transition-colors"
                             >
-                                <Music size={18} />
-                                <span className="text-sm truncate max-w-[200px] hidden sm:block">
-                                    {note.spotifyLink}
-                                </span>
-                            </a>
+                                <Heart size={20} className={cn(isLiked && "fill-rose-500 text-rose-500")} />
+                                <span className="text-sm font-medium">{likeCount}</span>
+                            </button>
+                            <div className="flex items-center gap-1.5 text-stone-600">
+                                <MessageCircle size={20} />
+                                <span className="text-sm font-medium">{comments.length}</span>
+                            </div>
+                        </div>
+                        <Button variant="ghost" onClick={onClose} className="hidden md:flex text-stone-500 hover:text-stone-800">
+                            <X size={20} />
+                        </Button>
+                    </div>
+
+                    {/* Comments List */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-stone-50/30">
+                        {comments.length === 0 ? (
+                            <div className="h-full flex flex-col items-center justify-center text-stone-400 text-center p-4">
+                                <MessageCircle size={32} className="mb-2 opacity-20" />
+                                <p className="text-sm">No comments yet.</p>
+                                <p className="text-xs">Be the first to share your thoughts!</p>
+                            </div>
+                        ) : (
+                            comments.map((comment) => (
+                                <div key={comment.id} className="flex gap-3 group">
+                                    <div className="w-8 h-8 rounded-full bg-stone-200 flex-shrink-0 overflow-hidden">
+                                        {comment.user?.avatar ? (
+                                            <img
+                                                src={getImageUrl(comment.user.avatar)}
+                                                alt={comment.user.username}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold bg-gradient-to-br from-blue-500 to-purple-600">
+                                                {comment.user?.username?.[0]?.toUpperCase() || '?'}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex-1 space-y-1">
+                                        <div className="bg-white p-3 rounded-2xl rounded-tl-none border border-stone-100 shadow-sm">
+                                            <p className="text-xs font-bold text-stone-900 mb-0.5">
+                                                {comment.user?.username || 'User'}
+                                            </p>
+                                            <p className="text-sm text-stone-700 leading-relaxed">
+                                                {comment.content}
+                                            </p>
+                                        </div>
+                                        <p className="text-[10px] text-stone-400 pl-2">
+                                            {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))
                         )}
                     </div>
 
-                    <Button variant="ghost" onClick={onClose} className="text-stone-500 hover:text-stone-800">
-                        <X size={20} />
-                    </Button>
-                </div>
-
-                {/* Letter Content */}
-                <div className={cn("p-8 md:p-12 max-w-2xl mx-auto w-full space-y-8", note.font || 'font-serif')}>
-
-                    {/* Header: Sender & Date */}
-                    <div className="space-y-1 text-stone-600 text-sm">
-                        <p className="font-bold text-stone-900">
-                            {note.isAnonymous ? 'Anonymous Writer' : 'A Writer'}
-                        </p>
-                        <p>123 Letter Lane</p>
-                        <p>City of Writers, WL 99999</p>
-                        <p className="pt-4">
-                            {new Date(note.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                        </p>
+                    {/* Comment Input */}
+                    <div className="p-4 bg-white border-t border-stone-100">
+                        <form onSubmit={handleComment} className="flex gap-2">
+                            <input
+                                type="text"
+                                value={commentText}
+                                onChange={(e) => setCommentText(e.target.value)}
+                                placeholder="Write a comment..."
+                                className="flex-1 bg-stone-100 border-none rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                            />
+                            <button
+                                type="submit"
+                                disabled={!commentText.trim()}
+                                className="p-2.5 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                            >
+                                <Send size={16} />
+                            </button>
+                        </form>
                     </div>
-
-                    {/* Recipient Info */}
-                    {(note.recipientName || note.recipientAddress) && (
-                        <div className="space-y-4">
-                            <div className="space-y-2 text-stone-800">
-                                {note.recipientName && <p className="font-bold text-base">{note.recipientName}</p>}
-                                {note.recipientAddress && <p className="text-sm whitespace-pre-wrap">{note.recipientAddress}</p>}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Salutation */}
-                    <div className="flex items-center gap-2 text-stone-900 font-bold">
-                        <span>Dear {note.recipientName ? note.recipientName.split(' ')[0] : 'Friend'},</span>
-                    </div>
-
-                    {/* Body */}
-                    <div className="min-h-[200px] text-stone-900 leading-relaxed text-lg whitespace-pre-wrap">
-                        {note.content}
-                    </div>
-
-                    {/* Closing */}
-                    <div className="space-y-4 pt-8">
-                        <p className="text-stone-800">Kind regards,</p>
-                        <p className="font-bold text-xl signature text-stone-900">
-                            {note.isAnonymous ? 'A Friend' : 'Me'}
-                        </p>
-                    </div>
-
                 </div>
             </DialogContent>
         </Dialog>

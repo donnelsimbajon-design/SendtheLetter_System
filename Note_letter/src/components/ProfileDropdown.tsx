@@ -1,6 +1,7 @@
 import { LogOut, Settings, HelpCircle, MessageSquare, AlertTriangle } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getImageUrl } from '../lib/utils';
 
 interface ProfileDropdownProps {
     isOpen: boolean;
@@ -27,11 +28,19 @@ const ProfileDropdown = ({ isOpen, onClose }: ProfileDropdownProps) => {
             >
                 <div className="p-4 border-b border-border/10">
                     <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer">
-                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-lg">
-                            {user?.name?.[0] || 'U'}
+                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-lg overflow-hidden">
+                            {user?.avatar ? (
+                                <img
+                                    src={getImageUrl(user.avatar)}
+                                    alt={user.username}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <span>{user?.username?.[0]?.toUpperCase() || 'U'}</span>
+                            )}
                         </div>
                         <div className="flex-1">
-                            <h4 className="font-semibold text-foreground">{user?.name || 'User'}</h4>
+                            <h4 className="font-semibold text-foreground">{user?.username || 'User'}</h4>
                             <p className="text-xs text-muted-foreground">See your profile</p>
                         </div>
                     </div>

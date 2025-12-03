@@ -1,43 +1,71 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useNoteStore } from '../../store/noteStore';
-import { User as UserIcon, MapPin, Link as LinkIcon, Calendar, Camera, PenLine, Search, FileText, Mail } from 'lucide-react';
+import { MapPin, Calendar, Camera, PenLine, Search, Settings, Sparkles } from 'lucide-react';
 import { Button } from '../../components/ui/button';
-import { Card } from '../../components/ui/card';
-import { Input } from '../../components/ui/input';
 import LetterEditorModal from '../../components/LetterEditorModal';
 import LetterViewModal from '../../components/LetterViewModal';
+import EditProfileModal from '../../components/EditProfileModal';
 import Notecard from '../../components/Notecard';
 import { Note } from '../../types/note';
+import { motion } from 'framer-motion';
+import { getImageUrl } from '../../lib/utils';
 
 const Profile = () => {
     const user = useAuthStore((state) => state.user);
-    const { notes, addNote } = useNoteStore();
+    const { notes, drafts, addNote, fetchMyLetters, fetchDrafts } = useNoteStore();
     const [isEditorOpen, setIsEditorOpen] = useState(false);
-
-    // View Modal State
+    const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
     const [selectedNote, setSelectedNote] = useState<Note | null>(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState('Letters');
+    const [followerCount, setFollowerCount] = useState(0);
+    const [followingCount, setFollowingCount] = useState(0);
 
     const tabs = ['Letters', 'About', 'Pen Pals', 'Saved', 'Drafts'];
 
-    const userNotes = notes.filter((note) => note.authorId === user?.id);
+    useEffect(() => {
+        fetchMyLetters();
+        fetchDrafts();
+        if (user?.id) {
+            fetchFollowStats();
+        }
+    }, [fetchMyLetters, fetchDrafts, user?.id]);
 
-    const handleLetterCreate = (data: any) => {
-        addNote({
-            id: crypto.randomUUID(),
+    const fetchFollowStats = async () => {
+        if (!user?.id) return;
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:5000/api/users/${user.id}/profile`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setFollowerCount(data.followerCount || 0);
+                setFollowingCount(data.followingCount || 0);
+            }
+        } catch (error) {
+            console.error('Error fetching follow stats:', error);
+        }
+    };
+
+    // Filter to show only private letters in the main "Letters" tab
+    const displayNotes = activeTab === 'Drafts' ? drafts : notes.filter(n => !n.isPublic);
+
+    const handleLetterCreate = async (data: any) => {
+        await addNote({
             title: data.subject || 'Untitled Letter',
             content: data.content,
-            category: data.category || 'Other',
-            isPublic: true,
-            authorId: user?.id || 'anonymous',
-            createdAt: new Date(),
+            type: data.category || 'General',
+            isPublic: data.isPublic,
             reactions: {},
             spotifyLink: data.spotifyLink,
             font: data.font,
             recipientName: data.recipientName,
             recipientAddress: data.recipientAddress,
             isAnonymous: data.isAnonymous,
+            backgroundImage: data.backgroundImage,
+            imageUrl: data.imageUrl,
         });
     };
 
@@ -47,62 +75,208 @@ const Profile = () => {
     };
 
     return (
-        <div className="max-w-5xl mx-auto -mt-6">
-            {/* Cover Photo Section */}
-            <div className="bg-card rounded-b-xl shadow-sm border-x border-b border-border/50">
-                <div className="h-[300px] w-full bg-gradient-to-r from-primary/20 to-secondary/20 relative rounded-b-xl group cursor-pointer overflow-hidden">
-                    <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors" />
-                    <button className="absolute bottom-4 right-8 bg-background/80 hover:bg-background text-foreground px-4 py-2 rounded-full font-medium text-sm flex items-center gap-2 transition-all opacity-0 group-hover:opacity-100 shadow-sm">
-                        <Camera size={16} />
-                        Change Cover
-                    </button>
-                </div>
+        <div className="min-h-screen bg-background text-foreground pb-20 font-sans selection:bg-primary/20">
+            {/* Immersive Cover Section */}
+            <div className="relative h-[50vh] w-full overflow-hidden">
+                {user?.coverImage ? (
+                    <motion.div
+                        initial={{ scale: 1.1 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 1.5, ease: "easeOut" }}
+                        className="absolute inset-0 bg-cover bg-center"
+                        style={{ backgroundImage: `url(${getImageUrl(user.coverImage)})` }}
+                    />
+                ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/20 to-background" />
 
-                <div className="px-8 pb-4">
-                    <div className="flex flex-col md:flex-row items-start md:items-end gap-6 -mt-12 mb-6 relative z-10">
-                        <div className="relative">
-                            <div className="w-32 h-32 md:w-40 md:h-40 bg-muted rounded-full border-[4px] border-background flex items-center justify-center text-muted-foreground overflow-hidden relative group cursor-pointer shadow-md">
-                                <UserIcon size={64} strokeWidth={1} />
-                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Camera className="text-white" size={24} />
+                {/* Floating Action Button */}
+                <div className="absolute top-6 right-6 z-20">
+                    <Button
+                        onClick={() => setIsEditProfileOpen(true)}
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-full bg-black/20 backdrop-blur-md border border-white/10 hover:bg-white/10 text-white transition-all duration-300"
+                    >
+                        <Settings size={20} />
+                    </Button>
+                </div>
+            </div>
+
+            <div className="container mx-auto px-4 md:px-6 -mt-32 relative z-10">
+                <div className="flex flex-col items-center">
+                    {/* Minimalist Profile Header */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="flex flex-col items-center text-center mb-12 w-full max-w-2xl"
+                    >
+                        <div className="relative mb-6 group">
+                            <div className="w-32 h-32 md:w-40 md:h-40 rounded-full p-1 bg-background/50 backdrop-blur-sm border border-white/10 shadow-2xl">
+                                <div className="w-full h-full rounded-full overflow-hidden relative">
+                                    {user?.avatar ? (
+                                        <img
+                                            src={getImageUrl(user.avatar)}
+                                            alt={user.username}
+                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
+                                            <span className="text-5xl font-light text-primary">{user?.username?.[0]?.toUpperCase() || 'U'}</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
+                            <button
+                                onClick={() => setIsEditProfileOpen(true)}
+                                className="absolute bottom-2 right-2 p-2 bg-primary text-primary-foreground rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
+                            >
+                                <Camera size={16} />
+                            </button>
                         </div>
 
-                        <div className="flex-1 mb-2">
-                            <h1 className="text-3xl font-serif font-bold text-foreground">{user?.name || 'Guest User'}</h1>
-                            <p className="text-muted-foreground font-light">Writing from <span className="text-foreground font-medium">San Francisco</span></p>
-                            <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
-                                <span className="flex items-center gap-1"><FileText size={14} /> {userNotes.length} Letters</span>
-                                <span className="flex items-center gap-1"><UserIcon size={14} /> 1.2k Pen Pals</span>
+                        <h1 className="text-4xl md:text-5xl font-bold mb-3 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white/90 to-white/60">
+                            {user?.username || 'Guest User'}
+                        </h1>
+
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6 font-medium tracking-wide">
+                            {user?.location && (
+                                <>
+                                    <span className="flex items-center gap-1.5">
+                                        <MapPin size={14} /> {user.location}
+                                    </span>
+                                    <span className="w-1 h-1 rounded-full bg-white/20" />
+                                </>
+                            )}
+                            <span className="flex items-center gap-1.5">
+                                <Calendar size={14} /> Joined recently
+                            </span>
+                        </div>
+
+                        {user?.bio && (
+                            <p className="text-lg text-muted-foreground/80 leading-relaxed max-w-lg font-light">
+                                {user.bio}
+                            </p>
+                        )}
+
+                        <div className="flex gap-6 mt-8">
+                            <div className="text-center">
+                                <div className="text-2xl font-bold text-foreground">{notes.length}</div>
+                                <div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Letters</div>
+                            </div>
+                            <div className="w-px h-10 bg-white/10" />
+                            <div className="text-center">
+                                <div className="text-2xl font-bold text-foreground">{followerCount}</div>
+                                <div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Followers</div>
+                            </div>
+                            <div className="w-px h-10 bg-white/10" />
+                            <div className="text-center">
+                                <div className="text-2xl font-bold text-foreground">{followingCount}</div>
+                                <div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Following</div>
                             </div>
                         </div>
+                    </motion.div>
 
-                        <div className="flex gap-3 mb-4 md:mb-2 w-full md:w-auto">
-                            <Button onClick={() => setIsEditorOpen(true)} className="flex-1 md:flex-none gap-2 rounded-full px-6">
-                                <PenLine size={16} />
-                                Write Letter
-                            </Button>
-                            <Button variant="outline" className="flex-1 md:flex-none gap-2 rounded-full">
-                                Edit Profile
-                            </Button>
+                    {/* Minimalist Tabs */}
+                    <div className="w-full max-w-4xl mb-10">
+                        <div className="flex justify-center items-center gap-8 border-b border-white/5 pb-4 overflow-x-auto scrollbar-hide">
+                            {tabs.map((tab) => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveTab(tab)}
+                                    className={`
+                                        text-sm font-medium transition-all duration-300 relative px-2 py-1
+                                        ${activeTab === tab ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}
+                                    `}
+                                >
+                                    {tab}
+                                    {activeTab === tab && (
+                                        <motion.div
+                                            layoutId="activeTab"
+                                            className="absolute -bottom-[17px] left-0 right-0 h-0.5 bg-primary"
+                                        />
+                                    )}
+                                </button>
+                            ))}
                         </div>
                     </div>
 
-                    <div className="border-t border-border/50 pt-1">
-                        <nav className="flex items-center gap-6 overflow-x-auto pb-2 md:pb-0">
-                            {tabs.map((tab, i) => (
-                                <button
-                                    key={tab}
-                                    className={`py-3 font-medium text-sm transition-colors whitespace-nowrap border-b-2 ${i === 0 ? 'text-primary border-primary' : 'text-muted-foreground border-transparent hover:text-foreground hover:border-border'}`}
-                                >
-                                    {tab}
-                                </button>
-                            ))}
-                        </nav>
+                    {/* Content Area */}
+                    <div className="w-full max-w-5xl">
+                        {activeTab === 'About' ? (
+                            <motion.div
+                                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                className="max-w-2xl mx-auto text-center py-12"
+                            >
+                                <Sparkles className="w-8 h-8 text-primary/50 mx-auto mb-6" />
+                                <h3 className="text-xl font-light mb-4">More About Me</h3>
+                                <p className="text-muted-foreground leading-loose">
+                                    {user?.bio || "I haven't written a long bio yet, but I love writing letters and connecting with people from all over the world."}
+                                </p>
+                            </motion.div>
+                        ) : activeTab === 'Pen Pals' || activeTab === 'Saved' ? (
+                            <motion.div
+                                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                className="text-center py-20"
+                            >
+                                <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
+                                    <PenLine size={32} className="text-muted-foreground" />
+                                </div>
+                                <h3 className="text-xl font-medium mb-2">Coming Soon</h3>
+                                <p className="text-muted-foreground">This feature is currently being crafted.</p>
+                            </motion.div>
+                        ) : (
+                            <>
+                                {/* Action Bar */}
+                                <div className="flex justify-between items-center mb-8 px-2">
+                                    <div className="relative w-full max-w-xs group">
+                                        <Search className="absolute left-0 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
+                                        <input
+                                            placeholder="Search letters..."
+                                            className="w-full bg-transparent border-b border-white/10 py-2 pl-8 text-sm focus:outline-none focus:border-primary transition-colors placeholder:text-muted-foreground/50"
+                                        />
+                                    </div>
+                                    <Button
+                                        onClick={() => setIsEditorOpen(true)}
+                                        className="rounded-full w-12 h-12 p-0 bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all hover:scale-105 flex items-center justify-center"
+                                    >
+                                        <PenLine size={20} />
+                                    </Button>
+                                </div>
+
+                                {/* Grid */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {displayNotes.length > 0 ? (
+                                        displayNotes.map((note, index) => (
+                                            <motion.div
+                                                key={note.id}
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: index * 0.05 }}
+                                            >
+                                                <Notecard note={note} onClick={handleNoteClick} />
+                                            </motion.div>
+                                        ))
+                                    ) : (
+                                        <div className="col-span-full text-center py-20">
+                                            <p className="text-muted-foreground font-light text-lg">
+                                                {activeTab === 'Drafts' ? 'No drafts yet.' : 'No letters published yet.'}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
+
+            <EditProfileModal
+                isOpen={isEditProfileOpen}
+                onClose={() => setIsEditProfileOpen(false)}
+            />
 
             <LetterEditorModal
                 isOpen={isEditorOpen}
@@ -115,102 +289,6 @@ const Profile = () => {
                 onClose={() => setIsViewModalOpen(false)}
                 note={selectedNote}
             />
-
-            {/* Main Content Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 px-4 md:px-0">
-                {/* Left Column: Intro */}
-                <div className="space-y-6">
-                    <Card className="p-6 space-y-4 shadow-sm border-border/50">
-                        <h2 className="text-lg font-serif font-bold">About</h2>
-                        <div className="space-y-4 text-sm font-light">
-                            <p className="text-muted-foreground leading-relaxed">
-                                "I write to discover what I know." <br />
-                                Lover of vintage stationery and meaningful conversations.
-                            </p>
-                            <div className="pt-4 space-y-3 border-t border-border/50">
-                                <div className="flex items-center gap-3 text-muted-foreground">
-                                    <MapPin size={18} />
-                                    <span>Lives in <strong className="text-foreground font-medium">San Francisco, CA</strong></span>
-                                </div>
-                                <div className="flex items-center gap-3 text-muted-foreground">
-                                    <Calendar size={18} />
-                                    <span>Joined March 2024</span>
-                                </div>
-                                <div className="flex items-center gap-3 text-muted-foreground">
-                                    <LinkIcon size={18} />
-                                    <a href="#" className="text-primary hover:underline">senttheletter.com</a>
-                                </div>
-                            </div>
-                        </div>
-                    </Card>
-
-                    <Card className="p-6 shadow-sm border-border/50">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-serif font-bold">Pen Pals</h2>
-                            <a href="#" className="text-primary text-xs hover:underline uppercase tracking-wider">See all</a>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4">
-                            {[1, 2, 3, 4, 5, 6].map((i) => (
-                                <div key={i} className="space-y-2 text-center">
-                                    <div className="aspect-square bg-muted rounded-full flex items-center justify-center text-muted-foreground/30 mx-auto w-full max-w-[60px]">
-                                        <UserIcon size={24} />
-                                    </div>
-                                    <p className="text-xs font-medium truncate">Writer {i}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </Card>
-                </div>
-
-                {/* Right Column: Letters Feed */}
-                <div className="md:col-span-2 space-y-6">
-                    {/* Create Letter */}
-                    <Card className="p-4 shadow-sm border-border/50">
-                        <div className="flex gap-4 mb-4">
-                            <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
-                                <UserIcon size={20} />
-                            </div>
-                            <Input
-                                className="bg-muted/30 border-transparent rounded-full hover:bg-muted/50 transition-colors cursor-pointer h-10"
-                                placeholder={`Write a letter to the world...`}
-                                onClick={() => setIsEditorOpen(true)}
-                            />
-                        </div>
-                        <div className="border-t border-border/50 pt-3 flex justify-between px-2">
-                            <Button variant="ghost" className="flex-1 gap-2 text-muted-foreground hover:bg-muted/50 hover:text-foreground text-xs uppercase tracking-wide">
-                                <PenLine size={16} />
-                                Draft
-                            </Button>
-                            <Button variant="ghost" className="flex-1 gap-2 text-muted-foreground hover:bg-muted/50 hover:text-foreground text-xs uppercase tracking-wide">
-                                <Mail size={16} />
-                                Public Letter
-                            </Button>
-                        </div>
-                    </Card>
-
-                    {/* Letters Filter */}
-                    <div className="flex justify-between items-center px-2">
-                        <h3 className="font-serif font-bold text-lg">Recent Letters</h3>
-                        <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
-                            <Search size={16} />
-                            <span className="text-xs uppercase tracking-wider">Search</span>
-                        </Button>
-                    </div>
-
-                    {/* User Letters */}
-                    <div className="space-y-6">
-                        {userNotes.length > 0 ? (
-                            userNotes.map((note) => (
-                                <Notecard key={note.id} note={note} onClick={handleNoteClick} />
-                            ))
-                        ) : (
-                            <div className="text-center py-12 border-2 border-dashed border-border rounded-xl">
-                                <p className="text-muted-foreground">You haven't written any letters yet.</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
         </div>
     );
 };

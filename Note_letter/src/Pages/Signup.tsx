@@ -9,28 +9,30 @@ import { motion } from 'framer-motion';
 
 const Signup = () => {
     const navigate = useNavigate();
-    const login = useAuthStore((state) => state.login);
-    const [name, setName] = useState('');
+    const register = useAuthStore((state) => state.register);
+    const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
+        setError('');
 
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Mock registration - in a real app this would call a register endpoint
-        login({
-            id: Math.random().toString(36).substr(2, 9),
-            name: name,
-            email: email,
-        });
-
-        setIsLoading(false);
-        navigate('/dashboard');
+        try {
+            await register({
+                username,
+                email,
+                password,
+            });
+            navigate('/dashboard');
+        } catch (err: any) {
+            setError(err.message || 'Registration failed');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -63,17 +65,23 @@ const Signup = () => {
                         <p className="text-muted-foreground">Join us to start writing meaningful letters</p>
                     </div>
 
+                    {error && (
+                        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm text-center">
+                            {error}
+                        </div>
+                    )}
+
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium ml-1">Full Name</label>
+                            <label className="text-sm font-medium ml-1">Username</label>
                             <div className="relative group">
                                 <User className="absolute left-3 top-3 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
                                 <Input
                                     type="text"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
                                     className="pl-10 bg-background/50 border-border/50 focus:border-primary/50 transition-all"
-                                    placeholder="John Doe"
+                                    placeholder="johndoe123"
                                     required
                                 />
                             </div>
