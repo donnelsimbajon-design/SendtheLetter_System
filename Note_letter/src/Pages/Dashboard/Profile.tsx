@@ -13,24 +13,29 @@ import { getImageUrl } from '../../lib/utils';
 
 const Profile = () => {
     const user = useAuthStore((state) => state.user);
-    const { notes, drafts, addNote, fetchMyLetters, fetchDrafts } = useNoteStore();
+    const { notes, drafts, archived, addNote, updateNote, fetchMyLetters, fetchDrafts, fetchArchivedLetters } = useNoteStore();
     const [isEditorOpen, setIsEditorOpen] = useState(false);
     const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
     const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+    const [noteToEdit, setNoteToEdit] = useState<Note | null>(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('Letters');
     const [followerCount, setFollowerCount] = useState(0);
     const [followingCount, setFollowingCount] = useState(0);
+    const [reposts, setReposts] = useState<Note[]>([]);
 
-    const tabs = ['Letters', 'About', 'Pen Pals', 'Saved', 'Drafts'];
+
+    const tabs = ['Letters', 'Repost', 'About', 'Pen Pals', 'Archived', 'Drafts'];
 
     useEffect(() => {
         fetchMyLetters();
         fetchDrafts();
+        fetchReposts();
+        fetchArchivedLetters();
         if (user?.id) {
             fetchFollowStats();
         }
-    }, [fetchMyLetters, fetchDrafts, user?.id]);
+    }, [fetchMyLetters, fetchDrafts, fetchArchivedLetters, user?.id]);
 
     const fetchFollowStats = async () => {
         if (!user?.id) return;
@@ -49,24 +54,67 @@ const Profile = () => {
         }
     };
 
-    // Filter to show only private letters in the main "Letters" tab
-    const displayNotes = activeTab === 'Drafts' ? drafts : notes.filter(n => !n.isPublic);
+    const fetchReposts = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('http://localhost:5000/api/letters/reposts', {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setReposts(data);
+            }
+        } catch (error) {
+            console.error('Error fetching reposts:', error);
+        }
+    };
 
-    const handleLetterCreate = async (data: any) => {
-        await addNote({
-            title: data.subject || 'Untitled Letter',
-            content: data.content,
-            type: data.category || 'General',
-            isPublic: data.isPublic,
-            reactions: {},
-            spotifyLink: data.spotifyLink,
-            font: data.font,
-            recipientName: data.recipientName,
-            recipientAddress: data.recipientAddress,
-            isAnonymous: data.isAnonymous,
-            backgroundImage: data.backgroundImage,
-            imageUrl: data.imageUrl,
-        });
+    // Filter to show only private letters in the main "Letters" tab
+    const displayNotes = activeTab === 'Drafts'
+        ? drafts
+        : activeTab === 'Repost'
+            ? reposts
+            : activeTab === 'Archived'
+                ? archived
+                : notes;
+
+    const handleLetterSubmit = async (data: any) => {
+        if (noteToEdit) {
+            await updateNote(String(noteToEdit.id), {
+                title: data.title || 'Untitled Letter',
+                content: data.content,
+                type: data.category || 'General',
+                isPublic: data.isPublic,
+                spotifyLink: data.spotifyLink,
+                font: data.font,
+                recipientName: data.recipientName,
+                recipientAddress: data.recipientAddress,
+                isAnonymous: data.isAnonymous,
+                backgroundImage: data.backgroundImage,
+                imageUrl: data.imageUrl,
+            });
+            setNoteToEdit(null); // Clear edit state
+        } else {
+            await addNote({
+                title: data.title || 'Untitled Letter',
+                content: data.content,
+                type: data.category || 'General',
+                isPublic: data.isPublic,
+                reactions: {},
+                spotifyLink: data.spotifyLink,
+                font: data.font,
+                recipientName: data.recipientName,
+                recipientAddress: data.recipientAddress,
+                isAnonymous: data.isAnonymous,
+                backgroundImage: data.backgroundImage,
+                imageUrl: data.imageUrl,
+            });
+        }
+    };
+
+    const handleLetterEdit = (note: Note) => {
+        setNoteToEdit(note);
+        setIsEditorOpen(true);
     };
 
     const handleNoteClick = (note: Note) => {
@@ -239,7 +287,10 @@ const Profile = () => {
                                         />
                                     </div>
                                     <Button
-                                        onClick={() => setIsEditorOpen(true)}
+                                        onClick={() => {
+                                            setNoteToEdit(null); // Ensure clean state for new letter
+                                            setIsEditorOpen(true);
+                                        }}
                                         className="rounded-full w-12 h-12 p-0 bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all hover:scale-105 flex items-center justify-center"
                                     >
                                         <PenLine size={20} />
@@ -280,14 +331,19 @@ const Profile = () => {
 
             <LetterEditorModal
                 isOpen={isEditorOpen}
-                onClose={() => setIsEditorOpen(false)}
-                onSubmit={handleLetterCreate}
+                onClose={() => {
+                    setIsEditorOpen(false);
+                    setNoteToEdit(null);
+                }}
+                onSubmit={handleLetterSubmit}
+                initialData={noteToEdit}
             />
 
             <LetterViewModal
                 isOpen={isViewModalOpen}
                 onClose={() => setIsViewModalOpen(false)}
                 note={selectedNote}
+                onEdit={handleLetterEdit}
             />
         </div>
     );

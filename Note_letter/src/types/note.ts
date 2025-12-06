@@ -29,4 +29,13 @@ export interface Note {
     isLikedByUser?: boolean;
     comments?: Comment[];
     imageUrl?: string;
+    address?: string;
+    latitude?: number;
+    longitude?: number;
+    scheduledDate?: Date | string;
+    openDate?: Date | string;
+    isTimeCapsule?: boolean;
+    status?: string;
+    repostCount?: number;
+    isReposted?: boolean;
 }

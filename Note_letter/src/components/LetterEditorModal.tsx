@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { X, Type, Image as ImageIcon, Music, Send, Globe, EyeOff } from 'lucide-react';
+import { X, Type, Image as ImageIcon, Music, Send, Globe, EyeOff, Calendar, Lock } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { cn } from '../lib/utils';
 
@@ -13,6 +13,7 @@ interface LetterEditorModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (data: any) => void;
+    initialData?: any;
 }
 
 const fonts = [
@@ -41,7 +42,7 @@ const backgroundGradients = [
     { name: 'Rose Gold', value: 'linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%)', gradient: 'bg-gradient-to-br from-[#fce4ec] to-[#f8bbd0]' },
 ];
 
-const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, onSubmit }) => {
+const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, onSubmit, initialData }) => {
     const user = useAuthStore((state) => state.user);
     const [font, setFont] = useState('font-serif');
     const [category, setCategory] = useState('Other');
@@ -56,6 +57,102 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
     const [recipientAddress, setRecipientAddress] = useState('');
     const [spotifyLink, setSpotifyLink] = useState('');
     const [content, setContent] = useState('');
+
+    // Enhanced features state
+    const [scheduledDate, setScheduledDate] = useState<string>('');
+    const [isTimeCapsule, setIsTimeCapsule] = useState(false);
+    const [openDate, setOpenDate] = useState<string>('');
+    const [draftId, setDraftId] = useState<string | null>(null);
+    const [lastSaved, setLastSaved] = useState<string>('');
+    const [isSaving, setIsSaving] = useState(false);
+
+    // Populate form if initialData is provided
+    useEffect(() => {
+        if (isOpen && initialData) {
+            setTitle(initialData.title || '');
+            setContent(initialData.content || '');
+            setCategory(initialData.type || 'Other');
+            setFont(initialData.font || 'font-serif');
+            setIsPublic(initialData.isPublic || false);
+            setIsAnonymous(initialData.isAnonymous || false);
+            setBackgroundImage(initialData.backgroundImage || backgroundGradients[0].value);
+            setImageUrl(initialData.imageUrl || '');
+            setSpotifyLink(initialData.spotifyLink || '');
+            setRecipientName(initialData.recipientName || '');
+            setRecipientAddress(initialData.recipientAddress || '');
+            // Stop draft auto-save if we are editing an existing letter
+            if (initialData.status === 'published') {
+                setDraftId('stop-autosave');
+            } else if (initialData.id) {
+                setDraftId(initialData.id);
+            }
+        } else if (isOpen && !initialData) {
+            // Reset fields for new letter
+            setTitle('');
+            setContent('');
+            setCategory('Other');
+            setFont('font-serif');
+            setIsPublic(false);
+            setIsAnonymous(false);
+            setBackgroundImage(backgroundGradients[0].value);
+            setImageUrl('');
+            setSpotifyLink('');
+            setRecipientName('');
+            setDraftId(null);
+            setLastSaved('');
+        }
+    }, [isOpen, initialData]);
+
+    // Auto-save effect - saves draft every 10 seconds
+    useEffect(() => {
+        if (!isOpen || !title || !content || draftId === 'stop-autosave') return;
+
+        const saveDraft = async () => {
+            setIsSaving(true);
+            try {
+                const token = localStorage.getItem('token');
+                const draftData = {
+                    title, recipientName, recipientAddress, content, font, category,
+                    spotifyLink, isAnonymous, isPublic, backgroundImage,
+                    imageUrl, scheduledDate, isTimeCapsule, openDate,
+                    status: 'draft', type: category
+                };
+
+                const API_URL = 'http://localhost:5000/api/letters';
+
+                if (draftId) {
+                    await fetch(`${API_URL}/drafts/${draftId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(draftData)
+                    });
+                } else {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(draftData)
+                    });
+                    const data = await response.json();
+                    setDraftId(data.letter?.id);
+                }
+
+                setLastSaved(new Date().toLocaleTimeString());
+            } catch (error) {
+                console.error('Error saving draft:', error);
+            } finally {
+                setIsSaving(false);
+            }
+        };
+
+        const timer = setTimeout(saveDraft, 10000);
+        return () => clearTimeout(timer);
+    }, [isOpen, title, content, recipientName, font, category, scheduledDate, isTimeCapsule, openDate, draftId]);
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -81,6 +178,9 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
             isPublic,
             backgroundImage,
             imageUrl,
+            scheduledDate,
+            openDate,
+            isTimeCapsule,
             createdAt: new Date(),
         });
         onClose();
@@ -91,6 +191,13 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-screen-lg h-[95vh] p-0 border-none bg-transparent shadow-none overflow-hidden flex flex-col items-center justify-center">
+
+                {/* Draft Saved Indicator */}
+                {lastSaved && (
+                    <div className="absolute top-16 right-4 z-50 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs text-stone-600 shadow-sm">
+                        {isSaving ? '💾 Saving...' : `✓ Saved ${lastSaved}`}
+                    </div>
+                )}
 
                 {/* Floating Close Button */}
                 <button
@@ -231,6 +338,54 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                                         {imageUrl ? 'Change Image' : 'Add Image'}
                                     </label>
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* Enhanced Features */}
+                        <div className="space-y-4 pt-4 border-t border-stone-100">
+                            <Label className="text-xs font-bold uppercase tracking-wider text-stone-400">
+                                Special Features
+                            </Label>
+
+                            {/* Schedule Letter */}
+                            <div className="space-y-2">
+                                <Label htmlFor="schedule-date" className="text-xs flex items-center gap-2 text-stone-600">
+                                    <Calendar size={12} />
+                                    Schedule for Later
+                                </Label>
+                                <Input
+                                    id="schedule-date"
+                                    type="datetime-local"
+                                    value={scheduledDate}
+                                    onChange={(e) => setScheduledDate(e.target.value)}
+                                    className="bg-white border-stone-200 text-stone-800 text-sm"
+                                />
+                            </div>
+
+                            {/* Time Capsule */}
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <Label htmlFor="time-capsule" className="text-xs flex items-center gap-2 text-stone-600 cursor-pointer">
+                                        <Lock size={12} />
+                                        Time Capsule
+                                    </Label>
+                                    <input
+                                        id="time-capsule"
+                                        type="checkbox"
+                                        checked={isTimeCapsule}
+                                        onChange={(e) => setIsTimeCapsule(e.target.checked)}
+                                        className="rounded border-stone-300 text-stone-900 focus:ring-stone-900"
+                                    />
+                                </div>
+                                {isTimeCapsule && (
+                                    <Input
+                                        type="datetime-local"
+                                        value={openDate}
+                                        onChange={(e) => setOpenDate(e.target.value)}
+                                        placeholder="Open Date"
+                                        className="bg-white border-stone-200 text-stone-800 text-sm"
+                                    />
+                                )}
                             </div>
                         </div>
                     </div>

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useNoteStore } from '../../store/noteStore';
-import { MapPin, Calendar, UserPlus, UserMinus, Sparkles, PenLine, Search } from 'lucide-react';
+import { MapPin, Calendar, UserPlus, UserMinus, Sparkles, PenLine, Search, MessageCircle } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import LetterViewModal from '../../components/LetterViewModal';
 import Notecard from '../../components/Notecard';
@@ -27,8 +27,10 @@ interface UserProfile {
 
 const UserProfilePage = () => {
     const { username } = useParams<{ username: string }>();
+    const navigate = useNavigate();
     const currentUser = useAuthStore((state) => state.user);
     const { userPublicLetters, fetchUserPublicLetters } = useNoteStore();
+    const [publicReposts, setPublicReposts] = useState<Note[]>([]);
 
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -36,14 +38,33 @@ const UserProfilePage = () => {
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('Letters');
 
-    const tabs = ['Letters', 'About', 'Pen Pals'];
+    const tabs = ['Letters', 'Repost', 'About', 'Pen Pals'];
 
     useEffect(() => {
         if (username) {
             fetchProfile();
             fetchUserPublicLetters(username);
+            fetchPublicReposts(username);
         }
     }, [username]);
+
+    const fetchPublicReposts = async (username: string) => {
+        try {
+            const token = localStorage.getItem('token');
+            const headers: any = {};
+            if (token) headers.Authorization = `Bearer ${token}`;
+
+            const response = await fetch(`http://localhost:5000/api/letters/user/${username}/reposts`, {
+                headers,
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setPublicReposts(data);
+            }
+        } catch (error) {
+            console.error('Error fetching public reposts:', error);
+        }
+    };
 
     const fetchProfile = async () => {
         if (!username) return;
@@ -192,9 +213,9 @@ const UserProfilePage = () => {
                             </div>
                         </div>
 
-                        {/* Follow Button */}
+                        {/* Follow & Message Buttons */}
                         {currentUser && currentUser.id !== profile?.id && (
-                            <div className="mt-8">
+                            <div className="mt-8 flex gap-3">
                                 <Button
                                     onClick={handleToggleFollow}
                                     variant={profile.isFollowing ? "outline" : "default"}
@@ -211,6 +232,14 @@ const UserProfilePage = () => {
                                             Follow
                                         </>
                                     )}
+                                </Button>
+                                <Button
+                                    onClick={() => navigate(`/dashboard/messages?userId=${profile.id}`)}
+                                    variant="secondary"
+                                    className="rounded-full px-8"
+                                >
+                                    <MessageCircle className="w-4 h-4 mr-2" />
+                                    Message
                                 </Button>
                             </div>
                         )}
@@ -279,30 +308,57 @@ const UserProfilePage = () => {
 
                                 {/* Grid */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {userPublicLetters.length > 0 ? (
-                                        userPublicLetters.map((note, index) => (
-                                            <motion.div
-                                                key={note.id}
-                                                initial={{ opacity: 0, y: 20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: index * 0.05 }}
-                                            >
-                                                <Notecard note={note} onClick={handleNoteClick} />
-                                            </motion.div>
-                                        ))
-                                    ) : (
-                                        <div className="col-span-full text-center py-20">
-                                            <p className="text-muted-foreground font-light text-lg">
-                                                No public letters published yet.
-                                            </p>
-                                        </div>
-                                    )}
+                                    {activeTab === 'Letters' ? (
+                                        userPublicLetters.length > 0 ? (
+                                            userPublicLetters.map((note, index) => (
+                                                <motion.div
+                                                    key={note.id}
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: index * 0.05 }}
+                                                >
+                                                    <Notecard note={note} onClick={handleNoteClick} />
+                                                </motion.div>
+                                            ))
+                                        ) : (
+                                            <div className="col-span-full text-center py-20">
+                                                <p className="text-muted-foreground font-light text-lg">
+                                                    No public letters published yet.
+                                                </p>
+                                            </div>
+                                        )
+                                    ) : activeTab === 'Repost' ? (
+                                        publicReposts.length > 0 ? (
+                                            publicReposts.map((note, index) => (
+                                                <motion.div
+                                                    key={note.id}
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: index * 0.05 }}
+                                                >
+                                                    <Notecard note={note} onClick={handleNoteClick} />
+                                                </motion.div>
+                                            ))
+                                        ) : (
+                                            <div className="col-span-full text-center py-20">
+                                                <p className="text-muted-foreground font-light text-lg">
+                                                    No reposts yet.
+                                                </p>
+                                            </div>
+                                        )
+                                    ) : null}
                                 </div>
                             </>
                         )}
                     </div>
                 </div>
             </div>
+
+            <LetterViewModal
+                isOpen={isViewModalOpen}
+                onClose={() => setIsViewModalOpen(false)}
+                note={selectedNote}
+            />
 
             <LetterViewModal
                 isOpen={isViewModalOpen}

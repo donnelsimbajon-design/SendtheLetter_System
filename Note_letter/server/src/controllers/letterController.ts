@@ -246,3 +246,84 @@ export const updateLetter = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+export const updateDraft = async (req: AuthRequest, res: Response) => {
+    // Re-use updateLetter logic for drafts
+    return updateLetter(req, res);
+};
+
+export const getScheduledLetters = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user.id;
+        const letters = await Letter.findAll({
+            where: {
+                userId,
+                status: 'scheduled'
+            },
+            order: [['scheduledDate', 'ASC']],
+        });
+        res.json(letters);
+    } catch (error) {
+        console.error('Error fetching scheduled letters:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+export const getTimeCapsules = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user.id;
+        // Time capsules are just scheduled letters (for now, or logic can differ)
+        // Assuming time capsules are a specific 'type' or just handled same as scheduled
+        const letters = await Letter.findAll({
+            where: {
+                userId,
+                type: 'Time Capsule',
+                status: 'scheduled'
+            },
+            order: [['scheduledDate', 'ASC']],
+        });
+        res.json(letters);
+    } catch (error) {
+        console.error('Error fetching time capsules:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+export const archiveLetter = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        const letter = await Letter.findByPk(id);
+
+        if (!letter) {
+            return res.status(404).json({ message: 'Letter not found' });
+        }
+
+        if (letter.userId !== userId) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        await letter.update({ isArchived: true });
+        res.json({ message: 'Letter archived successfully', letter });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+export const getArchivedLetters = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user.id;
+
+        const letters = await Letter.findAll({
+            where: { userId, isArchived: true },
+            order: [['updatedAt', 'DESC']]
+        });
+
+        res.json(letters);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};

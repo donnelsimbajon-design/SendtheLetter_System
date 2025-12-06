@@ -29,13 +29,16 @@ interface NoteState {
     notifications: Notification[];
     isLoading: boolean;
     error: string | null;
+    archived: Note[];
+    fetchArchivedLetters: () => Promise<void>;
+    archiveNote: (id: string) => Promise<void>;
     fetchMyLetters: () => Promise<void>;
     fetchDrafts: () => Promise<void>;
     fetchPublicLetters: () => Promise<void>;
     fetchUserPublicLetters: (username: string | number) => Promise<void>;
     addNote: (note: Omit<Note, 'id' | 'createdAt' | 'authorId'>) => Promise<void>;
-    deleteNote: (id: string) => void;
-    updateNote: (id: string, updates: Partial<Note>) => void;
+    deleteNote: (id: string) => Promise<void>;
+    updateNote: (id: string, updates: Partial<Note>) => Promise<void>;
     toggleReaction: (noteId: string, reaction: string) => void;
     addComment: (letterId: string, content: string) => Promise<void>;
     deleteComment: (letterId: string, commentId: string) => Promise<void>;
@@ -55,6 +58,51 @@ export const useNoteStore = create<NoteState>((set, get) => ({
     notifications: [],
     isLoading: false,
     error: null,
+    archived: [],
+
+    fetchArchivedLetters: async () => {
+        set({ isLoading: true, error: null });
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_URL}/archived`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!response.ok) throw new Error('Failed to fetch archived letters');
+            const data = await response.json();
+            set({ archived: data });
+        } catch (error: any) {
+            set({ error: error.message });
+        } finally {
+            set({ isLoading: false });
+        }
+    },
+
+    archiveNote: async (id) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_URL}/${id}/archive`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (!response.ok) throw new Error('Failed to archive letter');
+
+            // Update local state by removing from all other lists
+            set((state) => ({
+                notes: state.notes.filter((n) => n.id !== id),
+                publicLetters: state.publicLetters.filter((n) => n.id !== id),
+                drafts: state.drafts.filter((n) => n.id !== id),
+                // We don't add to archived here immediately to keep it simple, 
+                // or we can if the backend returns the archived letter. 
+                // Let's refetch archived letters for consistency.
+            }));
+
+            await get().fetchArchivedLetters();
+        } catch (error: any) {
+            console.error('Error archiving letter:', error);
+            throw error;
+        }
+    },
 
     fetchMyLetters: async () => {
         set({ isLoading: true, error: null });
@@ -158,16 +206,53 @@ export const useNoteStore = create<NoteState>((set, get) => ({
         }
     },
 
-    deleteNote: (id) => set((state) => ({
-        notes: state.notes.filter((n) => n.id !== id),
-        publicLetters: state.publicLetters.filter((n) => n.id !== id)
-    })),
+    deleteNote: async (id) => {
+        try {
+            const token = localStorage.getItem('token');
+            await fetch(`${API_URL}/${id}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            set((state) => ({
+                notes: state.notes.filter((n) => n.id !== id),
+                publicLetters: state.publicLetters.filter((n) => n.id !== id),
+                drafts: state.drafts.filter((n) => n.id !== id)
+            }));
+        } catch (error: any) {
+            console.error('Error deleting note:', error);
+        }
+    },
 
-    updateNote: (id, updates) =>
-        set((state) => ({
-            notes: state.notes.map((n) => (n.id === id ? { ...n, ...updates } : n)),
-            publicLetters: state.publicLetters.map((n) => (n.id === id ? { ...n, ...updates } : n)),
-        })),
+    updateNote: async (id, updates) => {
+        set({ isLoading: true, error: null });
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_URL}/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(updates),
+            });
+
+            if (!response.ok) throw new Error('Failed to update letter');
+            const data = await response.json();
+            const updatedLetter = data.letter;
+
+            set((state) => ({
+                notes: state.notes.map((n) => (String(n.id) === String(id) ? updatedLetter : n)),
+                publicLetters: state.publicLetters.map((n) => (String(n.id) === String(id) ? updatedLetter : n)),
+                drafts: state.drafts.map((n) => (String(n.id) === String(id) ? updatedLetter : n)),
+                userPublicLetters: state.userPublicLetters.map((n) => (String(n.id) === String(id) ? updatedLetter : n)),
+            }));
+        } catch (error: any) {
+            set({ error: error.message });
+            throw error;
+        } finally {
+            set({ isLoading: false });
+        }
+    },
 
     toggleReaction: (noteId, reaction) =>
         set((state) => {

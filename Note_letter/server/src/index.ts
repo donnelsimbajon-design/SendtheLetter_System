@@ -12,6 +12,8 @@ import User from './models/User';
 import Letter from './models/Letter';
 import Notification from './models/Notification';
 import Follow from './models/Follow';
+import messageRoutes from './routes/messageRoutes';
+import Message from './models/Message';
 
 dotenv.config();
 
@@ -40,6 +42,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/letters', letterRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/users', followRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Test route
 app.use('/api/test', (req, res) => {
@@ -88,6 +91,11 @@ const startServer = async () => {
 
         Notification.belongsTo(Letter, { foreignKey: 'entityId', as: 'letter' });
 
+        // Message associations
+        // Associations are defined in models/Message.ts, but we ensure they are initialized
+        // User.hasMany(Message, { foreignKey: 'senderId', as: 'sentMessages' });
+        // User.hasMany(Message, { foreignKey: 'receiverId', as: 'receivedMessages' });
+
         // Follow associations - Commented out temporarily due to MySQL key limit
         // User.hasMany(Follow, { foreignKey: 'followerId', as: 'following' });
         // User.hasMany(Follow, { foreignKey: 'followingId', as: 'followers' });
@@ -99,7 +107,7 @@ const startServer = async () => {
         console.log('Database synced (skipped).');
 
         httpServer.listen(PORT, () => {
-            console.log(`Server is running on port ${PORT}`);
+            console.log(`Server is running on http://localhost:${PORT}`);
         });
     } catch (error) {
         console.error('Unable to connect to the database:', error);

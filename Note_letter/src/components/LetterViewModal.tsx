@@ -1,34 +1,59 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent } from './ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from './ui/dialog';
+// VisuallyHidden removed
 import { Button } from './ui/button';
-import { Music, X, Heart, MessageCircle, Send } from 'lucide-react';
+import { Music, X, Heart, MessageCircle, Send, Repeat, PenLine } from 'lucide-react';
 import { Note } from '../types/note';
 import { cn, getImageUrl } from '../lib/utils';
 import { useAuthStore } from '../store/authStore';
 import { useNoteStore } from '../store/noteStore';
 import { formatDistanceToNow } from 'date-fns';
+import socketService from '../services/socketService';
 
 interface LetterViewModalProps {
     isOpen: boolean;
     onClose: () => void;
     note: Note | null;
     onAuthorClick?: (username: string) => void;
+    onEdit?: (note: Note) => void;
 }
 
-import socketService from '../services/socketService';
-
-const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note, onAuthorClick }) => {
+const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note, onAuthorClick, onEdit }) => {
     const user = useAuthStore((state) => state.user);
     const { toggleLike, addComment } = useNoteStore();
     const [commentText, setCommentText] = useState('');
     const [comments, setComments] = useState<any[]>([]);
     const [isLiked, setIsLiked] = useState(false);
     const [likeCount, setLikeCount] = useState(0);
+    const [isReposted, setIsReposted] = useState(false);
+    const [repostCount, setRepostCount] = useState(0);
 
     useEffect(() => {
         if (note && isOpen) {
             setIsLiked(note.isLikedByUser || false);
             setLikeCount(note.likeCount || 0);
+
+            // Initialize repost count from note if available, or fetch
+            setRepostCount(note.repostCount || 0);
+
+            // Check if user has reposted
+            const checkRepostStatus = async () => {
+                if (!user) return;
+                try {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch(`http://localhost:5000/api/letters/${note.id}/repost/status`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        setIsReposted(data.reposted);
+                        setRepostCount(data.count);
+                    }
+                } catch (error) {
+                    console.error('Error checking repost status:', error);
+                }
+            };
+            checkRepostStatus();
 
             // Join real-time room
             socketService.joinLetterRoom(String(note.id));
@@ -76,6 +101,26 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
         }
     }, [note, isOpen]);
 
+    const handleRepost = async () => {
+        if (!note || !user) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:5000/api/letters/${note.id}/repost`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setIsReposted(data.reposted);
+                setRepostCount(prev => data.reposted ? prev + 1 : prev - 1);
+            }
+        } catch (error) {
+            console.error('Error toggling repost:', error);
+        }
+    };
+
     const handleLike = async () => {
         if (!note || !user) return;
 
@@ -121,6 +166,7 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-4xl h-[90vh] p-0 gap-0 bg-[#fdfbf7] overflow-hidden flex flex-col md:flex-row">
+                <DialogTitle className="sr-only">Letter from {note.isAnonymous ? 'A Friend' : note.authorName || 'Unknown'}</DialogTitle>
 
                 {/* Left Side: Letter Content */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar border-r border-stone-200">
@@ -142,9 +188,26 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                                 </a>
                             )}
                         </div>
-                        <Button variant="ghost" onClick={onClose} className="md:hidden text-stone-500">
-                            <X size={20} />
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            {/* Edit Button for Author */}
+                            {user?.id === (typeof note.authorId === 'string' ? parseInt(note.authorId) : note.authorId) && onEdit && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        onClose();
+                                        onEdit(note);
+                                    }}
+                                    className="text-stone-500 hover:text-stone-800"
+                                >
+                                    <PenLine size={18} />
+                                    <span className="sr-only">Edit Letter</span>
+                                </Button>
+                            )}
+                            <Button variant="ghost" onClick={onClose} className="md:hidden text-stone-500">
+                                <X size={20} />
+                            </Button>
+                        </div>
                     </div>
 
                     <div className={cn("p-8 md:p-12 space-y-8", note.font || 'font-serif')}>
@@ -222,6 +285,13 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                         <h3 className="font-semibold text-stone-800">Comments</h3>
                         <div className="flex items-center gap-4">
                             <button
+                                onClick={handleRepost}
+                                className={cn("flex items-center gap-1.5 transition-colors", isReposted ? "text-green-500" : "text-stone-600 hover:text-green-500")}
+                            >
+                                <Repeat size={20} className={cn(isReposted && "fill-green-500 text-green-500")} />
+                                <span className="text-sm font-medium">{repostCount}</span>
+                            </button>
+                            <button
                                 onClick={handleLike}
                                 className="flex items-center gap-1.5 text-stone-600 hover:text-rose-500 transition-colors"
                             >
@@ -288,7 +358,7 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                                 value={commentText}
                                 onChange={(e) => setCommentText(e.target.value)}
                                 placeholder="Write a comment..."
-                                className="flex-1 bg-stone-100 border-none rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                className="flex-1 bg-stone-100 border-none rounded-full px-4 py-2.5 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                             />
                             <button
                                 type="submit"

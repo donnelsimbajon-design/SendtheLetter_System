@@ -1,3 +1,4 @@
+
 import { Request, Response } from 'express';
 import Follow from '../models/Follow';
 import User from '../models/User';
@@ -71,6 +72,43 @@ export const getUserProfile = async (req: Request, res: Response) => {
         });
     } catch (error) {
         console.error('Error fetching user profile:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+export const getUserById = async (req: Request, res: Response) => {
+    try {
+        const { userId } = req.params;
+
+        // Parse ID carefully
+        const id = parseInt(userId);
+        if (isNaN(id)) {
+            return res.status(400).json({ message: 'Invalid User ID' });
+        }
+
+        const user = await User.findByPk(id, {
+            attributes: ['id', 'username', 'email', 'createdAt', 'bio', 'location', 'avatar', 'coverImage'],
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Similar to profile but maybe simpler structure is fine, 
+        // reusing same logic for robust profile availability
+        const followerCount = await Follow.count({ where: { followingId: user.id } });
+        const followingCount = await Follow.count({ where: { followerId: user.id } });
+
+        res.json({
+            ...user.toJSON(),
+            followerCount,
+            followingCount,
+            // isFollowing logic could be added if needed, but for minimal fetch it's okay.
+            // Let's keep it simple for now.
+        });
+
+    } catch (error) {
+        console.error('Error fetching user by ID:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };

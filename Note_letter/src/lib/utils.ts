@@ -14,7 +14,7 @@ export function getImageUrl(path: string | null | undefined): string {
     if (!path) return '';
 
     // If already a full URL, return as is
-    if (path.startsWith('http://') || path.startsWith('https://')) {
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
         return path;
     }
 

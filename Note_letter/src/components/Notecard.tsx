@@ -5,6 +5,8 @@ import clsx from 'clsx';
 import { useNoteStore } from '../store/noteStore';
 import { useAuthStore } from '../store/authStore';
 import { getImageUrl } from '../lib/utils';
+import { useState } from 'react';
+import DeleteConfirmDialog from './DeleteConfirmDialog';
 
 interface NotecardProps {
     note: Note;
@@ -22,8 +24,9 @@ const backgroundGradients = [
 ];
 
 const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
-    const { deleteNote, toggleLike } = useNoteStore();
+    const { deleteNote, toggleLike, archiveNote } = useNoteStore();
     const user = useAuthStore((state) => state.user);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
     // Check if current user is the author
     const isAuthor = user?.id === (typeof note.authorId === 'string' ? parseInt(note.authorId) : note.authorId);
@@ -122,7 +125,8 @@ const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
-                            deleteNote(note.id);
+                            // Show dialog instead of immediate delete
+                            setIsDeleteDialogOpen(true);
                         }}
                         className={clsx("p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all", iconColor, "hover:text-red-500")}
                         title="Delete note"
@@ -171,7 +175,15 @@ const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
                     </button>
                 </div>
             </div>
-        </div>
+            {/* Delete Confirmation Dialog */}
+            <DeleteConfirmDialog
+                isOpen={isDeleteDialogOpen}
+                onClose={() => setIsDeleteDialogOpen(false)}
+                onArchive={() => archiveNote(String(note.id))}
+                onDelete={() => deleteNote(String(note.id))}
+                title={`Delete "${note.title || 'Untitled'}"?`}
+            />
+        </div >
     );
 };
 

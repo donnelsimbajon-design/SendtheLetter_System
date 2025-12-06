@@ -18,6 +18,12 @@ interface LetterAttributes {
     font?: string;
     isAnonymous?: boolean;
     imageUrl?: string;
+    address?: string;
+    latitude?: number;
+    longitude?: number;
+    openDate?: Date;
+    isTimeCapsule?: boolean;
+    isArchived?: boolean;
 }
 
 interface LetterCreationAttributes extends Optional<LetterAttributes, 'id'> { }
@@ -38,6 +44,12 @@ class Letter extends Model<LetterAttributes, LetterCreationAttributes> implement
     public font?: string;
     public isAnonymous?: boolean;
     public imageUrl?: string;
+    public address?: string;
+    public latitude?: number;
+    public longitude?: number;
+    openDate?: Date;
+    public isTimeCapsule?: boolean;
+    public isArchived?: boolean;
 
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
@@ -108,8 +120,28 @@ Letter.init(
             defaultValue: false,
         },
         imageUrl: {
+            type: DataTypes.TEXT('long'),
+            allowNull: true,
+        },
+        address: {
             type: DataTypes.STRING(500),
             allowNull: true,
+        },
+        latitude: {
+            type: DataTypes.DECIMAL(10, 8),
+            allowNull: true,
+        },
+        longitude: {
+            type: DataTypes.DECIMAL(11, 8),
+            allowNull: true,
+        },
+        openDate: {
+            type: DataTypes.DATE,
+            allowNull: true,
+        },
+        isTimeCapsule: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
         },
     },
     {

@@ -1,0 +1,5 @@
+-- Add location columns to letters table
+ALTER TABLE letters 
+ADD COLUMN IF NOT EXISTS address VARCHAR(500) NULL,
+ADD COLUMN IF NOT EXISTS latitude DECIMAL(10, 8) NULL,
+ADD COLUMN IF NOT EXISTS longitude DECIMAL(11, 8) NULL;

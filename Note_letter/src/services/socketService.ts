@@ -59,6 +59,14 @@ class SocketService {
         this.socket?.on('new_notification', callback);
     }
 
+    onNewMessage(callback: (message: any) => void) {
+        this.socket?.on('new_message', callback);
+    }
+
+    offNewMessage() {
+        this.socket?.off('new_message');
+    }
+
     offNewComment() {
         this.socket?.off('new_comment');
     }

@@ -11,9 +11,9 @@ interface MapDashboardProps {
 }
 
 const MapDashboard = ({ notes, onNoteClick }: MapDashboardProps) => {
-    // Default center (can be user's location or a general center)
-    const defaultCenter: [number, number] = [20, 0]; // World view roughly
-    const defaultZoom = 2;
+    // Default center - Butuan City, Philippines
+    const defaultCenter: [number, number] = [8.9475, 125.5406];
+    const defaultZoom = 13;
 
     return (
         <div className="h-[calc(100vh-120px)] w-full rounded-3xl overflow-hidden border border-stone-200 shadow-sm relative z-0">
@@ -26,14 +26,20 @@ const MapDashboard = ({ notes, onNoteClick }: MapDashboardProps) => {
             >
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
                 {notes.map((note) => {
-                    // Generate random coordinates if not present (Mocking for now as backend doesn't seem to have coords)
-                    // In a real app, you'd use note.latitude and note.longitude
-                    // For demo purposes, we'll hash the ID to get a consistent random position
-                    const lat = (Math.sin(Number(note.id)) * 180) % 85;
-                    const lng = (Math.cos(Number(note.id)) * 360) % 180;
+                    // Use actual coordinates if available, otherwise use random positions in Butuan area
+                    let lat, lng;
+                    if (note.latitude && note.longitude) {
+                        lat = Number(note.latitude);
+                        lng = Number(note.longitude);
+                    } else {
+                        // Random position in Butuan City area (8.9-9.0 lat, 125.5-125.6 lng)
+                        const hashValue = Math.abs(Number(note.id) || 0);
+                        lat = 8.9 + (Math.sin(hashValue) * 0.05 + 0.05);
+                        lng = 125.5 + (Math.cos(hashValue) * 0.05 + 0.05);
+                    }
 
                     return (
                         <Marker
@@ -48,11 +54,13 @@ const MapDashboard = ({ notes, onNoteClick }: MapDashboardProps) => {
                                 <div className="min-w-[200px] p-2 cursor-pointer" onClick={() => onNoteClick(note)}>
                                     <div className="flex items-center gap-2 mb-2">
                                         <div className="w-8 h-8 rounded-full bg-stone-200 overflow-hidden">
-                                            {note.authorAvatar ? (
-                                                <img src={getImageUrl(note.authorAvatar)} alt="" className="w-full h-full object-cover" />
+                                            {note.authorName ? (
+                                                <div className="w-full h-full flex items-center justify-center text-xs font-bold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                                                    {note.authorName[0] || '?'}
+                                                </div>
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center text-xs font-bold text-stone-500">
-                                                    {note.authorName?.[0] || '?'}
+                                                    ?
                                                 </div>
                                             )}
                                         </div>

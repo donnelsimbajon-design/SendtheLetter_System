@@ -1,5 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import socketService from './services/socketService';
 import { useAuthStore } from './store/authStore';
 import DashboardLayout from './components/DashboardLayout';
 import UserNotePage from './Pages/user/UserNotePage';
@@ -21,6 +23,16 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
+    const { user, isAuthenticated } = useAuthStore();
+
+    useEffect(() => {
+        if (isAuthenticated && user?.id) {
+            socketService.connect(user.id);
+        } else {
+            socketService.disconnect();
+        }
+    }, [isAuthenticated, user]);
+
     return (
         <Router>
             <Routes>

@@ -1,46 +1,207 @@
-import { useState } from 'react';
-import { useChatStore } from '../../store/chatStore';
-import { Send, User, Search, MoreVertical, Phone, Video, Smile, Paperclip } from 'lucide-react';
+
+import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Send, User, Search, Phone, Video, MoreVertical, Paperclip, Smile } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuthStore } from '../../store/authStore';
+import socketService from '../../services/socketService';
+import axios from 'axios';
+import { getImageUrl } from '../../lib/utils';
+import { cn } from '../../lib/utils'; // Try to import cn if available, or just use template literals
 
-// Mock contacts data
-const mockContacts = [
-    { id: '1', name: 'John Doe', lastMessage: 'Hey, how are you?', timestamp: new Date(), avatar: null, online: true },
-    { id: '2', name: 'Jane Smith', lastMessage: 'See you tomorrow!', timestamp: new Date(Date.now() - 3600000), avatar: null, online: false },
-    { id: '3', name: 'Mike Johnson', lastMessage: 'Thanks for the help', timestamp: new Date(Date.now() - 7200000), avatar: null, online: true },
-];
+// Fallback cn if not available
+const classNames = (...classes: (string | undefined | null | false)[]) => classes.filter(Boolean).join(' ');
+
+interface Conversation {
+    user: {
+        id: number;
+        username: string;
+        avatar?: string;
+        location?: string;
+    };
+    lastMessage: string;
+    lastMessageTime: string;
+    unreadCount: number;
+    isOnline?: boolean;
+}
+
+interface Message {
+    id: number;
+    senderId: number;
+    receiverId: number;
+    content: string;
+    isRead: boolean;
+    createdAt: string;
+    sender?: {
+        id: number;
+        username: string;
+        avatar?: string;
+    };
+}
 
 const Messages = () => {
-    const { messages, sendMessage } = useChatStore();
+    const user = useAuthStore((state) => state.user);
+    const [searchParams] = useSearchParams();
+    const initialUserId = searchParams.get('userId');
+
+    const [conversations, setConversations] = useState<Conversation[]>([]);
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [selectedUser, setSelectedUser] = useState<Conversation['user'] | null>(null);
     const [newMessage, setNewMessage] = useState('');
-    const [selectedContact, setSelectedContact] = useState(mockContacts[0]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [isLoadingConvos, setIsLoadingConvos] = useState(true);
 
-    const handleSend = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newMessage.trim()) return;
+    const messagesEndRef = useRef<HTMLDivElement>(null);
 
-        sendMessage({
-            id: crypto.randomUUID(),
-            senderId: 'current-user',
-            receiverId: selectedContact.id,
-            content: newMessage,
-            timestamp: new Date(),
-        });
-        setNewMessage('');
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
-    const filteredContacts = mockContacts.filter(contact =>
-        contact.name.toLowerCase().includes(searchQuery.toLowerCase())
+    // Fetch conversations on mount
+    useEffect(() => {
+        fetchConversations();
+
+        // Listen for new messages globally to update conversation list
+        const handleNewMessage = (message: any) => {
+            // Update conversation list logic would go here
+            // For now, simplest is to refetch, or optimistically update
+            fetchConversations();
+
+            // If message belongs to current chat, append it
+            if (selectedUser && (message.senderId === selectedUser.id || message.receiverId === selectedUser.id)) {
+                setMessages((prev) => {
+                    // dedupe just in case
+                    if (prev.some(m => m.id === message.id)) return prev;
+                    return [...prev, message];
+                });
+            }
+        };
+
+        socketService.onNewMessage(handleNewMessage);
+
+        return () => {
+            socketService.offNewMessage();
+        };
+    }, [selectedUser]); // Dependency on selectedUser to know if we should append
+
+    const fetchConversations = async () => {
+        try {
+            const response = await axios.get('http://localhost:5000/api/messages/conversations', {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            });
+            setConversations(response.data);
+            setIsLoadingConvos(false);
+        } catch (error) {
+            console.error('Error fetching conversations:', error);
+            setIsLoadingConvos(false);
+        }
+    };
+
+    // Handle initial user selection from URL
+    // Handle initial user selection from URL
+    useEffect(() => {
+        const initChat = async () => {
+            if (initialUserId && !selectedUser) {
+                // Check if user is already in conversations
+                const existingConvo = conversations.find(c => c.user.id === parseInt(initialUserId));
+                if (existingConvo) {
+                    setSelectedUser(existingConvo.user);
+                } else {
+                    // Fetch user details if not in convos (new chat)
+                    try {
+                        const response = await axios.get(`http://localhost:5000/api/users/id/${initialUserId}`, {
+                            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                        });
+
+                        if (response.data) {
+                            setSelectedUser(response.data);
+                        }
+                    } catch (e) {
+                        console.error("User not found by ID", e);
+                    }
+                }
+            }
+        };
+
+        if (!isLoadingConvos) {
+            initChat();
+        }
+    }, [initialUserId, conversations, isLoadingConvos]);
+
+    // Fetch messages when a user is selected
+    useEffect(() => {
+        if (selectedUser) {
+            fetchMessages(selectedUser.id);
+        }
+    }, [selectedUser]);
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
+    const fetchMessages = async (otherUserId: number) => {
+        try {
+            const response = await axios.get(`http://localhost:5000/api/messages/${otherUserId}`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            });
+            setMessages(response.data);
+
+            // Mark as read (optional, can be separate call)
+            await axios.post('http://localhost:5000/api/messages/read', {
+                senderId: otherUserId
+            }, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            });
+
+            // Update convos unread count locally
+            setConversations(prev => prev.map(c =>
+                c.user.id === otherUserId ? { ...c, unreadCount: 0 } : c
+            ));
+
+        } catch (error) {
+            console.error('Error fetching messages:', error);
+        }
+    };
+
+    const handleSend = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newMessage.trim() || !selectedUser) return;
+
+        const content = newMessage;
+        setNewMessage('');
+
+        try {
+            const response = await axios.post('http://localhost:5000/api/messages/send', {
+                receiverId: selectedUser.id,
+                content
+            }, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            });
+
+            setMessages((prev) => [...prev, response.data]);
+
+            // Re-fetch conversations to update last message snippet
+            fetchConversations();
+        } catch (error) {
+            console.error('Error sending message:', error);
+        }
+    };
+
+    const filteredConversations = conversations.filter(c =>
+        c.user.username.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (
-        <div className="h-[calc(100vh-8rem)] flex gap-4">
+        <div className="h-[calc(100vh-4rem)] flex gap-0 md:gap-4 md:p-4 bg-background">
             {/* Contacts Sidebar */}
-            <div className="w-80 bg-card/50 backdrop-blur-sm rounded-2xl border border-white/5 flex flex-col overflow-hidden">
+            <div className={classNames(
+                "w-full md:w-80 bg-card/50 backdrop-blur-sm md:rounded-2xl border-r md:border border-border/50 flex flex-col overflow-hidden",
+                selectedUser ? "hidden md:flex" : "flex"
+            )}>
                 {/* Search Header */}
-                <div className="p-4 border-b border-white/5">
+                <div className="p-4 border-b border-border/50">
+                    <h2 className="text-xl font-bold mb-4 px-1">Messages</h2>
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                         <input
@@ -48,158 +209,197 @@ const Messages = () => {
                             placeholder="Search contacts..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-background/50 rounded-lg border border-white/5 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
+                            className="w-full pl-10 pr-4 py-2 bg-muted/50 rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
                         />
                     </div>
                 </div>
 
                 {/* Contacts List */}
                 <div className="flex-1 overflow-y-auto">
-                    {filteredContacts.map((contact) => (
-                        <motion.button
-                            key={contact.id}
-                            onClick={() => setSelectedContact(contact)}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            className={`w-full p-4 flex items-center gap-3 border-b border-white/5 transition-colors ${selectedContact.id === contact.id
-                                    ? 'bg-primary/10 border-l-4 border-l-primary'
-                                    : 'hover:bg-white/5'
-                                }`}
+                    {filteredConversations.length === 0 && !isLoadingConvos && (
+                        <div className="p-8 text-center text-muted-foreground text-sm">
+                            <p>No conversations found.</p>
+                        </div>
+                    )}
+                    {filteredConversations.map((convo) => (
+                        <button
+                            key={convo.user.id}
+                            onClick={() => setSelectedUser(convo.user)}
+                            className={classNames(
+                                "w-full p-4 flex items-center gap-3 border-b border-border/40 transition-colors hover:bg-muted/50",
+                                selectedUser?.id === convo.user.id ? "bg-primary/5 border-l-4 border-l-primary" : "border-l-4 border-l-transparent"
+                            )}
                         >
                             <div className="relative">
-                                <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-purple-500/20 rounded-full flex items-center justify-center">
-                                    <User size={24} className="text-primary" />
+                                <div className="w-12 h-12 rounded-full overflow-hidden bg-muted flex items-center justify-center border border-border">
+                                    {convo.user.avatar ? (
+                                        <img src={getImageUrl(convo.user.avatar)} alt={convo.user.username} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <User size={20} className="text-muted-foreground" />
+                                    )}
                                 </div>
-                                {contact.online && (
+                                {convo.isOnline && (
                                     <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-card" />
                                 )}
                             </div>
                             <div className="flex-1 text-left min-w-0">
                                 <div className="flex items-center justify-between mb-1">
-                                    <h4 className="font-semibold text-sm truncate">{contact.name}</h4>
-                                    <span className="text-xs text-muted-foreground">
-                                        {format(contact.timestamp, 'HH:mm')}
+                                    <h4 className="font-semibold text-sm truncate">{convo.user.username}</h4>
+                                    <span className="text-xs text-muted-foreground/70">
+                                        {convo.lastMessageTime ? format(new Date(convo.lastMessageTime), 'HH:mm') : ''}
                                     </span>
                                 </div>
-                                <p className="text-xs text-muted-foreground truncate">{contact.lastMessage}</p>
+                                <div className="flex justify-between items-center gap-2">
+                                    <p className={classNames(
+                                        "text-xs truncate flex-1",
+                                        convo.unreadCount > 0 ? "text-foreground font-medium" : "text-muted-foreground"
+                                    )}>
+                                        {convo.lastMessage || 'Sent an attachment'}
+                                    </p>
+                                    {convo.unreadCount > 0 && (
+                                        <span className="min-w-[1.25rem] h-5 px-1.5 flex items-center justify-center bg-primary text-primary-foreground text-[10px] font-bold rounded-full">
+                                            {convo.unreadCount}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
-                        </motion.button>
+                        </button>
                     ))}
                 </div>
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 flex flex-col bg-card/30 backdrop-blur-sm rounded-2xl border border-white/5 overflow-hidden">
-                {/* Chat Header */}
-                <div className="p-4 border-b border-white/5 flex items-center justify-between bg-card/50">
-                    <div className="flex items-center gap-3">
-                        <div className="relative">
-                            <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-purple-500/20 rounded-full flex items-center justify-center">
-                                <User size={20} className="text-primary" />
-                            </div>
-                            {selectedContact.online && (
-                                <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-card" />
-                            )}
-                        </div>
-                        <div>
-                            <h3 className="font-semibold">{selectedContact.name}</h3>
-                            <p className="text-xs text-muted-foreground">
-                                {selectedContact.online ? 'Online' : 'Offline'}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <button className="p-2 hover:bg-white/5 rounded-lg transition-colors">
-                            <Phone size={20} className="text-muted-foreground" />
-                        </button>
-                        <button className="p-2 hover:bg-white/5 rounded-lg transition-colors">
-                            <Video size={20} className="text-muted-foreground" />
-                        </button>
-                        <button className="p-2 hover:bg-white/5 rounded-lg transition-colors">
-                            <MoreVertical size={20} className="text-muted-foreground" />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Messages Area */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-transparent to-black/5">
-                    <AnimatePresence>
-                        {messages.map((msg, index) => (
-                            <motion.div
-                                key={msg.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ delay: index * 0.05 }}
-                                className={`flex ${msg.senderId === 'current-user' ? 'justify-end' : 'justify-start'}`}
-                            >
-                                <div
-                                    className={`max-w-[70%] ${msg.senderId === 'current-user'
-                                            ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground rounded-2xl rounded-br-md'
-                                            : 'bg-white/10 backdrop-blur-md text-foreground rounded-2xl rounded-bl-md border border-white/10'
-                                        } px-4 py-2.5 shadow-lg`}
-                                >
-                                    <p className="leading-relaxed">{msg.content}</p>
-                                    <p
-                                        className={`text-xs mt-1 ${msg.senderId === 'current-user'
-                                                ? 'text-primary-foreground/70 text-right'
-                                                : 'text-muted-foreground text-right'
-                                            }`}
-                                    >
-                                        {format(new Date(msg.timestamp), 'HH:mm')}
-                                    </p>
+            {selectedUser ? (
+                <div className="flex-1 flex flex-col bg-card/30 backdrop-blur-sm md:rounded-2xl md:border border-border/50 overflow-hidden h-full">
+                    {/* Chat Header */}
+                    <div className="p-4 border-b border-border/50 flex items-center justify-between bg-card/80 backdrop-blur-md sticky top-0 z-10">
+                        <div className="flex items-center gap-3">
+                            <button className="md:hidden" onClick={() => setSelectedUser(null)}>
+                                <span className="text-xl">←</span>
+                            </button>
+                            <div className="relative">
+                                <div className="w-10 h-10 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                                    {selectedUser.avatar ? (
+                                        <img src={getImageUrl(selectedUser.avatar)} alt={selectedUser.username} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <User size={20} className="text-muted-foreground" />
+                                    )}
                                 </div>
-                            </motion.div>
-                        ))}
-                    </AnimatePresence>
-                    {messages.length === 0 && (
-                        <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
-                            <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-4">
-                                <Send className="text-muted-foreground" size={32} />
+                                {selectedUser.isOnline && (
+                                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-card" />
+                                )}
                             </div>
-                            <h3 className="text-lg font-semibold mb-2">No messages yet</h3>
-                            <p className="text-sm">Start a conversation with {selectedContact.name}!</p>
+                            <div>
+                                <h3 className="font-semibold">{selectedUser.username}</h3>
+                                <p className="text-xs text-muted-foreground">
+                                    {selectedUser.location || 'Online'}
+                                </p>
+                            </div>
                         </div>
-                    )}
-                </div>
-
-                {/* Input Area */}
-                <form onSubmit={handleSend} className="p-4 border-t border-white/5 bg-card/50">
-                    <div className="flex items-center gap-2">
-                        <button
-                            type="button"
-                            className="p-2 hover:bg-white/5 rounded-lg transition-colors text-muted-foreground"
-                        >
-                            <Paperclip size={20} />
-                        </button>
-                        <div className="relative flex-1">
-                            <input
-                                type="text"
-                                value={newMessage}
-                                onChange={(e) => setNewMessage(e.target.value)}
-                                placeholder="Type your message..."
-                                className="w-full bg-background/50 px-4 py-3 pr-12 rounded-xl border border-white/5 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
-                            />
-                            <button
-                                type="button"
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                                <Smile size={20} />
+                        <div className="flex items-center gap-1">
+                            {/* Actions (Phone/Video) could go here */}
+                            <button className="p-2 hover:bg-muted rounded-full transition-colors">
+                                <MoreVertical size={20} className="text-muted-foreground" />
                             </button>
                         </div>
-                        <motion.button
-                            type="submit"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="p-3 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground rounded-xl hover:shadow-lg hover:shadow-primary/25 transition-all disabled:opacity-50"
-                            disabled={!newMessage.trim()}
-                        >
-                            <Send size={20} />
-                        </motion.button>
                     </div>
-                </form>
-            </div>
-        </div>
+
+                    {/* Messages Area */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/5 custom-scrollbar">
+                        {messages.length === 0 && (
+                            <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50">
+                                <Send size={48} className="mb-4" />
+                                <p>Start the conversation!</p>
+                            </div>
+                        )}
+                        {messages.map((msg, index) => {
+                            const isMe = msg.senderId === user?.id;
+                            const showAvatar = !isMe && (index === 0 || messages[index - 1].senderId !== msg.senderId);
+
+                            return (
+                                <motion.div
+                                    key={msg.id || index}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className={`flex items-end gap-2 ${isMe ? 'justify-end' : 'justify-start'}`}
+                                >
+                                    {!isMe && (
+                                        <div className="w-8 h-8 shrink-0 pb-1">
+                                            {showAvatar && (
+                                                <div className="w-8 h-8 rounded-full overflow-hidden bg-muted border border-border">
+                                                    {msg.sender?.avatar ? (
+                                                        <img src={getImageUrl(msg.sender.avatar)} alt="avatar" className="w-full h-full object-cover" />
+                                                    ) : selectedUser.avatar ? ( // Fallback to selected user avatar if message sender info missing
+                                                        <img src={getImageUrl(selectedUser.avatar)} alt="avatar" className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center"><User size={12} /></div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    <div
+                                        className={classNames(
+                                            "max-w-[75%] px-4 py-2.5 shadow-sm text-sm relative group",
+                                            isMe
+                                                ? "bg-primary text-primary-foreground rounded-2xl rounded-tr-sm"
+                                                : "bg-card border border-border/50 text-foreground rounded-2xl rounded-tl-sm"
+                                        )}
+                                    >
+                                        <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                                        <p className={classNames(
+                                            "text-[10px] mt-1 text-right opacity-70",
+                                            isMe ? "text-primary-foreground" : "text-muted-foreground"
+                                        )}>
+                                            {format(new Date(msg.createdAt), 'HH:mm')}
+                                        </p>
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
+                        <div ref={messagesEndRef} />
+                    </div>
+
+                    {/* Input Area */}
+                    <form onSubmit={handleSend} className="p-4 border-t border-border/50 bg-card/50">
+                        <div className="flex items-center gap-3">
+                            <button type="button" className="p-2 text-muted-foreground hover:bg-muted rounded-full transition-colors">
+                                <Paperclip size={20} />
+                            </button>
+                            <div className="relative flex-1">
+                                <input
+                                    type="text"
+                                    value={newMessage}
+                                    onChange={(e) => setNewMessage(e.target.value)}
+                                    placeholder="Type a message..."
+                                    className="w-full bg-muted/50 px-4 py-3 pr-10 rounded-full border-none focus:outline-none focus:ring-1 focus:ring-primary/30 text-sm text-foreground placeholder:text-muted-foreground"
+                                />
+                                <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                                    <Smile size={20} />
+                                </button>
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={!newMessage.trim()}
+                                className="p-3 bg-primary text-primary-foreground rounded-full hover:shadow-lg hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95"
+                            >
+                                <Send size={20} className="ml-0.5" />
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            ) : (
+                <div className="flex-1 hidden md:flex flex-col items-center justify-center bg-card/30 backdrop-blur-sm rounded-2xl border border-border/50 text-muted-foreground">
+                    <div className="w-24 h-24 bg-muted/50 rounded-full flex items-center justify-center mb-6">
+                        <Send size={40} className="text-muted-foreground/50 ml-2" />
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2">Your Messages</h3>
+                    <p>Select a contact to start chatting</p>
+                </div>
+            )
+            }
+        </div >
     );
 };
 
