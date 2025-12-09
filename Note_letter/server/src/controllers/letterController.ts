@@ -91,7 +91,7 @@ export const getPublicLetters = async (req: Request, res: Response) => {
                 {
                     model: User,
                     as: 'user',
-                    attributes: ['id', 'username'],
+                    attributes: ['id', 'username', 'avatar'],
                 },
             ],
             order: [['createdAt', 'DESC']],
@@ -116,6 +116,7 @@ export const getPublicLetters = async (req: Request, res: Response) => {
                 return {
                     ...letterData,
                     authorName: letterData.user?.username || 'Unknown',
+                    authorAvatar: letterData.user?.avatar || null,
                     authorId: letterData.user?.id || null,
                     likeCount,
                     commentCount,
@@ -160,7 +161,7 @@ export const getUserPublicLetters = async (req: Request, res: Response) => {
                 {
                     model: User,
                     as: 'user',
-                    attributes: ['id', 'username'],
+                    attributes: ['id', 'username', 'avatar'],
                 },
             ],
             order: [['createdAt', 'DESC']],
@@ -185,6 +186,7 @@ export const getUserPublicLetters = async (req: Request, res: Response) => {
                 return {
                     ...letterData,
                     authorName: letterData.user?.username || 'Unknown',
+                    authorAvatar: letterData.user?.avatar || null,
                     authorId: letterData.user?.id || null,
                     likeCount,
                     commentCount,

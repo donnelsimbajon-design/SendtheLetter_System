@@ -16,6 +16,7 @@ export interface Note {
     isPublic: boolean;
     authorId: string | number; // Backend uses number
     authorName?: string; // Added for frontend display
+    authorAvatar?: string; // Added for profile picture
     createdAt: Date | string; // Backend returns string
     reactions: Record<string, number>;
     spotifyLink?: string;

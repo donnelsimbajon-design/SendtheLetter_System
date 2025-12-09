@@ -2,6 +2,7 @@
 import { Request, Response } from 'express';
 import Follow from '../models/Follow';
 import User from '../models/User';
+import Notification from '../models/Notification';
 import sequelize from '../config/database';
 
 interface AuthRequest extends Request {
@@ -25,7 +26,29 @@ export const toggleFollow = async (req: AuthRequest, res: Response) => {
             await existingFollow.destroy();
             return res.json({ message: 'Unfollowed', isFollowing: false });
         } else {
-            await Follow.create({ followerId, followingId: parseInt(followingId) });
+            const newFollow = await Follow.create({ followerId, followingId: parseInt(followingId) });
+
+            // Create Notification
+            try {
+                const notification = await Notification.create({
+                    userId: parseInt(followingId), // Recipient
+                    actorId: followerId, // Triggered by
+                    type: 'follow',
+                    entityId: newFollow.id, // The follow info
+                });
+
+                // Socket.io
+                const io = (req as any).app.get('io');
+                if (io) {
+                    const notificationWithDetails = await Notification.findByPk(notification.id, {
+                        include: [{ model: User, as: 'actor', attributes: ['id', 'username', 'avatar'] }]
+                    });
+                    io.to(`user_${followingId}`).emit('new_notification', notificationWithDetails);
+                }
+            } catch (err) {
+                console.error('Error creating follow notification:', err);
+            }
+
             return res.json({ message: 'Followed', isFollowing: true });
         }
     } catch (error) {

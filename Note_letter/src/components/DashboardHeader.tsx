@@ -105,11 +105,60 @@ const DashboardHeader = () => {
                                 ) : (
                                     notifications.map(n => (
                                         <div key={n.id} className="p-3 hover:bg-stone-50 transition-colors border-b border-stone-50 last:border-0">
-                                            <p className="text-sm text-stone-800 leading-snug">
-                                                <span className="font-bold">{n.actor?.username || 'Someone'}</span>
-                                                {n.type === 'like' ? ' liked your letter ' : ' commented on your letter '}
-                                                <span className="font-medium">"{n.letter?.title || 'Untitled'}"</span>
-                                            </p>
+                                            <div className="flex flex-col gap-2">
+                                                <p className="text-sm text-stone-800 leading-snug">
+                                                    <Link to={`/dashboard/profile/${n.actor?.username}`} onClick={() => setIsNotificationOpen(false)} className="font-bold hover:underline">
+                                                        {n.actor?.username || 'Someone'}
+                                                    </Link>
+                                                    {n.type === 'like' ? (
+                                                        <> liked your letter <span className="font-medium">"{n.letter?.title || 'Untitled'}"</span></>
+                                                    ) : n.type === 'friend_request' ? (
+                                                        <span> sent you a friend request</span>
+                                                    ) : n.type === 'follow' ? (
+                                                        <span> started following you</span>
+                                                    ) : (
+                                                        <> commented on your letter <span className="font-medium">"{n.letter?.title || 'Untitled'}"</span></>
+                                                    )}
+                                                </p>
+                                                {n.type === 'friend_request' && (
+                                                    <div className="flex gap-2 mt-1">
+                                                        <button
+                                                            onClick={async () => {
+                                                                try {
+                                                                    const token = localStorage.getItem('token');
+                                                                    await fetch('http://localhost:5000/api/friends/accept', {
+                                                                        method: 'POST',
+                                                                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                                                                        body: JSON.stringify({ requestId: n.entityId })
+                                                                    });
+                                                                    fetchNotifications(); // Refresh list to remove it or mark action
+                                                                    setIsNotificationOpen(false);
+                                                                    window.location.reload(); // Quick refresh to show updated state
+                                                                } catch (err) { console.error(err); }
+                                                            }}
+                                                            className="px-3 py-1 bg-stone-900 text-white text-xs rounded-full hover:bg-stone-700 transition"
+                                                        >
+                                                            Confirm
+                                                        </button>
+                                                        <button
+                                                            onClick={async () => {
+                                                                try {
+                                                                    const token = localStorage.getItem('token');
+                                                                    await fetch('http://localhost:5000/api/friends/decline', {
+                                                                        method: 'POST',
+                                                                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                                                                        body: JSON.stringify({ requestId: n.entityId })
+                                                                    });
+                                                                    fetchNotifications();
+                                                                } catch (err) { console.error(err); }
+                                                            }}
+                                                            className="px-3 py-1 bg-stone-200 text-stone-700 text-xs rounded-full hover:bg-stone-300 transition"
+                                                        >
+                                                            Decline
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
                                             <p className="text-xs text-stone-400 mt-1">
                                                 {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
                                             </p>

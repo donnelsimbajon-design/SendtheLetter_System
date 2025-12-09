@@ -12,6 +12,9 @@ const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
     host: dbHost,
     dialect: 'mysql',
     logging: false,
+    dialectOptions: {
+        connectTimeout: 60000 // 60 seconds
+    }
 });
 
 export default sequelize;

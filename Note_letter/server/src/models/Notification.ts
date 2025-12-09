@@ -5,7 +5,7 @@ interface NotificationAttributes {
     id: number;
     userId: number; // Recipient
     actorId: number; // Who triggered it
-    type: 'comment' | 'like';
+    type: string;
     entityId: number; // ID of the letter
     isRead: boolean;
 }
@@ -16,7 +16,7 @@ class Notification extends Model<NotificationAttributes, NotificationCreationAtt
     public id!: number;
     public userId!: number;
     public actorId!: number;
-    public type!: 'comment' | 'like';
+    public type!: string;
     public entityId!: number;
     public isRead!: boolean;
 
@@ -50,7 +50,7 @@ Notification.init(
             onDelete: 'CASCADE',
         },
         type: {
-            type: DataTypes.ENUM('comment', 'like'),
+            type: DataTypes.STRING, // Changed from ENUM to allow easier updates
             allowNull: false,
         },
         entityId: {

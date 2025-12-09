@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useNoteStore } from '../../store/noteStore';
-import { MapPin, Calendar, UserPlus, UserMinus, Sparkles, PenLine, Search, MessageCircle } from 'lucide-react';
+import { MapPin, Calendar, UserPlus, UserMinus, Sparkles, PenLine, Search, MessageCircle, UserCheck, UserX, X } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import LetterViewModal from '../../components/LetterViewModal';
 import Notecard from '../../components/Notecard';
@@ -37,6 +37,9 @@ const UserProfilePage = () => {
     const [selectedNote, setSelectedNote] = useState<Note | null>(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('Letters');
+    const [friendStatus, setFriendStatus] = useState<'none' | 'pending' | 'friends' | 'received'>('none');
+    const [requestId, setRequestId] = useState<number | null>(null);
+    const [isSender, setIsSender] = useState(false);
 
     const tabs = ['Letters', 'Repost', 'About', 'Pen Pals'];
 
@@ -47,6 +50,114 @@ const UserProfilePage = () => {
             fetchPublicReposts(username);
         }
     }, [username]);
+
+    useEffect(() => {
+        if (profile?.id && currentUser?.id) {
+            fetchFriendStatus();
+        }
+    }, [profile?.id, currentUser?.id]);
+
+    const fetchFriendStatus = async () => {
+        if (!profile?.id) return;
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:5000/api/friends/status/${profile.id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setFriendStatus(data.status); // 'none', 'friends', 'pending'
+                setIsSender(false); // Reset default
+
+                if (data.status === 'pending') {
+                    setRequestId(data.requestId);
+                    setIsSender(data.isSender);
+
+                    // If we are NOT the sender, it means we received it
+                    if (!data.isSender) {
+                        setFriendStatus('received');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching friend status:', error);
+        }
+    };
+
+    const handleSendFriendRequest = async () => {
+        if (!profile?.id) return;
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('http://localhost:5000/api/friends/request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ recipientId: profile.id })
+            });
+
+            if (response.ok) {
+                setFriendStatus('pending');
+                setIsSender(true);
+            } else {
+                const data = await response.json();
+                console.error('Failed to send request:', data);
+
+                // If it says "Request already pending", just update UI to match reality
+                if (data.message === 'Request already pending') {
+                    setFriendStatus('pending');
+                    setIsSender(true);
+                } else {
+                    // Show the specific error message from the backend if available
+                    alert(`Failed to send request: ${data.error || data.message || 'Unknown error'}`);
+                }
+            }
+        } catch (error) {
+            console.error('Error sending friend request:', error);
+            alert('Error connecting to server. Please try again.');
+        }
+    };
+
+    const handleCancelFriendRequest = async () => {
+        if (!requestId) return;
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('http://localhost:5000/api/friends/cancel', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ requestId })
+            });
+            if (response.ok) {
+                fetchFriendStatus();
+            }
+        } catch (error) {
+            console.error('Error cancelling friend request:', error);
+        }
+    };
+
+    const handleAcceptFriendRequest = async () => {
+        if (!requestId) return;
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('http://localhost:5000/api/friends/accept', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ requestId })
+            });
+            if (response.ok) {
+                setFriendStatus('friends');
+            }
+        } catch (error) {
+            console.error('Error accepting friend request:', error);
+        }
+    };
 
     const fetchPublicReposts = async (username: string) => {
         try {
@@ -215,11 +326,41 @@ const UserProfilePage = () => {
 
                         {/* Follow & Message Buttons */}
                         {currentUser && currentUser.id !== profile?.id && (
-                            <div className="mt-8 flex gap-3">
+                            <div className="mt-8 flex gap-3 flex-wrap justify-center">
+                                {/* Friend Button */}
+                                {friendStatus === 'friends' ? (
+                                    <Button variant="outline" className="rounded-full px-6 border-green-500 text-green-600 bg-green-50 hover:bg-green-100 hover:text-green-700">
+                                        <UserCheck className="w-4 h-4 mr-2" />
+                                        Friends
+                                    </Button>
+                                ) : friendStatus === 'pending' ? (
+                                    isSender ? (
+                                        <Button onClick={handleCancelFriendRequest} variant="outline" className="rounded-full px-6 border-red-500/50 text-red-500 hover:bg-red-500/10 hover:text-red-600">
+                                            <X className="w-4 h-4 mr-2" />
+                                            Cancel Request
+                                        </Button>
+                                    ) : (
+                                        <Button onClick={handleAcceptFriendRequest} className="rounded-full px-6 bg-green-600 hover:bg-green-700">
+                                            <UserPlus className="w-4 h-4 mr-2" />
+                                            Accept Request
+                                        </Button>
+                                    )
+                                ) : friendStatus === 'received' ? (
+                                    <Button onClick={handleAcceptFriendRequest} className="rounded-full px-6 bg-green-600 hover:bg-green-700">
+                                        <UserPlus className="w-4 h-4 mr-2" />
+                                        Accept Request
+                                    </Button>
+                                ) : (
+                                    <Button onClick={handleSendFriendRequest} className="rounded-full px-6 bg-stone-900 text-white hover:bg-stone-800">
+                                        <UserPlus className="w-4 h-4 mr-2" />
+                                        Add Friend
+                                    </Button>
+                                )}
+
                                 <Button
                                     onClick={handleToggleFollow}
-                                    variant={profile.isFollowing ? "outline" : "default"}
-                                    className="rounded-full px-8"
+                                    variant={profile.isFollowing ? "outline" : "secondary"}
+                                    className="rounded-full px-6"
                                 >
                                     {profile.isFollowing ? (
                                         <>
@@ -233,14 +374,16 @@ const UserProfilePage = () => {
                                         </>
                                     )}
                                 </Button>
-                                <Button
-                                    onClick={() => navigate(`/dashboard/messages?userId=${profile.id}`)}
-                                    variant="secondary"
-                                    className="rounded-full px-8"
-                                >
-                                    <MessageCircle className="w-4 h-4 mr-2" />
-                                    Message
-                                </Button>
+                                {friendStatus === 'friends' && (
+                                    <Button
+                                        onClick={() => navigate(`/dashboard/messages?userId=${profile.id}`)}
+                                        variant="secondary"
+                                        className="rounded-full px-6"
+                                    >
+                                        <MessageCircle className="w-4 h-4 mr-2" />
+                                        Message
+                                    </Button>
+                                )}
                             </div>
                         )}
                     </motion.div>
@@ -360,11 +503,7 @@ const UserProfilePage = () => {
                 note={selectedNote}
             />
 
-            <LetterViewModal
-                isOpen={isViewModalOpen}
-                onClose={() => setIsViewModalOpen(false)}
-                note={selectedNote}
-            />
+
         </div>
     );
 };

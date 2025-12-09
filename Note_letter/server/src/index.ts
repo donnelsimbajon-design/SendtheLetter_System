@@ -13,7 +13,9 @@ import Letter from './models/Letter';
 import Notification from './models/Notification';
 import Follow from './models/Follow';
 import messageRoutes from './routes/messageRoutes';
+import friendRoutes from './routes/friendRoutes';
 import Message from './models/Message';
+import Friend from './models/Friend';
 
 dotenv.config();
 
@@ -43,6 +45,7 @@ app.use('/api/letters', letterRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/users', followRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/friends', friendRoutes);
 
 // Test route
 app.use('/api/test', (req, res) => {
@@ -102,9 +105,27 @@ const startServer = async () => {
         // Follow.belongsTo(User, { foreignKey: 'followerId', as: 'follower' });
         // Follow.belongsTo(User, { foreignKey: 'followingId', as: 'following' });
 
-        // Sync models (alter: true updates the schema to match the model)
-        // await sequelize.sync({ alter: true });
-        console.log('Database synced (skipped).');
+        // Sync models (Disabled alter to prevent index duplication crash)
+        await sequelize.sync();
+
+        try {
+            // Manual fix for Notification type to ensure it supports 'friend_request'
+            await sequelize.query("ALTER TABLE notifications MODIFY COLUMN type VARCHAR(255) NOT NULL");
+            console.log('Schema patch: Notification type updated to VARCHAR');
+        } catch (err) {
+            // Ignore error if column already modified or table issues - primarily to fix the 500 error
+            console.log('Schema patch info:', (err as Error).message);
+        }
+
+        try {
+            // Manual fix: Drop the SPECIFIC Foreign Key constraint reported by user
+            await sequelize.query("ALTER TABLE notifications DROP FOREIGN KEY notifications_ibfk_62");
+            console.log('Schema patch: Dropped conflicting FK on notifications.entityId (ibfk_62)');
+        } catch (err) {
+            console.log('Schema patch info (FK):', (err as Error).message);
+        }
+
+        console.log('Database synced.');
 
         httpServer.listen(PORT, () => {
             console.log(`Server is running on http://localhost:${PORT}`);
