@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { Note } from '../types/note';
+import { API_ENDPOINTS, API_BASE_URL } from '../config/api';
 
 export type { Note };
 
@@ -48,7 +49,7 @@ interface NoteState {
     markNotificationsRead: () => Promise<void>;
 }
 
-const API_URL = 'http://localhost:5000/api/letters';
+const API_URL = API_ENDPOINTS.letters;
 
 export const useNoteStore = create<NoteState>((set, get) => ({
     notes: [],
@@ -359,7 +360,7 @@ export const useNoteStore = create<NoteState>((set, get) => ({
     fetchNotifications: async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:5000/api/notifications', {
+            const response = await fetch(`${API_BASE_URL}/api/notifications`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (!response.ok) throw new Error('Failed to fetch notifications');
@@ -373,7 +374,7 @@ export const useNoteStore = create<NoteState>((set, get) => ({
     markNotificationsRead: async () => {
         try {
             const token = localStorage.getItem('token');
-            await fetch('http://localhost:5000/api/notifications/read', {
+            await fetch(`${API_BASE_URL}/api/notifications/read`, {
                 method: 'PUT',
                 headers: { Authorization: `Bearer ${token}` },
             });

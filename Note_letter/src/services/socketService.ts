@@ -1,4 +1,5 @@
 import { io, Socket } from 'socket.io-client';
+import API_BASE_URL from '../config/api';
 
 class SocketService {
     private socket: Socket | null = null;
@@ -8,7 +9,7 @@ class SocketService {
             return;
         }
 
-        this.socket = io('http://localhost:5000', {
+        this.socket = io(API_BASE_URL, {
             transports: ['websocket'],
             autoConnect: true,
         });
