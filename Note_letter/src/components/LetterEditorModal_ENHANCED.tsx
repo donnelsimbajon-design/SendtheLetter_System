@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent } from './ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -103,6 +103,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-screen-lg h-[95vh] p-0 border-none bg-transparent shadow-none overflow-hidden flex flex-col items-center justify-center">
+                <DialogTitle className="sr-only">Write a Letter</DialogTitle>
                 {/* Add this draft indicator at the top */}
                 {lastSaved && (
                     <div className="absolute top-16 right-4 z-50 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs text-stone-600">

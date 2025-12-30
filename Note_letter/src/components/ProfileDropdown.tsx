@@ -19,6 +19,7 @@ const ProfileDropdown = ({ isOpen, onClose }: ProfileDropdownProps) => {
             {isOpen && (
                 <div key="backdrop" className="fixed inset-0 z-40" onClick={onClose} />
             )}
+<<<<<<< HEAD
             {isOpen && (
                 <motion.div
                     key="dropdown"
@@ -45,6 +46,32 @@ const ProfileDropdown = ({ isOpen, onClose }: ProfileDropdownProps) => {
                                 <h4 className="font-semibold text-foreground">{user?.username || 'User'}</h4>
                                 <p className="text-xs text-muted-foreground">See your profile</p>
                             </div>
+=======
+            <motion.div
+                key="dropdown"
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="absolute right-0 top-14 w-80 bg-card border border-border/50 rounded-xl shadow-2xl overflow-hidden z-50"
+            >
+                <div className="p-4 border-b border-border/10">
+                    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer">
+                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-lg overflow-hidden">
+                            {user?.avatar ? (
+                                <img
+                                    src={getImageUrl(user.avatar)}
+                                    alt={user.username}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <span>{user?.username?.[0]?.toUpperCase() || 'U'}</span>
+                            )}
+                        </div>
+                        <div className="flex-1">
+                            <h4 className="font-semibold text-foreground">{user?.username || 'User'}</h4>
+                            <p className="text-xs text-muted-foreground">See your profile</p>
+>>>>>>> Nadz
                         </div>
                     </div>
 

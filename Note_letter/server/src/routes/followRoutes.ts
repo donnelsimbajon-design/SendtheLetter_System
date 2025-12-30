@@ -7,6 +7,7 @@ const router = express.Router();
 router.post('/:userId/toggle', authenticateToken, toggleFollow);
 router.get('/profile/:username', optionalAuth, getUserProfile);
 router.get('/id/:userId', getUserById);
+router.get('/:userId/profile', getUserById);  // Alias for frontend compatibility
 router.get('/:userId/followers', getFollowers);
 router.get('/:userId/following', getFollowing);
 

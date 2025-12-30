@@ -105,6 +105,7 @@ const startServer = async () => {
         // Follow.belongsTo(User, { foreignKey: 'followerId', as: 'follower' });
         // Follow.belongsTo(User, { foreignKey: 'followingId', as: 'following' });
 
+<<<<<<< HEAD
         // Sync models (Disabled alter to prevent index duplication crash)
         await sequelize.sync();
 
@@ -126,6 +127,11 @@ const startServer = async () => {
         }
 
         console.log('Database synced.');
+=======
+        // Sync models - create tables if they don't exist
+        await sequelize.sync({ alter: true });
+        console.log('Database synced successfully.');
+>>>>>>> Nadz
 
         httpServer.listen(PORT, () => {
             console.log(`Server is running on http://localhost:${PORT}`);

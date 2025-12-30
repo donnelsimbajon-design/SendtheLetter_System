@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import socketService from '../services/socketService';
+import { API_ENDPOINTS } from '../config/api';
 
 interface User {
     id: number;
@@ -21,7 +22,7 @@ interface AuthState {
     logout: () => void;
 }
 
-const API_URL = 'http://localhost:5000/api/auth';
+const API_URL = API_ENDPOINTS.auth;
 
 export const useAuthStore = create<AuthState>((set) => ({
     user: JSON.parse(localStorage.getItem('user') || 'null'),

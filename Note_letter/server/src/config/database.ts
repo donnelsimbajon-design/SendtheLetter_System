@@ -3,14 +3,21 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const dbName = process.env.DB_NAME || 'note_letter_db';
-const dbUser = process.env.DB_USER || 'root';
-const dbPassword = process.env.DB_PASSWORD || '';
-const dbHost = process.env.DB_HOST || 'localhost';
+// Supabase PostgreSQL connection
+const databaseUrl = process.env.DATABASE_URL;
 
-const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
-    host: dbHost,
-    dialect: 'mysql',
+if (!databaseUrl) {
+    throw new Error('DATABASE_URL environment variable is not set');
+}
+
+const sequelize = new Sequelize(databaseUrl, {
+    dialect: 'postgres',
+    dialectOptions: {
+        ssl: {
+            require: true,
+            rejectUnauthorized: false
+        }
+    },
     logging: false,
     dialectOptions: {
         connectTimeout: 60000 // 60 seconds

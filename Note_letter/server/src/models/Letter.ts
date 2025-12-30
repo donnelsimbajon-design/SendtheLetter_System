@@ -143,6 +143,10 @@ Letter.init(
             type: DataTypes.BOOLEAN,
             defaultValue: false,
         },
+        isArchived: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
     },
     {
         sequelize,
