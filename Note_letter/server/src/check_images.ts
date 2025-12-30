@@ -1,4 +1,5 @@
 import sequelize from './config/database';
+import { Op } from 'sequelize';
 import Letter from './models/Letter';
 
 const checkImages = async () => {
@@ -7,7 +8,7 @@ const checkImages = async () => {
         console.log('Database connected.');
 
         const letters = await Letter.findAll({
-            where: { imageUrl: { [sequelize.Sequelize.Op.ne]: null } },
+            where: { imageUrl: { [Op.ne]: null } },
             attributes: ['id', 'title', 'imageUrl'],
             limit: 5
         });

@@ -16,12 +16,10 @@ const sequelize = new Sequelize(databaseUrl, {
         ssl: {
             require: true,
             rejectUnauthorized: false
-        }
+        },
+        connectTimeout: 60000 // 60 seconds
     },
     logging: false,
-    dialectOptions: {
-        connectTimeout: 60000 // 60 seconds
-    }
 });
 
 export default sequelize;
