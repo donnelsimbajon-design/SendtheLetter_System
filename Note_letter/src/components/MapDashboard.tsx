@@ -5,6 +5,9 @@ import { customMarkerIcon } from './customMarker';
 import { getImageUrl } from '../lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 
+// Geoapify API key from environment variables
+const GEOAPIFY_API_KEY = import.meta.env.VITE_GEOAPIFY_API_KEY || 'YOUR_GEOAPIFY_API_KEY';
+
 interface MapDashboardProps {
     notes: Note[];
     onNoteClick: (note: Note) => void;
@@ -25,8 +28,8 @@ const MapDashboard = ({ notes, onNoteClick }: MapDashboardProps) => {
                 style={{ background: '#fdfbf7' }}
             >
                 <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | © OpenStreetMap contributors'
+                    url={`https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=${GEOAPIFY_API_KEY}`}
                 />
                 {notes.map((note) => {
                     // Use actual coordinates if available, otherwise use random positions in Butuan area

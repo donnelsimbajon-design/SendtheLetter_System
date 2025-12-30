@@ -102,9 +102,9 @@ const startServer = async () => {
         // Follow.belongsTo(User, { foreignKey: 'followerId', as: 'follower' });
         // Follow.belongsTo(User, { foreignKey: 'followingId', as: 'following' });
 
-        // Sync models (alter: true updates the schema to match the model)
-        // await sequelize.sync({ alter: true });
-        console.log('Database synced (skipped).');
+        // Sync models - create tables if they don't exist
+        await sequelize.sync({ alter: true });
+        console.log('Database synced successfully.');
 
         httpServer.listen(PORT, () => {
             console.log(`Server is running on http://localhost:${PORT}`);

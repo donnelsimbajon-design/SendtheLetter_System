@@ -17,9 +17,10 @@ const ProfileDropdown = ({ isOpen, onClose }: ProfileDropdownProps) => {
     return (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-40" onClick={onClose} />
+                <div key="backdrop" className="fixed inset-0 z-40" onClick={onClose} />
             )}
             <motion.div
+                key="dropdown"
                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
