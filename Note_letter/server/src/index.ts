@@ -105,33 +105,9 @@ const startServer = async () => {
         // Follow.belongsTo(User, { foreignKey: 'followerId', as: 'follower' });
         // Follow.belongsTo(User, { foreignKey: 'followingId', as: 'following' });
 
-<<<<<<< HEAD
-        // Sync models (Disabled alter to prevent index duplication crash)
-        await sequelize.sync();
-
-        try {
-            // Manual fix for Notification type to ensure it supports 'friend_request'
-            await sequelize.query("ALTER TABLE notifications MODIFY COLUMN type VARCHAR(255) NOT NULL");
-            console.log('Schema patch: Notification type updated to VARCHAR');
-        } catch (err) {
-            // Ignore error if column already modified or table issues - primarily to fix the 500 error
-            console.log('Schema patch info:', (err as Error).message);
-        }
-
-        try {
-            // Manual fix: Drop the SPECIFIC Foreign Key constraint reported by user
-            await sequelize.query("ALTER TABLE notifications DROP FOREIGN KEY notifications_ibfk_62");
-            console.log('Schema patch: Dropped conflicting FK on notifications.entityId (ibfk_62)');
-        } catch (err) {
-            console.log('Schema patch info (FK):', (err as Error).message);
-        }
-
-        console.log('Database synced.');
-=======
         // Sync models - create tables if they don't exist
         await sequelize.sync({ alter: true });
         console.log('Database synced successfully.');
->>>>>>> Nadz
 
         httpServer.listen(PORT, () => {
             console.log(`Server is running on http://localhost:${PORT}`);
