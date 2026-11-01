@@ -7,6 +7,7 @@ import { getImageUrl } from '../lib/utils';
 import axios from 'axios';
 import { Note } from '../types/note';
 import { API_ENDPOINTS, API_BASE_URL } from '../config/api';
+import Mascot from './Mascot';
 
 interface ShareModalProps {
     isOpen: boolean;
@@ -143,7 +144,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
             <DialogContent className="sm:max-w-lg p-0 overflow-hidden bg-background border border-border shadow-2xl">
                 <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
                     <DialogTitle className="text-lg font-semibold flex items-center gap-2">
-                        <Share2 size={18} className="text-primary" /> Share Letter
+                        <Mascot name="piko" className="h-9 w-9" /> Share Letter
                     </DialogTitle>
                     <DialogDescription className="sr-only">Share a public letter externally or send it to a friend inside SendTheLetter.</DialogDescription>
                 </div>
