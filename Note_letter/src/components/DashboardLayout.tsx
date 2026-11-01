@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
-import { BookHeart, FileText, Home, LogOut, MessageCircle, PenLine, UserRound, Palette } from 'lucide-react';
+import { Bell, BookHeart, FileText, Home, LogOut, MessageCircle, PenLine, UserRound, Palette } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 import { useAuthStore } from '../store/authStore';
+import { useNoteStore } from '../store/noteStore';
+import socketService from '../services/socketService';
 
 const navigation = [
   { to: '/dashboard', label: 'Overview', icon: Home, end: true },
@@ -16,6 +19,15 @@ const DashboardLayout = () => {
   const location = useLocation();
   const [theme, setTheme] = useState<'warm' | 'cool' | 'dark'>('warm');
   const [showThemes, setShowThemes] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const { notifications, fetchNotifications, markNotificationsRead } = useNoteStore();
+  const unreadCount = notifications.filter((notification) => !notification.isRead).length;
+
+  useEffect(() => {
+    void fetchNotifications();
+    socketService.onNewNotification(() => { void fetchNotifications(); });
+    return () => socketService.offNewNotification();
+  }, [fetchNotifications]);
 
   useEffect(() => {
     const saved = localStorage.getItem('sendtheletter-theme');
@@ -40,6 +52,25 @@ const DashboardLayout = () => {
             <span className="font-editorial text-xl font-semibold tracking-tight">SendTheLetter</span>
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
+            <div className="relative">
+              <button onClick={() => { const next = !showNotifications; setShowNotifications(next); if (next && unreadCount > 0) void markNotificationsRead(); }} className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="Notifications">
+                <Bell size={17} />
+                {unreadCount > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[hsl(var(--accent))] ring-2 ring-card" />}
+              </button>
+              {showNotifications && (
+                <div className="absolute right-0 top-12 z-50 w-[min(21rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-card shadow-xl">
+                  <div className="flex items-center justify-between border-b border-border px-4 py-3"><p className="text-sm font-semibold">Notifications</p><span className="text-xs text-muted-foreground">{unreadCount ? `${unreadCount} new` : 'All caught up'}</span></div>
+                  <div className="max-h-80 overflow-y-auto">
+                    {notifications.length ? notifications.slice(0, 12).map((notification) => (
+                      <Link key={notification.id} to={notification.actor?.username ? `/dashboard/profile/${notification.actor.username}` : '/dashboard'} onClick={() => setShowNotifications(false)} className="block border-b border-border/70 px-4 py-3 last:border-0 hover:bg-muted/60">
+                        <p className="text-sm leading-5"><span className="font-semibold">{notification.actor?.username || 'Someone'}</span>{notification.type === 'like' ? ' liked your letter ' : ' commented on your letter '}<span className="font-medium">{notification.letter?.title || 'your letter'}</span></p>
+                        <p className="mt-1 text-xs text-muted-foreground">{formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}</p>
+                      </Link>
+                    )) : <p className="px-4 py-8 text-center text-sm text-muted-foreground">No notifications yet.</p>}
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="relative">
               <button onClick={() => setShowThemes((value) => !value)} className="flex h-10 items-center gap-2 rounded-full border border-border bg-background px-3 text-sm font-medium hover:bg-muted" aria-label="Choose color theme">
                 <Palette size={16} /><span className="hidden sm:inline">Appearance</span>
