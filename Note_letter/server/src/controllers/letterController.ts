@@ -33,7 +33,7 @@ export const createLetter = async (req: AuthRequest, res: Response) => {
         if (!title || !content) {
             return res.status(400).json({ message: 'A letter title and content are required' });
         }
-        if (isTimeCapsule && !openDate) {
+        if (status !== 'draft' && isTimeCapsule && !openDate) {
             return res.status(400).json({ message: 'Choose an opening date for your Time Capsule' });
         }
 
