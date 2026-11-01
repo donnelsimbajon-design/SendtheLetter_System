@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
-import { Archive, BookHeart, FileText, Home, Inbox, LogOut, MessageCircle, Moon, PenLine, Sun, UserRound, Palette } from 'lucide-react';
+import { BookHeart, FileText, Home, LogOut, MessageCircle, PenLine, UserRound, Palette } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
 const navigation = [
