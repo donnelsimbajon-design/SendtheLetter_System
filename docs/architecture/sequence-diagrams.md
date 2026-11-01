@@ -41,7 +41,7 @@ sequenceDiagram
   UI-->>Author: Show saved result
 ```
 
-## Scheduled delivery (target, not currently operational)
+## Scheduled delivery / Time Capsule (worker implemented; integration testing required)
 
 ```mermaid
 sequenceDiagram
@@ -50,7 +50,6 @@ sequenceDiagram
   participant API as Express API
   participant DB as PostgreSQL
   participant Worker as Delivery worker
-  participant Email as Email provider
   actor Recipient
 
   Author->>UI: Choose future delivery time
@@ -61,10 +60,9 @@ sequenceDiagram
   Note over Worker,DB: Worker polls or claims due jobs
   Worker->>DB: Claim due delivery atomically
   DB-->>Worker: Due letter and recipient
-  Worker->>Email: Send notification/content
-  Email-->>Worker: Provider result
-  Worker->>DB: Record outcome and prevent duplicates
-  Recipient-->>Email: Receives delivery
+  Worker->>DB: Publish letter and create author notification in one transaction
+  Worker-->>Author: Emit realtime notification when connected
+  Note over Author,Recipient: Registered-recipient or external email delivery is not implemented because no recipient identity is modeled yet
 ```
 
 ## Social share (target)
