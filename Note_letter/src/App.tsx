@@ -44,6 +44,7 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/creator" element={<Creator />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
 
                 {/* Private Routes */}
                 <Route
