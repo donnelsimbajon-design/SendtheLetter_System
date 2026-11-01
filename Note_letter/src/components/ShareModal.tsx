@@ -29,7 +29,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
 
     const shareUrl = useMemo(() => {
         if (typeof window === 'undefined') return '';
-        return new URL(`/letters/${encodeURIComponent(String(note.id))}`, window.location.origin).toString();
+        return new URL(`/api/letters/public/${encodeURIComponent(String(note.id))}/share`, API_BASE_URL).toString();
     }, [note.id]);
 
     useEffect(() => {
