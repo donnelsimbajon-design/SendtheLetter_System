@@ -52,6 +52,15 @@ const backgroundGradients = [
     { name: 'Rose Gold', value: 'linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%)', gradient: 'bg-gradient-to-br from-[#fce4ec] to-[#f8bbd0]' },
 ];
 
+const toLocalDateTimeInput = (value?: string | Date | null) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+};
+
+const toUtcDateTime = (value: string) => value ? new Date(value).toISOString() : null;
+
 const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, onSubmit, initialData }) => {
     const user = useAuthStore((state) => state.user);
     const [font, setFont] = useState('font-serif');
@@ -91,9 +100,9 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
             setSpotifyLink(initialData.spotifyLink || '');
             setRecipientName(initialData.recipientName || '');
             setRecipientAddress(initialData.recipientAddress || '');
-            setScheduledDate(initialData.scheduledDate || '');
+            setScheduledDate(toLocalDateTimeInput(initialData.scheduledDate));
             setIsTimeCapsule(initialData.isTimeCapsule || false);
-            setOpenDate(initialData.openDate || '');
+            setOpenDate(toLocalDateTimeInput(initialData.openDate));
             // Stop draft auto-save if we are editing an existing letter
             if (initialData.status === 'published') {
                 setDraftId('stop-autosave');
@@ -206,8 +215,8 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
             isPublic,
             backgroundImage,
             imageUrl,
-            scheduledDate,
-            openDate,
+            scheduledDate: toUtcDateTime(scheduledDate),
+            openDate: toUtcDateTime(openDate),
             isTimeCapsule,
             createdAt: new Date(),
         });
