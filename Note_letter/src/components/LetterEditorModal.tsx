@@ -205,7 +205,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
 
                 {/* Draft Saved Indicator */}
                 {lastSaved && (
-                    <div className="absolute top-16 right-4 z-50 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs text-stone-600 shadow-sm">
+                    <div className="absolute top-16 right-4 z-50 bg-card/95 backdrop-blur-sm px-3 py-1 rounded-full text-xs text-muted-foreground shadow-sm">
                         {isSaving ? '💾 Saving...' : `✓ Saved ${lastSaved}`}
                     </div>
                 )}
@@ -220,24 +220,24 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
 
                 {/* Main Card Container */}
                 <div className={cn(
-                    "w-full h-full md:h-auto md:max-h-[85vh] overflow-hidden rounded-3xl shadow-2xl flex flex-col md:flex-row bg-white",
+                    "w-full h-full md:h-auto md:max-h-[85vh] overflow-hidden rounded-3xl shadow-2xl flex flex-col md:flex-row bg-card",
                 )}>
 
                     {/* Sidebar / Toolbar (Left Side on Desktop) */}
-                    <div className="w-full md:w-80 bg-stone-50 border-r border-stone-100 p-6 flex flex-col gap-6 overflow-y-auto custom-scrollbar">
+                    <div className="w-full md:w-80 bg-background border-r border-border p-6 flex flex-col gap-6 overflow-y-auto custom-scrollbar">
                         <div className="space-y-1">
-                            <h2 className="text-xl font-serif font-medium text-stone-900">Write a Letter</h2>
-                            <p className="text-xs text-stone-500">Craft your thoughts with care.</p>
+                            <h2 className="text-xl font-serif font-medium text-foreground">Write a Letter</h2>
+                            <p className="text-xs text-muted-foreground">Craft your thoughts with care.</p>
                         </div>
 
                         {/* Settings */}
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label className="text-xs font-bold uppercase tracking-wider text-stone-400">Style</Label>
+                                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Style</Label>
                                 <Select value={font} onValueChange={setFont}>
-                                    <SelectTrigger className="bg-white border-stone-200 text-stone-800">
+                                    <SelectTrigger className="bg-card border-border text-foreground">
                                         <div className="flex items-center gap-2">
-                                            <Type size={14} className="text-stone-400" />
+                                            <Type size={14} className="text-muted-foreground" />
                                             <SelectValue placeholder="Select Font" />
                                         </div>
                                     </SelectTrigger>
@@ -252,9 +252,9 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-xs font-bold uppercase tracking-wider text-stone-400">Category</Label>
+                                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Category</Label>
                                 <Select value={category} onValueChange={setCategory}>
-                                    <SelectTrigger className="bg-white border-stone-200 text-stone-800">
+                                    <SelectTrigger className="bg-card border-border text-foreground">
                                         <SelectValue placeholder="Category" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -268,7 +268,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-xs font-bold uppercase tracking-wider text-stone-400">Paper</Label>
+                                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Paper</Label>
                                 <div className="grid grid-cols-3 gap-2">
                                     {backgroundGradients.map((bg) => (
                                         <button
@@ -278,7 +278,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                                             className={cn(
                                                 "h-10 rounded-lg border-2 transition-all",
                                                 bg.gradient,
-                                                backgroundImage === bg.value ? "border-stone-800 ring-1 ring-stone-800" : "border-stone-200 hover:border-stone-400"
+                                                backgroundImage === bg.value ? "border-primary ring-1 ring-primary" : "border-border hover:border-stone-400"
                                             )}
                                             title={bg.name}
                                         />
@@ -289,47 +289,47 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                             <div className="space-y-3 pt-2">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
-                                        <Globe size={14} className="text-stone-400" />
-                                        <Label htmlFor="public" className="text-sm text-stone-600 cursor-pointer">Public Post</Label>
+                                        <Globe size={14} className="text-muted-foreground" />
+                                        <Label htmlFor="public" className="text-sm text-muted-foreground cursor-pointer">Public Post</Label>
                                     </div>
                                     <input
                                         type="checkbox"
                                         id="public"
                                         checked={isPublic}
                                         onChange={(e) => setIsPublic(e.target.checked)}
-                                        className="rounded border-stone-300 text-stone-900 focus:ring-stone-900"
+                                        className="rounded border-border text-foreground focus:ring-stone-900"
                                     />
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
-                                        <EyeOff size={14} className="text-stone-400" />
-                                        <Label htmlFor="anonymous" className="text-sm text-stone-600 cursor-pointer">Anonymous</Label>
+                                        <EyeOff size={14} className="text-muted-foreground" />
+                                        <Label htmlFor="anonymous" className="text-sm text-muted-foreground cursor-pointer">Anonymous</Label>
                                     </div>
                                     <input
                                         type="checkbox"
                                         id="anonymous"
                                         checked={isAnonymous}
                                         onChange={(e) => setIsAnonymous(e.target.checked)}
-                                        className="rounded border-stone-300 text-stone-900 focus:ring-stone-900"
+                                        className="rounded border-border text-foreground focus:ring-stone-900"
                                     />
                                 </div>
                             </div>
                         </div>
 
                         {/* Attachments */}
-                        <div className="space-y-4 pt-4 border-t border-stone-100">
-                            <Label className="text-xs font-bold uppercase tracking-wider text-stone-400">Attachments</Label>
+                        <div className="space-y-4 pt-4 border-t border-border">
+                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Attachments</Label>
 
                             <div className="space-y-3">
                                 <div className="relative">
-                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">
+                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                                         <Music size={14} />
                                     </div>
                                     <Input
                                         placeholder="Spotify Link..."
                                         value={spotifyLink}
                                         onChange={(e) => setSpotifyLink(e.target.value)}
-                                        className="pl-9 bg-white border-stone-200 text-stone-800 placeholder:text-stone-400"
+                                        className="pl-9 bg-card border-border text-foreground placeholder:text-muted-foreground"
                                     />
                                 </div>
 
@@ -343,7 +343,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                                     />
                                     <label
                                         htmlFor="image-upload"
-                                        className="flex items-center justify-center gap-2 w-full h-10 rounded-md border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 cursor-pointer transition-colors text-sm font-medium"
+                                        className="flex items-center justify-center gap-2 w-full h-10 rounded-md border border-border bg-card text-muted-foreground hover:bg-background cursor-pointer transition-colors text-sm font-medium"
                                     >
                                         <ImageIcon size={16} />
                                         {imageUrl ? 'Change Image' : 'Add Image'}
@@ -353,14 +353,14 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                         </div>
 
                         {/* Enhanced Features */}
-                        <div className="space-y-4 pt-4 border-t border-stone-100">
-                            <Label className="text-xs font-bold uppercase tracking-wider text-stone-400">
+                        <div className="space-y-4 pt-4 border-t border-border">
+                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                                 Special Features
                             </Label>
 
                             {/* Schedule Letter */}
                             <div className="space-y-2">
-                                <Label htmlFor="schedule-date" className="text-xs flex items-center gap-2 text-stone-600">
+                                <Label htmlFor="schedule-date" className="text-xs flex items-center gap-2 text-muted-foreground">
                                     <Calendar size={12} />
                                     Schedule for Later
                                 </Label>
@@ -369,14 +369,14 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                                     type="datetime-local"
                                     value={scheduledDate}
                                     onChange={(e) => setScheduledDate(e.target.value)}
-                                    className="bg-white border-stone-200 text-stone-800 text-sm"
+                                    className="bg-card border-border text-foreground text-sm"
                                 />
                             </div>
 
                             {/* Time Capsule */}
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
-                                    <Label htmlFor="time-capsule" className="text-xs flex items-center gap-2 text-stone-600 cursor-pointer">
+                                    <Label htmlFor="time-capsule" className="text-xs flex items-center gap-2 text-muted-foreground cursor-pointer">
                                         <Lock size={12} />
                                         Time Capsule
                                     </Label>
@@ -385,7 +385,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                                         type="checkbox"
                                         checked={isTimeCapsule}
                                         onChange={(e) => setIsTimeCapsule(e.target.checked)}
-                                        className="rounded border-stone-300 text-stone-900 focus:ring-stone-900"
+                                        className="rounded border-border text-foreground focus:ring-stone-900"
                                     />
                                 </div>
                                 {isTimeCapsule && (
@@ -394,7 +394,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                                         value={openDate}
                                         onChange={(e) => setOpenDate(e.target.value)}
                                         placeholder="Open Date"
-                                        className="bg-white border-stone-200 text-stone-800 text-sm"
+                                        className="bg-card border-border text-foreground text-sm"
                                     />
                                 )}
                             </div>
@@ -415,15 +415,15 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                         <div className="relative z-10 flex-1 flex flex-col p-8 md:p-12 overflow-y-auto custom-scrollbar">
                             {/* Header Inputs */}
                             <div className="space-y-6 mb-8">
-                                <div className="border-b border-black/10 pb-2">
+                                <div className="border-b border-border pb-2">
                                     <Input
                                         placeholder="Title of your letter..."
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         className={cn(
-                                            "border-none bg-transparent text-3xl md:text-4xl font-bold placeholder:text-black/20 focus-visible:ring-0 px-0 mb-4",
+                                            "border-none bg-transparent text-3xl md:text-4xl font-bold placeholder:text-muted-foreground/40 focus-visible:ring-0 px-0 mb-4",
                                             font,
-                                            imageUrl ? "text-white placeholder:text-white/40" : "text-stone-800"
+                                            imageUrl ? "text-white placeholder:text-white/40" : "text-foreground"
                                         )}
                                     />
                                     <Input
@@ -431,9 +431,9 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                                         value={recipientName}
                                         onChange={(e) => setRecipientName(e.target.value)}
                                         className={cn(
-                                            "border-none bg-transparent text-2xl md:text-3xl font-bold placeholder:text-black/20 focus-visible:ring-0 px-0",
+                                            "border-none bg-transparent text-2xl md:text-3xl font-bold placeholder:text-muted-foreground/40 focus-visible:ring-0 px-0",
                                             font,
-                                            imageUrl ? "text-white placeholder:text-white/40" : "text-stone-800"
+                                            imageUrl ? "text-white placeholder:text-white/40" : "text-foreground"
                                         )}
                                     />
                                 </div>
@@ -447,15 +447,15 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                                 className={cn(
                                     "flex-1 min-h-[300px] border-none bg-transparent resize-none focus-visible:ring-0 px-0 text-lg leading-relaxed",
                                     font,
-                                    imageUrl ? "text-white placeholder:text-white/40" : "text-stone-800 placeholder:text-stone-400"
+                                    imageUrl ? "text-white placeholder:text-white/40" : "text-foreground placeholder:text-muted-foreground"
                                 )}
                             />
 
                             {/* Footer / Signature */}
-                            <div className="mt-8 pt-8 border-t border-black/10 flex justify-end">
+                            <div className="mt-8 pt-8 border-t border-border flex justify-end">
                                 <div className={cn(
                                     "text-right",
-                                    imageUrl ? "text-white/80" : "text-stone-500"
+                                    imageUrl ? "text-white/80" : "text-muted-foreground"
                                 )}>
                                     <p className={cn("text-sm italic", font)}>
                                         {isAnonymous ? "— Anonymous" : `— ${user?.username || 'Me'}`}
@@ -469,7 +469,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                             <Button
                                 onClick={handleSubmit}
                                 disabled={!content.trim() || !title.trim()}
-                                className="h-14 px-8 rounded-full bg-stone-900 hover:bg-black text-white shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
+                                className="h-14 px-8 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
                             >
                                 <span className="text-lg font-medium">Send Letter</span>
                                 <Send size={18} />
