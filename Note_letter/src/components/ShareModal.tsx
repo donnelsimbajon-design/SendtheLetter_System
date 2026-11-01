@@ -24,7 +24,8 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
     const [emailAddress, setEmailAddress] = useState('');
     const [isSendingEmail, setIsSendingEmail] = useState(false);
     const isPubliclyShareable = note.isPublic && note.status === 'published';
-    const canEmail = String(note.authorId) === String(user?.id) && note.status === 'published';
+    const noteOwnerId = note.authorId ?? (note as Note & { userId?: string | number }).userId;
+    const canEmail = String(noteOwnerId) === String(user?.id) && note.status === 'published';
 
     const shareUrl = useMemo(() => {
         if (typeof window === 'undefined') return '';
