@@ -47,7 +47,7 @@ Only generate a public URL when `isPublic=true` and `status=published`. Add a pu
 
 Use a cryptographically random token, store only its hash, bind it to one letter and optionally one recipient, add expiry and revocation, and rate-limit resolution. Do not use sequential letter IDs as secret links.
 
-## Meta integration
+## Social preview note\n\nThe current Vite single-page app updates the document title and description after the public letter loads. Social crawlers often require server-rendered or pre-rendered Open Graph tags, so reliable per-letter Facebook/Instagram link previews still need SSR, prerendering, or an edge metadata endpoint. Do not promise a unique preview until verified with platform sharing debuggers.\n\n## Meta integration
 
 - Facebook public sharing: use the supported share dialog and correct Open Graph metadata.
 - Messenger: prefer native share handoff; direct messaging requires a supported Meta app setup, permissions, eligible account, and policy compliance.
