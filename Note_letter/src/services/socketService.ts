@@ -14,12 +14,10 @@ class SocketService {
         const socket = io(API_BASE_URL, {
             transports: ['websocket', 'polling'],
             autoConnect: true,
+            auth: { token: localStorage.getItem('token') },
         });
         this.socket = socket;
 
-        socket.on('connect', () => {
-            socket.emit('join', userId);
-        });
     }
 
     disconnect() {
