@@ -414,8 +414,6 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                 isOpen={isShareModalOpen}
                 onClose={() => setIsShareModalOpen(false)}
                 note={note}
-                onRepost={handleRepost}
-                isReposted={isReposted}
             />
         </>
     );
