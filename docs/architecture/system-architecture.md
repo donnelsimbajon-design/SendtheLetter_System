@@ -55,7 +55,7 @@ These are architectural recommendations, not claims about deployed components:
 - The current scheduled-release poller runs inside the API process; a dedicated worker process/queue is recommended for production isolation and independent scaling.
 - An email adapter (Resend or another selected provider) behind a server-side service interface.
 - Durable object storage for uploads.
-- A share-link service with random, revocable tokens and explicit permission checks.
+- A share-link service with random, revocable tokens and explicit permission checks for private letters. Public letters use a backend crawler-preview endpoint and public detail route.
 - A transactional outbox or durable job table for retryable delivery and notification work.
 - Structured logs, health checks, rate limiting, and metrics.
 
