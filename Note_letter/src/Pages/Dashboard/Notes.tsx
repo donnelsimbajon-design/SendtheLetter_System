@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useNoteStore } from '../../store/noteStore';
-import { useAuthStore } from '../../store/authStore';
 import Notecard from '../../components/Notecard';
 import { Search, PenLine, Lock, Globe } from 'lucide-react';
 import { Input } from '../../components/ui/input';
@@ -12,7 +11,6 @@ import clsx from 'clsx';
 
 const Notes = () => {
     const { notes, publicLetters, addNote, fetchMyLetters, fetchPublicLetters } = useNoteStore();
-    const { user } = useAuthStore();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState<'public' | 'personal'>('public');
     const [isEditorOpen, setIsEditorOpen] = useState(false);
