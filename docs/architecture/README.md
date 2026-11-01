@@ -9,7 +9,7 @@ This handbook documents the repository as inspected on 2026-11-01. It separates 
 - **Persistence:** Sequelize configured for PostgreSQL through `DATABASE_URL`. The server package also contains MySQL driver dependencies, but the active Sequelize configuration is PostgreSQL.
 - **Authentication:** JWT bearer tokens and bcrypt password hashing in the User model hooks.
 - **Current API groups:** auth, letters, notifications, users/follows, messages, friends.
-- **Realtime:** Socket.IO user and letter rooms. The current room-join events need server-side authentication and authorization hardening.
+- **Realtime:** Socket.IO JWT handshake authentication, server-assigned user rooms, and owner/public checks for letter rooms are added in this PR; integration tests are still required.
 - **Uploads:** local Express static `/uploads` directory using Multer; this is not durable object storage in a multi-instance production deployment.
 
 ## Read these documents
