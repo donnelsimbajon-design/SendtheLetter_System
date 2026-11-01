@@ -84,7 +84,7 @@ io.on('connection', (socket) => {
 
     socket.on('join_letter', async (letterId: string) => {
         try {
-            if (!/^\d+$/.test(String(letterId))) return;
+            if (!/^\\d+$/.test(String(letterId))) return;
             const letter = await Letter.findByPk(letterId);
             if (!letter) return;
 
@@ -99,7 +99,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('leave_letter', (letterId: string) => {
-        if (/^\d+$/.test(String(letterId))) socket.leave(`letter_${letterId}`);
+        if (/^\\d+$/.test(String(letterId))) socket.leave(`letter_${letterId}`);
     });
 });
 
@@ -118,9 +118,9 @@ const startServer = async () => {
         void Message;
         void Friend;
 
-        // TODO: replace alter-sync with versioned migrations before production rollout.
-        await sequelize.sync({ alter: true });
-        console.log('Database synced successfully.');
+        // Schema changes must be applied through reviewed, versioned migrations.
+        // Do not run Sequelize alter-sync at startup: it can create duplicate
+        // unique constraints and make unreviewed production schema changes.
         startScheduledLetterWorker(io);
 
         httpServer.listen(PORT, () => {
