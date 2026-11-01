@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, BookOpen, FileText, Heart, PenLine, Sparkles } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useNoteStore } from '../../store/noteStore';
+import Mascot from '../../components/Mascot';
 
 const DashboardPage = () => {
   const user = useAuthStore((state) => state.user);
@@ -29,6 +30,7 @@ const DashboardPage = () => {
           <p className="mt-4 max-w-xl text-sm leading-7 opacity-80 sm:text-base">Take a breath, find the words, and send something that matters. Your next letter can start right here.</p>
           <Link to="/dashboard/notes" className="mt-7 inline-flex items-center gap-2 rounded-full bg-[hsl(var(--surface-gold))] px-5 py-3 text-sm font-bold text-[#493D2A] transition-transform hover:-translate-y-0.5">Write a letter <PenLine size={16} /></Link>
         </div>
+        <Mascot name="lumi" className="pointer-events-none absolute bottom-0 right-4 z-10 hidden h-48 w-48 drop-shadow-lg md:block lg:h-56 lg:w-56" />
         <div className="pointer-events-none absolute -bottom-20 -right-12 hidden h-72 w-72 rotate-[-12deg] rounded-[2.5rem] border border-white/20 bg-white/10 p-6 sm:block">
           <div className="h-full rounded-[1.8rem] border border-white/20 bg-white/10 p-6"><div className="h-2 w-16 rounded-full bg-white/40" /><div className="mt-8 space-y-3"><div className="h-2 w-full rounded-full bg-white/30" /><div className="h-2 w-4/5 rounded-full bg-white/30" /><div className="h-2 w-5/6 rounded-full bg-white/30" /><div className="h-2 w-2/3 rounded-full bg-white/30" /></div><div className="mt-10 font-editorial text-2xl italic opacity-70">with care,</div></div>
         </div>
@@ -49,7 +51,7 @@ const DashboardPage = () => {
           {notes.length ? (
             <div className="mt-5 divide-y divide-border">{notes.slice(0, 4).map((note) => <div key={note.id} className="flex items-center justify-between gap-4 py-4"><div className="min-w-0"><p className="truncate font-semibold">{note.title || 'Untitled letter'}</p><p className="mt-1 truncate text-sm text-muted-foreground">{note.content}</p></div><span className="shrink-0 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">{note.isPublic ? 'Public' : 'Private'}</span></div>)}</div>
           ) : (
-            <div className="mt-6 rounded-2xl bg-background px-5 py-8 text-center"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[hsl(var(--surface-gold))] text-[#55462A]"><PenLine size={21} /></div><p className="mt-4 font-semibold">Your first letter is waiting</p><p className="mt-1 text-sm text-muted-foreground">Start with a thought, a memory, or a simple hello.</p><Link to="/dashboard/notes" className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-primary">Write your first letter <ArrowRight size={15} /></Link></div>
+            <div className="mt-6 rounded-2xl bg-background px-5 py-8 text-center"><Mascot name="sely" className="mx-auto h-24 w-24" /><p className="mt-4 font-semibold">Your first letter is waiting</p><p className="mt-1 text-sm text-muted-foreground">Start with a thought, a memory, or a simple hello.</p><Link to="/dashboard/notes" className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-primary">Write your first letter <ArrowRight size={15} /></Link></div>
           )}
         </div>
         <div className="rounded-3xl border border-border bg-[hsl(var(--surface-gold))] p-6 text-[#493D2A] sm:p-8">
