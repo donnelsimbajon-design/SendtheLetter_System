@@ -1,4 +1,4 @@
-import { DataTypes, Model, Optional } from 'sequelize';
+import { DataTypes, Model, Optional, literal } from 'sequelize';
 import sequelize from '../config/database';
 import User from './User';
 
@@ -152,7 +152,7 @@ Letter.init(
         shareToken: {
             type: DataTypes.STRING(64),
             allowNull: false,
-            defaultValue: sequelize.literal("encode(gen_random_bytes(24), 'hex')") as any,
+            defaultValue: literal("encode(gen_random_bytes(24), 'hex')") as any,
         },
     },
     {
