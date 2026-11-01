@@ -70,6 +70,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
     const [isPublic, setIsPublic] = useState(false);
     const [backgroundImage, setBackgroundImage] = useState(backgroundGradients[0].value);
     const [imageUrl, setImageUrl] = useState('');
+    const [imageUploadError, setImageUploadError] = useState('');
 
     // Form State
     const [title, setTitle] = useState('');
@@ -120,6 +121,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
             setIsAnonymous(false);
             setBackgroundImage(backgroundGradients[0].value);
             setImageUrl('');
+            setImageUploadError('');
             setSpotifyLink('');
             setRecipientName('');
             setRecipientAddress('');
@@ -194,6 +196,17 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            if (!file.type.startsWith('image/')) {
+                setImageUploadError('Please choose an image file.');
+                e.target.value = '';
+                return;
+            }
+            if (file.size > 7 * 1024 * 1024) {
+                setImageUploadError('Please choose an image smaller than 7 MB.');
+                e.target.value = '';
+                return;
+            }
+            setImageUploadError('');
             const reader = new FileReader();
             reader.onloadend = () => {
                 setImageUrl(reader.result as string);
@@ -390,6 +403,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                                         <ImageIcon size={16} />
                                         {imageUrl ? 'Change Image' : 'Add Image'}
                                     </label>
+                                    {imageUploadError && <p role="alert" className="mt-1 text-xs text-destructive">{imageUploadError}</p>}
                                 </div>
                             </div>
                         </div>
