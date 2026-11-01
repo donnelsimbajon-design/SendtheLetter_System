@@ -21,7 +21,10 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
     const [isSearching, setIsSearching] = useState(false);
     const [sentTo, setSentTo] = useState<number[]>([]);
     const [shareFeedback, setShareFeedback] = useState('');
+    const [emailAddress, setEmailAddress] = useState('');
+    const [isSendingEmail, setIsSendingEmail] = useState(false);
     const isPubliclyShareable = note.isPublic && note.status === 'published';
+    const canEmail = String(note.authorId) === String(user?.id) && note.status === 'published';
 
     const shareUrl = useMemo(() => {
         if (typeof window === 'undefined') return '';
@@ -67,6 +70,24 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
         } catch (error) {
             console.error('Error sending letter message:', error);
             setShareFeedback('Could not send the in-app message. Please try again.');
+        }
+    };
+
+    const sendEmail = async () => {
+        if (!canEmail || !emailAddress.trim()) return;
+        setIsSendingEmail(true);
+        setShareFeedback('');
+        try {
+            const token = localStorage.getItem('token');
+            await axios.post(`${API_ENDPOINTS.letters}/${encodeURIComponent(String(note.id))}/email`, { recipientEmail: emailAddress.trim() }, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setShareFeedback('Your letter was accepted by the email delivery provider.');
+            setEmailAddress('');
+        } catch (error: any) {
+            setShareFeedback(error?.response?.data?.message || 'Email delivery is unavailable. Check the server email configuration.');
+        } finally {
+            setIsSendingEmail(false);
         }
     };
 
@@ -123,6 +144,17 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
                 </div>
 
                 <div className="p-4 space-y-5 max-h-[75vh] overflow-y-auto">
+                    {canEmail && (
+                        <section className="space-y-2">
+                            <h3 className="font-semibold text-sm">Send this letter by email</h3>
+                            <div className="flex gap-2">
+                                <input type="email" value={emailAddress} onChange={(event) => setEmailAddress(event.target.value)} placeholder="recipient@example.com" aria-label="Recipient email address" className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                <Button type="button" onClick={sendEmail} disabled={!emailAddress.trim() || isSendingEmail} className="gap-2"><Mail size={16} /> {isSendingEmail ? 'Sending…' : 'Send email'}</Button>
+                            </div>
+                            <p className="text-xs text-muted-foreground">The server sends the letter using its configured email provider. Private letters are sent only after your explicit action as the author.</p>
+                        </section>
+                    )}
+
                     <section className="space-y-2">
                         <div className="flex items-center gap-2">
                             <h3 className="font-semibold text-sm">Share outside SendTheLetter</h3>
