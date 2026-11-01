@@ -394,7 +394,7 @@ export const getPublicLetterById = async (req: Request, res: Response) => {
     try {
         const letter = await Letter.findOne({
             where: {
-                id: req.params.id,
+                shareToken: req.params.token,
                 isPublic: true,
                 status: 'published',
                 isArchived: false,
@@ -415,7 +415,7 @@ export const getPublicLetterById = async (req: Request, res: Response) => {
         const author = data.user;
 
         return res.json({
-            id: data.id,
+            shareToken: data.shareToken,
             title: data.title,
             content: data.content,
             type: data.type,
@@ -486,7 +486,7 @@ export const sendLetterByEmail = async (req: AuthRequest, res: Response) => {
         const safeTitle = escapeEmailHtml(letter.title || 'A letter from SendTheLetter');
         const safeContent = escapeEmailHtml(letter.content || '').replace(/\r?\n/g, '<br>');
         const publicUrl = letter.isPublic
-            ? `${(process.env.APP_BASE_URL || process.env.CLIENT_ORIGIN || process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '')}/letters/${letter.id}`
+            ? `${(process.env.APP_BASE_URL || process.env.CLIENT_ORIGIN || process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '')}/?s=${encodeURIComponent(letter.shareToken)}`
             : '';
         const publicLinkHtml = publicUrl
             ? `<p><a href="${escapeEmailHtml(publicUrl)}">View this letter on SendTheLetter</a></p>`
@@ -539,7 +539,7 @@ export const getPublicLetterSharePreview = async (req: Request, res: Response) =
         }
 
         const appBaseUrl = (process.env.APP_BASE_URL || process.env.CLIENT_ORIGIN || process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
-        const canonicalUrl = `${appBaseUrl}/letters/${letter.id}`;
+        const canonicalUrl = `${appBaseUrl}/?s=${encodeURIComponent(letter.shareToken)}`;
         const title = escapeEmailHtml(letter.title || 'A letter from SendTheLetter');
         const description = escapeEmailHtml((letter.content || 'A letter shared with care.').replace(/\s+/g, ' ').slice(0, 200));
         const imageUrl = typeof letter.imageUrl === 'string' && /^https?:\/\//i.test(letter.imageUrl)
