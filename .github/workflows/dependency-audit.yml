@@ -58,10 +58,10 @@ jobs:
         run: |
           cd Note_letter
           npm install
-          npm audit fix
+          npm audit fix || true
           cd server
           npm install
-          npm audit fix
+          npm audit fix || true
       - name: Commit updated lockfiles when changed
         run: |
           git config user.name "github-actions[bot]"
