@@ -8,6 +8,7 @@ import LetterEditorModal from '../../components/LetterEditorModal';
 import LetterViewModal from '../../components/LetterViewModal';
 import { Note } from '../../types/note';
 import clsx from 'clsx';
+import Mascot from '../../components/Mascot';
 
 const Notes = () => {
     const { notes, publicLetters, addNote, fetchMyLetters, fetchPublicLetters } = useNoteStore();
@@ -126,14 +127,14 @@ const Notes = () => {
 
                 {filteredNotes.length === 0 && (
                     <div className="col-span-full flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-border rounded-3xl bg-muted/10">
-                        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4 text-muted-foreground">
-                            {activeTab === 'personal' ? <Lock size={32} /> : <Globe size={32} />}
-                        </div>
-                        <h3 className="text-xl font-semibold mb-2">No letters found</h3>
+                        <Mascot name={activeTab === 'personal' ? 'lumi' : 'sely'} className="mb-3 h-28 w-28" />
+                        <h3 className="text-xl font-semibold mb-2">{searchQuery ? 'No matching letters' : 'No letters found'}</h3>
                         <p className="text-muted-foreground max-w-sm">
-                            {activeTab === 'personal'
-                                ? "You haven't written any letters yet. Click 'Write a Letter' to start!"
-                                : "There are no public letters to display right now."}
+                            {searchQuery
+                                ? 'Try a different search term.'
+                                : activeTab === 'personal'
+                                  ? "You haven't written any letters yet. Click 'Write a Letter' to start!"
+                                  : 'There are no public letters to display right now.'}
                         </p>
                     </div>
                 )}
