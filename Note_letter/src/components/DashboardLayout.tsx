@@ -63,7 +63,7 @@ const DashboardLayout = () => {
                   <div className="max-h-80 overflow-y-auto">
                     {notifications.length ? notifications.slice(0, 12).map((notification) => (
                       <Link key={notification.id} to={notification.actor?.username ? `/dashboard/profile/${notification.actor.username}` : '/dashboard'} onClick={() => setShowNotifications(false)} className="block border-b border-border/70 px-4 py-3 last:border-0 hover:bg-muted/60">
-                        <p className="text-sm leading-5"><span className="font-semibold">{notification.actor?.username || 'Someone'}</span>{notification.type === 'like' ? ' liked your letter ' : ' commented on your letter '}<span className="font-medium">{notification.letter?.title || 'your letter'}</span></p>
+                        <p className="text-sm leading-5"><span className="font-semibold">{notification.actor?.username || 'Someone'}</span>{notification.type === 'like' ? ' liked your letter ' : notification.type === 'friend_request' ? ' sent you a friend request' : notification.type === 'follow' ? ' started following you' : ' commented on your letter '}<span className="font-medium">{notification.letter?.title || 'your letter'}</span></p>
                         <p className="mt-1 text-xs text-muted-foreground">{formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}</p>
                       </Link>
                     )) : <p className="px-4 py-8 text-center text-sm text-muted-foreground">No notifications yet.</p>}
