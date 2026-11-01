@@ -9,6 +9,7 @@ export interface Comment {
 
 export interface Note {
     id: string;
+    shareToken?: string;
     title: string;
     content: string;
     category?: string;
