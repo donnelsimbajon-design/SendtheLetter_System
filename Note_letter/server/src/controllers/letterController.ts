@@ -412,7 +412,7 @@ export const sendLetterByEmail = async (req: AuthRequest, res: Response) => {
         if (Number(letter.userId) !== userId) {
             return res.status(403).json({ message: 'Only the letter author can send it by email' });
         }
-        if (letter.status !== 'published' || letter.isArchived || (letter.scheduledDate && new Date(letter.scheduledDate) > new Date())) {
+        if (letter.status !== 'published' || letter.isArchived || (letter.scheduledDate && letter.scheduledDate.getTime() > Date.now())) {
             return res.status(409).json({ message: 'Only available, published letters can be emailed' });
         }
 
@@ -431,11 +431,14 @@ export const sendLetterByEmail = async (req: AuthRequest, res: Response) => {
         const safeTitle = escapeEmailHtml(letter.title || 'A letter from SendTheLetter');
         const safeContent = escapeEmailHtml(letter.content || '').replace(/\r?\n/g, '<br>');
         const publicUrl = letter.isPublic
-            ? `${(process.env.APP_BASE_URL || '').replace(/\/$/, '')}/letters/${letter.id}`
+            ? `${(process.env.APP_BASE_URL || 'http://localhost:5173').replace(/\/$/, '')}/letters/${letter.id}`
             : '';
         const publicLinkHtml = publicUrl
             ? `<p><a href="${escapeEmailHtml(publicUrl)}">View this letter on SendTheLetter</a></p>`
             : '';
+
+        recentAttempts.push(now);
+        emailSendHistory.set(userId, recentAttempts);
 
         const response = await axios.post('https://api.resend.com/emails', {
             from,
@@ -448,8 +451,6 @@ export const sendLetterByEmail = async (req: AuthRequest, res: Response) => {
             timeout: 15000,
         });
 
-        recentAttempts.push(now);
-        emailSendHistory.set(userId, recentAttempts);
         return res.status(202).json({
             message: 'Letter email accepted by the delivery provider',
             providerMessageId: response.data?.id || null,
