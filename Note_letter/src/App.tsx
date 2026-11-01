@@ -16,6 +16,7 @@ import Contact from './Pages/Contact';
 import Login from './Pages/Login';
 import Signup from './Pages/Signup';
 import Creator from './Pages/Creator';
+import PublicLetterPage from './Pages/user/PublicLetterPage';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -44,6 +45,7 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/creator" element={<Creator />} />
+                <Route path="/letters/:id" element={<PublicLetterPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
 
                 {/* Private Routes */}
