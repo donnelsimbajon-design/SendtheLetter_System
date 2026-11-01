@@ -7,7 +7,8 @@ import { useAuthStore } from '../store/authStore';
 import socketService from '../services/socketService';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
-import { cn, getImageUrl } from '../lib/utils'; // Keep getImageUrl if needed, or remove if unused
+import { cn, getImageUrl } from '../lib/utils';
+import { API_ENDPOINTS } from '../config/api';
 
 interface MessageModalProps {
     isOpen: boolean;
@@ -75,48 +76,13 @@ const MessageModal: React.FC<MessageModalProps> = ({ isOpen, onClose, otherUser 
     const fetchMessages = async () => {
         if (!otherUser) return;
         try {
-            const response = await axios.get(`http://localhost:5000/api/messages/${otherUser.id}`, {
+            const response = await axios.get(`${API_ENDPOINTS.messages}/${otherUser.id}`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             setMessages(response.data);
         } catch (error) {
             console.error('Error fetching messages:', error);
         }
-    };
-
-    const handleSendMessage = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newMessage.trim() || !otherUser) return;
-
-        try {
-            await axios.post('http://localhost:5000/api/messages/send', {
-                receiverId: otherUser.id,
-                content: newMessage
-            }, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
-
-            // Optimistic update not strictly needed as socket will return the message,
-            // but we can append it if we want instant feedback before server confirms.
-            // For now rely on socket or re-fetch. 
-            // Actually, let's append it manually to be "lively" immediately if socket delay.
-            // But wait, the socket emits to the receiver. Does it emit to SENDER?
-            // The controller: io.to(`user_${receiverId}`).emit...
-            // It does NOT emit to sender. So we MUST append it manually or have controller emit to sender too.
-            // Let's append manually here for now, or fetch the response.
-            // The controller returns the message. 
-
-            // Let's assume we get the message back from the POST request
-            // const response = ...
-            // Actually, let's fetch messages again or update state with response.
-
-            // Revisiting handleSendMessage...
-        } catch (error) {
-            console.error('Error sending message:', error);
-        }
-
-        // Reset input immediately
-        setNewMessage('');
     };
 
     // Better handleSendMessage
@@ -128,7 +94,7 @@ const MessageModal: React.FC<MessageModalProps> = ({ isOpen, onClose, otherUser 
         setNewMessage(''); // Clear input immediately
 
         try {
-            const response = await axios.post('http://localhost:5000/api/messages/send', {
+            const response = await axios.post(`${API_ENDPOINTS.messages}/send`, {
                 receiverId: otherUser.id,
                 content: content
             }, {
