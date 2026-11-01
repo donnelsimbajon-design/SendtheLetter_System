@@ -30,8 +30,19 @@ export const createLetter = async (req: AuthRequest, res: Response) => {
         } = req.body;
         const userId = req.user.id;
 
+        if (!title || !content) {
+            return res.status(400).json({ message: 'A letter title and content are required' });
+        }
+        if (isTimeCapsule && !openDate) {
+            return res.status(400).json({ message: 'Choose an opening date for your Time Capsule' });
+        }
+
         const releaseAt = isTimeCapsule ? openDate : scheduledDate;
-        const releaseIsFuture = Boolean(releaseAt && new Date(releaseAt).getTime() > Date.now());
+        const releaseTime = releaseAt ? new Date(releaseAt).getTime() : null;
+        if (releaseTime !== null && !Number.isFinite(releaseTime)) {
+            return res.status(400).json({ message: 'Enter a valid release date' });
+        }
+        const releaseIsFuture = releaseTime !== null && releaseTime > Date.now();
         const effectiveStatus = status === 'draft' ? 'draft' : (releaseIsFuture ? 'scheduled' : (status || 'published'));
 
         const letter = await Letter.create({
@@ -266,6 +277,9 @@ export const updateLetter = async (req: AuthRequest, res: Response) => {
             ? (updates.openDate ?? letter.openDate)
             : (updates.scheduledDate ?? letter.scheduledDate);
 
+        if (letter.status !== 'draft' && nextIsTimeCapsule && !nextReleaseAt) {
+            return res.status(400).json({ message: 'Choose an opening date for your Time Capsule' });
+        }
         if (letter.status !== 'draft' && nextReleaseAt) {
             const releaseTime = nextReleaseAt instanceof Date ? nextReleaseAt.getTime() : Date.parse(String(nextReleaseAt));
             if (!Number.isFinite(releaseTime)) {
