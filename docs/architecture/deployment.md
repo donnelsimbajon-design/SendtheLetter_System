@@ -14,8 +14,9 @@ flowchart TB
   api -->|Local filesystem today| files[(uploads directory)]
   api -.->|Future| object[(Object storage)]
   api -.->|Future| email[Email delivery provider]
-  worker -.->|Future scheduled jobs| db
-  worker -.->|Future email delivery| email
+  api -->|In-process scheduled release polling| db
+  worker -.->|Future dedicated worker process| db
+  api -.->|Configured Resend email endpoint| email
 ```
 
 ## Production requirements
