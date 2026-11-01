@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Send, User, Search, Phone, Video, MoreVertical, Paperclip, Smile } from 'lucide-react';
+import { Send, User, Search, MoreVertical, Paperclip, Smile } from 'lucide-react';
 import { format } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAuthStore } from '../../store/authStore';
 import socketService from '../../services/socketService';
 import axios from 'axios';
@@ -18,6 +18,7 @@ interface Conversation {
         username: string;
         avatar?: string;
         location?: string;
+        isOnline?: boolean;
     };
     lastMessage: string;
     lastMessageTime: string;
