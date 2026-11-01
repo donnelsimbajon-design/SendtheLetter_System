@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
-import { Search, Send, Check, User as UserIcon, X, Copy, Mail, Facebook, Instagram, MessageCircle, Share2, Lock } from 'lucide-react';
+import { Search, Check, User as UserIcon, X, Copy, Mail, Facebook, Instagram, MessageCircle, Share2, Lock } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { getImageUrl } from '../lib/utils';
 import axios from 'axios';
