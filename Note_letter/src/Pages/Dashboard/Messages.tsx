@@ -8,10 +8,8 @@ import { useAuthStore } from '../../store/authStore';
 import socketService from '../../services/socketService';
 import axios from 'axios';
 import { getImageUrl } from '../../lib/utils';
-import { cn } from '../../lib/utils'; // Try to import cn if available, or just use template literals
 import { API_ENDPOINTS } from '../../config/api';
 
-// Fallback cn if not available
 const classNames = (...classes: (string | undefined | null | false)[]) => classes.filter(Boolean).join(' ');
 
 interface Conversation {
