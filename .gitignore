@@ -1,0 +1,24 @@
+# Environment secrets
+.env
+.env.*
+!.env.example
+Note_letter/.env
+Note_letter/server/.env
+
+# Dependencies and generated output
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+coverage/
+
+# Runtime uploads and local logs
+Note_letter/server/uploads/*
+!Note_letter/server/uploads/.gitkeep
+*.log
+npm-debug.log*
+
+# Local editor and OS files
+.DS_Store
+.vscode/
+.idea/

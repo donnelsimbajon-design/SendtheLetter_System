@@ -13,7 +13,7 @@ export const toggleLike = async (req: AuthRequest, res: Response) => {
 
         // Check if letter exists
         const letter = await Letter.findByPk(letterId);
-        if (!letter) {
+        if (!letter || letter.isArchived || (!letter.isPublic && letter.userId !== userId) || (letter.status !== 'published' && letter.userId !== userId)) {
             return res.status(404).json({ message: 'Letter not found' });
         }
 
@@ -81,10 +81,14 @@ export const toggleLike = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const getLikes = async (req: Request, res: Response) => {
+export const getLikes = async (req: AuthRequest, res: Response) => {
     try {
         const { id: letterId } = req.params;
-        const userId = (req as AuthRequest).user?.id;
+        const userId = req.user?.id;
+        const letter = await Letter.findByPk(letterId);
+        if (!letter || letter.isArchived || (!letter.isPublic && letter.userId !== userId) || (letter.status !== 'published' && letter.userId !== userId)) {
+            return res.status(404).json({ message: 'Letter not found' });
+        }
 
         const likeCount = await Like.count({ where: { letterId } });
 

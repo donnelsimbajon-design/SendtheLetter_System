@@ -10,12 +10,12 @@ interface AuthRequest extends Request {
 export const createComment = async (req: AuthRequest, res: Response) => {
     try {
         const { id: letterId } = req.params;
-        const { content } = req.body;
+        const content = typeof req.body.content === 'string' ? req.body.content.trim() : '';
         const userId = req.user.id;
+        if (!content || content.length > 5000) return res.status(400).json({ message: 'Comment must be between 1 and 5,000 characters.' });
 
-        // Check if letter exists and is public
         const letter = await Letter.findByPk(letterId);
-        if (!letter) {
+        if (!letter || letter.isArchived || (!letter.isPublic && letter.userId !== userId) || (letter.status !== 'published' && letter.userId !== userId)) {
             return res.status(404).json({ message: 'Letter not found' });
         }
 
@@ -87,9 +87,13 @@ export const createComment = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const getComments = async (req: Request, res: Response) => {
+export const getComments = async (req: AuthRequest, res: Response) => {
     try {
         const { id: letterId } = req.params;
+        const letter = await Letter.findByPk(letterId);
+        if (!letter || letter.isArchived || (!letter.isPublic && letter.userId !== req.user?.id) || (letter.status !== 'published' && letter.userId !== req.user?.id)) {
+            return res.status(404).json({ message: 'Letter not found' });
+        }
 
         const comments = await Comment.findAll({
             where: { letterId },

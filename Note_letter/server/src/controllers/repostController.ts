@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
-import { Model, DataTypes } from 'sequelize';
-import sequelize from '../config/database';
+import { Op } from 'sequelize';
 import Letter from '../models/Letter';
 import User from '../models/User';
 import Repost from '../models/Repost';
@@ -12,7 +11,12 @@ interface AuthRequest extends Request {
 export const toggleRepost = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user.id;
-        const letterId = parseInt(req.params.id);
+        const letterId = Number(req.params.id);
+        if (!Number.isInteger(letterId) || letterId < 1) return res.status(400).json({ message: 'Invalid letter ID.' });
+        const letter = await Letter.findByPk(letterId);
+        if (!letter || !letter.isPublic || letter.status !== 'published' || letter.isArchived) return res.status(404).json({ message: 'Public letter not found.' });
+        const author = await User.findByPk(letter.userId);
+        if (!author || !author.isActive) return res.status(404).json({ message: 'Public letter not found.' });
 
         const existingRepost = await Repost.findOne({
             where: { userId, letterId }
@@ -34,7 +38,10 @@ export const toggleRepost = async (req: AuthRequest, res: Response) => {
 export const checkRepostStatus = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user.id;
-        const letterId = parseInt(req.params.id);
+        const letterId = Number(req.params.id);
+        if (!Number.isInteger(letterId) || letterId < 1) return res.status(400).json({ message: 'Invalid letter ID.' });
+        const letter = await Letter.findByPk(letterId);
+        if (!letter || !letter.isPublic || letter.status !== 'published' || letter.isArchived) return res.status(404).json({ message: 'Public letter not found.' });
 
         const repost = await Repost.findOne({
             where: { userId, letterId }
@@ -63,10 +70,12 @@ export const getUserReposts = async (req: AuthRequest, res: Response) => {
             include: [{
                 model: Letter,
                 as: 'letter',
+                where: { isPublic: true, status: 'published', isArchived: false },
                 include: [{
                     model: User,
                     as: 'user',
-                    attributes: ['id', 'username', 'avatar']
+                    attributes: ['id', 'username', 'avatar'],
+                    where: { isActive: true },
                 }]
             }],
             order: [['createdAt', 'DESC']]
@@ -91,10 +100,7 @@ export const getPublicUserReposts = async (req: AuthRequest, res: Response) => {
         const { username } = req.params;
 
         const user = await User.findOne({
-            where: sequelize.where(
-                sequelize.fn('LOWER', sequelize.col('username')),
-                sequelize.fn('LOWER', username)
-            )
+            where: { username: { [Op.iLike]: username }, isActive: true }
         });
 
         if (!user) {
@@ -106,11 +112,12 @@ export const getPublicUserReposts = async (req: AuthRequest, res: Response) => {
             include: [{
                 model: Letter,
                 as: 'letter',
-                where: { isPublic: true, status: 'published' }, // Only show public letters
+                where: { isPublic: true, status: 'published', isArchived: false }, // Only show public letters
                 include: [{
                     model: User,
                     as: 'user',
-                    attributes: ['id', 'username', 'avatar']
+                    attributes: ['id', 'username', 'avatar'],
+                    where: { isActive: true },
                 }]
             }],
             order: [['createdAt', 'DESC']]

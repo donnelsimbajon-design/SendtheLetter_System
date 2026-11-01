@@ -25,15 +25,20 @@ export const createLetter = async (req: AuthRequest, res: Response) => {
             imageUrl
         } = req.body;
         const userId = req.user.id;
+        if (typeof title !== 'string' || !title.trim() || title.length > 255 || typeof content !== 'string' || !content.trim() || content.length > 100000) {
+            return res.status(400).json({ message: 'A title (max 255 characters) and letter content are required.' });
+        }
+        if (typeof imageUrl === 'string' && imageUrl.length > 7500000) return res.status(400).json({ message: 'Letter image must be 5 MB or smaller.' });
+        const safeStatus = status === 'draft' || status === 'scheduled' ? status : 'published';
 
         const letter = await Letter.create({
             userId,
-            title,
+            title: title.trim(),
             content,
-            type,
-            isPublic,
+            type: typeof type === 'string' ? type.slice(0, 50) : 'General',
+            isPublic: isPublic === true,
             scheduledDate,
-            status: status || 'published',
+            status: safeStatus,
             backgroundImage,
             recipientName,
             recipientAddress,
@@ -54,7 +59,7 @@ export const getMyLetters = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user.id;
         const letters = await Letter.findAll({
-            where: { userId, status: 'published' },
+            where: { userId, status: 'published', isArchived: false },
             order: [['createdAt', 'DESC']],
         });
         res.json(letters);
@@ -86,7 +91,7 @@ export const getPublicLetters = async (req: Request, res: Response) => {
         const { default: Comment } = await import('../models/Comment');
 
         const letters = await Letter.findAll({
-            where: { isPublic: true, status: 'published' },
+            where: { isPublic: true, status: 'published', isArchived: false },
             include: [
                 {
                     model: User,
@@ -154,6 +159,7 @@ export const getUserPublicLetters = async (req: Request, res: Response) => {
             where: {
                 isPublic: true,
                 status: 'published',
+                isArchived: false,
                 userId: user.id,
                 isAnonymous: false // Don't show anonymous letters on profile
             },
@@ -229,7 +235,25 @@ export const updateLetter = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
-        const updates = req.body;
+        const body = req.body || {};
+        const allowedFields = ['title', 'content', 'type', 'isPublic', 'scheduledDate', 'status', 'backgroundImage', 'recipientName', 'recipientAddress', 'spotifyLink', 'font', 'isAnonymous', 'imageUrl', 'address', 'latitude', 'longitude', 'openDate', 'isTimeCapsule', 'isArchived'];
+        const updates: Record<string, any> = {};
+        for (const field of allowedFields) {
+            if (Object.prototype.hasOwnProperty.call(body, field)) updates[field] = body[field];
+        }
+        if (updates.title !== undefined && (typeof updates.title !== 'string' || !updates.title.trim() || updates.title.length > 255)) {
+            return res.status(400).json({ message: 'Title must be between 1 and 255 characters.' });
+        }
+        if (updates.content !== undefined && (typeof updates.content !== 'string' || !updates.content.trim() || updates.content.length > 100000)) {
+            return res.status(400).json({ message: 'Letter content is required and must be 100,000 characters or fewer.' });
+        }
+        if (typeof updates.imageUrl === 'string' && updates.imageUrl.length > 7500000) return res.status(400).json({ message: 'Letter image must be 5 MB or smaller.' });
+        if (updates.status !== undefined && !['published', 'draft', 'scheduled'].includes(String(updates.status))) {
+            return res.status(400).json({ message: 'Invalid letter status.' });
+        }
+        if (updates.isPublic !== undefined && typeof updates.isPublic !== 'boolean') {
+            return res.status(400).json({ message: 'isPublic must be a boolean.' });
+        }
 
         const letter = await Letter.findByPk(id);
 
@@ -240,7 +264,11 @@ export const updateLetter = async (req: AuthRequest, res: Response) => {
         if (letter.userId !== userId) {
             return res.status(403).json({ message: 'Not authorized to update this letter' });
         }
+        if (letter.status === 'removed' && (updates.status !== undefined || updates.isPublic !== undefined || updates.isArchived === false)) {
+            return res.status(403).json({ message: 'This letter was removed by moderation and cannot be republished.' });
+        }
 
+        if (Object.keys(updates).length === 0) return res.status(400).json({ message: 'No valid fields supplied for update.' });
         await letter.update(updates);
         res.json({ message: 'Letter updated successfully', letter });
     } catch (error) {
@@ -260,7 +288,8 @@ export const getScheduledLetters = async (req: AuthRequest, res: Response) => {
         const letters = await Letter.findAll({
             where: {
                 userId,
-                status: 'scheduled'
+                status: 'scheduled',
+                isArchived: false,
             },
             order: [['scheduledDate', 'ASC']],
         });
@@ -280,7 +309,8 @@ export const getTimeCapsules = async (req: AuthRequest, res: Response) => {
             where: {
                 userId,
                 type: 'Time Capsule',
-                status: 'scheduled'
+                status: 'scheduled',
+                isArchived: false,
             },
             order: [['scheduledDate', 'ASC']],
         });

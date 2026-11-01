@@ -4,22 +4,23 @@ import API_BASE_URL from '../config/api';
 class SocketService {
     private socket: Socket | null = null;
     private activeUserId: number | null = null;
+    private activeToken: string | null = null;
 
-    connect(userId: number) {
+    connect(userId: number, token: string) {
         // Reuse an existing connection (including one still handshaking).
-        if (this.socket && this.activeUserId === userId) return;
+        if (this.socket && this.activeUserId === userId && this.activeToken === token) return;
 
         this.disconnect();
         this.activeUserId = userId;
+        this.activeToken = token;
         const socket = io(API_BASE_URL, {
+            auth: { token },
             transports: ['websocket', 'polling'],
             autoConnect: true,
         });
         this.socket = socket;
 
-        socket.on('connect', () => {
-            socket.emit('join', userId);
-        });
+
     }
 
     disconnect() {
@@ -29,6 +30,7 @@ class SocketService {
             this.socket = null;
         }
         this.activeUserId = null;
+        this.activeToken = null;
     }
 
     joinLetterRoom(letterId: string) {
