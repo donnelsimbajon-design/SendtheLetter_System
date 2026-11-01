@@ -8,6 +8,7 @@ import ProfileDropdown from './ProfileDropdown';
 import { formatDistanceToNow } from 'date-fns';
 import socketService from '../services/socketService';
 import { getImageUrl } from '../lib/utils';
+import { API_BASE_URL } from '../config/api';
 
 const DashboardHeader = () => {
     const location = useLocation();
@@ -126,7 +127,7 @@ const DashboardHeader = () => {
                                                             onClick={async () => {
                                                                 try {
                                                                     const token = localStorage.getItem('token');
-                                                                    await fetch('http://localhost:5000/api/friends/accept', {
+                                                                    await fetch(`${API_BASE_URL}/api/friends/accept`, {
                                                                         method: 'POST',
                                                                         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                                                                         body: JSON.stringify({ requestId: n.entityId })
