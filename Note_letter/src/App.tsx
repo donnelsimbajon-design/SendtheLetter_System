@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import socketService from './services/socketService';
 import { useAuthStore } from './store/authStore';
@@ -30,6 +30,11 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
     return user?.role === 'admin' ? <>{children}</> : <Navigate to="/dashboard" replace />;
 };
 
+const Landing = () => {
+    const { search } = useLocation();
+    return new URLSearchParams(search).has('s') ? <PublicLetterPage /> : <Home />;
+};
+
 function App() {
     const { user, isAuthenticated, token } = useAuthStore();
 
@@ -44,7 +49,7 @@ function App() {
     return (
         <Router>
             <Routes>
-                <Route path="/" element={new URLSearchParams(window.location.search).has("s") ? <PublicLetterPage /> : <Home />} />
+                <Route path="/" element={<Landing />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/services" element={<Services />} />
                 <Route path="/contact" element={<Contact />} />
