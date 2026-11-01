@@ -23,20 +23,20 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
     const [shareFeedback, setShareFeedback] = useState('');
     const [emailAddress, setEmailAddress] = useState('');
     const [isSendingEmail, setIsSendingEmail] = useState(false);
-    const isPubliclyShareable = note.isPublic && note.status === 'published';
+    const isPubliclyShareable = note.isPublic && note.status === 'published' && !!note.shareToken;
     const noteOwnerId = note.authorId ?? (note as Note & { userId?: string | number }).userId;
     const canEmail = String(noteOwnerId) === String(user?.id) && note.status === 'published';
 
     const shareUrl = useMemo(() => {
         if (typeof window === 'undefined') return '';
         const appBaseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
-        return new URL(`/letters/${encodeURIComponent(String(note.id))}`, appBaseUrl).toString();
-    }, [note.id]);
+        return new URL(`/?s=${encodeURIComponent(String(note.shareToken || ''))}`, appBaseUrl).toString();
+    }, [note.shareToken]);
 
     // Social crawlers need server-rendered Open Graph metadata; human-facing links
     // should always point to the deployed frontend route.
     const socialPreviewUrl = useMemo(() => {
-        return new URL(`/api/letters/public/${encodeURIComponent(String(note.id))}/share`, API_BASE_URL).toString();
+        return new URL(`/api/letters/public/${encodeURIComponent(String(note.shareToken || ''))}/share`, API_BASE_URL).toString();
     }, [note.id]);
 
     useEffect(() => {
@@ -178,7 +178,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
                                 </div>
                             </>
                         ) : (
-                            <p className="text-sm text-muted-foreground bg-muted/50 rounded-xl p-3">This letter is not public and published, so external sharing is disabled to protect its privacy. You can still send an in-app message to a friend.</p>
+                            <p className="text-sm text-muted-foreground bg-muted/50 rounded-xl p-3">Only published public letters with a secure share token can be shared. Save or refresh the letter if its link is not ready. You can still send an in-app message to a friend.</p>
                         )}
                         {shareFeedback && <p role="status" className="text-xs text-primary">{shareFeedback}</p>}
                     </section>
