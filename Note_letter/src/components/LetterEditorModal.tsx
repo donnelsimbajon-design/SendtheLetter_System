@@ -34,6 +34,13 @@ const categories = [
     'Other'
 ];
 
+const letterTemplates = [
+    { value: 'gratitude', label: 'A note of gratitude', category: 'Gratitude', title: 'Thank you for being you', content: 'Dear you,\\n\\nI wanted to take a moment to say thank you for...\\n\\nOne thing I appreciate about you is...\\n\\nIt means more than you know.\\n\\nWith gratitude,' },
+    { value: 'apology', label: 'A gentle apology', category: 'Apology', title: 'I owe you an apology', content: 'Dear you,\\n\\nI have been thinking about what happened, and I want to acknowledge...\\n\\nI am sorry for...\\n\\nI hope we can find a way forward when you are ready.\\n\\nWith sincerity,' },
+    { value: 'future-self', label: 'A note to my future self', category: 'Reflection', title: 'A note to my future self', content: 'Dear future me,\\n\\nRight now, life looks like...\\n\\nI hope you remember...\\n\\nPlease keep making time for...\\n\\nWhatever happens, I hope you are proud of how far we have come.\\n\\nWith care,' },
+    { value: 'hello', label: 'A little hello', category: 'Friendship', title: 'Just wanted to say hello', content: 'Dear you,\\n\\nYou crossed my mind today, and I wanted to reach out.\\n\\nI hope you have been...\\n\\nHere is something I wanted you to know...\\n\\nTalk soon,' },
+];
+
 const API_URL = API_ENDPOINTS.letters;
 
 const backgroundGradients = [
@@ -49,6 +56,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
     const user = useAuthStore((state) => state.user);
     const [font, setFont] = useState('font-serif');
     const [category, setCategory] = useState('Other');
+    const [selectedTemplate, setSelectedTemplate] = useState('');
     const [isAnonymous, setIsAnonymous] = useState(false);
     const [isPublic, setIsPublic] = useState(false);
     const [backgroundImage, setBackgroundImage] = useState(backgroundGradients[0].value);
@@ -96,6 +104,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
             // Reset fields for new letter
             setTitle('');
             setContent('');
+            setSelectedTemplate('');
             setCategory('Other');
             setFont('font-serif');
             setIsPublic(false);
@@ -164,6 +173,15 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
         return () => clearTimeout(timer);
     }, [isOpen, title, content, recipientName, recipientAddress, font, category, spotifyLink, isAnonymous, isPublic, backgroundImage, imageUrl, scheduledDate, isTimeCapsule, openDate, draftId]);
 
+    const handleTemplateChange = (value: string) => {
+        setSelectedTemplate(value);
+        const template = letterTemplates.find((item) => item.value === value);
+        if (!template) return;
+        setTitle(template.title);
+        setCategory(template.category);
+        setContent(template.content);
+    };
+
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -228,6 +246,21 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                         <div className="space-y-1">
                             <h2 className="text-xl font-serif font-medium text-foreground">Write a Letter</h2>
                             <p className="text-xs text-muted-foreground">Craft your thoughts with care.</p>
+                        </div>
+
+                        {/* Writing prompts */}
+                        <div className="space-y-2">
+                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Start with a prompt</Label>
+                            <Select value={selectedTemplate} onValueChange={handleTemplateChange}>
+                                <SelectTrigger className="bg-card border-border text-foreground">
+                                    <SelectValue placeholder="Choose a starting point" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {letterTemplates.map((template) => (
+                                        <SelectItem key={template.value} value={template.value}>{template.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         {/* Settings */}
