@@ -48,3 +48,10 @@ The frontend should only advertise capabilities that are implemented and backed 
 ## Quality checks
 
 GitHub Actions runs the frontend TypeScript project build and Vite production build for pull requests and relevant branch pushes. The lockfile includes semver-compatible dependency security updates; CI runs a full npm dependency audit.
+
+
+## System architecture and integrations
+
+The architecture handbook and implementation boundaries are documented in [docs/architecture](docs/architecture/README.md). It includes the system context, logical architecture, data flows, sequence diagrams, database model, deployment view, security findings, and sharing/email integration contract.
+
+The current implementation supports in-app friend sharing and a public-letter URL flow for published public letters. Email-provider delivery, scheduled delivery worker, private share tokens, and direct Meta API publishing/messaging still require additional implementation and owner-supplied credentials. See [implementation status](docs/implementation-status.md) before treating these as production features.
