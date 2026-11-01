@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
-import { Search, Check, User as UserIcon, X, Copy, Mail, Facebook, Instagram, MessageCircle, Share2, Lock } from 'lucide-react';
+import { Search, Check, User as UserIcon, Copy, Mail, Facebook, Instagram, MessageCircle, Share2, Lock } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { getImageUrl } from '../lib/utils';
 import axios from 'axios';
@@ -29,6 +29,13 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
 
     const shareUrl = useMemo(() => {
         if (typeof window === 'undefined') return '';
+        const appBaseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+        return new URL(`/letters/${encodeURIComponent(String(note.id))}`, appBaseUrl).toString();
+    }, [note.id]);
+
+    // Social crawlers need server-rendered Open Graph metadata; human-facing links
+    // should always point to the deployed frontend route.
+    const socialPreviewUrl = useMemo(() => {
         return new URL(`/api/letters/public/${encodeURIComponent(String(note.id))}/share`, API_BASE_URL).toString();
     }, [note.id]);
 
@@ -118,7 +125,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
 
     const shareFacebook = () => {
         if (!isPubliclyShareable) return;
-        const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+        const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(socialPreviewUrl)}`;
         window.open(url, '_blank', 'noopener,noreferrer');
     };
 
@@ -139,9 +146,6 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
                         <Share2 size={18} className="text-primary" /> Share Letter
                     </DialogTitle>
                     <DialogDescription className="sr-only">Share a public letter externally or send it to a friend inside SendTheLetter.</DialogDescription>
-                    <button onClick={onClose} aria-label="Close share dialog" className="text-muted-foreground hover:text-foreground transition-colors">
-                        <X size={20} />
-                    </button>
                 </div>
 
                 <div className="p-4 space-y-5 max-h-[75vh] overflow-y-auto">
