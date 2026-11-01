@@ -9,7 +9,7 @@ import socketService from '../../services/socketService';
 import axios from 'axios';
 import { getImageUrl } from '../../lib/utils';
 import { cn } from '../../lib/utils'; // Try to import cn if available, or just use template literals
-import { API_BASE_URL, API_ENDPOINTS } from '../../config/api';
+import { API_ENDPOINTS } from '../../config/api';
 
 // Fallback cn if not available
 const classNames = (...classes: (string | undefined | null | false)[]) => classes.filter(Boolean).join(' ');
@@ -88,7 +88,7 @@ const Messages = () => {
 
     const fetchConversations = async () => {
         try {
-            const response = await axios.get('API_ENDPOINTS.messages/conversations', {
+            const response = await axios.get(`${API_ENDPOINTS.messages}/conversations`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             setConversations(response.data);
@@ -111,7 +111,7 @@ const Messages = () => {
                 } else {
                     // Fetch user details if not in convos (new chat)
                     try {
-                        const response = await axios.get(`API_ENDPOINTS.users/id/${initialUserId}`, {
+                        const response = await axios.get(`${API_ENDPOINTS.users}/id/${initialUserId}`, {
                             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
                         });
 
@@ -143,13 +143,13 @@ const Messages = () => {
 
     const fetchMessages = async (otherUserId: number) => {
         try {
-            const response = await axios.get(`API_ENDPOINTS.messages/${otherUserId}`, {
+            const response = await axios.get(`${API_ENDPOINTS.messages}/${otherUserId}`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             setMessages(response.data);
 
             // Mark as read (optional, can be separate call)
-            await axios.post('API_ENDPOINTS.messages/read', {
+            await axios.post(`${API_ENDPOINTS.messages}/read`, {
                 senderId: otherUserId
             }, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -173,7 +173,7 @@ const Messages = () => {
         setNewMessage('');
 
         try {
-            const response = await axios.post('API_ENDPOINTS.messages/send', {
+            const response = await axios.post(`${API_ENDPOINTS.messages}/send`, {
                 receiverId: selectedUser.id,
                 content
             }, {
