@@ -134,7 +134,7 @@ export const postPublicThread = async (req: AuthedRequest, res: Response) => {
             const user = await User.findByPk(req.user.id, { attributes: ['id', 'username', 'isActive'] });
             if (!user?.isActive) return res.status(401).json({ message: 'Account unavailable. Sign in again.' });
             userId = user.id;
-            displayName = user.username;
+            displayName = user.username.slice(0, 40);
         } else {
             const name = typeof req.body?.displayName === 'string' ? req.body.displayName.trim() : '';
             if (name.length < 2 || name.length > 40 || /[<>\x00-\x1f]/.test(name)) {
@@ -183,7 +183,15 @@ export const postPublicThread = async (req: AuthedRequest, res: Response) => {
                     entityId: letter.id,
                 });
                 const io = req.app.get('io');
-                if (io) io.to(`user_${letter.userId}`).emit('new_notification', notification);
+                if (io) {
+                    const detailed = await Notification.findByPk(notification.id, {
+                        include: [
+                            { model: User, as: 'actor', attributes: ['id', 'username'] },
+                            { model: Letter, as: 'letter', attributes: ['id', 'title'] },
+                        ],
+                    });
+                    io.to(`user_${letter.userId}`).emit('new_notification', detailed || notification);
+                }
             } catch (notificationError) {
                 console.error('Comment saved, but notification could not be delivered:', notificationError);
             }
