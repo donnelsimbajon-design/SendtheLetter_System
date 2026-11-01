@@ -16,6 +16,7 @@ import messageRoutes from './routes/messageRoutes';
 import friendRoutes from './routes/friendRoutes';
 import Message from './models/Message';
 import Friend from './models/Friend';
+import { startScheduledLetterWorker } from './services/scheduledLetterWorker';
 
 dotenv.config();
 
@@ -120,6 +121,7 @@ const startServer = async () => {
         // TODO: replace alter-sync with versioned migrations before production rollout.
         await sequelize.sync({ alter: true });
         console.log('Database synced successfully.');
+        startScheduledLetterWorker(io);
 
         httpServer.listen(PORT, () => {
             console.log(`Server is listening on port ${PORT}`);
