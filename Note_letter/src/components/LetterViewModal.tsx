@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dialog';
 // VisuallyHidden removed
 import { Button } from './ui/button';
 import { Music, X, Heart, MessageCircle, Send, Repeat, PenLine, Share2, PanelRightClose, PanelRightOpen } from 'lucide-react';
@@ -171,6 +171,7 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
             <Dialog open={isOpen} onOpenChange={onClose}>
                 <DialogContent className="max-w-4xl h-[90vh] p-0 gap-0 bg-[#fdfbf7] overflow-hidden flex flex-col md:flex-row">
                     <DialogTitle className="sr-only">Letter from {note.isAnonymous ? 'A Friend' : note.authorName || 'Unknown'}</DialogTitle>
+                    <DialogDescription className="sr-only">Read the selected letter and its details.</DialogDescription>
 
                     {/* Left Side: Letter Content */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar border-r border-stone-200 transition-all duration-300">
