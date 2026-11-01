@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   audit:
@@ -44,3 +44,32 @@ jobs:
           name: ${{ matrix.app }}-npm-audit
           path: ${{ matrix.app == 'frontend' && 'Note_letter' || 'Note_letter/server' }}/audit-report.json
           retention-days: 14
+
+  remediate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply non-breaking security updates
+        run: |
+          cd Note_letter
+          npm install
+          npm audit fix
+          cd server
+          npm install
+          npm audit fix
+      - name: Commit updated lockfiles when changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- Note_letter/package-lock.json Note_letter/server/package-lock.json; then
+            echo "No lockfile updates were needed."
+          else
+            git add Note_letter/package-lock.json Note_letter/server/package-lock.json
+            git commit -m "Fix vulnerable npm dependencies"
+            git push
+          fi
