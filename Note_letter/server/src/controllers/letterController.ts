@@ -545,8 +545,10 @@ export const getPublicLetterSharePreview = async (req: Request, res: Response) =
         const description = escapeEmailHtml((letter.content || 'A letter shared with care.').replace(/\s+/g, ' ').slice(0, 200));
         const imageUrl = typeof letter.imageUrl === 'string' && /^https?:\/\//i.test(letter.imageUrl)
             ? letter.imageUrl
-            : '';
-        const imageTag = imageUrl ? `<meta property="og:image" content="${escapeEmailHtml(imageUrl)}">` : '';
+            : `${appBaseUrl}/logo.png`;
+        const imageTag = `<meta property="og:image" content="${escapeEmailHtml(imageUrl)}">
+<meta property="og:image:alt" content="SendTheLetter public letter">
+<meta property="og:site_name" content="SendTheLetter">`;
 
         res.setHeader('Cache-Control', 'public, max-age=300');
         return res.status(200).type('html').send(`<!doctype html>
