@@ -11,7 +11,7 @@ The existing ShareModal sends an in-app message to a friend. This PR adds an aut
 | Email | Authenticated server-side Resend API adapter | Requires verified sender domain and server API key; current per-process sender limit is not a distributed rate limiter and delivery audit persistence remains future work. |
 | Facebook | Public URL sharing through Facebook's share dialog is wired in the UI | No automatic posting to a user's feed or Meta Graph API publishing. |
 | Messenger | Native device share-sheet handoff is wired in the UI | Availability depends on the device/apps; no arbitrary direct messages or Messenger API integration. |
-| Instagram | Native device share-sheet handoff is wired in the UI | Image export and automatic feed/story publishing are not implemented; platform support varies by device. |
+| Instagram | Downloadable 1080×1350 PNG export and native device share-sheet handoff are wired in the UI | Automatic feed/story publishing and unrestricted DMs are not implemented; platform support varies by device. |
 | Copy link | Copy a canonical public URL or authorized private token URL | Private URLs require random, expiring/revocable tokens and server-side authorization. |
 | In-app message | Keep existing friend message workflow | Send a letter reference, not a truncated copy of private content, after authorization. |
 
