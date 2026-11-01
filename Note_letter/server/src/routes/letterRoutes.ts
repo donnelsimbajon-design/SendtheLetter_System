@@ -9,8 +9,8 @@ const router = express.Router();
 
 // Public reads allow anonymous visitors while optionally personalizing engagement state.
 router.get('/public', optionalAuth, letterController.getPublicLetters);
-router.get('/public/:id/share', letterController.getPublicLetterSharePreview);
-router.get('/public/:id', letterController.getPublicLetterById);
+router.get('/public/:token/share', letterController.getPublicLetterSharePreview);
+router.get('/public/:token', letterController.getPublicLetterById);
 router.get('/:id/comments', optionalAuth, commentController.getComments);
 router.get('/:id/likes', optionalAuth, likeController.getLikes);
 router.get('/user/:username', optionalAuth, letterController.getUserPublicLetters);
