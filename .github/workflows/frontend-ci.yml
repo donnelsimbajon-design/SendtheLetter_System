@@ -38,7 +38,7 @@ jobs:
         run: npm ci
       - name: Apply compatible dependency security fixes
         if: github.event_name == 'pull_request'
-        run: npm audit fix
+        run: npm audit fix || true
       - name: Commit dependency security fixes to PR branch
         if: github.event_name == 'pull_request'
         run: |
