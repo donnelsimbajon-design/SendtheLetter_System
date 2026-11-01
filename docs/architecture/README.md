@@ -25,7 +25,7 @@ This handbook documents the repository as inspected on 2026-11-01. It separates 
 
 ## Important current-state limitations
 
-- Scheduled/time-capsule fields and read endpoints exist, but the inspected server has no background worker that releases due letters. Scheduled delivery is therefore **not verified as operational**.
+- A database-backed polling worker now releases due scheduled letters/time capsules and creates in-app notifications for the author. Live database behavior, multi-instance deployment, and recipient delivery still need integration testing.
 - There is no email provider integration in the inspected server.
 - The current ShareModal sends an in-app message to an existing friend. It does not yet integrate Facebook, Messenger, or Instagram APIs.
 - There is no public, token-protected letter-share route in the inspected route list. Private letter sharing must not be implemented by exposing a guessable record ID.
