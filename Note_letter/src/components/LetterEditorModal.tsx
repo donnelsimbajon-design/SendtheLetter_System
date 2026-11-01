@@ -6,7 +6,7 @@ import Mascot from './Mascot';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { X, Type, Image as ImageIcon, Music, Send, Globe, EyeOff, Calendar, Lock } from 'lucide-react';
+import { X, Type, Image as ImageIcon, Music, Send, Globe, EyeOff, Lock } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { cn } from '../lib/utils';
 import { API_ENDPOINTS } from '../config/api';
