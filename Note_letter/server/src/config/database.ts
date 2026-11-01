@@ -15,7 +15,7 @@ const sequelize = new Sequelize(databaseUrl, {
     dialectOptions: {
         ssl: {
             require: true,
-            rejectUnauthorized: true
+            rejectUnauthorized: false
         },
         connectionTimeoutMillis: 60000 // 60 seconds
     },
