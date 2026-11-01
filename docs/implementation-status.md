@@ -8,7 +8,7 @@ This file is the source of truth for the scope of the architecture and integrati
 | Environment hygiene | Tracked env removal and examples added in this PR | No active secrets in tracked working tree; owner rotates historical values. |
 | Auth | JWT + bcrypt model hooks exist | API tests for register/login, malformed tokens, expiry, and authorization. |
 | Letter CRUD | Existing API/model | Tests for ownership, public/private visibility, draft and archived status. |
-| Time Capsule | Fields and listing endpoints exist; no worker found | Durable worker, atomic claim, retries, idempotency, recipient delivery, timezone tests. |
+| Time Capsule | Database-backed polling worker, transactional release, author notification, and open-date read gating implemented | Live database tests, process restart/multi-instance tests, delivery audit/retry policy, timezone coverage, recipient delivery model. |
 | Email | Authenticated Resend endpoint implemented; disabled until provider secrets are configured | Verified sender, shared rate limiting, durable delivery records, provider integration tests. |
 | Facebook | Not integrated | Public URL sharing, Open Graph preview validation. |
 | Messenger | Not integrated | Native share handoff verified on supported devices; no arbitrary DMs. |
