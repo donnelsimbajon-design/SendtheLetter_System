@@ -12,7 +12,7 @@ This file is the source of truth for the scope of the architecture and integrati
 | Email | Authenticated Resend endpoint implemented; disabled until provider secrets are configured | Verified sender, shared rate limiting, durable delivery records, provider integration tests. |
 | Facebook | Public URL share dialog wired in UI; no Graph API publishing | Open Graph preview validation and platform debugger checks. |
 | Messenger | Native share-sheet handoff wired in UI; no direct messaging API | Verify handoff on supported devices; no arbitrary DMs. |
-| Instagram | Native share-sheet handoff wired in UI; no image export or publishing API | Implement image export and verify share handoff on supported devices. |
+| Instagram | 1080×1350 PNG export and native share-sheet handoff implemented; no publishing API | Verify image export and share handoff on supported devices; automatic publishing remains out of scope. |
 | Private share links | Not implemented | Random token, hash storage, expiry, revocation, recipient authorization, audit trail. |
 | Realtime | Socket.IO exists | Handshake JWT auth and authorized room membership tests. |
 | Upload storage | Local Multer directory | Content validation and durable object storage in production. |
