@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import Guestbook from '../../components/Guestbook';
 import axios from 'axios';
 import { ArrowLeft, Feather, Lock, Loader2, Printer, Download } from 'lucide-react';
 import { API_ENDPOINTS } from '../../config/api';
@@ -7,7 +8,7 @@ import { getImageUrl } from '../../lib/utils';
 import { Note } from '../../types/note';
 
 const PublicLetterPage = () => {
-    const { id } = useParams<{ id: string }>();
+    const token = new URLSearchParams(window.location.search).get('s') || '';
     const [letter, setLetter] = useState<Note | null>(null);
     const [loading, setLoading] = useState(true);
     const [notFound, setNotFound] = useState(false);
@@ -19,7 +20,7 @@ const PublicLetterPage = () => {
             setLoading(true);
             setNotFound(false);
             try {
-                const response = await axios.get(`${API_ENDPOINTS.letters}/public/${encodeURIComponent(id || '')}`);
+                const response = await axios.get(`${API_ENDPOINTS.letters}/public/${encodeURIComponent(token)}`);
                 if (active) setLetter(response.data);
             } catch {
                 if (active) setNotFound(true);
@@ -27,9 +28,9 @@ const PublicLetterPage = () => {
                 if (active) setLoading(false);
             }
         };
-        if (id) loadLetter();
+        if (/^[a-f0-9]{48}$/.test(token)) loadLetter(); else { setLoading(false); setNotFound(true); }
         return () => { active = false; };
-    }, [id]);
+    }, [token]);
 
     const downloadShareImage = () => {
         if (!letter) return;
@@ -108,7 +109,7 @@ const PublicLetterPage = () => {
                 const imageUrl = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = imageUrl;
-                link.download = `sendtheletter-${letter.id}.png`;
+                link.download = `sendtheletter-${token.slice(0,12)}.png`;
                 link.click();
                 URL.revokeObjectURL(imageUrl);
                 setImageStatus('Your share image is ready.');
@@ -136,7 +137,7 @@ const PublicLetterPage = () => {
     }, [letter]);
 
     if (loading) return <main className="min-h-screen flex items-center justify-center bg-[#f6f1e9] text-[#263b35]"><Loader2 className="animate-spin" /> <span className="ml-2">Opening your letter…</span></main>;
-    if (notFound || !letter) return <main className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#f6f1e9] p-6 text-center text-[#263b35]"><Lock size={32} /><h1 className="font-serif text-3xl">This letter isn't available</h1><p className="max-w-md text-sm text-[#52645d]">It may be private, unpublished, or no longer available.</p><Link to="/" className="inline-flex items-center gap-2 rounded-full bg-[#263b35] px-5 py-3 text-white"><ArrowLeft size={16} /> Back to SendTheLetter</Link></main>;
+    if (notFound || !letter) return <main className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#f6f1e9] p-6 text-center text-[#263b35]"><Lock size={32} /><h1 className="font-serif text-3xl">This letter isn't available</h1><p className="max-w-md text-sm text-[#52645d]">The letter may be private or unavailable. Ask the author for a fresh, secure share link.</p><Link to="/" className="inline-flex items-center gap-2 rounded-full bg-[#263b35] px-5 py-3 text-white"><ArrowLeft size={16} /> Back to SendTheLetter</Link></main>;
 
     return (
         <main className="min-h-screen bg-[#f6f1e9] px-4 py-10 text-[#263b35]">
@@ -160,6 +161,7 @@ const PublicLetterPage = () => {
                         <div className="mt-10 border-t border-[#e9e2d8] pt-6 text-xs text-[#8a8d84]">Shared with care on SendTheLetter.</div>
                     </div>
                 </article>
+                <Guestbook token={token} />
             </div>
         </main>
     );
