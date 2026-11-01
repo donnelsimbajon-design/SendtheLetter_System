@@ -6,7 +6,7 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "dev": "nodemon src/index.ts",
-    "build": "tsc",
+    "build": "npm install --include=dev && tsc",
     "start:prod": "node dist/index.js",
     "admin:promote": "node dist/scripts/promoteAdmin.js"
   },
