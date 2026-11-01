@@ -145,7 +145,7 @@ const DashboardHeader = () => {
                                                             onClick={async () => {
                                                                 try {
                                                                     const token = localStorage.getItem('token');
-                                                                    await fetch('http://localhost:5000/api/friends/decline', {
+                                                                    await fetch(`${API_BASE_URL}/api/friends/decline`, {
                                                                         method: 'POST',
                                                                         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                                                                         body: JSON.stringify({ requestId: n.entityId })
