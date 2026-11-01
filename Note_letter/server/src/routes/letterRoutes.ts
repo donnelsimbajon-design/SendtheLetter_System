@@ -18,6 +18,7 @@ router.get('/user/:username', authenticateToken, letterController.getUserPublicL
 router.use(authenticateToken);
 router.post('/', letterController.createLetter);
 router.get('/mine', letterController.getMyLetters);
+router.post('/:id/email', letterController.sendLetterByEmail);
 router.get('/drafts', letterController.getDrafts);
 
 // Comment routes (protected)
