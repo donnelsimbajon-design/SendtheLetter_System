@@ -9,6 +9,7 @@ const router = express.Router();
 
 // Public routes (some might be accessible without auth, but we use auth middleware to check for user context)
 router.get('/public', authenticateToken, letterController.getPublicLetters);
+router.get('/public/:id/share', letterController.getPublicLetterSharePreview);
 router.get('/public/:id', letterController.getPublicLetterById);
 router.get('/:id/comments', commentController.getComments);
 router.get('/:id/likes', likeController.getLikes);
