@@ -43,7 +43,7 @@ The dashboard includes Warm Editorial, Cool Blue, and Forest Dark appearance cho
 
 ## Product scope notes
 
-The frontend should only advertise capabilities that are implemented and backed by the API. Future-delivery/time-capsule workflows, attachments, and advanced privacy guarantees require explicit backend support and should not be presented as completed features until those integrations are verified.
+The frontend should only advertise capabilities that are implemented and backed by the API. The backend now includes a database-backed scheduled-letter release worker and a public-letter sharing route. Verify these workflows against a staging database before treating them as production-ready; recipient-specific delivery, attachments, and advanced privacy guarantees still require additional backend support.
 
 ## Quality checks
 
