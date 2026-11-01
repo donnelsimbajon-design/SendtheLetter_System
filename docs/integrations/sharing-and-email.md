@@ -2,20 +2,20 @@
 
 ## Current status
 
-The existing ShareModal sends an in-app message to a friend. There is no configured email provider or Meta API integration in the inspected backend. This document defines a safe implementation path.
+The existing ShareModal sends an in-app message to a friend. This PR adds an authenticated Resend email endpoint for letters owned by the sender. It requires `RESEND_API_KEY` and a verified `EMAIL_FROM` value at runtime. There is still no configured provider credential in this repository session and no Meta API integration.
 
 ## Share policy
 
 | Channel | Supported implementation | Important boundary |
 | --- | --- | --- |
-| Email | Server-side email provider adapter (Resend is one option) | Requires verified sender domain, API key, abuse controls, and delivery logs. |
+| Email | Authenticated server-side Resend API adapter | Requires verified sender domain and server API key; current per-process sender limit is not a distributed rate limiter and delivery audit persistence remains future work. |
 | Facebook | Share a canonical public URL via Facebook's share dialog | Does not authorize automatic posting to a user's feed. |
 | Messenger | Use device-native share sheet / supported Messenger handoff | No arbitrary unsolicited DMs. Direct messaging APIs have eligibility and policy restrictions. |
 | Instagram | Generate/download a letter image and use native share sheet | Do not promise automatic feed/story publishing or unrestricted DMs. |
 | Copy link | Copy a canonical public URL or authorized private token URL | Private URLs require random, expiring/revocable tokens and server-side authorization. |
 | In-app message | Keep existing friend message workflow | Send a letter reference, not a truncated copy of private content, after authorization. |
 
-## Recommended backend contracts
+## Implemented email endpoint\n\n`POST /api/letters/:id/email` (authenticated). The author supplies `recipientEmail`; the server verifies ownership and that the letter is published, available, and not archived, then sends the full letter through Resend. Private letters are not exposed through a public URL. A per-process limit of five sends per user per hour is a basic abuse guard, not a substitute for a shared Redis/database limiter in a multi-instance deployment. Provider delivery is not active until credentials and sender-domain verification are configured.\n\n## Recommended backend contracts
 
 ### Email send
 
