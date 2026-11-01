@@ -113,7 +113,7 @@ export const getPublicLetters = async (req: Request, res: Response) => {
         const { default: Comment } = await import('../models/Comment');
 
         const letters = await Letter.findAll({
-            where: { isPublic: true, status: 'published', [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }] },
+            where: { isPublic: true, status: 'published', isArchived: false, [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }] },
             include: [
                 {
                     model: User,
@@ -181,6 +181,7 @@ export const getUserPublicLetters = async (req: Request, res: Response) => {
             where: {
                 isPublic: true,
                 status: 'published',
+                isArchived: false,
                 userId: user.id,
                 isAnonymous: false, // Don't show anonymous letters on profile
                 [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }]
