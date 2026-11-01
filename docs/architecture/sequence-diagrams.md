@@ -77,10 +77,10 @@ sequenceDiagram
   actor Viewer
 
   Author->>UI: Choose a letter and share action
-  UI->>API: Request share target
-  API->>DB: Verify owner, visibility, and publish state
-  DB-->>API: Authorization result
-  API-->>UI: Public URL or scoped private token
+  UI->>API: Request crawler-ready public preview URL
+  API->>DB: Verify public visibility, publish state, archive, and open date
+  DB-->>API: Authorized public letter
+  API-->>UI: Preview URL with Open Graph metadata
   UI->>Platform: Open native share handoff
   Platform-->>Viewer: Shared URL / preview
   Viewer->>UI: Open link
