@@ -447,7 +447,7 @@ export const sendLetterByEmail = async (req: AuthRequest, res: Response) => {
         if (Number(letter.userId) !== userId) {
             return res.status(403).json({ message: 'Only the letter author can send it by email' });
         }
-        if (letter.status !== 'published' || letter.isArchived || (letter.scheduledDate && letter.scheduledDate.getTime() > Date.now())) {
+        if (letter.status !== 'published' || letter.isArchived || (letter.scheduledDate && letter.scheduledDate.getTime() > Date.now()) || (letter.isTimeCapsule && letter.openDate && letter.openDate.getTime() > Date.now())) {
             return res.status(409).json({ message: 'Only available, published letters can be emailed' });
         }
 
