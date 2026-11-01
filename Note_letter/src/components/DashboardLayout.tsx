@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
-import { Bell, BookHeart, FileText, Home, LogOut, MessageCircle, PenLine, UserRound, Palette } from 'lucide-react';
+import { Bell, BookHeart, FileText, Home, LogOut, MessageCircle, PenLine, UserRound, Palette, ShieldCheck } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useAuthStore } from '../store/authStore';
 import { useNoteStore } from '../store/noteStore';
@@ -112,6 +112,7 @@ const DashboardLayout = () => {
                 <Icon size={18} strokeWidth={1.8} />{label}
               </NavLink>
             ))}
+            {user?.role === 'admin' && <NavLink to="/admin" className={({ isActive }) => `flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition-colors ${isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}><ShieldCheck size={18} />Admin panel</NavLink>}
           </nav>
           <div className="mt-auto rounded-2xl bg-[hsl(var(--surface-rose))] p-4 text-[#49363B]">
             <p className="font-editorial text-lg leading-snug">Some words deserve a little more time.</p>
@@ -129,12 +130,13 @@ const DashboardLayout = () => {
         </main>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-border bg-card/95 px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur-xl lg:hidden">
+      <nav className={`fixed inset-x-0 bottom-0 z-40 grid ${user?.role === "admin" ? "grid-cols-5" : "grid-cols-4"} border-t border-border bg-card/95 px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur-xl lg:hidden`}>
         {navigation.map(({ to, label, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={end} className={({ isActive }) => `flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-medium ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
             <Icon size={20} strokeWidth={1.9} /><span>{label}</span>
           </NavLink>
         ))}
+        {user?.role === 'admin' && <NavLink to="/admin" className={({ isActive }) => `flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-medium ${isActive ? 'text-primary' : 'text-muted-foreground'}`}><ShieldCheck size={20} /><span>Admin</span></NavLink>}
       </nav>
     </div>
   );

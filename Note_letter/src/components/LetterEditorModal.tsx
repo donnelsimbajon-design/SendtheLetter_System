@@ -61,6 +61,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
     const [isPublic, setIsPublic] = useState(false);
     const [backgroundImage, setBackgroundImage] = useState(backgroundGradients[0].value);
     const [imageUrl, setImageUrl] = useState('');
+    const [imageUploadError, setImageUploadError] = useState('');
 
     // Form State
     const [title, setTitle] = useState('');
@@ -185,6 +186,18 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+            if (!allowedTypes.includes(file.type)) {
+                setImageUploadError('Choose a JPG, PNG, WEBP, or GIF image.');
+                e.target.value = '';
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                setImageUploadError('Image must be 5 MB or smaller.');
+                e.target.value = '';
+                return;
+            }
+            setImageUploadError('');
             const reader = new FileReader();
             reader.onloadend = () => {
                 setImageUrl(reader.result as string);
@@ -369,11 +382,12 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                                 <div className="relative">
                                     <input
                                         type="file"
-                                        accept="image/*"
+                                        accept="image/jpeg,image/png,image/webp,image/gif"
                                         onChange={handleImageUpload}
                                         className="hidden"
                                         id="image-upload"
                                     />
+                                    {imageUploadError && <p role="alert" className="mb-2 text-xs text-destructive">{imageUploadError}</p>}
                                     <label
                                         htmlFor="image-upload"
                                         className="flex items-center justify-center gap-2 w-full h-10 rounded-md border border-border bg-card text-muted-foreground hover:bg-background cursor-pointer transition-colors text-sm font-medium"
