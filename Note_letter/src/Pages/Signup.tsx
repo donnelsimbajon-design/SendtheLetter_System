@@ -1,143 +1,60 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { Lock, Mail, User, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookHeart, LockKeyhole, Mail, UserRound } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Card } from '../components/ui/card';
-import { motion } from 'framer-motion';
 
 const Signup = () => {
-    const navigate = useNavigate();
-    const register = useAuthStore((state) => state.register);
-    const [username, setUsername] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
+  const navigate = useNavigate();
+  const register = useAuthStore((state) => state.register);
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setError('');
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsLoading(true);
+    setError('');
+    try {
+      await register({ username, email, password });
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'We could not create your account. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-        try {
-            await register({
-                username,
-                email,
-                password,
-            });
-            navigate('/dashboard');
-        } catch (err: any) {
-            setError(err.message || 'Registration failed');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-background relative overflow-hidden px-4">
-            {/* Background Elements */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-primary/5 rounded-full blur-3xl" />
-                <div className="absolute top-[40%] -right-[10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-3xl" />
-            </div>
-
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="mb-8 flex flex-col items-center gap-0 z-10"
-            >
-                <img src="/logo.png" alt="SentTheLetter Logo" className="h-24 w-24 object-contain" />
-                <h1 className="text-3xl font-serif font-bold text-foreground tracking-wide -mt-2">SentTheLetter</h1>
-            </motion.div>
-
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="w-full max-w-md z-10"
-            >
-                <Card className="p-8 shadow-2xl border-border/50 backdrop-blur-sm bg-card/95">
-                    <div className="text-center mb-8">
-                        <h1 className="text-3xl font-bold text-foreground mb-2">Create Account</h1>
-                        <p className="text-muted-foreground">Join us to start writing meaningful letters</p>
-                    </div>
-
-                    {error && (
-                        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm text-center">
-                            {error}
-                        </div>
-                    )}
-
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium ml-1">Username</label>
-                            <div className="relative group">
-                                <User className="absolute left-3 top-3 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
-                                <Input
-                                    type="text"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    className="pl-10 bg-background/50 border-border/50 focus:border-primary/50 transition-all"
-                                    placeholder="johndoe123"
-                                    required
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium ml-1">Email</label>
-                            <div className="relative group">
-                                <Mail className="absolute left-3 top-3 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
-                                <Input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="pl-10 bg-background/50 border-border/50 focus:border-primary/50 transition-all"
-                                    placeholder="you@example.com"
-                                    required
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium ml-1">Password</label>
-                            <div className="relative group">
-                                <Lock className="absolute left-3 top-3 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
-                                <Input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="pl-10 bg-background/50 border-border/50 focus:border-primary/50 transition-all"
-                                    placeholder="••••••••"
-                                    required
-                                />
-                            </div>
-                        </div>
-
-                        <Button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full py-6 text-lg font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all mt-4"
-                        >
-                            {isLoading ? 'Creating Account...' : 'Sign Up'}
-                        </Button>
-                    </form>
-
-                    <div className="mt-8 text-center">
-                        <p className="text-sm text-muted-foreground">
-                            Already have an account?{' '}
-                            <Link to="/login" className="text-primary font-semibold hover:underline inline-flex items-center gap-1">
-                                Sign in <ArrowRight size={14} />
-                            </Link>
-                        </p>
-                    </div>
-                </Card>
-            </motion.div>
+  return (
+    <main className="grid min-h-screen bg-background lg:grid-cols-[.9fr_1fr]">
+      <section className="relative hidden overflow-hidden bg-[hsl(var(--surface-rose))] p-12 text-[#49363B] lg:flex lg:flex-col lg:justify-between xl:p-16">
+        <Link to="/" className="relative z-10 flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/60"><BookHeart size={22}/></span><span className="font-editorial text-2xl">SendTheLetter</span></Link>
+        <div className="relative z-10 max-w-xl"><p className="text-xs font-bold uppercase tracking-[.22em] opacity-65">A fresh page</p><h1 className="mt-5 font-editorial text-6xl leading-[1.08] xl:text-7xl">Make room for what matters.</h1><p className="mt-6 max-w-md leading-7 opacity-75">Create a little corner of the internet for thoughtful words, quiet moments, and meaningful connection.</p></div>
+        <p className="relative z-10 text-sm opacity-60">Your story can start with one sentence.</p>
+        <div className="absolute -bottom-20 -right-24 h-96 w-96 rounded-full border border-[#49363B]/15"/><div className="absolute -bottom-10 -right-14 h-72 w-72 rounded-full border border-[#49363B]/15"/>
+      </section>
+      <section className="flex items-center justify-center px-5 py-12 sm:px-10">
+        <div className="w-full max-w-md">
+          <Link to="/" className="mb-12 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"><ArrowLeft size={16}/> Back to home</Link>
+          <div className="mb-8 lg:hidden"><span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground"><BookHeart size={23}/></span><p className="mt-4 font-editorial text-2xl">SendTheLetter</p></div>
+          <p className="text-xs font-bold uppercase tracking-[.2em] text-[hsl(var(--accent))]">Start here</p>
+          <h2 className="mt-3 font-editorial text-4xl">Create your space.</h2>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">A few details, then the page is yours.</p>
+          {error && <div role="alert" className="mt-6 rounded-2xl border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
+          <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+            <div className="space-y-2"><label htmlFor="username" className="text-sm font-semibold">Username</label><div className="relative"><UserRound size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"/><Input id="username" autoComplete="username" required value={username} onChange={(event)=>setUsername(event.target.value)} placeholder="Choose a username" className="h-12 rounded-xl bg-card pl-11"/></div></div>
+            <div className="space-y-2"><label htmlFor="email" className="text-sm font-semibold">Email address</label><div className="relative"><Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"/><Input id="email" type="email" autoComplete="email" required value={email} onChange={(event)=>setEmail(event.target.value)} placeholder="you@example.com" className="h-12 rounded-xl bg-card pl-11"/></div></div>
+            <div className="space-y-2"><label htmlFor="password" className="text-sm font-semibold">Password</label><div className="relative"><LockKeyhole size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"/><Input id="password" type="password" autoComplete="new-password" minLength={8} required value={password} onChange={(event)=>setPassword(event.target.value)} placeholder="At least 8 characters" className="h-12 rounded-xl bg-card pl-11"/></div></div>
+            <Button type="submit" disabled={isLoading} className="h-12 w-full rounded-xl text-sm font-semibold">{isLoading?'Creating your space...':'Create account'} {!isLoading&&<ArrowRight size={17} className="ml-2"/>}</Button>
+          </form>
+          <p className="mt-7 text-center text-sm text-muted-foreground">Already have an account? <Link to="/login" className="font-semibold text-primary hover:underline">Sign in</Link></p>
         </div>
-    );
+      </section>
+    </main>
+  );
 };
 
 export default Signup;
