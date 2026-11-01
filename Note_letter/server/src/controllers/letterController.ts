@@ -267,7 +267,11 @@ export const updateLetter = async (req: AuthRequest, res: Response) => {
             : (updates.scheduledDate ?? letter.scheduledDate);
 
         if (letter.status !== 'draft' && nextReleaseAt) {
-            updates.status = new Date(nextReleaseAt as string | Date).getTime() > Date.now() ? 'scheduled' : 'published';
+            const releaseTime = nextReleaseAt instanceof Date ? nextReleaseAt.getTime() : Date.parse(String(nextReleaseAt));
+            if (!Number.isFinite(releaseTime)) {
+                return res.status(400).json({ message: 'Enter a valid scheduled release date' });
+            }
+            updates.status = releaseTime > Date.now() ? 'scheduled' : 'published';
         } else if (letter.status === 'scheduled' && !nextReleaseAt) {
             updates.status = 'published';
         }
