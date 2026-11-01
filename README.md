@@ -47,4 +47,4 @@ The frontend should only advertise capabilities that are implemented and backed 
 
 ## Quality checks
 
-GitHub Actions runs the frontend TypeScript project build and Vite production build for pull requests and relevant branch pushes. The lockfile includes semver-compatible dependency security updates; CI checks production dependency advisories.
+GitHub Actions runs the frontend TypeScript project build and Vite production build for pull requests and relevant branch pushes. The lockfile includes semver-compatible dependency security updates; CI runs a full npm dependency audit.
