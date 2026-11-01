@@ -52,7 +52,7 @@ flowchart TB
 
 These are architectural recommendations, not claims about deployed components:
 
-- A dedicated delivery worker / scheduler, separate from HTTP request handling.
+- The current scheduled-release poller runs inside the API process; a dedicated worker process/queue is recommended for production isolation and independent scaling.
 - An email adapter (Resend or another selected provider) behind a server-side service interface.
 - Durable object storage for uploads.
 - A share-link service with random, revocable tokens and explicit permission checks.
