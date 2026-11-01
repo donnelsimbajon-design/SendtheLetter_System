@@ -30,6 +30,7 @@ const readStoredUser = (): User | null => {
         return stored ? JSON.parse(stored) as User : null;
     } catch {
         localStorage.removeItem('user');
+        localStorage.removeItem('token');
         return null;
     }
 };
