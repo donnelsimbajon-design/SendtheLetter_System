@@ -12,10 +12,10 @@ interface AuthRequest extends Request {
 export const createLetter = async (req: AuthRequest, res: Response) => {
     try {
         const {
-            title: title.trim(),
+            title: rawTitle,
             content,
-            type: typeof type === 'string' ? type.slice(0, 50) : 'General',
-            isPublic: isPublic === true,
+            type: rawType,
+            isPublic: rawIsPublic,
             scheduledDate,
             openDate,
             isTimeCapsule,
@@ -29,8 +29,11 @@ export const createLetter = async (req: AuthRequest, res: Response) => {
             imageUrl
         } = req.body;
         const userId = req.user.id;
+        const title = typeof rawTitle === 'string' ? rawTitle.trim() : '';
+        const type = typeof rawType === 'string' ? rawType.slice(0, 50) : 'General';
+        const isPublic = rawIsPublic === true;
 
-        if (typeof title !== 'string' || !title.trim() || title.length > 255 || typeof content !== 'string' || !content.trim() || content.length > 100000) {
+        if (!title || title.length > 255 || typeof content !== 'string' || !content.trim() || content.length > 100000) {
             return res.status(400).json({ message: 'A title (max 255 characters) and letter content are required.' });
         }
         if (typeof imageUrl === 'string' && imageUrl.length > 7500000) {
