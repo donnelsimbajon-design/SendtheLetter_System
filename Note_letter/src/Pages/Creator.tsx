@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookHeart, Code2, Feather, Heart, MapPin } from 'lucide-react';
+import { ArrowRight, BookHeart, Code2, Feather, Heart } from 'lucide-react';
 
 const Creator = () => (
   <div className="min-h-screen bg-background text-foreground">
