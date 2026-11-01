@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookHeart, Globe2, Heart, LockKeyhole, Mail, MessageCircle, Music2, PenLine } from 'lucide-react';
+import { ArrowRight, BookHeart, Globe2, Heart, LockKeyhole, MessageCircle, Music2, PenLine } from 'lucide-react';
 
 const features = [
   {icon:PenLine,title:'A thoughtful writing space',body:'Create letters with a simple editor that keeps the focus on what you want to say.',tone:'gold'},
