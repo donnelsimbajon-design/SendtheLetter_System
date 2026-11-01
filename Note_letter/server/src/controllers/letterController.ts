@@ -527,7 +527,7 @@ export const getPublicLetterSharePreview = async (req: Request, res: Response) =
     try {
         const letter = await Letter.findOne({
             where: {
-                id: req.params.id,
+                shareToken: req.params.token,
                 isPublic: true,
                 status: 'published',
                 isArchived: false,
