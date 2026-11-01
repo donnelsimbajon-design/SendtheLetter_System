@@ -36,6 +36,8 @@ const allowedOrigins = new Set(
 );
 
 const app = express();
+// Render terminates HTTPS at a trusted reverse proxy. Resolve real client IPs for rate limiting.
+app.set('trust proxy', 1);
 app.disable('x-powered-by');
 fs.mkdirSync(path.resolve(process.cwd(), 'uploads'), { recursive: true });
 
