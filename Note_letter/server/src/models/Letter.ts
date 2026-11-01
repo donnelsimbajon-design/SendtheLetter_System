@@ -24,6 +24,7 @@ interface LetterAttributes {
     openDate?: Date | null;
     isTimeCapsule?: boolean;
     isArchived?: boolean;
+    shareToken?: string;
 }
 
 interface LetterCreationAttributes extends Optional<LetterAttributes, 'id'> { }
@@ -50,6 +51,7 @@ class Letter extends Model<LetterAttributes, LetterCreationAttributes> implement
     openDate?: Date;
     public isTimeCapsule?: boolean;
     public isArchived?: boolean;
+    public shareToken!: string;
 
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
@@ -146,6 +148,11 @@ Letter.init(
         isArchived: {
             type: DataTypes.BOOLEAN,
             defaultValue: false,
+        },
+        shareToken: {
+            type: DataTypes.STRING(64),
+            allowNull: false,
+            defaultValue: sequelize.literal("encode(gen_random_bytes(24), 'hex')") as any,
         },
     },
     {
