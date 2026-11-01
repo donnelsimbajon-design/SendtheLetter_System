@@ -55,3 +55,20 @@ GitHub Actions runs the frontend TypeScript project build and Vite production bu
 The architecture handbook and implementation boundaries are documented in [docs/architecture](docs/architecture/README.md). It includes the system context, logical architecture, data flows, sequence diagrams, database model, deployment view, security findings, and sharing/email integration contract.
 
 The current implementation supports in-app friend sharing and a public-letter URL flow for published public letters. Email-provider delivery, scheduled delivery worker, private share tokens, and direct Meta API publishing/messaging still require additional implementation and owner-supplied credentials. See [implementation status](docs/implementation-status.md) before treating these as production features.
+
+
+## Backend setup
+
+```bash
+cd Note_letter/server
+npm ci
+cp .env.example .env
+```
+
+Set `DATABASE_URL`, a random `JWT_SECRET` of at least 32 characters, and `CLIENT_ORIGIN` in the server environment before starting the API:
+
+```bash
+npm run dev
+```
+
+For email delivery, configure `RESEND_API_KEY` and a verified `EMAIL_FROM`. Never commit a real `.env` file. The frontend also has a safe template at `Note_letter/.env.example`.
