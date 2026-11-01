@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
 import { Send, User as UserIcon } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
@@ -121,6 +121,7 @@ const MessageModal: React.FC<MessageModalProps> = ({ isOpen, onClose, otherUser 
                         )}
                     </div>
                     <DialogTitle className="text-lg font-serif">{otherUser?.username}</DialogTitle>
+                    <DialogDescription className="sr-only">Conversation messages with this friend.</DialogDescription>
                 </DialogHeader>
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background">
