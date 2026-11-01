@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dialog';
 // VisuallyHidden removed
 import { Button } from './ui/button';
-import { Music, X, Heart, MessageCircle, Send, Repeat, PenLine, Share2, PanelRightClose, PanelRightOpen } from 'lucide-react';
+import { Music, Heart, Repeat, PenLine, Share2, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import CommentsPanel from './CommentsPanel';
 import { Note } from '../types/note';
 import { cn, getImageUrl } from '../lib/utils';
 import { useAuthStore } from '../store/authStore';
@@ -22,9 +23,8 @@ interface LetterViewModalProps {
 
 const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note, onAuthorClick, onEdit }) => {
     const user = useAuthStore((state) => state.user);
-    const { toggleLike, addComment } = useNoteStore();
-    const [commentText, setCommentText] = useState('');
-    const [comments, setComments] = useState<any[]>([]);
+    const { toggleLike } = useNoteStore();
+    const [commentCount, setCommentCount] = useState(0);
     const [isLiked, setIsLiked] = useState(false);
     const [likeCount, setLikeCount] = useState(0);
     const [isReposted, setIsReposted] = useState(false);
@@ -63,32 +63,6 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
             // Join real-time room
             socketService.joinLetterRoom(String(note.id));
 
-            // Fetch comments
-            const fetchComments = async () => {
-                try {
-                    const response = await fetch(`${API_ENDPOINTS.letters}/${note.id}/comments`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        setComments(data);
-                    }
-                } catch (error) {
-                    console.error('Error fetching comments:', error);
-                }
-            };
-            fetchComments();
-
-            // Listen for new comments
-            const handleNewComment = (newComment: any) => {
-
-                if (String(newComment.letterId) === String(note.id)) {
-                    setComments(prev => {
-                        // Avoid duplicates if we optimistically added it
-                        if (prev.some(c => c.id === newComment.id)) return prev;
-                        return [newComment, ...prev];
-                    });
-                }
-            };
-
             // Listen for like updates
             const handleLikeUpdate = (data: { letterId: string; likeCount: number }) => {
                 if (String(data.letterId) === String(note.id)) {
@@ -96,12 +70,10 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                 }
             };
 
-            socketService.onNewComment(handleNewComment);
             socketService.onLikeUpdate(handleLikeUpdate);
 
             return () => {
                 socketService.leaveLetterRoom(String(note.id));
-                socketService.offNewComment();
                 socketService.offLikeUpdate();
             };
         }
@@ -145,18 +117,6 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
         }
     };
 
-    const handleComment = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!note || !user || !commentText.trim()) return;
-
-        try {
-            await addComment(String(note.id), commentText);
-            setCommentText('');
-        } catch (error) {
-            console.error('Error adding comment:', error);
-        }
-    };
-
     const handleAuthorClick = () => {
         if (note && !note.isAnonymous && note.authorName && onAuthorClick) {
             onClose();
@@ -169,14 +129,14 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
     return (
         <>
             <Dialog open={isOpen} onOpenChange={onClose}>
-                <DialogContent className="max-w-4xl h-[90vh] p-0 gap-0 bg-[#fdfbf7] overflow-hidden flex flex-col md:flex-row">
+                <DialogContent className="max-w-5xl h-[90vh] p-0 gap-0 bg-[#fdfbf7] overflow-hidden flex flex-col-reverse md:flex-row-reverse">
                     <DialogTitle className="sr-only">Letter from {note.isAnonymous ? 'A Friend' : note.authorName || 'Unknown'}</DialogTitle>
                     <DialogDescription className="sr-only">Read the selected letter and its details.</DialogDescription>
 
                     {/* Left Side: Letter Content */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar border-r border-stone-200 transition-all duration-300">
                         {/* Toolbar / Header */}
-                        <div className="sticky top-0 z-10 bg-[#fdfbf7]/95 backdrop-blur border-b border-stone-200 p-4 flex justify-between items-center">
+                        <div className="sticky top-0 z-10 bg-[#fdfbf7]/95 backdrop-blur border-b border-stone-200 p-4 pr-12 flex justify-between items-center">
                             <div className="flex items-center gap-4">
                                 <div className="px-3 py-1 rounded-full bg-stone-100 border border-stone-200 text-stone-600 text-sm font-medium">
                                     {note.category || 'Letter'}
@@ -199,10 +159,10 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                                    className="hidden md:flex text-stone-500 hover:text-stone-800"
+                                    className="flex text-stone-500 hover:text-stone-800"
                                     title={isSidebarOpen ? "Hide Comments" : "Show Comments"}
                                 >
-                                    {isSidebarOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
+                                    {isSidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
                                 </Button>
 
                                 {/* Edit Button for Author */}
@@ -220,9 +180,6 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                                         <span className="sr-only">Edit Letter</span>
                                     </Button>
                                 )}
-                                <Button variant="ghost" onClick={onClose} className="md:hidden text-stone-500">
-                                    <X size={20} />
-                                </Button>
                             </div>
                         </div>
 
@@ -308,108 +265,24 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                         </div>
                     </div>
 
-                    {/* Right Side: Interactions & Comments */}
-                    <div className={cn(
-                        "bg-white flex flex-col h-[40vh] md:h-full border-t md:border-t-0 md:border-l border-stone-200 transition-all duration-300 ease-in-out overflow-hidden",
-                        isSidebarOpen ? "w-full md:w-96 opacity-100" : "w-0 opacity-0 border-none"
+                    {/* Comments drawer: visually left of the letter on desktop, top on mobile. */}
+                    <aside className={cn(
+                        "min-h-0 shrink-0 border-stone-200 transition-[width,height,opacity] duration-300 overflow-hidden",
+                        isSidebarOpen ? "h-[45vh] w-full border-b opacity-100 md:h-full md:w-[380px] md:border-b-0 md:border-r" : "h-0 w-0 border-0 opacity-0 md:h-full"
                     )}>
-                        <div className="p-4 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
-                            <h3 className="font-semibold text-stone-800">Comments</h3>
-                            <div className="flex items-center gap-4">
-                                <button
-                                    onClick={handleRepost}
-                                    className={cn("hidden md:flex items-center gap-1.5 transition-colors", isReposted ? "text-green-500" : "text-stone-600 hover:text-green-500")}
-                                    title="Quick Repost"
-                                >
-                                    <Repeat size={20} className={cn(isReposted && "fill-green-500 text-green-500")} />
-                                    <span className="text-sm font-medium">{repostCount}</span>
-                                </button>
-                                <button
-                                    onClick={() => setIsShareModalOpen(true)}
-                                    className="flex items-center gap-1.5 text-stone-600 hover:text-blue-500 transition-colors"
-                                    title="Share"
-                                >
-                                    <Share2 size={20} />
-                                </button>
-                                <button
-                                    onClick={handleLike}
-                                    className="flex items-center gap-1.5 text-stone-600 hover:text-rose-500 transition-colors"
-                                >
-                                    <Heart size={20} className={cn(isLiked && "fill-rose-500 text-rose-500")} />
-                                    <span className="text-sm font-medium">{likeCount}</span>
-                                </button>
-                                <div className="flex items-center gap-1.5 text-stone-600">
-                                    <MessageCircle size={20} />
-                                    <span className="text-sm font-medium">{comments.length}</span>
-                                </div>
-                            </div>
-                            <Button variant="ghost" onClick={onClose} className="hidden md:flex text-stone-500 hover:text-stone-800">
-                                <X size={20} />
-                            </Button>
-                        </div>
-
-                        {/* Comments List */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-stone-50/30">
-                            {comments.length === 0 ? (
-                                <div className="h-full flex flex-col items-center justify-center text-stone-400 text-center p-4">
-                                    <MessageCircle size={32} className="mb-2 opacity-20" />
-                                    <p className="text-sm">No comments yet.</p>
-                                    <p className="text-xs">Be the first to share your thoughts!</p>
-                                </div>
-                            ) : (
-                                comments.map((comment) => (
-                                    <div key={comment.id} className="flex gap-3 group">
-                                        <div className="w-8 h-8 rounded-full bg-stone-200 flex-shrink-0 overflow-hidden">
-                                            {comment.user?.avatar ? (
-                                                <img
-                                                    src={getImageUrl(comment.user.avatar)}
-                                                    alt={comment.user.username}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold bg-gradient-to-br from-blue-500 to-purple-600">
-                                                    {comment.user?.username?.[0]?.toUpperCase() || '?'}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="flex-1 space-y-1">
-                                            <div className="bg-white p-3 rounded-2xl rounded-tl-none border border-stone-100 shadow-sm">
-                                                <p className="text-xs font-bold text-stone-900 mb-0.5">
-                                                    {comment.user?.username || 'User'}
-                                                </p>
-                                                <p className="text-sm text-stone-700 leading-relaxed">
-                                                    {comment.content}
-                                                </p>
-                                            </div>
-                                            <p className="text-[10px] text-stone-400 pl-2">
-                                                {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-
-                        {/* Comment Input */}
-                        <div className="p-4 bg-white border-t border-stone-100">
-                            <form onSubmit={handleComment} className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={commentText}
-                                    onChange={(e) => setCommentText(e.target.value)}
-                                    placeholder="Write a comment..."
-                                    className="flex-1 bg-stone-100 border-none rounded-full px-4 py-2.5 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={!commentText.trim()}
-                                    className="p-2.5 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
-                                >
-                                    <Send size={16} />
-                                </button>
-                            </form>
-                        </div>
-                    </div>
+                        {isSidebarOpen && <CommentsPanel
+                            letterId={note.id}
+                            shareToken={note.isPublic && note.status === 'published' && !note.isArchived ? note.shareToken : undefined}
+                            onCollapse={() => setIsSidebarOpen(false)}
+                            onCommentCountChange={setCommentCount}
+                            actions={<>
+                                <button type="button" onClick={handleRepost} disabled={!user} className={cn("inline-flex items-center gap-1 text-xs hover:text-green-600 disabled:opacity-40", isReposted && "text-green-600")} title="Repost"><Repeat size={17} /><span>{repostCount}</span></button>
+                                <button type="button" onClick={() => setIsShareModalOpen(true)} disabled={!user} className="text-stone-600 hover:text-blue-500 disabled:opacity-40" title="Share"><Share2 size={17} /></button>
+                                <button type="button" onClick={handleLike} disabled={!user} className={cn("inline-flex items-center gap-1 text-xs hover:text-rose-500 disabled:opacity-40", isLiked && "text-rose-500")} title="Like"><Heart size={17} className={cn(isLiked && "fill-rose-500")} /><span>{likeCount}</span></button>
+                                <span className="sr-only">{commentCount} comments</span>
+                            </>}
+                        />}
+                    </aside>
                 </DialogContent>
             </Dialog>
             <ShareModal
