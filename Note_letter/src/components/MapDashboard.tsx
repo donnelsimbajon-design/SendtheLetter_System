@@ -2,7 +2,6 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Note } from '../types/note';
 import { customMarkerIcon } from './customMarker';
-import { getImageUrl } from '../lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 
 // Geoapify API key from environment variables
