@@ -10,6 +10,8 @@ interface User {
     avatar?: string;
     coverImage?: string;
     location?: string;
+    role: 'user' | 'admin';
+    isActive: boolean;
 }
 
 interface AuthState {
@@ -66,7 +68,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             set({ user: data.user, token: data.token, isAuthenticated: true });
 
             // Connect to socket
-            socketService.connect(data.user.id);
+            socketService.connect(data.user.id, data.token);
         } catch (error) {
             console.error('Login error:', error);
             throw error;
@@ -81,7 +83,7 @@ export const useAuthStore = create<AuthState>((set) => ({
                 body: JSON.stringify(credentials),
             });
 
-            const data = await response.json();
+            const data = await readResponse(response);
 
             if (!response.ok) {
                 throw new Error(data.message || 'Registration failed');
@@ -93,7 +95,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             set({ user: data.user, token: data.token, isAuthenticated: true });
 
             // Connect to socket
-            socketService.connect(data.user.id);
+            socketService.connect(data.user.id, data.token);
         } catch (error) {
             console.error('Registration error:', error);
             throw error;

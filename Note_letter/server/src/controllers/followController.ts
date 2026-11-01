@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import Follow from '../models/Follow';
 import User from '../models/User';
 import Notification from '../models/Notification';
-import sequelize from '../config/database';
+import { Op } from 'sequelize';
 
 interface AuthRequest extends Request {
     user?: any;
@@ -12,11 +12,14 @@ interface AuthRequest extends Request {
 export const toggleFollow = async (req: AuthRequest, res: Response) => {
     try {
         const followerId = req.user.id;
-        const { userId: followingId } = req.params;
-
-        if (followerId === parseInt(followingId)) {
+        const followingId = Number(req.params.userId);
+        if (!Number.isInteger(followingId) || followingId < 1) return res.status(400).json({ message: 'Invalid user ID.' });
+        if (followerId === followingId) {
             return res.status(400).json({ message: 'You cannot follow yourself' });
         }
+
+        const targetUser = await User.findByPk(followingId);
+        if (!targetUser || !targetUser.isActive) return res.status(404).json({ message: 'User not found.' });
 
         const existingFollow = await Follow.findOne({
             where: { followerId, followingId },
@@ -26,12 +29,12 @@ export const toggleFollow = async (req: AuthRequest, res: Response) => {
             await existingFollow.destroy();
             return res.json({ message: 'Unfollowed', isFollowing: false });
         } else {
-            const newFollow = await Follow.create({ followerId, followingId: parseInt(followingId) });
+            const newFollow = await Follow.create({ followerId, followingId });
 
             // Create Notification
             try {
                 const notification = await Notification.create({
-                    userId: parseInt(followingId), // Recipient
+                    userId: followingId, // Recipient
                     actorId: followerId, // Triggered by
                     type: 'follow',
                     entityId: newFollow.id, // The follow info
@@ -62,17 +65,12 @@ export const getUserProfile = async (req: Request, res: Response) => {
         const { username } = req.params;
         const currentUserId = (req as AuthRequest).user?.id;
 
-        console.log('Fetching profile for username:', username);
         const user = await User.findOne({
-            where: sequelize.where(
-                sequelize.fn('LOWER', sequelize.col('username')),
-                sequelize.fn('LOWER', username)
-            ),
-            attributes: ['id', 'username', 'email', 'createdAt', 'bio', 'location', 'avatar', 'coverImage'],
+            where: { username: { [Op.iLike]: username }, isActive: true },
+            attributes: ['id', 'username', 'createdAt', 'bio', 'location', 'avatar', 'coverImage'],
         });
-        console.log('User found:', user ? user.username : 'null');
 
-        if (!user) {
+        if (!user || !user.isActive) {
             return res.status(404).json({ message: 'User not found' });
         }
 
@@ -109,8 +107,8 @@ export const getUserById = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Invalid User ID' });
         }
 
-        const user = await User.findByPk(id, {
-            attributes: ['id', 'username', 'email', 'createdAt', 'bio', 'location', 'avatar', 'coverImage'],
+        const user = await User.findOne({ where: { id, isActive: true },
+            attributes: ['id', 'username', 'createdAt', 'bio', 'location', 'avatar', 'coverImage'],
         });
 
         if (!user) {
@@ -147,6 +145,7 @@ export const getFollowers = async (req: Request, res: Response) => {
                     model: User,
                     as: 'follower',
                     attributes: ['id', 'username'],
+                    where: { isActive: true },
                 },
             ],
         });
@@ -169,6 +168,7 @@ export const getFollowing = async (req: Request, res: Response) => {
                     model: User,
                     as: 'following',
                     attributes: ['id', 'username'],
+                    where: { isActive: true },
                 },
             ],
         });

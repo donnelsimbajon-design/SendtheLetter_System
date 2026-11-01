@@ -11,39 +11,42 @@ interface AuthRequest extends Request {
 export const sendFriendRequest = async (req: AuthRequest, res: Response) => {
     try {
         const requesterId = req.user.id;
-        const { recipientId } = req.body;
-
-        if (requesterId === recipientId) {
+        const recipientUserId = Number(req.body.recipientId);
+        if (!Number.isInteger(recipientUserId) || recipientUserId < 1) return res.status(400).json({ message: 'A valid recipient is required.' });
+        if (requesterId === recipientUserId) {
             return res.status(400).json({ message: 'Cannot add yourself' });
         }
 
         const existing = await Friend.findOne({
             where: {
                 [Op.or]: [
-                    { requesterId, recipientId },
-                    { requesterId: recipientId, recipientId: requesterId }
+                    { requesterId, recipientId: recipientUserId },
+                    { requesterId: recipientUserId, recipientId: requesterId }
                 ]
             }
         });
 
         if (existing) {
-            if (existing.status === 'pending') {
+            if (existing.status === 'rejected') await existing.destroy();
+            else if (existing.status === 'pending') {
                 return res.status(400).json({ message: 'Request already pending' });
             }
-            if (existing.status === 'accepted') {
+            else if (existing.status === 'accepted') {
                 return res.status(400).json({ message: 'Already friends' });
             }
         }
+        const recipient = await User.findByPk(recipientUserId);
+        if (!recipient || !recipient.isActive) return res.status(404).json({ message: 'Recipient not found.' });
 
         const friendRequest = await Friend.create({
             requesterId,
-            recipientId,
+            recipientId: recipientUserId,
             status: 'pending'
         });
 
         // Create Notification
         const notification = await Notification.create({
-            userId: recipientId,
+            userId: recipientUserId,
             actorId: requesterId,
             type: 'friend_request',
             entityId: friendRequest.id,
@@ -55,17 +58,13 @@ export const sendFriendRequest = async (req: AuthRequest, res: Response) => {
             const notificationWithDetails = await Notification.findByPk(notification.id, {
                 include: [{ model: User, as: 'actor', attributes: ['id', 'username', 'avatar'] }]
             });
-            io.to(`user_${recipientId}`).emit('new_notification', notificationWithDetails);
+            io.to(`user_${recipientUserId}`).emit('new_notification', notificationWithDetails);
         }
 
         res.json(friendRequest);
     } catch (error: any) {
         console.error('Error sending friend request:', error);
-        res.status(500).json({
-            message: 'Server error',
-            error: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        });
+        res.status(500).json({ message: 'Unable to process the friend request.' });
     }
 };
 
@@ -97,11 +96,7 @@ export const acceptFriendRequest = async (req: AuthRequest, res: Response) => {
         res.json({ message: 'Friend request accepted' });
     } catch (error: any) {
         console.error('Error accepting friend request:', error);
-        res.status(500).json({
-            message: 'Server error',
-            error: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        });
+        res.status(500).json({ message: 'Unable to complete the friend request.' });
     }
 };
 
@@ -130,11 +125,7 @@ export const getFriends = async (req: AuthRequest, res: Response) => {
         res.json(formattedFriends);
     } catch (error: any) {
         console.error('Error getting friends:', error);
-        res.status(500).json({
-            message: 'Server error',
-            error: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        });
+        res.status(500).json({ message: 'Unable to complete the friend request.' });
     }
 };
 
@@ -171,11 +162,7 @@ export const checkFriendStatus = async (req: AuthRequest, res: Response) => {
         res.json({ status: 'none' });
     } catch (error: any) {
         console.error('Error checking status:', error);
-        res.status(500).json({
-            message: 'Server error',
-            error: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        });
+        res.status(500).json({ message: 'Unable to complete the friend request.' });
     }
 };
 
@@ -209,11 +196,7 @@ export const cancelFriendRequest = async (req: AuthRequest, res: Response) => {
         res.json({ message: 'Friend request cancelled' });
     } catch (error: any) {
         console.error('Error cancelling friend request:', error);
-        res.status(500).json({
-            message: 'Server error',
-            error: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        });
+        res.status(500).json({ message: 'Unable to complete the friend request.' });
     }
 };
 // Decline a request (for the recipient)
@@ -247,9 +230,6 @@ export const declineFriendRequest = async (req: AuthRequest, res: Response) => {
         res.json({ message: 'Friend request declined' });
     } catch (error: any) {
         console.error('Error declining friend request:', error);
-        res.status(500).json({
-            message: 'Server error',
-            error: error.message
-        });
+        res.status(500).json({ message: 'Unable to complete the friend request.' });
     }
 };

@@ -1,6 +1,6 @@
 
 import { Request, Response } from 'express';
-import { Op } from 'sequelize';
+import { Op, QueryTypes } from 'sequelize';
 import Message from '../models/Message';
 import User from '../models/User';
 import sequelize from '../config/database';
@@ -14,21 +14,26 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
         const senderId = req.user.id;
         const { receiverId, content } = req.body;
 
-        if (!receiverId || !content) {
-            return res.status(400).json({ message: 'Receiver and content are required' });
+        const receiverUserId = Number(receiverId);
+        const safeContent = typeof content === 'string' ? content.trim() : '';
+        if (!Number.isInteger(receiverUserId) || receiverUserId < 1 || !safeContent || safeContent.length > 5000) {
+            return res.status(400).json({ message: 'A valid recipient and a message of 1 to 5,000 characters are required.' });
         }
+        if (receiverUserId === senderId) return res.status(400).json({ message: 'You cannot message yourself.' });
+        const receiverUser = await User.findByPk(receiverUserId);
+        if (!receiverUser || !receiverUser.isActive) return res.status(404).json({ message: 'Recipient not found.' });
 
         const message = await Message.create({
             senderId,
-            receiverId,
-            content,
+            receiverId: receiverUserId,
+            content: safeContent,
             isRead: false
         });
 
         // Manually fetch updated message with sender/receiver details
         const createdMessage = await Message.findByPk(message.id);
         const sender = await User.findByPk(senderId, { attributes: ['id', 'username', 'avatar'] });
-        const receiver = await User.findByPk(receiverId, { attributes: ['id', 'username', 'avatar'] });
+        const receiver = await User.findByPk(receiverUserId, { attributes: ['id', 'username', 'avatar'] });
 
         const messageWithUsers = {
             id: createdMessage!.id,
@@ -44,7 +49,7 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
         // Emit real-time message to receiver
         const io = (req as any).app.get('io');
         if (io) {
-            io.to(`user_${receiverId}`).emit('new_message', messageWithUsers);
+            io.to(`user_${receiverUserId}`).emit('new_message', messageWithUsers);
         }
 
         res.status(201).json(messageWithUsers);
@@ -57,7 +62,8 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
 export const getMessages = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user.id;
-        const { otherUserId } = req.params;
+        const otherUserId = Number(req.params.otherUserId);
+        if (!Number.isInteger(otherUserId) || otherUserId < 1) return res.status(400).json({ message: 'Invalid conversation.' });
 
         // Fetch messages first
         const messages = await Message.findAll({
@@ -98,7 +104,8 @@ export const getMessages = async (req: AuthRequest, res: Response) => {
 export const markAsRead = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user.id;
-        const { senderId } = req.body;
+        const senderId = Number(req.body.senderId);
+        if (!Number.isInteger(senderId) || senderId < 1) return res.status(400).json({ message: 'Invalid sender.' });
 
         await Message.update(
             { isRead: true },
@@ -129,21 +136,21 @@ export const getConversations = async (req: AuthRequest, res: Response) => {
         // Let's rely on raw query for performance and simplicity to get "Latest Message Per Conversation"
 
         const query = `
-            SELECT 
-                CASE 
-                    WHEN senderId = :userId THEN receiverId 
-                    ELSE senderId 
-                END as otherUserId,
-                MAX(createdAt) as lastMessageTime
-            FROM messages
-            WHERE senderId = :userId OR receiverId = :userId
-            GROUP BY otherUserId
-            ORDER BY lastMessageTime DESC
+            SELECT
+                CASE
+                    WHEN "senderId" = :userId THEN "receiverId"
+                    ELSE "senderId"
+                END AS "otherUserId",
+                MAX("createdAt") AS "lastMessageTime"
+            FROM "messages"
+            WHERE "senderId" = :userId OR "receiverId" = :userId
+            GROUP BY "otherUserId"
+            ORDER BY "lastMessageTime" DESC
         `;
 
         const results = await sequelize.query(query, {
             replacements: { userId },
-            type: (sequelize as any).QueryTypes.SELECT
+            type: QueryTypes.SELECT
         }) as any[];
 
         // Now fetch user details and the actual last message content for each
