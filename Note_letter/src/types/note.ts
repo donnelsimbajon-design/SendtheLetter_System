@@ -25,6 +25,7 @@ export interface Note {
     recipientName?: string;
     recipientAddress?: string;
     isAnonymous?: boolean;
+    isArchived?: boolean;
     backgroundImage?: string;
     likeCount?: number;
     commentCount?: number;
