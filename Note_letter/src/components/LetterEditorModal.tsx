@@ -35,10 +35,10 @@ const categories = [
 ];
 
 const letterTemplates = [
-    { value: 'gratitude', label: 'A note of gratitude', category: 'Gratitude', title: 'Thank you for being you', content: 'Dear you,\\n\\nI wanted to take a moment to say thank you for...\\n\\nOne thing I appreciate about you is...\\n\\nIt means more than you know.\\n\\nWith gratitude,' },
-    { value: 'apology', label: 'A gentle apology', category: 'Apology', title: 'I owe you an apology', content: 'Dear you,\\n\\nI have been thinking about what happened, and I want to acknowledge...\\n\\nI am sorry for...\\n\\nI hope we can find a way forward when you are ready.\\n\\nWith sincerity,' },
-    { value: 'future-self', label: 'A note to my future self', category: 'Reflection', title: 'A note to my future self', content: 'Dear future me,\\n\\nRight now, life looks like...\\n\\nI hope you remember...\\n\\nPlease keep making time for...\\n\\nWhatever happens, I hope you are proud of how far we have come.\\n\\nWith care,' },
-    { value: 'hello', label: 'A little hello', category: 'Friendship', title: 'Just wanted to say hello', content: 'Dear you,\\n\\nYou crossed my mind today, and I wanted to reach out.\\n\\nI hope you have been...\\n\\nHere is something I wanted you to know...\\n\\nTalk soon,' },
+    { value: 'gratitude', label: 'A note of gratitude', category: 'Gratitude', title: 'Thank you for being you', content: 'Dear you,\n\nI wanted to take a moment to say thank you for...\n\nOne thing I appreciate about you is...\n\nIt means more than you know.\n\nWith gratitude,' },
+    { value: 'apology', label: 'A gentle apology', category: 'Apology', title: 'I owe you an apology', content: 'Dear you,\n\nI have been thinking about what happened, and I want to acknowledge...\n\nI am sorry for...\n\nI hope we can find a way forward when you are ready.\n\nWith sincerity,' },
+    { value: 'future-self', label: 'A note to my future self', category: 'Reflection', title: 'A note to my future self', content: 'Dear future me,\n\nRight now, life looks like...\n\nI hope you remember...\n\nPlease keep making time for...\n\nWhatever happens, I hope you are proud of how far we have come.\n\nWith care,' },
+    { value: 'hello', label: 'A little hello', category: 'Friendship', title: 'Just wanted to say hello', content: 'Dear you,\n\nYou crossed my mind today, and I wanted to reach out.\n\nI hope you have been...\n\nHere is something I wanted you to know...\n\nTalk soon,' },
 ];
 
 const API_URL = API_ENDPOINTS.letters;
