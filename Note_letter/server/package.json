@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "nodemon src/index.ts",
-    "build": "npm install --include=dev && tsc",
+    "build": "npm install --include=dev && npm rebuild bcrypt --build-from-source && tsc",
     "start:prod": "node dist/index.js",
     "admin:promote": "node dist/scripts/promoteAdmin.js"
   },
