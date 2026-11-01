@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_BASE_URL, API_ENDPOINTS } from '../../config/api';
 import { useAuthStore } from '../../store/authStore';
 import { useNoteStore } from '../../store/noteStore';
 import { MapPin, Calendar, Camera, PenLine, Search, Settings, Sparkles, UserPlus, UserCheck, MessageCircle } from 'lucide-react';
@@ -69,7 +70,7 @@ const Profile = () => {
     const handleSendFriendRequest = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:5000/api/friends/request', {
+            const response = await fetch(`${API_BASE_URL}/api/friends/request`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -87,7 +88,7 @@ const Profile = () => {
         if (!requestId) return;
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:5000/api/friends/accept', {
+            const response = await fetch(`${API_BASE_URL}/api/friends/accept`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -108,7 +109,7 @@ const Profile = () => {
         if (!user?.id) return;
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:5000/api/users/${user.id}/profile`, {
+            const response = await fetch(`${API_ENDPOINTS.users}/${user.id}/profile`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (response.ok) {
@@ -124,7 +125,7 @@ const Profile = () => {
     const fetchReposts = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:5000/api/letters/reposts', {
+            const response = await fetch(`${API_ENDPOINTS.letters}/reposts`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (response.ok) {
