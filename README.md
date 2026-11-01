@@ -43,8 +43,32 @@ The dashboard includes Warm Editorial, Cool Blue, and Forest Dark appearance cho
 
 ## Product scope notes
 
-The frontend should only advertise capabilities that are implemented and backed by the API. Future-delivery/time-capsule workflows, attachments, and advanced privacy guarantees require explicit backend support and should not be presented as completed features until those integrations are verified.
+The frontend should only advertise capabilities that are implemented and backed by the API. The backend now includes a database-backed scheduled-letter release worker and a public-letter sharing route. Verify these workflows against a staging database before treating them as production-ready; recipient-specific delivery, attachments, and advanced privacy guarantees still require additional backend support.
 
 ## Quality checks
 
 GitHub Actions runs the frontend TypeScript project build and Vite production build for pull requests and relevant branch pushes. The lockfile includes semver-compatible dependency security updates; CI runs a full npm dependency audit.
+
+
+## System architecture and integrations
+
+The architecture handbook and implementation boundaries are documented in [docs/architecture](docs/architecture/README.md). It includes the system context, logical architecture, data flows, sequence diagrams, database model, deployment view, security findings, and sharing/email integration contract.
+
+The current implementation supports in-app friend sharing and a public-letter URL flow for published public letters. Email-provider delivery, scheduled delivery worker, private share tokens, and direct Meta API publishing/messaging still require additional implementation and owner-supplied credentials. See [implementation status](docs/implementation-status.md) before treating these as production features.
+
+
+## Backend setup
+
+```bash
+cd Note_letter/server
+npm ci
+cp .env.example .env
+```
+
+Set `DATABASE_URL`, a random `JWT_SECRET` of at least 32 characters, and `CLIENT_ORIGIN` in the server environment before starting the API:
+
+```bash
+npm run dev
+```
+
+For email delivery, configure `RESEND_API_KEY` and a verified `EMAIL_FROM`. Never commit a real `.env` file. The frontend also has a safe template at `Note_letter/.env.example`.

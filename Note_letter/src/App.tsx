@@ -17,6 +17,7 @@ import Login from './Pages/Login';
 import Signup from './Pages/Signup';
 import Creator from './Pages/Creator';
 import AdminDashboard from './Pages/AdminDashboard';
+import PublicLetterPage from './Pages/user/PublicLetterPage';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -43,7 +44,6 @@ function App() {
     return (
         <Router>
             <Routes>
-                {/* Public Routes */}
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/services" element={<Services />} />
@@ -52,17 +52,9 @@ function App() {
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/creator" element={<Creator />} />
                 <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+                <Route path="/letters/:id" element={<PublicLetterPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
-
-                {/* Private Routes */}
-                <Route
-                    path="/dashboard"
-                    element={
-                        <PrivateRoute>
-                            <DashboardLayout />
-                        </PrivateRoute>
-                    }
-                >
+                <Route path="/dashboard" element={<PrivateRoute><DashboardLayout /></PrivateRoute>}>
                     <Route index element={<DashboardPage />} />
                     <Route path="notes" element={<UserNotePage />} />
                     <Route path="profile" element={<ProfilePage />} />

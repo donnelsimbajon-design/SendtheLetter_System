@@ -52,6 +52,15 @@ const backgroundGradients = [
     { name: 'Rose Gold', value: 'linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%)', gradient: 'bg-gradient-to-br from-[#fce4ec] to-[#f8bbd0]' },
 ];
 
+const toLocalDateTimeInput = (value?: string | Date | null) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+};
+
+const toUtcDateTime = (value: string) => value ? new Date(value).toISOString() : null;
+
 const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, onSubmit, initialData }) => {
     const user = useAuthStore((state) => state.user);
     const [font, setFont] = useState('font-serif');
@@ -92,9 +101,9 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
             setSpotifyLink(initialData.spotifyLink || '');
             setRecipientName(initialData.recipientName || '');
             setRecipientAddress(initialData.recipientAddress || '');
-            setScheduledDate(initialData.scheduledDate || '');
+            setScheduledDate(toLocalDateTimeInput(initialData.scheduledDate));
             setIsTimeCapsule(initialData.isTimeCapsule || false);
-            setOpenDate(initialData.openDate || '');
+            setOpenDate(toLocalDateTimeInput(initialData.openDate));
             // Stop draft auto-save if we are editing an existing letter
             if (initialData.status === 'published') {
                 setDraftId('stop-autosave');
@@ -112,6 +121,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
             setIsAnonymous(false);
             setBackgroundImage(backgroundGradients[0].value);
             setImageUrl('');
+            setImageUploadError('');
             setSpotifyLink('');
             setRecipientName('');
             setRecipientAddress('');
@@ -186,14 +196,13 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-            if (!allowedTypes.includes(file.type)) {
-                setImageUploadError('Choose a JPG, PNG, WEBP, or GIF image.');
+            if (!file.type.startsWith('image/')) {
+                setImageUploadError('Please choose an image file.');
                 e.target.value = '';
                 return;
             }
-            if (file.size > 5 * 1024 * 1024) {
-                setImageUploadError('Image must be 5 MB or smaller.');
+            if (file.size > 7 * 1024 * 1024) {
+                setImageUploadError('Please choose an image smaller than 7 MB.');
                 e.target.value = '';
                 return;
             }
@@ -219,8 +228,8 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
             isPublic,
             backgroundImage,
             imageUrl,
-            scheduledDate,
-            openDate,
+            scheduledDate: toUtcDateTime(scheduledDate),
+            openDate: toUtcDateTime(openDate),
             isTimeCapsule,
             createdAt: new Date(),
         });
@@ -382,12 +391,11 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                                 <div className="relative">
                                     <input
                                         type="file"
-                                        accept="image/jpeg,image/png,image/webp,image/gif"
+                                        accept="image/*"
                                         onChange={handleImageUpload}
                                         className="hidden"
                                         id="image-upload"
                                     />
-                                    {imageUploadError && <p role="alert" className="mb-2 text-xs text-destructive">{imageUploadError}</p>}
                                     <label
                                         htmlFor="image-upload"
                                         className="flex items-center justify-center gap-2 w-full h-10 rounded-md border border-border bg-card text-muted-foreground hover:bg-background cursor-pointer transition-colors text-sm font-medium"
@@ -395,6 +403,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                                         <ImageIcon size={16} />
                                         {imageUrl ? 'Change Image' : 'Add Image'}
                                     </label>
+                                    {imageUploadError && <p role="alert" className="mt-1 text-xs text-destructive">{imageUploadError}</p>}
                                 </div>
                             </div>
                         </div>

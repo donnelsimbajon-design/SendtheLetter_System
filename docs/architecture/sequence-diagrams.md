@@ -1,0 +1,90 @@
+# Sequence Diagrams
+
+## Login (current implementation)
+
+```mermaid
+sequenceDiagram
+  actor User
+  participant UI as React client
+  participant API as Express API
+  participant Auth as Auth controller
+  participant DB as PostgreSQL
+
+  User->>UI: Submit email and password
+  UI->>API: POST /api/auth/login
+  API->>Auth: Route request
+  Auth->>DB: Find user by email
+  DB-->>Auth: User record
+  Auth->>Auth: bcrypt password comparison
+  Auth-->>UI: JWT + safe user profile
+  UI-->>User: Open dashboard
+```
+
+## Letter creation (current implementation)
+
+```mermaid
+sequenceDiagram
+  actor Author
+  participant UI as Letter editor
+  participant API as Express API
+  participant JWT as Auth middleware
+  participant Controller as Letter controller
+  participant DB as PostgreSQL
+
+  Author->>UI: Write title and content
+  UI->>API: POST /api/letters + Bearer token
+  API->>JWT: Verify token
+  JWT-->>Controller: Authenticated user ID
+  Controller->>DB: Insert letter
+  DB-->>Controller: Saved letter
+  Controller-->>UI: 201 Created
+  UI-->>Author: Show saved result
+```
+
+## Scheduled delivery / Time Capsule (worker implemented; integration testing required)
+
+```mermaid
+sequenceDiagram
+  actor Author
+  participant UI as React client
+  participant API as Express API
+  participant DB as PostgreSQL
+  participant Worker as Delivery worker
+  actor Recipient
+
+  Author->>UI: Choose future delivery time
+  UI->>API: Create scheduled letter
+  API->>DB: Save schedule and pending status
+  DB-->>API: Saved
+  API-->>UI: Scheduled confirmation
+  Note over Worker,DB: Worker polls or claims due jobs
+  Worker->>DB: Claim due delivery atomically
+  DB-->>Worker: Due letter and recipient
+  Worker->>DB: Publish letter and create author notification in one transaction
+  Worker-->>Author: Emit realtime notification when connected
+  Note over Author,Recipient: Registered-recipient or external email delivery is not implemented because no recipient identity is modeled yet
+```
+
+## Social share (target)
+
+```mermaid
+sequenceDiagram
+  actor Author
+  participant UI as Share dialog
+  participant API as Share API
+  participant DB as PostgreSQL
+  participant Platform as Native share / social platform
+  actor Viewer
+
+  Author->>UI: Choose a letter and share action
+  UI->>API: Request crawler-ready public preview URL
+  API->>DB: Verify public visibility, publish state, archive, and open date
+  DB-->>API: Authorized public letter
+  API-->>UI: Preview URL with Open Graph metadata
+  UI->>Platform: Open native share handoff
+  Platform-->>Viewer: Shared URL / preview
+  Viewer->>UI: Open link
+  UI->>API: Fetch letter by public ID or secure token
+  API->>DB: Re-check access
+  API-->>Viewer: Authorized letter only
+```

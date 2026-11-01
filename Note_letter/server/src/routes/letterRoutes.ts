@@ -7,8 +7,10 @@ import { authenticateToken, optionalAuth } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
-// Public reads may personalize counts when a valid token is supplied.
+// Public reads allow anonymous visitors while optionally personalizing engagement state.
 router.get('/public', optionalAuth, letterController.getPublicLetters);
+router.get('/public/:id/share', letterController.getPublicLetterSharePreview);
+router.get('/public/:id', letterController.getPublicLetterById);
 router.get('/:id/comments', optionalAuth, commentController.getComments);
 router.get('/:id/likes', optionalAuth, likeController.getLikes);
 router.get('/user/:username', optionalAuth, letterController.getUserPublicLetters);
@@ -17,6 +19,7 @@ router.get('/user/:username/reposts', optionalAuth, repostController.getPublicUs
 router.use(authenticateToken);
 router.post('/', letterController.createLetter);
 router.get('/mine', letterController.getMyLetters);
+router.post('/:id/email', letterController.sendLetterByEmail);
 router.get('/drafts', letterController.getDrafts);
 router.post('/:id/comments', commentController.createComment);
 router.delete('/:id/comments/:commentId', commentController.deleteComment);

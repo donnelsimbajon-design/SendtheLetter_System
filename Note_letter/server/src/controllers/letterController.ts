@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
+import axios from 'axios';
 import Letter from '../models/Letter';
 import User from '../models/User';
 import sequelize from '../config/database';
+import { Op } from 'sequelize';
 
 interface AuthRequest extends Request {
     user?: any;
@@ -10,11 +12,13 @@ interface AuthRequest extends Request {
 export const createLetter = async (req: AuthRequest, res: Response) => {
     try {
         const {
-            title,
+            title: title.trim(),
             content,
-            type,
-            isPublic,
+            type: typeof type === 'string' ? type.slice(0, 50) : 'General',
+            isPublic: isPublic === true,
             scheduledDate,
+            openDate,
+            isTimeCapsule,
             status,
             backgroundImage,
             recipientName,
@@ -25,20 +29,35 @@ export const createLetter = async (req: AuthRequest, res: Response) => {
             imageUrl
         } = req.body;
         const userId = req.user.id;
+
         if (typeof title !== 'string' || !title.trim() || title.length > 255 || typeof content !== 'string' || !content.trim() || content.length > 100000) {
             return res.status(400).json({ message: 'A title (max 255 characters) and letter content are required.' });
         }
-        if (typeof imageUrl === 'string' && imageUrl.length > 7500000) return res.status(400).json({ message: 'Letter image must be 5 MB or smaller.' });
-        const safeStatus = status === 'draft' || status === 'scheduled' ? status : 'published';
+        if (typeof imageUrl === 'string' && imageUrl.length > 7500000) {
+            return res.status(400).json({ message: 'Letter image must be 5 MB or smaller.' });
+        }
+        if (status !== 'draft' && isTimeCapsule && !openDate) {
+            return res.status(400).json({ message: 'Choose an opening date for your Time Capsule' });
+        }
+
+        const releaseAt = isTimeCapsule ? openDate : scheduledDate;
+        const releaseTime = releaseAt ? new Date(releaseAt).getTime() : null;
+        if (releaseTime !== null && !Number.isFinite(releaseTime)) {
+            return res.status(400).json({ message: 'Enter a valid release date' });
+        }
+        const releaseIsFuture = releaseTime !== null && releaseTime > Date.now();
+        const effectiveStatus = status === 'draft' ? 'draft' : (releaseIsFuture ? 'scheduled' : (status || 'published'));
 
         const letter = await Letter.create({
             userId,
-            title: title.trim(),
+            title,
             content,
-            type: typeof type === 'string' ? type.slice(0, 50) : 'General',
-            isPublic: isPublic === true,
+            type,
+            isPublic,
             scheduledDate,
-            status: safeStatus,
+            status: effectiveStatus,
+            openDate,
+            isTimeCapsule,
             backgroundImage,
             recipientName,
             recipientAddress,
@@ -59,7 +78,7 @@ export const getMyLetters = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user.id;
         const letters = await Letter.findAll({
-            where: { userId, status: 'published', isArchived: false },
+            where: { userId, status: 'published', [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }] },
             order: [['createdAt', 'DESC']],
         });
         res.json(letters);
@@ -91,7 +110,7 @@ export const getPublicLetters = async (req: Request, res: Response) => {
         const { default: Comment } = await import('../models/Comment');
 
         const letters = await Letter.findAll({
-            where: { isPublic: true, status: 'published', isArchived: false },
+            where: { isPublic: true, status: 'published', [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }] },
             include: [
                 {
                     model: User,
@@ -159,9 +178,9 @@ export const getUserPublicLetters = async (req: Request, res: Response) => {
             where: {
                 isPublic: true,
                 status: 'published',
-                isArchived: false,
                 userId: user.id,
-                isAnonymous: false // Don't show anonymous letters on profile
+                isAnonymous: false, // Don't show anonymous letters on profile
+                [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }]
             },
             include: [
                 {
@@ -235,25 +254,16 @@ export const updateLetter = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
-        const body = req.body || {};
-        const allowedFields = ['title', 'content', 'type', 'isPublic', 'scheduledDate', 'status', 'backgroundImage', 'recipientName', 'recipientAddress', 'spotifyLink', 'font', 'isAnonymous', 'imageUrl', 'address', 'latitude', 'longitude', 'openDate', 'isTimeCapsule', 'isArchived'];
-        const updates: Record<string, any> = {};
-        for (const field of allowedFields) {
-            if (Object.prototype.hasOwnProperty.call(body, field)) updates[field] = body[field];
-        }
-        if (updates.title !== undefined && (typeof updates.title !== 'string' || !updates.title.trim() || updates.title.length > 255)) {
-            return res.status(400).json({ message: 'Title must be between 1 and 255 characters.' });
-        }
-        if (updates.content !== undefined && (typeof updates.content !== 'string' || !updates.content.trim() || updates.content.length > 100000)) {
-            return res.status(400).json({ message: 'Letter content is required and must be 100,000 characters or fewer.' });
-        }
-        if (typeof updates.imageUrl === 'string' && updates.imageUrl.length > 7500000) return res.status(400).json({ message: 'Letter image must be 5 MB or smaller.' });
-        if (updates.status !== undefined && !['published', 'draft', 'scheduled'].includes(String(updates.status))) {
-            return res.status(400).json({ message: 'Invalid letter status.' });
-        }
-        if (updates.isPublic !== undefined && typeof updates.isPublic !== 'boolean') {
-            return res.status(400).json({ message: 'isPublic must be a boolean.' });
-        }
+        const requestedUpdates = req.body || {};
+        const allowedFields = [
+            'title', 'content', 'type', 'isPublic', 'scheduledDate', 'openDate',
+            'isTimeCapsule', 'backgroundImage', 'recipientName', 'recipientAddress',
+            'spotifyLink', 'font', 'isAnonymous', 'imageUrl', 'address',
+            'latitude', 'longitude', 'isArchived',
+        ];
+        const updates = Object.fromEntries(
+            Object.entries(requestedUpdates).filter(([key]) => allowedFields.includes(key))
+        );
 
         const letter = await Letter.findByPk(id);
 
@@ -261,14 +271,28 @@ export const updateLetter = async (req: AuthRequest, res: Response) => {
             return res.status(404).json({ message: 'Letter not found' });
         }
 
-        if (letter.userId !== userId) {
+        if (Number(letter.userId) !== Number(userId)) {
             return res.status(403).json({ message: 'Not authorized to update this letter' });
         }
-        if (letter.status === 'removed' && (updates.status !== undefined || updates.isPublic !== undefined || updates.isArchived === false)) {
-            return res.status(403).json({ message: 'This letter was removed by moderation and cannot be republished.' });
+
+        const nextIsTimeCapsule = updates.isTimeCapsule ?? letter.isTimeCapsule;
+        const nextReleaseAt = nextIsTimeCapsule
+            ? (updates.openDate ?? letter.openDate)
+            : (updates.scheduledDate ?? letter.scheduledDate);
+
+        if (letter.status !== 'draft' && nextIsTimeCapsule && !nextReleaseAt) {
+            return res.status(400).json({ message: 'Choose an opening date for your Time Capsule' });
+        }
+        if (letter.status !== 'draft' && nextReleaseAt) {
+            const releaseTime = nextReleaseAt instanceof Date ? nextReleaseAt.getTime() : Date.parse(String(nextReleaseAt));
+            if (!Number.isFinite(releaseTime)) {
+                return res.status(400).json({ message: 'Enter a valid scheduled release date' });
+            }
+            updates.status = releaseTime > Date.now() ? 'scheduled' : 'published';
+        } else if (letter.status === 'scheduled' && !nextReleaseAt) {
+            updates.status = 'published';
         }
 
-        if (Object.keys(updates).length === 0) return res.status(400).json({ message: 'No valid fields supplied for update.' });
         await letter.update(updates);
         res.json({ message: 'Letter updated successfully', letter });
     } catch (error) {
@@ -288,8 +312,7 @@ export const getScheduledLetters = async (req: AuthRequest, res: Response) => {
         const letters = await Letter.findAll({
             where: {
                 userId,
-                status: 'scheduled',
-                isArchived: false,
+                status: 'scheduled'
             },
             order: [['scheduledDate', 'ASC']],
         });
@@ -309,8 +332,7 @@ export const getTimeCapsules = async (req: AuthRequest, res: Response) => {
             where: {
                 userId,
                 type: 'Time Capsule',
-                status: 'scheduled',
-                isArchived: false,
+                status: 'scheduled'
             },
             order: [['scheduledDate', 'ASC']],
         });
@@ -357,5 +379,194 @@ export const getArchivedLetters = async (req: AuthRequest, res: Response) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
+    }
+};
+
+
+/**
+ * Public letter detail endpoint.
+ * Only published, explicitly public letters can be resolved by a share URL.
+ */
+export const getPublicLetterById = async (req: Request, res: Response) => {
+    try {
+        const letter = await Letter.findOne({
+            where: {
+                id: req.params.id,
+                isPublic: true,
+                status: 'published',
+                isArchived: false,
+                [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }],
+            },
+            include: [{
+                model: User,
+                as: 'user',
+                attributes: ['id', 'username', 'avatar'],
+            }],
+        });
+
+        if (!letter) {
+            return res.status(404).json({ message: 'Public letter not found' });
+        }
+
+        const data = letter.toJSON() as any;
+        const author = data.user;
+
+        return res.json({
+            id: data.id,
+            title: data.title,
+            content: data.content,
+            type: data.type,
+            isPublic: true,
+            status: data.status,
+            isAnonymous: Boolean(data.isAnonymous),
+            authorName: data.isAnonymous ? 'Anonymous' : (author?.username || 'Unknown'),
+            authorAvatar: data.isAnonymous ? null : (author?.avatar || null),
+            createdAt: data.createdAt,
+            backgroundImage: data.backgroundImage,
+            imageUrl: data.imageUrl,
+            font: data.font,
+        });
+    } catch (error) {
+        console.error('Error fetching public letter:', error);
+        return res.status(500).json({ message: 'Unable to load this letter' });
+    }
+};
+
+
+const emailSendHistory = new Map<number, number[]>();
+const escapeEmailHtml = (value: string) => value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+/**
+ * Sends a published letter by email through Resend.
+ * The sender must own the letter; private content is sent only after this
+ * explicit authenticated action and is never exposed through a public URL.
+ */
+export const sendLetterByEmail = async (req: AuthRequest, res: Response) => {
+    const userId = Number(req.user?.id);
+    try {
+        const recipientEmail = String(req.body?.recipientEmail || '').trim().toLowerCase();
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!Number.isInteger(userId) || userId <= 0) {
+            return res.status(401).json({ message: 'Authentication required' });
+        }
+        if (!emailPattern.test(recipientEmail) || recipientEmail.length > 254) {
+            return res.status(400).json({ message: 'Enter a valid recipient email address' });
+        }
+
+        const letter = await Letter.findByPk(req.params.id);
+        if (!letter) return res.status(404).json({ message: 'Letter not found' });
+        if (Number(letter.userId) !== userId) {
+            return res.status(403).json({ message: 'Only the letter author can send it by email' });
+        }
+        if (letter.status !== 'published' || letter.isArchived || (letter.scheduledDate && letter.scheduledDate.getTime() > Date.now()) || (letter.isTimeCapsule && letter.openDate && letter.openDate.getTime() > Date.now())) {
+            return res.status(409).json({ message: 'Only available, published letters can be emailed' });
+        }
+
+        const now = Date.now();
+        const recentAttempts = (emailSendHistory.get(userId) || []).filter((time) => now - time < 60 * 60 * 1000);
+        if (recentAttempts.length >= 5) {
+            return res.status(429).json({ message: 'Email sharing limit reached. Try again later.' });
+        }
+
+        const apiKey = process.env.RESEND_API_KEY;
+        const from = process.env.EMAIL_FROM;
+        if (!apiKey || !from) {
+            return res.status(503).json({ message: 'Email delivery is not configured yet' });
+        }
+
+        const safeTitle = escapeEmailHtml(letter.title || 'A letter from SendTheLetter');
+        const safeContent = escapeEmailHtml(letter.content || '').replace(/\r?\n/g, '<br>');
+        const publicUrl = letter.isPublic
+            ? `${(process.env.APP_BASE_URL || 'http://localhost:5173').replace(/\/$/, '')}/letters/${letter.id}`
+            : '';
+        const publicLinkHtml = publicUrl
+            ? `<p><a href="${escapeEmailHtml(publicUrl)}">View this letter on SendTheLetter</a></p>`
+            : '';
+
+        recentAttempts.push(now);
+        emailSendHistory.set(userId, recentAttempts);
+
+        const response = await axios.post('https://api.resend.com/emails', {
+            from,
+            to: [recipientEmail],
+            subject: letter.title || 'A letter from SendTheLetter',
+            html: `<main style="font-family:Georgia,serif;line-height:1.7;color:#263b35;max-width:640px;margin:auto"><h1>${safeTitle}</h1><div>${safeContent}</div>${publicLinkHtml}<p style="color:#8a8d84;font:12px Arial,sans-serif">Sent with care via SendTheLetter.</p></main>`,
+            text: `${letter.title || 'A letter from SendTheLetter'}\n\n${letter.content || ''}${publicUrl ? `\n\nView online: ${publicUrl}` : ''}\n\nSent with care via SendTheLetter.`,
+        }, {
+            headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+            timeout: 15000,
+        });
+
+        return res.status(202).json({
+            message: 'Letter email accepted by the delivery provider',
+            providerMessageId: response.data?.id || null,
+        });
+    } catch (error) {
+        const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+        console.error('Letter email delivery failed:', status || 'provider/network error');
+        return res.status(502).json({ message: 'Email could not be delivered. Please try again later.' });
+    }
+};
+
+
+/**
+ * Social crawler landing response. It exposes metadata only for a currently
+ * public, published, non-archived letter, then redirects humans to the SPA.
+ */
+export const getPublicLetterSharePreview = async (req: Request, res: Response) => {
+    try {
+        const letter = await Letter.findOne({
+            where: {
+                id: req.params.id,
+                isPublic: true,
+                status: 'published',
+                isArchived: false,
+                [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }],
+            },
+        });
+
+        if (!letter) {
+            return res.status(404).type('text').send('Public letter not found');
+        }
+
+        const appBaseUrl = (process.env.APP_BASE_URL || 'http://localhost:5173').replace(/\/$/, '');
+        const canonicalUrl = `${appBaseUrl}/letters/${letter.id}`;
+        const title = escapeEmailHtml(letter.title || 'A letter from SendTheLetter');
+        const description = escapeEmailHtml((letter.content || 'A letter shared with care.').replace(/\s+/g, ' ').slice(0, 200));
+        const imageUrl = typeof letter.imageUrl === 'string' && /^https?:\/\//i.test(letter.imageUrl)
+            ? letter.imageUrl
+            : '';
+        const imageTag = imageUrl ? `<meta property="og:image" content="${escapeEmailHtml(imageUrl)}">` : '';
+
+        res.setHeader('Cache-Control', 'public, max-age=300');
+        return res.status(200).type('html').send(`<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title} | SendTheLetter</title>
+<meta name="description" content="${description}">
+<link rel="canonical" href="${escapeEmailHtml(canonicalUrl)}">
+<meta property="og:type" content="article">
+<meta property="og:title" content="${title}">
+<meta property="og:description" content="${description}">
+<meta property="og:url" content="${escapeEmailHtml(canonicalUrl)}">
+${imageTag}
+<meta name="twitter:card" content="${imageUrl ? 'summary_large_image' : 'summary'}">
+<meta name="twitter:title" content="${title}">
+<meta name="twitter:description" content="${description}">
+<meta http-equiv="refresh" content="0;url=${escapeEmailHtml(canonicalUrl)}">
+</head>
+<body><p>Opening your letter… <a href="${escapeEmailHtml(canonicalUrl)}">Continue to SendTheLetter</a></p></body>
+</html>`);
+    } catch (error) {
+        console.error('Error creating public letter preview:', error);
+        return res.status(500).type('text').send('Unable to open this letter');
     }
 };

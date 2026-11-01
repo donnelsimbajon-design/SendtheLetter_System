@@ -1,24 +1,26 @@
-# Environment secrets
+# Secrets and local configuration
 .env
 .env.*
 !.env.example
-Note_letter/.env
-Note_letter/server/.env
+**/.env
+**/.env.*
+!**/.env.example
 
-# Dependencies and generated output
+# Node / build output
 node_modules/
 **/node_modules/
 dist/
 **/dist/
 coverage/
-
-# Runtime uploads and local logs
-Note_letter/server/uploads/*
-!Note_letter/server/uploads/.gitkeep
 *.log
 npm-debug.log*
 
+# Local uploads and generated files
+Note_letter/server/uploads/*
+!Note_letter/server/uploads/.gitkeep
+
 # Local editor and OS files
 .DS_Store
+Thumbs.db
 .vscode/
 .idea/

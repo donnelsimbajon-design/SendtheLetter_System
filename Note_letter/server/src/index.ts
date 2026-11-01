@@ -3,9 +3,9 @@ import fs from 'fs';
 import path from 'path';
 import cors, { CorsOptions } from 'cors';
 import dotenv from 'dotenv';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import jwt, { JwtPayload } from 'jsonwebtoken';
 import sequelize from './config/database';
 import authRoutes from './routes/authRoutes';
 import letterRoutes from './routes/letterRoutes';
@@ -19,17 +19,27 @@ import messageRoutes from './routes/messageRoutes';
 import friendRoutes from './routes/friendRoutes';
 import Message from './models/Message';
 import Friend from './models/Friend';
+import { startScheduledLetterWorker } from './services/scheduledLetterWorker';
 
 dotenv.config();
+
+const jwtSecret = process.env.JWT_SECRET;
+if (!jwtSecret || jwtSecret.length < 32) {
+    throw new Error('JWT_SECRET must be configured with at least 32 characters before starting the API.');
+}
+
+const allowedOrigins = new Set(
+    (process.env.CLIENT_ORIGIN || process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173')
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean)
+);
 
 const app = express();
 app.disable('x-powered-by');
 fs.mkdirSync(path.resolve(process.cwd(), 'uploads'), { recursive: true });
+
 const httpServer = createServer(app);
-const allowedOrigins = new Set(
-    [process.env.CLIENT_URL, process.env.FRONTEND_URL, 'http://localhost:5173']
-        .filter((origin): origin is string => Boolean(origin))
-);
 const corsOptions: CorsOptions = {
     origin: (origin, callback) => {
         if (!origin || allowedOrigins.has(origin)) return callback(null, true);
@@ -46,7 +56,7 @@ app.use((req, res, next) => {
     res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
     next();
 });
-app.use(express.json({ limit: '8mb' }));
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 app.use('/uploads', express.static('uploads', { dotfiles: 'deny', index: false }));
 
@@ -54,6 +64,7 @@ const io = new Server(httpServer, {
     cors: { origin: Array.from(allowedOrigins), methods: ['GET', 'POST'] },
 });
 
+const PORT = Number(process.env.PORT || 5000);
 app.set('io', io);
 app.use('/api/auth', authRoutes);
 app.use('/api/letters', letterRoutes);
@@ -75,11 +86,9 @@ app.use((error: any, _req: Request, res: Response, next: NextFunction) => {
 
 io.use(async (socket, next) => {
     try {
-        const secret = process.env.JWT_SECRET;
-        if (!secret || secret.length < 32) return next(new Error('Authentication is not configured.'));
         const token = socket.handshake.auth?.token;
         if (typeof token !== 'string' || !token) return next(new Error('Authentication required.'));
-        const decoded = jwt.verify(token, secret) as JwtPayload;
+        const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
         if (!decoded || typeof decoded === 'string' || !Number.isInteger(Number(decoded.id))) {
             return next(new Error('Invalid authentication token.'));
         }
@@ -93,28 +102,29 @@ io.use(async (socket, next) => {
 });
 
 io.on('connection', (socket) => {
-    const userId = socket.data.userId as number;
+    const userId = Number(socket.data.userId);
     socket.join(`user_${userId}`);
 
     socket.on('join_letter', async (letterId: string) => {
-        if (!/^\d+$/.test(String(letterId))) return;
-        const letter = await Letter.findByPk(Number(letterId));
-        if (letter && (letter.userId === userId || (letter.isPublic && letter.status === 'published' && !letter.isArchived))) {
-            socket.join(`letter_${letter.id}`);
+        try {
+            if (!/^\\d+$/.test(String(letterId))) return;
+            const letter = await Letter.findByPk(Number(letterId));
+            if (!letter) return;
+            const isOwner = Number(letter.userId) === userId;
+            const isPublicPublished = letter.isPublic && letter.status === 'published' && !letter.isArchived;
+            if (isOwner || isPublicPublished) socket.join(`letter_${letter.id}`);
+        } catch (error) {
+            console.error('Unable to authorize letter room access:', error);
         }
     });
 
     socket.on('leave_letter', (letterId: string) => {
-        if (/^\d+$/.test(String(letterId))) socket.leave(`letter_${letterId}`);
+        if (/^\\d+$/.test(String(letterId))) socket.leave(`letter_${letterId}`);
     });
 });
 
 const startServer = async () => {
     try {
-        const secret = process.env.JWT_SECRET;
-        if (!secret || secret.length < 32) {
-            throw new Error('Set JWT_SECRET to a random value of at least 32 characters before starting the server.');
-        }
         await sequelize.authenticate();
         console.log('Database connected successfully.');
 
@@ -124,14 +134,15 @@ const startServer = async () => {
         Notification.belongsTo(User, { foreignKey: 'actorId', as: 'actor' });
         Notification.belongsTo(Letter, { foreignKey: 'entityId', as: 'letter' });
 
-        // Existing schema synchronization is retained for compatibility with current deployments.
-        await sequelize.sync({ alter: true });
-        console.log('Database synced successfully.');
+        // Model modules register the remaining associations.
+        void Message;
+        void Friend;
 
-        const port = Number(process.env.PORT || 5000);
-        httpServer.listen(port, () => console.log(`API listening on port ${port}`));
+        // Use reviewed, versioned migrations; never alter production schema at boot.
+        startScheduledLetterWorker(io);
+        httpServer.listen(PORT, () => console.log(`Server is listening on port ${PORT}`));
     } catch (error) {
-        console.error('Unable to start the server:', error);
+        console.error('Unable to start the API:', error);
         process.exitCode = 1;
     }
 };
