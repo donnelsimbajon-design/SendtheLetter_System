@@ -1,3 +1,4 @@
+import Mascot from '../../components/Mascot';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -218,6 +219,7 @@ const Messages = () => {
                 <div className="flex-1 overflow-y-auto">
                     {filteredConversations.length === 0 && !isLoadingConvos && (
                         <div className="p-8 text-center text-muted-foreground text-sm">
+                            <Mascot name="piko" className="mx-auto mb-3 h-20 w-20" />
                             <p>No conversations found.</p>
                         </div>
                     )}
@@ -308,7 +310,7 @@ const Messages = () => {
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/5 custom-scrollbar">
                         {messages.length === 0 && (
                             <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50">
-                                <Send size={48} className="mb-4" />
+                                <Mascot name="piko" className="mb-3 h-28 w-28" />
                                 <p>Start the conversation!</p>
                             </div>
                         )}
@@ -391,9 +393,7 @@ const Messages = () => {
                 </div>
             ) : (
                 <div className="flex-1 hidden md:flex flex-col items-center justify-center bg-card/30 backdrop-blur-sm rounded-2xl border border-border/50 text-muted-foreground">
-                    <div className="w-24 h-24 bg-muted/50 rounded-full flex items-center justify-center mb-6">
-                        <Send size={40} className="text-muted-foreground/50 ml-2" />
-                    </div>
+                    <Mascot name="piko" className="mb-5 h-36 w-36" />
                     <h3 className="text-xl font-semibold mb-2">Your Messages</h3>
                     <p>Select a contact to start chatting</p>
                 </div>
