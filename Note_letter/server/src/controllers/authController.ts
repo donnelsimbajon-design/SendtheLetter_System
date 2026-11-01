@@ -3,6 +3,10 @@ import jwt from 'jsonwebtoken';
 import { Op } from 'sequelize';
 import User from '../models/User';
 
+// A strict allowlist prevents arbitrary URLs or user-supplied paths from being saved.
+const isApprovedAvatar = (value: unknown): value is string =>
+    typeof value === 'string' && /^\/avatars\/sprite\.svg#(?:female|male)-0[1-5]$/.test(value);
+
 const publicUser = (user: User) => ({
     id: user.id,
     username: user.username,
@@ -30,6 +34,11 @@ export const register = async (req: Request, res: Response) => {
         const username = typeof req.body.username === 'string' ? req.body.username.trim() : '';
         const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
         const password = typeof req.body.password === 'string' ? req.body.password : '';
+        const avatarPreset = req.body.avatarPreset;
+
+        if (avatarPreset != null && !isApprovedAvatar(avatarPreset)) {
+            return res.status(400).json({ message: 'Choose a valid profile character.' });
+        }
 
         if (username.length < 2 || username.length > 128) {
             return res.status(400).json({ message: 'Username must be between 2 and 128 characters.' });
@@ -51,7 +60,7 @@ export const register = async (req: Request, res: Response) => {
         }
 
         // Public registration can only create standard accounts. Admins are promoted out-of-band.
-        const user = await User.create({ username, email, password_hash: password, role: 'user', isActive: true });
+        const user = await User.create({ username, email, password_hash: password, role: 'user', isActive: true, ...(avatarPreset ? { avatar: avatarPreset } : {}) });
         const token = generateToken(user);
         return res.status(201).json({ message: 'User registered successfully.', token, user: publicUser(user) });
     } catch (error) {
@@ -85,7 +94,10 @@ export const updateProfile = async (req: Request & { user?: { id: number } }, re
         const user = await User.findByPk(req.user?.id);
         if (!user) return res.status(404).json({ message: 'User not found.' });
 
-        const { bio, location, username } = req.body;
+        const { bio, location, username, avatarPreset } = req.body;
+        if (avatarPreset !== undefined && !isApprovedAvatar(avatarPreset)) {
+            return res.status(400).json({ message: 'Choose a valid profile character.' });
+        }
         if (bio !== undefined) {
             if (typeof bio !== 'string' || bio.length > 2000) return res.status(400).json({ message: 'Bio must be 2,000 characters or fewer.' });
             user.bio = bio;
@@ -103,6 +115,8 @@ export const updateProfile = async (req: Request & { user?: { id: number } }, re
             if (duplicate && duplicate.id !== user.id) return res.status(409).json({ message: 'Username is already taken.' });
             user.username = normalized;
         }
+
+        if (avatarPreset) user.avatar = avatarPreset;
 
         const files = (req as any).files as { [fieldname: string]: Express.Multer.File[] } | undefined;
         if (files?.avatar?.[0]) user.avatar = `/uploads/${files.avatar[0].filename}`;
