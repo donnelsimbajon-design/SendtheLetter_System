@@ -45,7 +45,7 @@ Server requirements:
 
 ### Public URL
 
-Only generate a public URL when `isPublic=true`, `status=published`, the letter is not archived, and any `openDate` has passed. The public detail route re-checks these conditions on every request. Do not expose draft, scheduled, archived, or private letters through social preview endpoints.
+Only generate a public URL when `isPublic=true`, `status=published`, the letter is not archived, and any `openDate` has passed. Both the public detail and crawler-preview routes re-check these conditions on every request. Do not expose draft, scheduled, archived, or private letters through social preview endpoints.
 
 ### Private link
 
@@ -53,7 +53,7 @@ Use a cryptographically random token, store only its hash, bind it to one letter
 
 ## Social preview note
 
-The current Vite single-page app updates the document title and description after the public letter loads. Social crawlers often require server-rendered or pre-rendered Open Graph tags, so reliable per-letter Facebook/Instagram link previews still need SSR, prerendering, or an edge metadata endpoint. Do not promise a unique preview until verified with platform sharing debuggers.
+The current Vite single-page app updates the document title and description after the public letter loads. A backend HTML preview endpoint now returns per-letter Open Graph and Twitter metadata for currently public, published, non-archived letters, then redirects visitors to the SPA. Set `APP_BASE_URL` to the public frontend origin and verify previews with Facebook's sharing debugger; local/data-URL images are intentionally omitted from `og:image`.
 
 ## Meta integration
 
