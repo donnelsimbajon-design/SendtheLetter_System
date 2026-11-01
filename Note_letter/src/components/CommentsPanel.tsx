@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
-import { Gift, Heart, ImagePlus, MessageCircle, PanelLeftClose, Send, Sparkles, UserRound, X } from 'lucide-react';
+import { Gift, ImagePlus, MessageCircle, PanelLeftClose, Send, Sparkles, UserRound, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { API_ENDPOINTS } from '../config/api';
 import { getImageUrl } from '../lib/utils';
