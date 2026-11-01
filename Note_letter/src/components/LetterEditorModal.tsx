@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Button } from './ui/button';
+import Mascot from './Mascot';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { X, Type, Image as ImageIcon, Music, Send, Globe, EyeOff, Calendar, Lock } from 'lucide-react';
+import { X, Type, Image as ImageIcon, Music, Send, Globe, EyeOff, Lock } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { cn } from '../lib/utils';
 import { API_ENDPOINTS } from '../config/api';
@@ -418,7 +419,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                             {/* Schedule Letter */}
                             <div className="space-y-2">
                                 <Label htmlFor="schedule-date" className="text-xs flex items-center gap-2 text-muted-foreground">
-                                    <Calendar size={12} />
+                                    <Mascot name="tala" className="h-7 w-7" />
                                     Schedule for Later
                                 </Label>
                                 <Input

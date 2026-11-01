@@ -5,6 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { useAuthStore } from '../store/authStore';
 import { useNoteStore } from '../store/noteStore';
 import socketService from '../services/socketService';
+import Mascot from './Mascot';
 
 const navigation = [
   { to: '/dashboard', label: 'Overview', icon: Home, end: true },
@@ -66,7 +67,7 @@ const DashboardLayout = () => {
                         <p className="text-sm leading-5"><span className="font-semibold">{notification.actor?.username || 'Someone'}</span>{notification.type === 'like' ? ' liked your letter ' : notification.type === 'friend_request' ? ' sent you a friend request' : notification.type === 'follow' ? ' started following you' : ' commented on your letter '}<span className="font-medium">{notification.letter?.title || 'your letter'}</span></p>
                         <p className="mt-1 text-xs text-muted-foreground">{formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}</p>
                       </Link>
-                    )) : <p className="px-4 py-8 text-center text-sm text-muted-foreground">No notifications yet.</p>}
+                    )) : <div className="flex flex-col items-center px-4 py-6 text-center text-sm text-muted-foreground"><Mascot name="tala" className="mb-2 h-20 w-20" /><p>No notifications yet.</p></div>}
                   </div>
                 </div>
               )}
