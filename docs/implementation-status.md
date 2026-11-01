@@ -10,7 +10,7 @@ This file is the source of truth for the scope of the architecture and integrati
 | Letter CRUD | Existing API/model | Tests for ownership, public/private visibility, draft and archived status. |
 | Time Capsule | Database-backed polling worker, transactional release, author notification, and open-date read gating implemented | Live database tests, process restart/multi-instance tests, delivery audit/retry policy, timezone coverage, recipient delivery model. |
 | Email | Authenticated Resend endpoint implemented; disabled until provider secrets are configured | Verified sender, shared rate limiting, durable delivery records, provider integration tests. |
-| Facebook | Public URL share dialog wired in UI; no Graph API publishing | Open Graph preview validation and platform debugger checks. |
+| Facebook | Public URL share dialog and backend per-letter Open Graph preview route implemented; no Graph API publishing | Verify previews with platform debugger; configure production `APP_BASE_URL`. |
 | Messenger | Native share-sheet handoff wired in UI; no direct messaging API | Verify handoff on supported devices; no arbitrary DMs. |
 | Instagram | 1080×1350 PNG export and native share-sheet handoff implemented; no publishing API | Verify image export and share handoff on supported devices; automatic publishing remains out of scope. |
 | Private share links | Not implemented | Random token, hash storage, expiry, revocation, recipient authorization, audit trail. |
