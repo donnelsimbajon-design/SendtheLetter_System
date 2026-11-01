@@ -1,124 +1,13 @@
 import { Link } from 'react-router-dom';
-import { Send, Mail, MapPin } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Textarea } from '../components/ui/textarea';
-import { motion } from 'framer-motion';
+import { ArrowLeft, BookHeart, Mail, MessageCircle } from 'lucide-react';
 
-const Contact = () => {
-    return (
-        <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/30">
-            {/* Header */}
-            <header className="fixed top-0 w-full z-40 border-b border-white/5 bg-background/80 backdrop-blur-md">
-                <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-                    <Link to="/" className="flex items-center gap-2">
-                        <img src="/logo.png" alt="Logo" className="h-10 w-10 object-contain" />
-                        <span className="text-xl font-bold tracking-tight">SendTheLetter</span>
-                    </Link>
-                    <nav className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
-                        <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">About</Link>
-                        <Link to="/creator" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Creator</Link>
-                        <Link to="/services" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Services</Link>
-                        <Link to="/contact" className="text-sm font-medium text-primary transition-colors">Contact</Link>
-                    </nav>
-                    <Link to="/login" className="hidden md:block">
-                        <Button variant="ghost" className="font-semibold">Login</Button>
-                    </Link>
-                </div>
-            </header>
-
-            <main className="pt-32 pb-20 relative min-h-screen flex items-center">
-                {/* Background Elements */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    <div className="absolute top-20 left-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px]" />
-                    <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-purple-500/10 rounded-full blur-[100px]" />
-                </div>
-
-                <div className="container mx-auto px-6 relative z-10">
-                    <div className="grid md:grid-cols-2 gap-16 items-start">
-                        <motion.div
-                            initial={{ opacity: 0, x: -50 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.6 }}
-                        >
-                            <h1 className="text-5xl md:text-7xl font-bold mb-8 tracking-tight">Get in Touch</h1>
-                            <p className="text-xl text-muted-foreground mb-12 leading-relaxed">
-                                Have questions, feedback, or just want to say hello? We'd love to hear from you.
-                                Drop us a message and we'll get back to you as soon as possible.
-                            </p>
-
-                            <div className="space-y-8">
-                                <div className="flex items-center gap-6">
-                                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                        <Mail size={24} />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-lg font-semibold">Email Us</h3>
-                                        <p className="text-muted-foreground">hello@sendtheletter.com</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-6">
-                                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                        <MapPin size={24} />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-lg font-semibold">Location</h3>
-                                        <p className="text-muted-foreground">Digital Space, Internet</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.6, delay: 0.2 }}
-                            className="bg-card/50 backdrop-blur-md border border-white/10 p-8 md:p-10 rounded-3xl shadow-2xl"
-                        >
-                            <form className="space-y-6">
-                                <div className="space-y-2">
-                                    <label htmlFor="name" className="text-sm font-medium ml-1">Name</label>
-                                    <Input
-                                        type="text"
-                                        id="name"
-                                        className="bg-background/50 border-white/10 focus:border-primary/50 h-12"
-                                        placeholder="Your Name"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label htmlFor="email" className="text-sm font-medium ml-1">Email</label>
-                                    <Input
-                                        type="email"
-                                        id="email"
-                                        className="bg-background/50 border-white/10 focus:border-primary/50 h-12"
-                                        placeholder="your@email.com"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label htmlFor="message" className="text-sm font-medium ml-1">Message</label>
-                                    <Textarea
-                                        id="message"
-                                        rows={5}
-                                        className="bg-background/50 border-white/10 focus:border-primary/50 resize-none"
-                                        placeholder="How can we help you?"
-                                    />
-                                </div>
-
-                                <Button
-                                    type="submit"
-                                    className="w-full h-14 rounded-xl text-lg font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all mt-4"
-                                >
-                                    Send Message <Send size={18} className="ml-2" />
-                                </Button>
-                            </form>
-                        </motion.div>
-                    </div>
-                </div>
-            </main>
-        </div>
-    );
-};
-
+const Contact = () => (
+  <div className="min-h-screen bg-background text-foreground">
+    <header className="border-b border-border/70"><div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-8"><Link to="/" className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground"><BookHeart size={21}/></span><span className="font-editorial text-xl font-semibold">SendTheLetter</span></Link><Link to="/" className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"><ArrowLeft size={16}/> Back home</Link></div></header>
+    <main className="mx-auto grid max-w-6xl gap-12 px-5 py-16 sm:px-8 sm:py-24 lg:grid-cols-[1fr_.8fr] lg:items-center">
+      <div><p className="text-xs font-bold uppercase tracking-[.2em] text-[hsl(var(--accent))]">Get in touch</p><h1 className="mt-5 font-editorial text-5xl leading-[1.08] sm:text-7xl">We'd love to hear from you.</h1><p className="mt-7 max-w-xl text-lg leading-8 text-muted-foreground">Have a question, an idea, or feedback about SendTheLetter? Reach out by email and tell us what's on your mind.</p></div>
+      <div className="rounded-[2rem] border border-border bg-card p-7 shadow-sm sm:p-9"><span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[hsl(var(--surface-gold))] text-[#55462A]"><Mail size={24}/></span><h2 className="mt-6 font-editorial text-3xl">Send us a note</h2><p className="mt-3 text-sm leading-7 text-muted-foreground">For questions and feedback, use the contact email listed for the project.</p><a href="mailto:hello@sendtheletter.com" className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground hover:opacity-90"><MessageCircle size={17}/> Email SendTheLetter</a><p className="mt-4 text-center text-xs text-muted-foreground">Your email app will open with a new message.</p></div>
+    </main>
+  </div>
+);
 export default Contact;
