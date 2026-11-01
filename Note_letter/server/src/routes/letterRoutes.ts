@@ -4,6 +4,7 @@ import * as commentController from '../controllers/commentController';
 import * as likeController from '../controllers/likeController';
 import * as repostController from '../controllers/repostController';
 import * as guestController from '../controllers/guestInteractionController';
+import * as publicThreadController from '../controllers/publicThreadController';
 import { authenticateToken, optionalAuth } from '../middleware/authMiddleware';
 
 const router = express.Router();
@@ -11,6 +12,8 @@ const router = express.Router();
 // Public reads allow anonymous visitors while optionally personalizing engagement state.
 router.get('/public', optionalAuth, letterController.getPublicLetters);
 router.get('/public/:token/share', letterController.getPublicLetterSharePreview);
+router.get('/public/:token/thread', publicThreadController.getPublicThread);
+router.post('/public/:token/thread', optionalAuth, publicThreadController.limitThreadPosts, publicThreadController.postPublicThread);
 router.get('/public/:token/guest', guestController.getGuestInteractions);
 router.post('/public/:token/guest', guestController.guestRateLimit, guestController.postGuestInteraction);
 router.get('/public/:token', letterController.getPublicLetterById);
