@@ -9,7 +9,7 @@ This file is the source of truth for the scope of the architecture and integrati
 | Auth | JWT + bcrypt model hooks exist | API tests for register/login, malformed tokens, expiry, and authorization. |
 | Letter CRUD | Existing API/model | Tests for ownership, public/private visibility, draft and archived status. |
 | Time Capsule | Fields and listing endpoints exist; no worker found | Durable worker, atomic claim, retries, idempotency, recipient delivery, timezone tests. |
-| Email | Not integrated | Verified sender, server-side provider adapter, rate limits, delivery records, integration tests. |
+| Email | Authenticated Resend endpoint implemented; disabled until provider secrets are configured | Verified sender, shared rate limiting, durable delivery records, provider integration tests. |
 | Facebook | Not integrated | Public URL sharing, Open Graph preview validation. |
 | Messenger | Not integrated | Native share handoff verified on supported devices; no arbitrary DMs. |
 | Instagram | Not integrated | Image export and native share sheet tested on supported devices. |
