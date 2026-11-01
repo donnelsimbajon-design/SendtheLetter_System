@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
-import { Search, Send, Repeat, Check, User as UserIcon, X } from 'lucide-react';
+import { Search, Send, Check, User as UserIcon, X } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { getImageUrl } from '../lib/utils';
 import axios from 'axios';
 import { Note } from '../types/note';
+import { API_ENDPOINTS, API_BASE_URL } from '../config/api';
 
 interface ShareModalProps {
     isOpen: boolean;
@@ -30,7 +31,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
         setIsSearching(true);
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/api/friends', {
+            const response = await axios.get(`${API_BASE_URL}/api/friends`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setSearchResults(response.data);
@@ -51,7 +52,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
             const token = localStorage.getItem('token');
             const content = `Shared a letter: "${note.title || 'A Letter'}"\n\n${note.content.substring(0, 100)}...`;
 
-            await axios.post('http://localhost:5000/api/messages/send', {
+            await axios.post(`${API_ENDPOINTS.messages}/send`, {
                 receiverId,
                 content
             }, {
