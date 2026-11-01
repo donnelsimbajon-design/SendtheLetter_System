@@ -12,10 +12,10 @@ interface AuthRequest extends Request {
 export const createLetter = async (req: AuthRequest, res: Response) => {
     try {
         const {
-            title,
+            title: title.trim(),
             content,
-            type,
-            isPublic,
+            type: typeof type === 'string' ? type.slice(0, 50) : 'General',
+            isPublic: isPublic === true,
             scheduledDate,
             openDate,
             isTimeCapsule,
@@ -30,8 +30,11 @@ export const createLetter = async (req: AuthRequest, res: Response) => {
         } = req.body;
         const userId = req.user.id;
 
-        if (!title || !content) {
-            return res.status(400).json({ message: 'A letter title and content are required' });
+        if (typeof title !== 'string' || !title.trim() || title.length > 255 || typeof content !== 'string' || !content.trim() || content.length > 100000) {
+            return res.status(400).json({ message: 'A title (max 255 characters) and letter content are required.' });
+        }
+        if (typeof imageUrl === 'string' && imageUrl.length > 7500000) {
+            return res.status(400).json({ message: 'Letter image must be 5 MB or smaller.' });
         }
         if (status !== 'draft' && isTimeCapsule && !openDate) {
             return res.status(400).json({ message: 'Choose an opening date for your Time Capsule' });
