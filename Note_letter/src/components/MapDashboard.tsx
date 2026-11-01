@@ -2,11 +2,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Note } from '../types/note';
 import { customMarkerIcon } from './customMarker';
-import { getImageUrl } from '../lib/utils';
 import { formatDistanceToNow } from 'date-fns';
-
-// Geoapify API key from environment variables
-const GEOAPIFY_API_KEY = import.meta.env.VITE_GEOAPIFY_API_KEY || 'YOUR_GEOAPIFY_API_KEY';
 
 interface MapDashboardProps {
     notes: Note[];
@@ -14,35 +10,41 @@ interface MapDashboardProps {
 }
 
 const MapDashboard = ({ notes, onNoteClick }: MapDashboardProps) => {
-    // Default center - Butuan City, Philippines
-    const defaultCenter: [number, number] = [8.9475, 125.5406];
-    const defaultZoom = 13;
+    const mappedNotes = notes.filter((note) => {
+        if (note.latitude == null || note.longitude == null) return false;
+        const latitude = Number(note.latitude);
+        const longitude = Number(note.longitude);
+        return Number.isFinite(latitude) && Number.isFinite(longitude) &&
+            latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180;
+    });
+    const firstLocation = mappedNotes[0];
+    const mapCenter: [number, number] = firstLocation
+        ? [Number(firstLocation.latitude), Number(firstLocation.longitude)]
+        : [0, 0];
 
     return (
-        <div className="h-[calc(100vh-120px)] w-full rounded-3xl overflow-hidden border border-stone-200 shadow-sm relative z-0">
+        <div className="relative z-0 h-[calc(100vh-120px)] w-full overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
+            {mappedNotes.length === 0 ? (
+                <div className="flex h-full min-h-72 flex-col items-center justify-center px-6 text-center">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[hsl(var(--surface-sage))] text-[#263B35]">✳</div>
+                    <h3 className="mt-4 font-editorial text-2xl text-foreground">No mapped letters yet</h3>
+                    <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">Letters will appear here when they include valid location coordinates. We never guess where a letter was written.</p>
+                </div>
+            ) : (
             <MapContainer
-                center={defaultCenter}
-                zoom={defaultZoom}
+                center={mapCenter}
+                zoom={11}
                 scrollWheelZoom={true}
                 className="h-full w-full"
-                style={{ background: '#fdfbf7' }}
+                style={{ background: '#F6F1E9' }}
             >
                 <TileLayer
-                    attribution='Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | © OpenStreetMap contributors'
-                    url={`https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=${GEOAPIFY_API_KEY}`}
+                    attribution='© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                {notes.map((note) => {
-                    // Use actual coordinates if available, otherwise use random positions in Butuan area
-                    let lat, lng;
-                    if (note.latitude && note.longitude) {
-                        lat = Number(note.latitude);
-                        lng = Number(note.longitude);
-                    } else {
-                        // Random position in Butuan City area (8.9-9.0 lat, 125.5-125.6 lng)
-                        const hashValue = Math.abs(Number(note.id) || 0);
-                        lat = 8.9 + (Math.sin(hashValue) * 0.05 + 0.05);
-                        lng = 125.5 + (Math.cos(hashValue) * 0.05 + 0.05);
-                    }
+                {mappedNotes.map((note) => {
+                    const lat = Number(note.latitude);
+                    const lng = Number(note.longitude);
 
                     return (
                         <Marker
@@ -82,6 +84,7 @@ const MapDashboard = ({ notes, onNoteClick }: MapDashboardProps) => {
                     );
                 })}
             </MapContainer>
+            )}
         </div>
     );
 };

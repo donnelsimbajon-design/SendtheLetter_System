@@ -64,8 +64,8 @@ const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
         <div
             onClick={() => onClick?.(note)}
             className={clsx(
-                "group p-6 rounded-2xl border transition-all duration-500 cursor-pointer relative overflow-hidden h-[280px] flex flex-col",
-                backgroundClass && !isImageBackground ? [backgroundClass, "border-stone-200/50 shadow-sm"] : "bg-card/30 backdrop-blur-sm border-white/5 hover:border-primary/30 hover:bg-card/50"
+                "group p-6 rounded-3xl border transition-all duration-300 cursor-pointer relative overflow-hidden h-[280px] flex flex-col hover:-translate-y-1",
+                backgroundClass && !isImageBackground ? [backgroundClass, "border-stone-200/50 shadow-sm"] : "bg-card border-border shadow-sm hover:border-primary/30 hover:shadow-md"
             )}
         >
             {/* Background Image Cover */}

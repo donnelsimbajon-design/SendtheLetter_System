@@ -1,103 +1,18 @@
 import { Link } from 'react-router-dom';
-import { Button } from '../components/ui/button';
-import { motion } from 'framer-motion';
+import { ArrowRight, BookHeart, Feather, HeartHandshake, MessageCircle } from 'lucide-react';
 
-const About = () => {
-    return (
-        <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/30">
-            {/* Header */}
-            <header className="fixed top-0 w-full z-40 border-b border-white/5 bg-background/80 backdrop-blur-md">
-                <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-                    <Link to="/" className="flex items-center gap-2">
-                        <img src="/logo.png" alt="Logo" className="h-10 w-10 object-contain" />
-                        <span className="text-xl font-bold tracking-tight">SendTheLetter</span>
-                    </Link>
-                    <nav className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
-                        <Link to="/about" className="text-sm font-medium text-primary transition-colors">About</Link>
-                        <Link to="/creator" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Creator</Link>
-                        <Link to="/services" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Services</Link>
-                        <Link to="/contact" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Contact</Link>
-                    </nav>
-                    <Link to="/login" className="hidden md:block">
-                        <Button variant="ghost" className="font-semibold">Login</Button>
-                    </Link>
-                </div>
-            </header>
-
-            <main className="pt-32 pb-20 relative">
-                {/* Background Elements */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    <div className="absolute top-20 right-0 w-[400px] h-[400px] bg-primary/10 rounded-full blur-[100px]" />
-                    <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-purple-500/10 rounded-full blur-[80px]" />
-                </div>
-
-                <div className="container mx-auto px-6 max-w-4xl relative z-10">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                        className="text-center mb-16"
-                    >
-                        <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">Our Story</h1>
-                        <div className="h-1 w-20 bg-primary mx-auto rounded-full" />
-                    </motion.div>
-
-                    <div className="space-y-12 text-lg md:text-xl text-muted-foreground leading-relaxed">
-                        <motion.p
-                            initial={{ opacity: 0, x: -20 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.6, delay: 0.2 }}
-                            className="first-letter:text-5xl first-letter:font-bold first-letter:text-primary first-letter:mr-3 first-letter:float-left"
-                        >
-                            <span className="text-foreground font-medium">SendTheLetter</span> is a minimalist platform designed to help you express your feelings
-                            through digital letters. In a world of instant messaging and fleeting notifications, we
-                            believe in the power of a thoughtful, deliberate note.
-                        </motion.p>
-
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            whileInView={{ opacity: 1, scale: 1 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.6, delay: 0.3 }}
-                            className="p-8 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm shadow-xl"
-                        >
-                            <p className="italic text-foreground/80">
-                                "Inspired by the simplicity of traditional letter writing, we've created a space where
-                                you can compose messages that matter, attach a song that sets the mood, and
-                                share them with the people who mean the most to you."
-                            </p>
-                        </motion.div>
-
-                        <motion.p
-                            initial={{ opacity: 0, x: 20 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.6, delay: 0.4 }}
-                        >
-                            Whether it's a confession of love, a word of encouragement, or a simple "thank you",
-                            SendTheLetter provides the canvas for your emotions. We ensure your words are delivered
-                            safely, securely, and exactly when you intend them to be heard.
-                        </motion.p>
-                    </div>
-
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6, delay: 0.5 }}
-                        className="mt-20 text-center"
-                    >
-                        <Link to="/signup">
-                            <Button size="lg" className="rounded-full px-10 py-6 text-lg shadow-lg hover:scale-105 transition-transform">
-                                Start Writing Today
-                            </Button>
-                        </Link>
-                    </motion.div>
-                </div>
-            </main>
-        </div>
-    );
-};
-
+const About = () => (
+  <div className="min-h-screen bg-background text-foreground">
+    <header className="border-b border-border/70"><div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-8"><Link to="/" className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground"><BookHeart size={21}/></span><span className="font-editorial text-xl font-semibold">SendTheLetter</span></Link><nav className="flex items-center gap-5 text-sm font-medium text-muted-foreground sm:gap-8"><Link to="/services" className="hover:text-foreground">Features</Link><Link to="/contact" className="hover:text-foreground">Contact</Link><Link to="/login" className="rounded-full bg-primary px-4 py-2.5 text-primary-foreground">Sign in</Link></nav></div></header>
+    <main className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-24">
+      <p className="text-xs font-bold uppercase tracking-[.2em] text-[hsl(var(--accent))]">Our story</p>
+      <h1 className="mt-5 max-w-4xl font-editorial text-5xl leading-[1.08] sm:text-7xl">A place for the words that deserve to be kept.</h1>
+      <p className="mt-8 max-w-2xl text-lg leading-8 text-muted-foreground">SendTheLetter brings a little intention back to digital communication. It gives people room to write, share thoughts, and hold on to meaningful messages without the rush of an ordinary feed.</p>
+      <div className="mt-16 grid gap-5 md:grid-cols-3">
+        {[{icon:Feather,title:'Write with intention',body:'A letter can be thoughtful, messy, joyful, or unfinished. The important thing is that it sounds like you.'},{icon:HeartHandshake,title:'Share on your terms',body:'Choose whether a letter is for the community or something you want to keep personal.'},{icon:MessageCircle,title:'Keep the conversation going',body:'Connect through messages, comments, and reactions when you want to say a little more.'}].map(({icon:Icon,title,body},i)=><article key={title} className="rounded-3xl border border-border bg-card p-7"><span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${i===0?'bg-[hsl(var(--surface-gold))] text-[#55462A]':i===1?'bg-[hsl(var(--surface-sage))] text-[#263B35]':'bg-[hsl(var(--surface-rose))] text-[#68444D]'}`}><Icon size={22}/></span><h2 className="mt-6 font-editorial text-2xl">{title}</h2><p className="mt-3 text-sm leading-7 text-muted-foreground">{body}</p></article>)}
+      </div>
+      <div className="mt-16 rounded-[2rem] bg-primary px-7 py-10 text-primary-foreground sm:px-12 sm:py-14"><h2 className="max-w-2xl font-editorial text-4xl leading-tight sm:text-5xl">The internet is loud. Your words don't have to be.</h2><p className="mt-4 max-w-xl leading-7 opacity-75">Make a little room for meaningful communication, one letter at a time.</p><Link to="/signup" className="mt-7 inline-flex items-center gap-2 rounded-full bg-[hsl(var(--surface-gold))] px-5 py-3 text-sm font-bold text-[#493D2A]">Start writing <ArrowRight size={16}/></Link></div>
+    </main>
+  </div>
+);
 export default About;

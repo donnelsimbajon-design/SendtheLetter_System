@@ -10,6 +10,7 @@ import { useNoteStore } from '../store/noteStore';
 import { formatDistanceToNow } from 'date-fns';
 import socketService from '../services/socketService';
 import ShareModal from './ShareModal';
+import { API_ENDPOINTS } from '../config/api';
 
 interface LetterViewModalProps {
     isOpen: boolean;
@@ -45,7 +46,7 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                 if (!user) return;
                 try {
                     const token = localStorage.getItem('token');
-                    const response = await fetch(`http://localhost:5000/api/letters/${note.id}/repost/status`, {
+                    const response = await fetch(`${API_ENDPOINTS.letters}/${note.id}/repost/status`, {
                         headers: { Authorization: `Bearer ${token}` }
                     });
                     if (response.ok) {
@@ -65,7 +66,7 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
             // Fetch comments
             const fetchComments = async () => {
                 try {
-                    const response = await fetch(`http://localhost:5000/api/letters/${note.id}/comments`);
+                    const response = await fetch(`${API_ENDPOINTS.letters}/${note.id}/comments`);
                     if (response.ok) {
                         const data = await response.json();
                         setComments(data);
@@ -111,7 +112,7 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:5000/api/letters/${note.id}/repost`, {
+            const response = await fetch(`${API_ENDPOINTS.letters}/${note.id}/repost`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -414,8 +415,6 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                 isOpen={isShareModalOpen}
                 onClose={() => setIsShareModalOpen(false)}
                 note={note}
-                onRepost={handleRepost}
-                isReposted={isReposted}
             />
         </>
     );

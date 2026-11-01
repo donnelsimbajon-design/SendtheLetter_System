@@ -1,8 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNoteStore } from '../../store/noteStore';
-import { useAuthStore } from '../../store/authStore';
 import Notecard from '../../components/Notecard';
-import { Search, Filter, PenLine, Lock, Globe } from 'lucide-react';
+import { Search, PenLine, Lock, Globe } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import LetterEditorModal from '../../components/LetterEditorModal';
@@ -11,8 +10,7 @@ import { Note } from '../../types/note';
 import clsx from 'clsx';
 
 const Notes = () => {
-    const { notes, addNote } = useNoteStore();
-    const { user } = useAuthStore();
+    const { notes, publicLetters, addNote, fetchMyLetters, fetchPublicLetters } = useNoteStore();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState<'public' | 'personal'>('public');
     const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -21,28 +19,35 @@ const Notes = () => {
     const [selectedNote, setSelectedNote] = useState<Note | null>(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
-    const filteredNotes = notes.filter((note) => {
-        const matchesSearch = note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            note.title.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesTab = activeTab === 'public' ? note.isPublic : note.authorId === user?.id;
-        return matchesSearch && matchesTab;
-    });
+    useEffect(() => {
+        void fetchMyLetters();
+        void fetchPublicLetters();
+    }, [fetchMyLetters, fetchPublicLetters]);
+
+    const visibleNotes = activeTab === 'public' ? publicLetters : notes;
+    const filteredNotes = visibleNotes.filter((note) =>
+        note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        note.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     const handleLetterCreate = (data: any) => {
-        addNote({
-            id: crypto.randomUUID(),
-            title: data.subject || 'Untitled Letter',
+        void addNote({
+            title: data.title || 'Untitled Letter',
             content: data.content,
             category: data.category || 'Other',
-            isPublic: true,
-            authorId: user?.id || 'anonymous',
-            createdAt: new Date(),
+            isPublic: Boolean(data.isPublic),
             reactions: {},
             spotifyLink: data.spotifyLink,
             font: data.font,
             recipientName: data.recipientName,
             recipientAddress: data.recipientAddress,
             isAnonymous: data.isAnonymous,
+            backgroundImage: data.backgroundImage,
+            imageUrl: data.imageUrl,
+            scheduledDate: data.scheduledDate,
+            openDate: data.openDate,
+            isTimeCapsule: data.isTimeCapsule,
+            status: 'published',
         });
     };
 
@@ -110,9 +115,7 @@ const Notes = () => {
                         className="pl-10 bg-transparent border-none focus-visible:ring-0"
                     />
                 </div>
-                <Button variant="outline" size="icon" className="shrink-0">
-                    <Filter size={18} />
-                </Button>
+
             </div>
 
             {/* Notes Grid */}

@@ -8,7 +8,7 @@ export interface Notification {
     id: number;
     userId: number;
     actorId: number;
-    type: 'comment' | 'like';
+    type: 'comment' | 'like' | 'friend_request' | 'follow';
     entityId: number;
     isRead: boolean;
     createdAt: string;

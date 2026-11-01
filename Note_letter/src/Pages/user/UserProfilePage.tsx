@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
+import { API_BASE_URL, API_ENDPOINTS } from '../../config/api';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useNoteStore } from '../../store/noteStore';
-import { MapPin, Calendar, UserPlus, UserMinus, Sparkles, PenLine, Search, MessageCircle, UserCheck, UserX, X } from 'lucide-react';
+import { MapPin, Calendar, UserPlus, UserMinus, Sparkles, PenLine, Search, MessageCircle, UserCheck, X } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import LetterViewModal from '../../components/LetterViewModal';
 import Notecard from '../../components/Notecard';
@@ -61,7 +62,7 @@ const UserProfilePage = () => {
         if (!profile?.id) return;
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:5000/api/friends/status/${profile.id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/friends/status/${profile.id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (response.ok) {
@@ -88,7 +89,7 @@ const UserProfilePage = () => {
         if (!profile?.id) return;
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:5000/api/friends/request', {
+            const response = await fetch(`${API_BASE_URL}/api/friends/request`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -123,7 +124,7 @@ const UserProfilePage = () => {
         if (!requestId) return;
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:5000/api/friends/cancel', {
+            const response = await fetch(`${API_BASE_URL}/api/friends/cancel`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -143,7 +144,7 @@ const UserProfilePage = () => {
         if (!requestId) return;
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:5000/api/friends/accept', {
+            const response = await fetch(`${API_BASE_URL}/api/friends/accept`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -165,7 +166,7 @@ const UserProfilePage = () => {
             const headers: any = {};
             if (token) headers.Authorization = `Bearer ${token}`;
 
-            const response = await fetch(`http://localhost:5000/api/letters/user/${username}/reposts`, {
+            const response = await fetch(`${API_ENDPOINTS.letters}/user/${username}/reposts`, {
                 headers,
             });
             if (response.ok) {
@@ -185,7 +186,7 @@ const UserProfilePage = () => {
             const headers: any = {};
             if (token) headers.Authorization = `Bearer ${token}`;
 
-            const response = await fetch(`http://localhost:5000/api/users/profile/${username}`, {
+            const response = await fetch(`${API_ENDPOINTS.users}/profile/${username}`, {
                 headers,
             });
             if (!response.ok) throw new Error('Failed to fetch profile');
@@ -202,7 +203,7 @@ const UserProfilePage = () => {
         if (!currentUser || !profile?.id) return;
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:5000/api/users/${profile.id}/toggle`, {
+            const response = await fetch(`${API_ENDPOINTS.users}/${profile.id}/toggle`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` },
             });

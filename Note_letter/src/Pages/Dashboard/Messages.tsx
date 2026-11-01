@@ -1,16 +1,15 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Send, User, Search, Phone, Video, MoreVertical, Paperclip, Smile } from 'lucide-react';
+import { Send, User, Search, MoreVertical, Paperclip, Smile } from 'lucide-react';
 import { format } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAuthStore } from '../../store/authStore';
 import socketService from '../../services/socketService';
 import axios from 'axios';
 import { getImageUrl } from '../../lib/utils';
-import { cn } from '../../lib/utils'; // Try to import cn if available, or just use template literals
+import { API_ENDPOINTS } from '../../config/api';
 
-// Fallback cn if not available
 const classNames = (...classes: (string | undefined | null | false)[]) => classes.filter(Boolean).join(' ');
 
 interface Conversation {
@@ -19,6 +18,7 @@ interface Conversation {
         username: string;
         avatar?: string;
         location?: string;
+        isOnline?: boolean;
     };
     lastMessage: string;
     lastMessageTime: string;
@@ -87,7 +87,7 @@ const Messages = () => {
 
     const fetchConversations = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/api/messages/conversations', {
+            const response = await axios.get(`${API_ENDPOINTS.messages}/conversations`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             setConversations(response.data);
@@ -110,7 +110,7 @@ const Messages = () => {
                 } else {
                     // Fetch user details if not in convos (new chat)
                     try {
-                        const response = await axios.get(`http://localhost:5000/api/users/id/${initialUserId}`, {
+                        const response = await axios.get(`${API_ENDPOINTS.users}/id/${initialUserId}`, {
                             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
                         });
 
@@ -142,13 +142,13 @@ const Messages = () => {
 
     const fetchMessages = async (otherUserId: number) => {
         try {
-            const response = await axios.get(`http://localhost:5000/api/messages/${otherUserId}`, {
+            const response = await axios.get(`${API_ENDPOINTS.messages}/${otherUserId}`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             setMessages(response.data);
 
             // Mark as read (optional, can be separate call)
-            await axios.post('http://localhost:5000/api/messages/read', {
+            await axios.post(`${API_ENDPOINTS.messages}/read`, {
                 senderId: otherUserId
             }, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -172,7 +172,7 @@ const Messages = () => {
         setNewMessage('');
 
         try {
-            const response = await axios.post('http://localhost:5000/api/messages/send', {
+            const response = await axios.post(`${API_ENDPOINTS.messages}/send`, {
                 receiverId: selectedUser.id,
                 content
             }, {

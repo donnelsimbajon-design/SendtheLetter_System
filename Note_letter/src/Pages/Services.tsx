@@ -1,164 +1,23 @@
 import { Link } from 'react-router-dom';
-import { PenTool, Music, Share2, Lock, Zap, MessageCircle } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { motion } from 'framer-motion';
+import { ArrowRight, BookHeart, Globe2, Heart, LockKeyhole, MessageCircle, Music2, PenLine } from 'lucide-react';
 
-const Services = () => {
-    const features = [
-        {
-            icon: PenTool,
-            title: 'Digital Letters',
-            desc: 'Compose with our distraction-free editor.',
-            position: 'top-left'
-        },
-        {
-            icon: Music,
-            title: 'Music Integration',
-            desc: 'Attach a soundtrack to your emotions.',
-            position: 'bottom-left'
-        },
-        {
-            icon: Share2,
-            title: 'Instant Delivery',
-            desc: 'Send now or schedule for the future.',
-            position: 'top-right'
-        },
-        {
-            icon: Lock,
-            title: 'End-to-End Encrypted',
-            desc: 'Your thoughts remain private, always.',
-            position: 'bottom-right'
-        }
-    ];
+const features = [
+  {icon:PenLine,title:'A thoughtful writing space',body:'Create letters with a simple editor that keeps the focus on what you want to say.',tone:'gold'},
+  {icon:LockKeyhole,title:'Personal or public',body:'Use the visibility options available when creating a letter to choose how it is shared.',tone:'sage'},
+  {icon:Globe2,title:'A community of words',body:'Explore public letters and discover different stories, perspectives, and moments.',tone:'rose'},
+  {icon:MessageCircle,title:'Conversations',body:'Continue the connection through the app’s messaging and letter discussion features.',tone:'blue'},
+  {icon:Heart,title:'Reactions and keepsakes',body:'React to letters and revisit writing that meant something to you.',tone:'sage'},
+  {icon:Music2,title:'Music with a message',body:'Add a music link to a letter when a song says what words cannot.',tone:'gold'},
+];
 
-    return (
-        <div className="min-h-screen bg-slate-950 text-white overflow-hidden selection:bg-primary/30 font-sans relative">
-            {/* Header */}
-            <header className="fixed top-0 w-full z-40 border-b border-white/5 bg-slate-950/80 backdrop-blur-md">
-                <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                        <img src="/logo.png" alt="Logo" className="h-10 w-10 object-contain" />
-                        <Link to="/" className="text-xl font-bold tracking-tight hover:text-primary transition-colors">SendTheLetter</Link>
-                    </div>
-                    <nav className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2">
-                        <Link to="/about" className="text-sm font-medium text-slate-400 hover:text-primary transition-colors">About</Link>
-                        <Link to="/creator" className="text-sm font-medium text-slate-400 hover:text-primary transition-colors">Creator</Link>
-                        <Link to="/services" className="text-sm font-medium text-primary transition-colors">Services</Link>
-                        <Link to="/contact" className="text-sm font-medium text-slate-400 hover:text-primary transition-colors">Contact</Link>
-                    </nav>
-                    <Link to="/login" className="hidden md:block">
-                        <Button variant="ghost" className="font-semibold text-white hover:text-primary hover:bg-white/5">Login</Button>
-                    </Link>
-                </div>
-            </header>
-
-            <main className="relative min-h-screen flex flex-col items-center justify-center pt-20">
-                {/* Background Grid */}
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px] pointer-events-none" />
-
-                {/* Ambient Glow */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
-
-                <div className="container mx-auto px-6 relative z-10 text-center">
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8 }}
-                        className="mb-16"
-                    >
-                        <h1 className="text-5xl md:text-8xl font-thin tracking-tight mb-4">
-                            Pure <span className="font-medium text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/60">Connection</span>
-                        </h1>
-                        <p className="text-lg text-slate-400 max-w-2xl mx-auto font-light tracking-wide">
-                            Immerse in meaningful communication with zero distractions and seamless design.
-                        </p>
-                    </motion.div>
-
-                    <div className="relative max-w-5xl mx-auto h-[600px] md:h-[500px] flex items-center justify-center">
-                        {/* Central Visual */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 1, delay: 0.2 }}
-                            className="relative z-20 w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border border-white/10 shadow-2xl shadow-primary/20"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent mix-blend-overlay z-10" />
-                            <img
-                                src="https://images.unsplash.com/photo-1516383748727-801659961c2c?q=80&w=800&auto=format&fit=crop"
-                                alt="Connection"
-                                className="w-full h-full object-cover opacity-80"
-                            />
-
-                            {/* Connecting Lines (Decorative) */}
-                            <div className="absolute inset-0 border border-white/5 rounded-full animate-pulse" />
-                        </motion.div>
-
-                        {/* Features */}
-                        <div className="absolute inset-0 pointer-events-none">
-                            {features.map((feature, index) => {
-                                const isLeft = feature.position.includes('left');
-                                const isTop = feature.position.includes('top');
-
-                                return (
-                                    <motion.div
-                                        key={index}
-                                        initial={{ opacity: 0, x: isLeft ? 50 : -50, y: isTop ? 50 : -50 }}
-                                        animate={{ opacity: 1, x: 0, y: 0 }}
-                                        transition={{ duration: 0.8, delay: 0.4 + (index * 0.1) }}
-                                        className={`absolute pointer-events-auto flex flex-col gap-2 max-w-[200px] md:max-w-[250px]
-                                            ${isLeft ? 'items-end text-right left-4 md:left-0' : 'items-start text-left right-4 md:right-0'}
-                                            ${isTop ? 'top-0 md:top-10' : 'bottom-0 md:bottom-10'}
-                                        `}
-                                    >
-                                        <div className="p-3 rounded-xl bg-white/5 border border-white/10 text-primary backdrop-blur-sm">
-                                            <feature.icon size={24} />
-                                        </div>
-                                        <h3 className="text-xl font-medium text-white">{feature.title}</h3>
-                                        <p className="text-sm text-slate-400">{feature.desc}</p>
-                                    </motion.div>
-                                );
-                            })}
-                        </div>
-
-                        {/* Connecting Lines SVG */}
-                        <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20" style={{ zIndex: 10 }}>
-                            <line x1="50%" y1="50%" x2="15%" y2="15%" stroke="url(#grad1)" strokeWidth="1" />
-                            <line x1="50%" y1="50%" x2="85%" y2="15%" stroke="url(#grad1)" strokeWidth="1" />
-                            <line x1="50%" y1="50%" x2="15%" y2="85%" stroke="url(#grad1)" strokeWidth="1" />
-                            <line x1="50%" y1="50%" x2="85%" y2="85%" stroke="url(#grad1)" strokeWidth="1" />
-                            <defs>
-                                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
-                                    <stop offset="0%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 0 }} />
-                                    <stop offset="50%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 1 }} />
-                                    <stop offset="100%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 0 }} />
-                                </linearGradient>
-                            </defs>
-                        </svg>
-                    </div>
-
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, delay: 0.8 }}
-                        className="mt-16 flex justify-center gap-8 text-slate-500"
-                    >
-                        <div className="flex flex-col items-center gap-2">
-                            <Zap size={20} />
-                            <span className="text-xs uppercase tracking-widest">Fast</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-2">
-                            <Lock size={20} />
-                            <span className="text-xs uppercase tracking-widest">Secure</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-2">
-                            <MessageCircle size={20} />
-                            <span className="text-xs uppercase tracking-widest">Social</span>
-                        </div>
-                    </motion.div>
-                </div>
-            </main>
-        </div>
-    );
-};
-
+const Services = () => (
+  <div className="min-h-screen bg-background text-foreground">
+    <header className="border-b border-border/70"><div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-8"><Link to="/" className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground"><BookHeart size={21}/></span><span className="font-editorial text-xl font-semibold">SendTheLetter</span></Link><nav className="flex items-center gap-5 text-sm font-medium text-muted-foreground sm:gap-8"><Link to="/about" className="hover:text-foreground">Our story</Link><Link to="/contact" className="hover:text-foreground">Contact</Link><Link to="/login" className="rounded-full bg-primary px-4 py-2.5 text-primary-foreground">Sign in</Link></nav></div></header>
+    <main className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-24">
+      <div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[.2em] text-[hsl(var(--accent))]">The experience</p><h1 className="mt-5 font-editorial text-5xl leading-[1.08] sm:text-7xl">Everything starts with a few words.</h1><p className="mt-7 max-w-2xl text-lg leading-8 text-muted-foreground">Tools to help you write, share, and stay connected—without making the experience feel complicated.</p></div>
+      <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{features.map(({icon:Icon,title,body,tone})=><article key={title} className="rounded-3xl border border-border bg-card p-7 transition-transform hover:-translate-y-1"><span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${tone==='gold'?'bg-[hsl(var(--surface-gold))] text-[#55462A]':tone==='sage'?'bg-[hsl(var(--surface-sage))] text-[#263B35]':tone==='rose'?'bg-[hsl(var(--surface-rose))] text-[#68444D]': 'bg-[#DCE5F0] text-[#405B7B]'}`}><Icon size={22}/></span><h2 className="mt-6 font-editorial text-2xl">{title}</h2><p className="mt-3 text-sm leading-7 text-muted-foreground">{body}</p></article>)}</div>
+      <div className="mt-16 flex flex-col items-start justify-between gap-6 rounded-[2rem] bg-[hsl(var(--surface-sage))] p-8 text-[#263B35] sm:flex-row sm:items-center sm:p-10"><div><p className="text-xs font-bold uppercase tracking-[.18em] opacity-70">Ready when you are</p><h2 className="mt-2 font-editorial text-3xl sm:text-4xl">Put your thoughts into words.</h2></div><Link to="/signup" className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#263B35] px-5 py-3 text-sm font-semibold text-white">Create your space <ArrowRight size={16}/></Link></div>
+    </main>
+  </div>
+);
 export default Services;

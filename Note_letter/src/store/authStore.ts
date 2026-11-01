@@ -24,8 +24,25 @@ interface AuthState {
 
 const API_URL = API_ENDPOINTS.auth;
 
+const readStoredUser = (): User | null => {
+    try {
+        const stored = localStorage.getItem('user');
+        return stored ? JSON.parse(stored) as User : null;
+    } catch {
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        return null;
+    }
+};
+
+const readResponse = async (response: Response) => {
+    const text = await response.text();
+    try { return text ? JSON.parse(text) : {}; }
+    catch { throw new Error('The server returned an unreadable response. Please try again.'); }
+};
+
 export const useAuthStore = create<AuthState>((set) => ({
-    user: JSON.parse(localStorage.getItem('user') || 'null'),
+    user: readStoredUser(),
     token: localStorage.getItem('token'),
     isAuthenticated: !!localStorage.getItem('token'),
 
@@ -37,7 +54,7 @@ export const useAuthStore = create<AuthState>((set) => ({
                 body: JSON.stringify(credentials),
             });
 
-            const data = await response.json();
+            const data = await readResponse(response);
 
             if (!response.ok) {
                 throw new Error(data.message || 'Login failed');
@@ -95,7 +112,7 @@ export const useAuthStore = create<AuthState>((set) => ({
                 body: JSON.stringify(data),
             });
 
-            const resData = await response.json();
+            const resData = await readResponse(response);
 
             if (!response.ok) {
                 throw new Error(resData.message || 'Profile update failed');
