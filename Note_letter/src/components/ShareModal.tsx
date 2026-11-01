@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
-import { Search, Send, Check, User as UserIcon, X } from 'lucide-react';
+import { Search, Send, Check, User as UserIcon, X, Copy, Mail, Facebook, Instagram, MessageCircle, Share2, Lock } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { getImageUrl } from '../lib/utils';
 import axios from 'axios';
@@ -20,11 +20,16 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [sentTo, setSentTo] = useState<number[]>([]);
+    const [shareFeedback, setShareFeedback] = useState('');
+    const isPubliclyShareable = note.isPublic && note.status === 'published';
+
+    const shareUrl = useMemo(() => {
+        if (typeof window === 'undefined') return '';
+        return new URL(`/letters/${encodeURIComponent(String(note.id))}`, window.location.origin).toString();
+    }, [note.id]);
 
     useEffect(() => {
-        if (isOpen) {
-            fetchFriends();
-        }
+        if (isOpen) fetchFriends();
     }, [isOpen]);
 
     const fetchFriends = async () => {
@@ -34,111 +39,150 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
             const response = await axios.get(`${API_BASE_URL}/api/friends`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setSearchResults(response.data);
+            setSearchResults(Array.isArray(response.data) ? response.data : []);
         } catch (error) {
             console.error('Error fetching friends:', error);
+            setSearchResults([]);
         } finally {
             setIsSearching(false);
         }
     };
 
-    // Filter results based on search query
     const filteredResults = searchResults.filter(friend =>
-        friend.username.toLowerCase().includes(searchQuery.toLowerCase())
+        String(friend.username || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const handleSendMessage = async (receiverId: number) => {
         try {
             const token = localStorage.getItem('token');
-            const content = `Shared a letter: "${note.title || 'A Letter'}"\n\n${note.content.substring(0, 100)}...`;
+            const content = isPubliclyShareable
+                ? `Shared a letter: "${note.title || 'A Letter'}"\n${shareUrl}`
+                : `Shared a private letter: "${note.title || 'A Letter'}"`;
 
-            await axios.post(`${API_ENDPOINTS.messages}/send`, {
-                receiverId,
-                content
-            }, {
+            await axios.post(`${API_ENDPOINTS.messages}/send`, { receiverId, content }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-
             setSentTo(prev => [...prev, receiverId]);
         } catch (error) {
-            console.error('Error sending message:', error);
+            console.error('Error sending letter message:', error);
+            setShareFeedback('Could not send the in-app message. Please try again.');
         }
+    };
+
+    const copyLink = async () => {
+        if (!isPubliclyShareable) return;
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            setShareFeedback('Public letter link copied.');
+        } catch {
+            setShareFeedback('Copy is unavailable in this browser. Try the device share option.');
+        }
+    };
+
+    const shareNative = async (platform: string) => {
+        if (!isPubliclyShareable) return;
+        if (navigator.share) {
+            try {
+                await navigator.share({ title: note.title || 'A letter from SendTheLetter', text: 'I wanted to share this letter with you.', url: shareUrl });
+                setShareFeedback(`Share sheet opened for ${platform}.`);
+            } catch (error) {
+                if ((error as Error).name !== 'AbortError') setShareFeedback('Sharing was not completed. You can copy the link instead.');
+            }
+        } else {
+            setShareFeedback('This browser does not support the device share sheet. Copy the public link instead.');
+        }
+    };
+
+    const shareFacebook = () => {
+        if (!isPubliclyShareable) return;
+        const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+        window.open(url, '_blank', 'noopener,noreferrer');
+    };
+
+    const shareEmail = () => {
+        if (!isPubliclyShareable) return;
+        const subject = encodeURIComponent(note.title || 'A letter from SendTheLetter');
+        const body = encodeURIComponent(`I wanted to share this letter with you:\n\n${shareUrl}`);
+        window.location.href = `mailto:?subject=${subject}&body=${body}`;
     };
 
     if (!user) return null;
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-background border border-border shadow-2xl">
+            <DialogContent className="sm:max-w-lg p-0 overflow-hidden bg-background border border-border shadow-2xl">
                 <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
                     <DialogTitle className="text-lg font-semibold flex items-center gap-2">
-                        <Send size={18} className="text-primary" /> Share Letter
+                        <Share2 size={18} className="text-primary" /> Share Letter
                     </DialogTitle>
-                    <DialogDescription className="sr-only">
-                        Search for friends and share this letter with them.
-                    </DialogDescription>
-                    <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+                    <DialogDescription className="sr-only">Share a public letter externally or send it to a friend inside SendTheLetter.</DialogDescription>
+                    <button onClick={onClose} aria-label="Close share dialog" className="text-muted-foreground hover:text-foreground transition-colors">
                         <X size={20} />
                     </button>
                 </div>
 
-                <div className="p-4 min-h-[300px] flex flex-col">
-                    <div className="relative mb-4">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-                        <input
-                            type="text"
-                            placeholder="Search friends..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-muted/50 rounded-lg border border-transparent focus:border-primary/20 focus:bg-background focus:outline-none transition-all text-sm"
-                        />
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2">
-                        {isSearching ? (
-                            <div className="text-center py-8 text-muted-foreground animate-pulse">Loading friends...</div>
-                        ) : filteredResults.length > 0 ? (
-                            filteredResults.map((resultUser) => (
-                                <div key={resultUser.id} className="flex items-center justify-between p-3 hover:bg-muted/50 rounded-xl transition-all group border border-transparent hover:border-border/50">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full overflow-hidden bg-muted border border-border">
-                                            {resultUser.avatar ? (
-                                                <img src={getImageUrl(resultUser.avatar)} alt={resultUser.username} className="w-full h-full object-cover" />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-bold">
-                                                    {resultUser.username?.[0]?.toUpperCase()}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <p className="font-medium text-sm text-foreground">{resultUser.username}</p>
-                                            <p className="text-xs text-muted-foreground">{resultUser.location || 'Friend'}</p>
-                                        </div>
-                                    </div>
-
-                                    <Button
-                                        size="sm"
-                                        variant={sentTo.includes(resultUser.id) ? "outline" : "default"}
-                                        disabled={sentTo.includes(resultUser.id)}
-                                        onClick={() => handleSendMessage(resultUser.id)}
-                                        className={`h-8 px-4 rounded-full transition-all ${sentTo.includes(resultUser.id) ? 'border-primary/20 text-primary bg-primary/5' : 'hover:scale-105'}`}
-                                    >
-                                        {sentTo.includes(resultUser.id) ? (
-                                            <>Sent <Check size={14} className="ml-1" /></>
-                                        ) : (
-                                            <>Send</>
-                                        )}
-                                    </Button>
+                <div className="p-4 space-y-5 max-h-[75vh] overflow-y-auto">
+                    <section className="space-y-2">
+                        <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-sm">Share outside SendTheLetter</h3>
+                            {!isPubliclyShareable && <span className="text-xs text-amber-700 flex items-center gap-1"><Lock size={12} /> Private</span>}
+                        </div>
+                        {isPubliclyShareable ? (
+                            <>
+                                <p className="text-xs text-muted-foreground">Only published public letters can be shared with an open link.</p>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                    <Button type="button" variant="outline" onClick={shareEmail} className="justify-start gap-2"><Mail size={16} /> Email</Button>
+                                    <Button type="button" variant="outline" onClick={shareFacebook} className="justify-start gap-2"><Facebook size={16} /> Facebook</Button>
+                                    <Button type="button" variant="outline" onClick={() => shareNative('Messenger')} className="justify-start gap-2"><MessageCircle size={16} /> Messenger</Button>
+                                    <Button type="button" variant="outline" onClick={() => shareNative('Instagram')} className="justify-start gap-2"><Instagram size={16} /> Instagram</Button>
+                                    <Button type="button" variant="outline" onClick={() => shareNative('your device')} className="justify-start gap-2"><Share2 size={16} /> More options</Button>
+                                    <Button type="button" variant="outline" onClick={copyLink} className="justify-start gap-2"><Copy size={16} /> Copy link</Button>
                                 </div>
-                            ))
+                            </>
                         ) : (
-                            <div className="flex flex-col items-center justify-center h-full py-8 text-muted-foreground space-y-2 opacity-60">
-                                <UserIcon size={32} strokeWidth={1.5} />
-                                <p className="text-sm font-medium">No friends found.</p>
-                                <p className="text-xs">Add friends from their profile to share!</p>
-                            </div>
+                            <p className="text-sm text-muted-foreground bg-muted/50 rounded-xl p-3">This letter is not public and published, so external sharing is disabled to protect its privacy. You can still send an in-app message to a friend.</p>
                         )}
-                    </div>
+                        {shareFeedback && <p role="status" className="text-xs text-primary">{shareFeedback}</p>}
+                    </section>
+
+                    <section className="space-y-3">
+                        <div>
+                            <h3 className="font-semibold text-sm">Send to a SendTheLetter friend</h3>
+                            <p className="text-xs text-muted-foreground">Choose a friend to send an in-app message.</p>
+                        </div>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                            <input type="text" placeholder="Search friends..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-muted/50 rounded-lg border border-transparent focus:border-primary/20 focus:bg-background focus:outline-none transition-all text-sm" />
+                        </div>
+                        <div className="space-y-2">
+                            {isSearching ? (
+                                <div className="text-center py-6 text-muted-foreground">Loading friends...</div>
+                            ) : filteredResults.length > 0 ? (
+                                filteredResults.map((resultUser) => (
+                                    <div key={resultUser.id} className="flex items-center justify-between p-3 hover:bg-muted/50 rounded-xl border border-transparent hover:border-border/50">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className="w-10 h-10 shrink-0 rounded-full overflow-hidden bg-muted border border-border">
+                                                {resultUser.avatar ? <img src={getImageUrl(resultUser.avatar)} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-bold">{resultUser.username?.[0]?.toUpperCase()}</div>}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="font-medium text-sm truncate">{resultUser.username}</p>
+                                                <p className="text-xs text-muted-foreground truncate">{resultUser.location || 'Friend'}</p>
+                                            </div>
+                                        </div>
+                                        <Button size="sm" variant={sentTo.includes(resultUser.id) ? 'outline' : 'default'} disabled={sentTo.includes(resultUser.id)} onClick={() => handleSendMessage(resultUser.id)} className="h-8 px-4 rounded-full">
+                                            {sentTo.includes(resultUser.id) ? <>Sent <Check size={14} className="ml-1" /></> : <>Send</>}
+                                        </Button>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-6 text-muted-foreground space-y-2">
+                                    <UserIcon size={28} strokeWidth={1.5} />
+                                    <p className="text-sm font-medium">No friends found.</p>
+                                    <p className="text-xs">Add friends from their profile to share.</p>
+                                </div>
+                            )}
+                        </div>
+                    </section>
                 </div>
             </DialogContent>
         </Dialog>
