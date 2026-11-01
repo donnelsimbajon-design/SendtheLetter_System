@@ -50,7 +50,10 @@ const PublicLetterPage = () => {
     return (
         <main className="min-h-screen bg-[#f6f1e9] px-4 py-10 text-[#263b35]">
             <div className="mx-auto max-w-3xl">
-                <Link to="/" className="inline-flex items-center gap-2 text-sm text-[#52645d] hover:text-[#263b35]"><ArrowLeft size={16} /> SendTheLetter</Link>
+                <div className="flex items-center justify-between print:hidden">
+                    <Link to="/" className="inline-flex items-center gap-2 text-sm text-[#52645d] hover:text-[#263b35]"><ArrowLeft size={16} /> SendTheLetter</Link>
+                    <button type="button" onClick={() => window.print()} className="inline-flex items-center gap-2 rounded-full border border-[#d8cfc1] bg-[#fffdf8] px-4 py-2 text-sm text-[#263b35] hover:bg-white"><Printer size={15} /> Print / Save as PDF</button>
+                </div>
                 <article className="mt-8 overflow-hidden rounded-[2rem] border border-[#ded6c9] bg-[#fffdf8] shadow-xl">
                     {letter.imageUrl && <img src={getImageUrl(letter.imageUrl)} alt="" className="max-h-[420px] w-full object-cover" />}
                     <div className="p-7 sm:p-12">
