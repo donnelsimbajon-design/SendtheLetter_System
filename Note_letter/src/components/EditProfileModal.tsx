@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, Upload, Camera } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
+import { API_ENDPOINTS } from '../config/api';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 
@@ -57,7 +58,7 @@ const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => {
             }
 
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:5000/api/auth/profile', {
+            const response = await fetch(`${API_ENDPOINTS.auth}/profile`, {
                 method: 'PUT',
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -89,10 +90,10 @@ const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => {
 
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-            <div className="bg-background/80 backdrop-blur-xl border border-white/10 rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative">
+            <div className="bg-card backdrop-blur-xl border border-border rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative">
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors z-10"
+                    className="absolute top-4 right-4 p-2 hover:bg-muted rounded-full transition-colors z-10"
                 >
                     <X size={20} />
                 </button>
@@ -104,11 +105,11 @@ const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => {
                         {/* Images Section */}
                         <div className="space-y-6">
                             {/* Cover Image */}
-                            <div className="relative h-32 rounded-2xl overflow-hidden group border border-white/10">
+                            <div className="relative h-32 rounded-2xl overflow-hidden group border border-border">
                                 {coverPreview ? (
                                     <img src={coverPreview} alt="Cover" className="w-full h-full object-cover" />
                                 ) : (
-                                    <div className="w-full h-full bg-white/5 flex items-center justify-center">
+                                    <div className="w-full h-full bg-muted/60 flex items-center justify-center">
                                         <span className="text-sm text-muted-foreground">No cover image</span>
                                     </div>
                                 )}
@@ -145,7 +146,7 @@ const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => {
                                 <Input
                                     value={formData.username}
                                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                                    className="bg-white/5 border-transparent focus:border-primary/50 h-12 rounded-xl"
+                                    className="bg-muted/60 border-transparent focus:border-primary/50 h-12 rounded-xl"
                                 />
                             </div>
 
@@ -155,7 +156,7 @@ const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => {
                                     value={formData.bio}
                                     onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                                     rows={3}
-                                    className="w-full bg-white/5 border border-transparent focus:border-primary/50 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0 resize-none"
+                                    className="w-full bg-muted/60 border border-transparent focus:border-primary/50 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0 resize-none"
                                     placeholder="Tell your story..."
                                 />
                             </div>
@@ -165,7 +166,7 @@ const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => {
                                 <Input
                                     value={formData.location}
                                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                    className="bg-white/5 border-transparent focus:border-primary/50 h-12 rounded-xl"
+                                    className="bg-muted/60 border-transparent focus:border-primary/50 h-12 rounded-xl"
                                     placeholder="e.g., San Francisco, CA"
                                 />
                             </div>
