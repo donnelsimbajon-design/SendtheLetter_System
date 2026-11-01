@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import sequelize from './config/database';
@@ -11,7 +12,6 @@ import followRoutes from './routes/followRoutes';
 import User from './models/User';
 import Letter from './models/Letter';
 import Notification from './models/Notification';
-import Follow from './models/Follow';
 import messageRoutes from './routes/messageRoutes';
 import friendRoutes from './routes/friendRoutes';
 import Message from './models/Message';
@@ -19,27 +19,36 @@ import Friend from './models/Friend';
 
 dotenv.config();
 
+const jwtSecret = process.env.JWT_SECRET;
+if (!jwtSecret || jwtSecret.length < 32) {
+    throw new Error('JWT_SECRET must be configured with at least 32 characters before starting the API.');
+}
+
+const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: "http://localhost:5173",
-        methods: ["GET", "POST"]
-    }
+        origin: allowedOrigins,
+        methods: ['GET', 'POST'],
+    },
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = Number(process.env.PORT || 5000);
 
-app.use(cors());
-app.use(express.json({ limit: '50mb' })); // Increased limit for images
+app.use(cors({
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+}));
+app.use(express.json({ limit: '10mb' }));
 
-// Serve uploaded files
 app.use('/uploads', express.static('uploads'));
-
-// Make io accessible to routes
 app.set('io', io);
 
-// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/letters', letterRoutes);
 app.use('/api/notifications', notificationRoutes);
@@ -47,73 +56,77 @@ app.use('/api/users', followRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/friends', friendRoutes);
 
-// Test route
-app.use('/api/test', (req, res) => {
-    res.json({ message: 'Backend is working!' });
+app.get('/api/health', (_req, res) => {
+    res.json({ status: 'ok' });
 });
 
-// Socket.IO connection handling
+// Authenticate every realtime connection before it can join application rooms.
+io.use((socket, next) => {
+    const token = socket.handshake.auth?.token;
+    if (typeof token !== 'string' || !token) {
+        return next(new Error('Unauthorized'));
+    }
+
+    try {
+        const payload = jwt.verify(token, jwtSecret) as jwt.JwtPayload;
+        if (!payload.id) return next(new Error('Unauthorized'));
+        socket.data.userId = Number(payload.id);
+        return next();
+    } catch {
+        return next(new Error('Unauthorized'));
+    }
+});
+
 io.on('connection', (socket) => {
-    console.log('Client connected:', socket.id);
+    const userId = Number(socket.data.userId);
+    socket.join(`user_${userId}`);
 
-    // Join a room for a specific user
-    socket.on('join', (userId) => {
-        socket.join(`user_${userId}`);
-        console.log(`User ${userId} joined their room`);
+    socket.on('join_letter', async (letterId: string) => {
+        try {
+            if (!/^\d+$/.test(String(letterId))) return;
+            const letter = await Letter.findByPk(letterId);
+            if (!letter) return;
+
+            const isOwner = Number(letter.userId) === userId;
+            const isPublicPublished = letter.isPublic && letter.status === 'published';
+            if (isOwner || isPublicPublished) {
+                socket.join(`letter_${letter.id}`);
+            }
+        } catch (error) {
+            console.error('Unable to authorize letter room access:', error);
+        }
     });
 
-    // Join a room for a specific letter
-    socket.on('join_letter', (letterId) => {
-        socket.join(`letter_${letterId}`);
-        console.log(`Socket ${socket.id} joined letter room ${letterId}`);
-    });
-
-    // Leave a letter room
-    socket.on('leave_letter', (letterId) => {
-        socket.leave(`letter_${letterId}`);
-        console.log(`Socket ${socket.id} left letter room ${letterId}`);
-    });
-
-    socket.on('disconnect', () => {
-        console.log('Client disconnected:', socket.id);
+    socket.on('leave_letter', (letterId: string) => {
+        if (/^\d+$/.test(String(letterId))) socket.leave(`letter_${letterId}`);
     });
 });
 
-// Database connection and server start
 const startServer = async () => {
     try {
         await sequelize.authenticate();
         console.log('Database connected successfully.');
 
-        // Setup Associations
         User.hasMany(Notification, { foreignKey: 'userId', as: 'notifications' });
         Notification.belongsTo(User, { foreignKey: 'userId', as: 'user' });
-
         User.hasMany(Notification, { foreignKey: 'actorId', as: 'triggeredNotifications' });
         Notification.belongsTo(User, { foreignKey: 'actorId', as: 'actor' });
-
         Notification.belongsTo(Letter, { foreignKey: 'entityId', as: 'letter' });
 
-        // Message associations
-        // Associations are defined in models/Message.ts, but we ensure they are initialized
-        // User.hasMany(Message, { foreignKey: 'senderId', as: 'sentMessages' });
-        // User.hasMany(Message, { foreignKey: 'receiverId', as: 'receivedMessages' });
+        // Existing associations are initialized by their model modules.
+        void Message;
+        void Friend;
 
-        // Follow associations - Commented out temporarily due to MySQL key limit
-        // User.hasMany(Follow, { foreignKey: 'followerId', as: 'following' });
-        // User.hasMany(Follow, { foreignKey: 'followingId', as: 'followers' });
-        // Follow.belongsTo(User, { foreignKey: 'followerId', as: 'follower' });
-        // Follow.belongsTo(User, { foreignKey: 'followingId', as: 'following' });
-
-        // Sync models - create tables if they don't exist
+        // TODO: replace alter-sync with versioned migrations before production rollout.
         await sequelize.sync({ alter: true });
         console.log('Database synced successfully.');
 
         httpServer.listen(PORT, () => {
-            console.log(`Server is running on http://localhost:${PORT}`);
+            console.log(`Server is listening on port ${PORT}`);
         });
     } catch (error) {
-        console.error('Unable to connect to the database:', error);
+        console.error('Unable to start the API:', error);
+        process.exitCode = 1;
     }
 };
 
