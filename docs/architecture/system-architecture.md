@@ -71,7 +71,7 @@ These are architectural recommendations, not claims about deployed components:
 
 ## Architectural risks found during inspection
 
-- Socket.IO currently accepts client-provided user and letter room IDs without verifying the socket identity or resource access.
+- This PR adds JWT-authenticated Socket.IO handshakes and server-side room authorization. Add integration tests for expired tokens, user-room isolation, and private/public letter-room access before production.
 - Express CORS is currently permissive, and Socket.IO has a localhost-only origin setting.
 - `sequelize.sync({ alter: true })` runs on server startup; production schema changes should move to reviewed migrations.
 - The current server has no scheduled-delivery worker or email adapter.
