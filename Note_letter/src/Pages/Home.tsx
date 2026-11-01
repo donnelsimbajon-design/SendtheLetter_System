@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, BookHeart, Feather, Heart, LockKeyhole, Mail, PenLine, Sparkles } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
+import Mascot from '../components/Mascot';
 
 const Home = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -27,6 +28,7 @@ const Home = () => {
           </div>
 
           <div className="relative mx-auto w-full max-w-[540px]">
+            <Mascot name="lumi" className="pointer-events-none absolute -right-2 -top-12 z-20 h-28 w-28 drop-shadow-lg sm:h-36 sm:w-36" alt="Lumi, your friendly letter companion" loading="eager" />
             <div className="absolute -right-5 top-0 h-32 w-32 rounded-full bg-[hsl(var(--surface-sage))] opacity-70 blur-2xl" />
             <div className="absolute -bottom-6 -left-4 h-40 w-40 rounded-full bg-[hsl(var(--surface-rose))] opacity-80 blur-2xl" />
             <div className="relative rotate-[2deg] rounded-[2.5rem] bg-[hsl(var(--surface-sage))] p-4 shadow-[0_28px_80px_-35px_rgba(38,59,53,.45)] sm:p-6">
