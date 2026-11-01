@@ -13,6 +13,9 @@ export function cn(...inputs: ClassValue[]) {
 export function getImageUrl(path: string | null | undefined): string {
     if (!path) return '';
 
+    // Preset avatars are served by the Vite frontend, not the API server.
+    if (/^\/avatars\/sprite\.svg#(?:female|male)-0[1-5]$/.test(path)) return path;
+
     // If already a full URL, return as is
     if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
         return path;

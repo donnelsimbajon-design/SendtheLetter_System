@@ -4,6 +4,9 @@ import { useAuthStore } from '../store/authStore';
 import { API_ENDPOINTS } from '../config/api';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import AvatarPicker from './AvatarPicker';
+import { isPresetAvatar } from '../constants/avatars';
+import { getImageUrl } from '../lib/utils';
 
 interface EditProfileModalProps {
     isOpen: boolean;
@@ -20,8 +23,9 @@ const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => {
     });
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [coverFile, setCoverFile] = useState<File | null>(null);
-    const [avatarPreview, setAvatarPreview] = useState<string>(user?.avatar || '');
-    const [coverPreview, setCoverPreview] = useState<string>(user?.coverImage || '');
+    const [avatarPreview, setAvatarPreview] = useState<string>(getImageUrl(user?.avatar));
+    const [avatarPreset, setAvatarPreset] = useState<string | null>(isPresetAvatar(user?.avatar) ? user!.avatar! : null);
+    const [coverPreview, setCoverPreview] = useState<string>(getImageUrl(user?.coverImage));
 
     if (!isOpen) return null;
 
@@ -29,6 +33,7 @@ const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => {
         const file = e.target.files?.[0];
         if (file) {
             setAvatarFile(file);
+            setAvatarPreset(null);
             setAvatarPreview(URL.createObjectURL(file));
         }
     };
@@ -50,6 +55,7 @@ const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => {
             formDataToSend.append('bio', formData.bio);
             formDataToSend.append('location', formData.location);
 
+            if (avatarPreset) formDataToSend.append('avatarPreset', avatarPreset);
             if (avatarFile) {
                 formDataToSend.append('avatar', avatarFile);
             }
@@ -137,6 +143,18 @@ const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => {
                                     </label>
                                 </div>
                             </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-border bg-background/70 p-4">
+                            <AvatarPicker
+                                value={avatarPreset}
+                                onChange={(value) => {
+                                    setAvatarPreset(value);
+                                    setAvatarFile(null);
+                                    setAvatarPreview(value);
+                                }}
+                            />
+                            <p className="mt-3 text-xs text-muted-foreground">Or use the camera button on your photo above to upload your own image.</p>
                         </div>
 
                         {/* Form Fields */}

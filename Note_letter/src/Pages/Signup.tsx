@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/authStore';
 import { ArrowLeft, ArrowRight, BookHeart, LockKeyhole, Mail, UserRound } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import AvatarPicker from '../components/AvatarPicker';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ const Signup = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [avatarPreset, setAvatarPreset] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -19,7 +21,7 @@ const Signup = () => {
     setIsLoading(true);
     setError('');
     try {
-      await register({ username, email, password });
+      await register({ username, email, password, avatarPreset });
       navigate('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'We could not create your account. Please try again.');
@@ -48,6 +50,9 @@ const Signup = () => {
             <div className="space-y-2"><label htmlFor="username" className="text-sm font-semibold">Username</label><div className="relative"><UserRound size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"/><Input id="username" autoComplete="username" required value={username} onChange={(event)=>setUsername(event.target.value)} placeholder="Choose a username" className="h-12 rounded-xl bg-card pl-11"/></div></div>
             <div className="space-y-2"><label htmlFor="email" className="text-sm font-semibold">Email address</label><div className="relative"><Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"/><Input id="email" type="email" autoComplete="email" required value={email} onChange={(event)=>setEmail(event.target.value)} placeholder="you@example.com" className="h-12 rounded-xl bg-card pl-11"/></div></div>
             <div className="space-y-2"><label htmlFor="password" className="text-sm font-semibold">Password</label><div className="relative"><LockKeyhole size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"/><Input id="password" type="password" autoComplete="new-password" minLength={8} required value={password} onChange={(event)=>setPassword(event.target.value)} placeholder="At least 8 characters" className="h-12 rounded-xl bg-card pl-11"/></div></div>
+            <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+              <AvatarPicker value={avatarPreset} onChange={setAvatarPreset} />
+            </div>
             <Button type="submit" disabled={isLoading} className="h-12 w-full rounded-xl text-sm font-semibold">{isLoading?'Creating your space...':'Create account'} {!isLoading&&<ArrowRight size={17} className="ml-2"/>}</Button>
           </form>
           <p className="mt-7 text-center text-sm text-muted-foreground">Already have an account? <Link to="/login" className="font-semibold text-primary hover:underline">Sign in</Link></p>

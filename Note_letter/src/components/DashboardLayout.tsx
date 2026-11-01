@@ -5,6 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { useAuthStore } from '../store/authStore';
 import { useNoteStore } from '../store/noteStore';
 import socketService from '../services/socketService';
+import { getImageUrl } from '../lib/utils';
 import Mascot from './Mascot';
 
 const navigation = [
@@ -94,8 +95,10 @@ const DashboardLayout = () => {
               <p className="text-sm font-semibold">{user?.username || 'Writer'}</p>
               <p className="text-xs text-muted-foreground">Your personal space</p>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--surface-gold))] font-semibold text-foreground">
-              {user?.username?.slice(0, 1).toUpperCase() || 'W'}
+            <div className="flex h-10 w-10 overflow-hidden items-center justify-center rounded-full bg-[hsl(var(--surface-gold))] font-semibold text-foreground">
+              {user?.avatar ? (
+                <img src={getImageUrl(user.avatar)} alt={user.username} className="h-full w-full object-cover" />
+              ) : (user?.username?.slice(0, 1).toUpperCase() || 'W')}
             </div>
             <button onClick={logout} className="hidden h-10 items-center gap-2 rounded-full px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground sm:flex" title="Sign out">
               <LogOut size={17} /><span>Sign out</span>
