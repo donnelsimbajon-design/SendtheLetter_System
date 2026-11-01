@@ -1,0 +1,46 @@
+name: Dependency security audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Note_letter/package.json'
+      - 'Note_letter/package-lock.json'
+      - 'Note_letter/server/package.json'
+      - 'Note_letter/server/package-lock.json'
+      - '.github/workflows/dependency-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [frontend, backend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ${{ matrix.app == 'frontend' && 'Note_letter/package-lock.json' || 'Note_letter/server/package-lock.json' }}
+      - name: Install locked dependencies
+        working-directory: ${{ matrix.app == 'frontend' && 'Note_letter' || 'Note_letter/server' }}
+        run: npm ci
+      - name: Audit dependencies and summarize advisories
+        working-directory: ${{ matrix.app == 'frontend' && 'Note_letter' || 'Note_letter/server' }}
+        run: |
+          npm audit --json > audit-report.json || true
+          node -e "const r=require('./audit-report.json'); const v=r.metadata?.vulnerabilities||{}; console.log(JSON.stringify({totals:v, advisories:Object.entries(r.vulnerabilities||{}).map(([name,x])=>({name,severity:x.severity,range:x.range,fixAvailable:x.fixAvailable,via:x.via.map(y=>typeof y==='string'?y:{title:y.title,url:y.url,range:y.range})}))},null,2))" | tee audit-summary.json
+          echo '### Dependency audit: ${{ matrix.app }}' >> "$GITHUB_STEP_SUMMARY"
+          cat audit-summary.json >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.app }}-npm-audit
+          path: ${{ matrix.app == 'frontend' && 'Note_letter' || 'Note_letter/server' }}/audit-report.json
+          retention-days: 14
