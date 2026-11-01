@@ -60,11 +60,11 @@ const PublicLetterPage = () => {
             .replace(/'/g, '&apos;');
 
         const titleLines = wrapText(letter.title || 'A letter for you', 34).slice(0, 2);
-        const contentLines = (letter.content || '')
+        const allContentLines = (letter.content || '')
             .split(/\r?\n/)
-            .flatMap((paragraph) => paragraph.trim() ? wrapText(paragraph, 48) : [''])
-            .slice(0, 20);
-        if ((letter.content || '').length > 850 && contentLines.length) {
+            .flatMap((paragraph) => paragraph.trim() ? wrapText(paragraph, 48) : ['']);
+        const contentLines = allContentLines.slice(0, 20);
+        if ((allContentLines.length > 20 || (letter.content || '').length > 850) && contentLines.length) {
             contentLines[contentLines.length - 1] = `${contentLines[contentLines.length - 1].slice(0, 44)}…`;
         }
 
