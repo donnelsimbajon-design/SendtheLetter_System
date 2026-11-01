@@ -4,9 +4,9 @@ Review scope: repository source and configuration inspected on 2026-11-01. This 
 
 ## High-priority findings
 
-1. **Environment files are tracked in Git.** Remove tracked `.env` files, keep only sanitized `.env.example` templates, and rotate every credential/API key that has ever been committed. Deleting a file in a new commit does not erase it from Git history.
-2. **Socket.IO room joins trust client-supplied IDs.** The current `join` and `join_letter` handlers do not authenticate the socket or verify access to the user/letter room. Require JWT handshake authentication and server-side authorization before joining rooms.
-3. **CORS is permissive for Express.** Replace wildcard/default CORS with an explicit allowlist from `CLIENT_ORIGIN`; configure Socket.IO with the same validated allowlist.
+1. **Committed environment credentials require rotation.** This PR removes the tracked `.env` files and adds sanitized templates/ignore rules. Rotate every credential/API key that has ever been committed; deleting a file in a new commit does not erase it from Git history.
+2. **Realtime authorization needs tests.** This PR adds JWT handshake authentication, server-assigned user rooms, and owner/public checks before joining letter rooms. Add automated tests for token expiry, cross-user isolation, and private letter access before production.
+3. **CORS configuration is now allowlist-based.** This PR uses the comma-separated `CLIENT_ORIGIN` value for Express and Socket.IO. Set exact production origins and verify preflight behavior during deployment.
 4. **Production schema sync uses alter mode.** Replace startup `sequelize.sync({ alter: true })` with versioned migrations and a controlled release step.
 5. **Upload validation trusts MIME metadata.** Add extension/content signature validation, safe generated filenames, and storage outside the application container; keep size limits.
 6. **Authentication configuration fails open at startup.** Validate `JWT_SECRET` at boot and fail with a clear configuration error if absent or too short. Keep the secret outside source control.
