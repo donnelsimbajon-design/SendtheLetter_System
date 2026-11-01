@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import Guestbook from '../../components/Guestbook';
+import CommentsPanel from '../../components/CommentsPanel';
 import axios from 'axios';
-import { ArrowLeft, Feather, Lock, Loader2, Printer, Download } from 'lucide-react';
+import { ArrowLeft, Feather, Lock, Loader2, Printer, Download, MessageCircle } from 'lucide-react';
 import { API_ENDPOINTS } from '../../config/api';
 import { getImageUrl } from '../../lib/utils';
 import { Note } from '../../types/note';
@@ -13,6 +13,7 @@ const PublicLetterPage = () => {
     const [loading, setLoading] = useState(true);
     const [notFound, setNotFound] = useState(false);
     const [imageStatus, setImageStatus] = useState('');
+    const [mobileCommentsOpen, setMobileCommentsOpen] = useState(false);
 
     useEffect(() => {
         let active = true;
@@ -31,6 +32,13 @@ const PublicLetterPage = () => {
         if (/^[a-f0-9]{48}$/.test(token)) loadLetter(); else { setLoading(false); setNotFound(true); }
         return () => { active = false; };
     }, [token]);
+
+    useEffect(() => {
+        if (!mobileCommentsOpen) return;
+        const handleEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') setMobileCommentsOpen(false); };
+        window.addEventListener('keydown', handleEscape);
+        return () => window.removeEventListener('keydown', handleEscape);
+    }, [mobileCommentsOpen]);
 
     const downloadShareImage = () => {
         if (!letter) return;
@@ -141,7 +149,11 @@ const PublicLetterPage = () => {
 
     return (
         <main className="min-h-screen bg-[#f6f1e9] px-4 py-10 text-[#263b35]">
-            <div className="mx-auto max-w-3xl">
+            <div className="mx-auto max-w-7xl lg:grid lg:grid-cols-[370px_minmax(0,1fr)] lg:items-start lg:gap-7">
+                <aside className="no-print hidden lg:sticky lg:top-5 lg:block lg:h-[calc(100vh-2.5rem)] lg:min-h-[540px]" aria-label="Letter comments">
+                    <CommentsPanel shareToken={token} className="rounded-[1.75rem] border border-[#e3d8cd] shadow-xl" />
+                </aside>
+                <div className="mx-auto w-full max-w-3xl min-w-0">
                 <div className="no-print flex flex-wrap items-center justify-between gap-2">
                     <Link to="/" className="inline-flex items-center gap-2 text-sm text-[#52645d] hover:text-[#263b35]"><ArrowLeft size={16} /> SendTheLetter</Link>
                     <div className="flex flex-wrap gap-2">
@@ -161,8 +173,15 @@ const PublicLetterPage = () => {
                         <div className="mt-10 border-t border-[#e9e2d8] pt-6 text-xs text-[#8a8d84]">Shared with care on SendTheLetter.</div>
                     </div>
                 </article>
-                <Guestbook token={token} />
+                </div>
             </div>
+            <button type="button" onClick={() => setMobileCommentsOpen(true)} className="no-print fixed bottom-5 left-5 z-40 inline-flex items-center gap-2 rounded-full bg-[#263b35] px-5 py-3 text-sm font-semibold text-white shadow-2xl hover:bg-[#375747] lg:hidden"><MessageCircle size={18} /> Comments & gifts</button>
+            {mobileCommentsOpen && <div className="no-print fixed inset-0 z-[70] lg:hidden" role="dialog" aria-modal="true" aria-label="Comments drawer">
+                <button type="button" aria-label="Close comments drawer" onClick={() => setMobileCommentsOpen(false)} className="absolute inset-0 bg-black/55" />
+                <aside className="absolute inset-y-0 left-0 w-[min(420px,96vw)] overflow-hidden bg-white shadow-2xl">
+                    <CommentsPanel shareToken={token} onCollapse={() => setMobileCommentsOpen(false)} />
+                </aside>
+            </div>}
         </main>
     );
 };
