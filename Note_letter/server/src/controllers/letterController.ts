@@ -3,6 +3,7 @@ import axios from 'axios';
 import Letter from '../models/Letter';
 import User from '../models/User';
 import sequelize from '../config/database';
+import { Op } from 'sequelize';
 
 interface AuthRequest extends Request {
     user?: any;
@@ -16,6 +17,8 @@ export const createLetter = async (req: AuthRequest, res: Response) => {
             type,
             isPublic,
             scheduledDate,
+            openDate,
+            isTimeCapsule,
             status,
             backgroundImage,
             recipientName,
@@ -27,6 +30,10 @@ export const createLetter = async (req: AuthRequest, res: Response) => {
         } = req.body;
         const userId = req.user.id;
 
+        const releaseAt = isTimeCapsule ? openDate : scheduledDate;
+        const releaseIsFuture = Boolean(releaseAt && new Date(releaseAt).getTime() > Date.now());
+        const effectiveStatus = status === 'draft' ? 'draft' : (releaseIsFuture ? 'scheduled' : (status || 'published'));
+
         const letter = await Letter.create({
             userId,
             title,
@@ -34,7 +41,9 @@ export const createLetter = async (req: AuthRequest, res: Response) => {
             type,
             isPublic,
             scheduledDate,
-            status: status || 'published',
+            status: effectiveStatus,
+            openDate,
+            isTimeCapsule,
             backgroundImage,
             recipientName,
             recipientAddress,
@@ -55,7 +64,7 @@ export const getMyLetters = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user.id;
         const letters = await Letter.findAll({
-            where: { userId, status: 'published' },
+            where: { userId, status: 'published', [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }] },
             order: [['createdAt', 'DESC']],
         });
         res.json(letters);
@@ -87,7 +96,7 @@ export const getPublicLetters = async (req: Request, res: Response) => {
         const { default: Comment } = await import('../models/Comment');
 
         const letters = await Letter.findAll({
-            where: { isPublic: true, status: 'published' },
+            where: { isPublic: true, status: 'published', [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }] },
             include: [
                 {
                     model: User,
@@ -156,7 +165,8 @@ export const getUserPublicLetters = async (req: Request, res: Response) => {
                 isPublic: true,
                 status: 'published',
                 userId: user.id,
-                isAnonymous: false // Don't show anonymous letters on profile
+                isAnonymous: false, // Don't show anonymous letters on profile
+                [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }]
             },
             include: [
                 {
@@ -344,6 +354,7 @@ export const getPublicLetterById = async (req: Request, res: Response) => {
                 isPublic: true,
                 status: 'published',
                 isArchived: false,
+                [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }],
             },
             include: [{
                 model: User,
