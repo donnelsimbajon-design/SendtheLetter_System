@@ -10,7 +10,7 @@ interface LetterAttributes {
     type: string; // 'Love', 'Gratitude', 'Apology', etc.
     isPublic: boolean;
     status: string; // 'published', 'draft', 'archived'
-    scheduledDate?: Date;
+    scheduledDate?: Date | null;
     backgroundImage?: string;
     recipientName?: string;
     recipientAddress?: string;
@@ -21,7 +21,7 @@ interface LetterAttributes {
     address?: string;
     latitude?: number;
     longitude?: number;
-    openDate?: Date;
+    openDate?: Date | null;
     isTimeCapsule?: boolean;
     isArchived?: boolean;
 }
