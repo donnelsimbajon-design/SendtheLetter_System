@@ -1,0 +1,30 @@
+name: Backend TypeScript checks
+on:
+  push:
+    paths:
+      - 'Note_letter/server/src/**'
+      - 'Note_letter/server/package.json'
+      - 'Note_letter/server/package-lock.json'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    paths:
+      - 'Note_letter/server/src/**'
+      - 'Note_letter/server/package.json'
+      - 'Note_letter/server/package-lock.json'
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Note_letter/server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: Note_letter/server/package-lock.json
+      - run: npm ci
+      - run: npm run build
