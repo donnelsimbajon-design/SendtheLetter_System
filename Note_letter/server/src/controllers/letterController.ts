@@ -510,3 +510,60 @@ export const sendLetterByEmail = async (req: AuthRequest, res: Response) => {
         return res.status(502).json({ message: 'Email could not be delivered. Please try again later.' });
     }
 };
+
+
+/**
+ * Social crawler landing response. It exposes metadata only for a currently
+ * public, published, non-archived letter, then redirects humans to the SPA.
+ */
+export const getPublicLetterSharePreview = async (req: Request, res: Response) => {
+    try {
+        const letter = await Letter.findOne({
+            where: {
+                id: req.params.id,
+                isPublic: true,
+                status: 'published',
+                isArchived: false,
+                [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }],
+            },
+        });
+
+        if (!letter) {
+            return res.status(404).type('text').send('Public letter not found');
+        }
+
+        const appBaseUrl = (process.env.APP_BASE_URL || 'http://localhost:5173').replace(/\/$/, '');
+        const canonicalUrl = `${appBaseUrl}/letters/${letter.id}`;
+        const title = escapeEmailHtml(letter.title || 'A letter from SendTheLetter');
+        const description = escapeEmailHtml((letter.content || 'A letter shared with care.').replace(/\s+/g, ' ').slice(0, 200));
+        const imageUrl = typeof letter.imageUrl === 'string' && /^https?:\/\//i.test(letter.imageUrl)
+            ? letter.imageUrl
+            : '';
+        const imageTag = imageUrl ? `<meta property="og:image" content="${escapeEmailHtml(imageUrl)}">` : '';
+
+        res.setHeader('Cache-Control', 'public, max-age=300');
+        return res.status(200).type('html').send(`<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title} | SendTheLetter</title>
+<meta name="description" content="${description}">
+<link rel="canonical" href="${escapeEmailHtml(canonicalUrl)}">
+<meta property="og:type" content="article">
+<meta property="og:title" content="${title}">
+<meta property="og:description" content="${description}">
+<meta property="og:url" content="${escapeEmailHtml(canonicalUrl)}">
+${imageTag}
+<meta name="twitter:card" content="${imageUrl ? 'summary_large_image' : 'summary'}">
+<meta name="twitter:title" content="${title}">
+<meta name="twitter:description" content="${description}">
+<meta http-equiv="refresh" content="0;url=${escapeEmailHtml(canonicalUrl)}">
+</head>
+<body><p>Opening your letter… <a href="${escapeEmailHtml(canonicalUrl)}">Continue to SendTheLetter</a></p></body>
+</html>`);
+    } catch (error) {
+        console.error('Error creating public letter preview:', error);
+        return res.status(500).type('text').send('Unable to open this letter');
+    }
+};
