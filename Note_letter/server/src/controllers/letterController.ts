@@ -240,7 +240,16 @@ export const updateLetter = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
-        const updates = req.body;
+        const requestedUpdates = req.body || {};
+        const allowedFields = [
+            'title', 'content', 'type', 'isPublic', 'scheduledDate', 'openDate',
+            'isTimeCapsule', 'backgroundImage', 'recipientName', 'recipientAddress',
+            'spotifyLink', 'font', 'isAnonymous', 'imageUrl', 'address',
+            'latitude', 'longitude', 'isArchived',
+        ];
+        const updates = Object.fromEntries(
+            Object.entries(requestedUpdates).filter(([key]) => allowedFields.includes(key))
+        );
 
         const letter = await Letter.findByPk(id);
 
@@ -248,8 +257,19 @@ export const updateLetter = async (req: AuthRequest, res: Response) => {
             return res.status(404).json({ message: 'Letter not found' });
         }
 
-        if (letter.userId !== userId) {
+        if (Number(letter.userId) !== Number(userId)) {
             return res.status(403).json({ message: 'Not authorized to update this letter' });
+        }
+
+        const nextIsTimeCapsule = updates.isTimeCapsule ?? letter.isTimeCapsule;
+        const nextReleaseAt = nextIsTimeCapsule
+            ? (updates.openDate ?? letter.openDate)
+            : (updates.scheduledDate ?? letter.scheduledDate);
+
+        if (letter.status !== 'draft' && nextReleaseAt) {
+            updates.status = new Date(nextReleaseAt as string | Date).getTime() > Date.now() ? 'scheduled' : 'published';
+        } else if (letter.status === 'scheduled' && !nextReleaseAt) {
+            updates.status = 'published';
         }
 
         await letter.update(updates);
