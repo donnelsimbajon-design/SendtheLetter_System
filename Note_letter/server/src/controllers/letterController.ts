@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import axios from 'axios';
 import Letter from '../models/Letter';
 import User from '../models/User';
 import sequelize from '../config/database';
@@ -376,5 +377,86 @@ export const getPublicLetterById = async (req: Request, res: Response) => {
     } catch (error) {
         console.error('Error fetching public letter:', error);
         return res.status(500).json({ message: 'Unable to load this letter' });
+    }
+};
+
+
+const emailSendHistory = new Map<number, number[]>();
+const escapeEmailHtml = (value: string) => value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+/**
+ * Sends a published letter by email through Resend.
+ * The sender must own the letter; private content is sent only after this
+ * explicit authenticated action and is never exposed through a public URL.
+ */
+export const sendLetterByEmail = async (req: AuthRequest, res: Response) => {
+    const userId = Number(req.user?.id);
+    try {
+        const recipientEmail = String(req.body?.recipientEmail || '').trim().toLowerCase();
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!Number.isInteger(userId) || userId <= 0) {
+            return res.status(401).json({ message: 'Authentication required' });
+        }
+        if (!emailPattern.test(recipientEmail) || recipientEmail.length > 254) {
+            return res.status(400).json({ message: 'Enter a valid recipient email address' });
+        }
+
+        const letter = await Letter.findByPk(req.params.id);
+        if (!letter) return res.status(404).json({ message: 'Letter not found' });
+        if (Number(letter.userId) !== userId) {
+            return res.status(403).json({ message: 'Only the letter author can send it by email' });
+        }
+        if (letter.status !== 'published' || letter.isArchived || (letter.scheduledDate && new Date(letter.scheduledDate) > new Date())) {
+            return res.status(409).json({ message: 'Only available, published letters can be emailed' });
+        }
+
+        const now = Date.now();
+        const recentAttempts = (emailSendHistory.get(userId) || []).filter((time) => now - time < 60 * 60 * 1000);
+        if (recentAttempts.length >= 5) {
+            return res.status(429).json({ message: 'Email sharing limit reached. Try again later.' });
+        }
+
+        const apiKey = process.env.RESEND_API_KEY;
+        const from = process.env.EMAIL_FROM;
+        if (!apiKey || !from) {
+            return res.status(503).json({ message: 'Email delivery is not configured yet' });
+        }
+
+        const safeTitle = escapeEmailHtml(letter.title || 'A letter from SendTheLetter');
+        const safeContent = escapeEmailHtml(letter.content || '').replace(/\r?\n/g, '<br>');
+        const publicUrl = letter.isPublic
+            ? `${(process.env.APP_BASE_URL || '').replace(/\/$/, '')}/letters/${letter.id}`
+            : '';
+        const publicLinkHtml = publicUrl
+            ? `<p><a href="${escapeEmailHtml(publicUrl)}">View this letter on SendTheLetter</a></p>`
+            : '';
+
+        const response = await axios.post('https://api.resend.com/emails', {
+            from,
+            to: [recipientEmail],
+            subject: letter.title || 'A letter from SendTheLetter',
+            html: `<main style="font-family:Georgia,serif;line-height:1.7;color:#263b35;max-width:640px;margin:auto"><h1>${safeTitle}</h1><div>${safeContent}</div>${publicLinkHtml}<p style="color:#8a8d84;font:12px Arial,sans-serif">Sent with care via SendTheLetter.</p></main>`,
+            text: `${letter.title || 'A letter from SendTheLetter'}\n\n${letter.content || ''}${publicUrl ? `\n\nView online: ${publicUrl}` : ''}\n\nSent with care via SendTheLetter.`,
+        }, {
+            headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+            timeout: 15000,
+        });
+
+        recentAttempts.push(now);
+        emailSendHistory.set(userId, recentAttempts);
+        return res.status(202).json({
+            message: 'Letter email accepted by the delivery provider',
+            providerMessageId: response.data?.id || null,
+        });
+    } catch (error) {
+        const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+        console.error('Letter email delivery failed:', status || 'provider/network error');
+        return res.status(502).json({ message: 'Email could not be delivered. Please try again later.' });
     }
 };
