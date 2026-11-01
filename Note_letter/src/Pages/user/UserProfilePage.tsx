@@ -3,7 +3,7 @@ import { API_BASE_URL, API_ENDPOINTS } from '../../config/api';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useNoteStore } from '../../store/noteStore';
-import { MapPin, Calendar, UserPlus, UserMinus, Sparkles, PenLine, Search, MessageCircle, UserCheck, UserX, X } from 'lucide-react';
+import { MapPin, Calendar, UserPlus, UserMinus, Sparkles, PenLine, Search, MessageCircle, UserCheck, X } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import LetterViewModal from '../../components/LetterViewModal';
 import Notecard from '../../components/Notecard';
