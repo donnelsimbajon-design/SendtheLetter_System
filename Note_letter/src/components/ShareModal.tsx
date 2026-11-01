@@ -53,6 +53,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
     );
 
     const handleSendMessage = async (receiverId: number) => {
+        if (!isPubliclyShareable) return;
         try {
             const token = localStorage.getItem('token');
             const content = isPubliclyShareable
@@ -169,7 +170,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
                                                 <p className="text-xs text-muted-foreground truncate">{resultUser.location || 'Friend'}</p>
                                             </div>
                                         </div>
-                                        <Button size="sm" variant={sentTo.includes(resultUser.id) ? 'outline' : 'default'} disabled={sentTo.includes(resultUser.id)} onClick={() => handleSendMessage(resultUser.id)} className="h-8 px-4 rounded-full">
+                                        <Button size="sm" variant={sentTo.includes(resultUser.id) ? 'outline' : 'default'} disabled={!isPubliclyShareable || sentTo.includes(resultUser.id)} onClick={() => handleSendMessage(resultUser.id)} className="h-8 px-4 rounded-full">
                                             {sentTo.includes(resultUser.id) ? <>Sent <Check size={14} className="ml-1" /></> : <>Send</>}
                                         </Button>
                                     </div>
