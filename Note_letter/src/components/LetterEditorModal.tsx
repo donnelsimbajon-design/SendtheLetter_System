@@ -8,6 +8,7 @@ import { Textarea } from './ui/textarea';
 import { X, Type, Image as ImageIcon, Music, Send, Globe, EyeOff, Calendar, Lock } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { cn } from '../lib/utils';
+import { API_ENDPOINTS } from '../config/api';
 
 interface LetterEditorModalProps {
     isOpen: boolean;
@@ -32,6 +33,8 @@ const categories = [
     'Celebration',
     'Other'
 ];
+
+const API_URL = API_ENDPOINTS.letters;
 
 const backgroundGradients = [
     { name: 'Classic Paper', value: '#fdfbf7', gradient: 'bg-[#fdfbf7]' },
@@ -80,6 +83,9 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
             setSpotifyLink(initialData.spotifyLink || '');
             setRecipientName(initialData.recipientName || '');
             setRecipientAddress(initialData.recipientAddress || '');
+            setScheduledDate(initialData.scheduledDate || '');
+            setIsTimeCapsule(initialData.isTimeCapsule || false);
+            setOpenDate(initialData.openDate || '');
             // Stop draft auto-save if we are editing an existing letter
             if (initialData.status === 'published') {
                 setDraftId('stop-autosave');
@@ -98,6 +104,10 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
             setImageUrl('');
             setSpotifyLink('');
             setRecipientName('');
+            setRecipientAddress('');
+            setScheduledDate('');
+            setIsTimeCapsule(false);
+            setOpenDate('');
             setDraftId(null);
             setLastSaved('');
         }
@@ -118,10 +128,8 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                     status: 'draft', type: category
                 };
 
-                const API_URL = 'http://localhost:5000/api/letters';
-
                 if (draftId) {
-                    await fetch(`${API_URL}/drafts/${draftId}`, {
+                    const response = await fetch(`${API_URL}/drafts/${draftId}`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
@@ -129,6 +137,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                         },
                         body: JSON.stringify(draftData)
                     });
+                    if (!response.ok) throw new Error('Could not update your draft.');
                 } else {
                     const response = await fetch(API_URL, {
                         method: 'POST',
@@ -138,8 +147,9 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                         },
                         body: JSON.stringify(draftData)
                     });
+                    if (!response.ok) throw new Error('Could not save your draft.');
                     const data = await response.json();
-                    setDraftId(data.letter?.id);
+                    if (data.letter?.id) setDraftId(String(data.letter.id));
                 }
 
                 setLastSaved(new Date().toLocaleTimeString());
@@ -152,7 +162,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
 
         const timer = setTimeout(saveDraft, 10000);
         return () => clearTimeout(timer);
-    }, [isOpen, title, content, recipientName, font, category, scheduledDate, isTimeCapsule, openDate, draftId]);
+    }, [isOpen, title, content, recipientName, recipientAddress, font, category, spotifyLink, isAnonymous, isPublic, backgroundImage, imageUrl, scheduledDate, isTimeCapsule, openDate, draftId]);
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
