@@ -342,6 +342,7 @@ export const getPublicLetterById = async (req: Request, res: Response) => {
                 id: req.params.id,
                 isPublic: true,
                 status: 'published',
+                isArchived: false,
             },
             include: [{
                 model: User,
