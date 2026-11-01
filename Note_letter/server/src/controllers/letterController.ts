@@ -329,3 +329,51 @@ export const getArchivedLetters = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+
+/**
+ * Public letter detail endpoint.
+ * Only published, explicitly public letters can be resolved by a share URL.
+ */
+export const getPublicLetterById = async (req: Request, res: Response) => {
+    try {
+        const letter = await Letter.findOne({
+            where: {
+                id: req.params.id,
+                isPublic: true,
+                status: 'published',
+            },
+            include: [{
+                model: User,
+                as: 'user',
+                attributes: ['id', 'username', 'avatar'],
+            }],
+        });
+
+        if (!letter) {
+            return res.status(404).json({ message: 'Public letter not found' });
+        }
+
+        const data = letter.toJSON() as any;
+        const author = data.user;
+
+        return res.json({
+            id: data.id,
+            title: data.title,
+            content: data.content,
+            type: data.type,
+            isPublic: true,
+            status: data.status,
+            isAnonymous: Boolean(data.isAnonymous),
+            authorName: data.isAnonymous ? 'Anonymous' : (author?.username || 'Unknown'),
+            authorAvatar: data.isAnonymous ? null : (author?.avatar || null),
+            createdAt: data.createdAt,
+            backgroundImage: data.backgroundImage,
+            imageUrl: data.imageUrl,
+            font: data.font,
+        });
+    } catch (error) {
+        console.error('Error fetching public letter:', error);
+        return res.status(500).json({ message: 'Unable to load this letter' });
+    }
+};
