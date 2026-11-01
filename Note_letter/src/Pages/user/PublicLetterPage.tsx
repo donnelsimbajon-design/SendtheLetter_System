@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, Feather, Lock, Loader2 } from 'lucide-react';
+import { ArrowLeft, Feather, Lock, Loader2, Printer } from 'lucide-react';
 import { API_ENDPOINTS } from '../../config/api';
 import { getImageUrl } from '../../lib/utils';
 import { Note } from '../../types/note';
