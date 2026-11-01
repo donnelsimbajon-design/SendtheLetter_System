@@ -486,7 +486,7 @@ export const sendLetterByEmail = async (req: AuthRequest, res: Response) => {
         const safeTitle = escapeEmailHtml(letter.title || 'A letter from SendTheLetter');
         const safeContent = escapeEmailHtml(letter.content || '').replace(/\r?\n/g, '<br>');
         const publicUrl = letter.isPublic
-            ? `${(process.env.APP_BASE_URL || 'http://localhost:5173').replace(/\/$/, '')}/letters/${letter.id}`
+            ? `${(process.env.APP_BASE_URL || process.env.CLIENT_ORIGIN || process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '')}/letters/${letter.id}`
             : '';
         const publicLinkHtml = publicUrl
             ? `<p><a href="${escapeEmailHtml(publicUrl)}">View this letter on SendTheLetter</a></p>`
@@ -538,7 +538,7 @@ export const getPublicLetterSharePreview = async (req: Request, res: Response) =
             return res.status(404).type('text').send('Public letter not found');
         }
 
-        const appBaseUrl = (process.env.APP_BASE_URL || 'http://localhost:5173').replace(/\/$/, '');
+        const appBaseUrl = (process.env.APP_BASE_URL || process.env.CLIENT_ORIGIN || process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
         const canonicalUrl = `${appBaseUrl}/letters/${letter.id}`;
         const title = escapeEmailHtml(letter.title || 'A letter from SendTheLetter');
         const description = escapeEmailHtml((letter.content || 'A letter shared with care.').replace(/\s+/g, ' ').slice(0, 200));
