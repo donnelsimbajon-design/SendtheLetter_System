@@ -23,7 +23,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
     const [shareFeedback, setShareFeedback] = useState('');
     const [emailAddress, setEmailAddress] = useState('');
     const [isSendingEmail, setIsSendingEmail] = useState(false);
-    const isPubliclyShareable = note.isPublic && note.status === 'published' && !!note.shareToken;
+    const isPubliclyShareable = note.isPublic && note.status === 'published' && !!note.shareToken && !note.isArchived;
     const noteOwnerId = note.authorId ?? (note as Note & { userId?: string | number }).userId;
     const canEmail = String(noteOwnerId) === String(user?.id) && note.status === 'published';
 
