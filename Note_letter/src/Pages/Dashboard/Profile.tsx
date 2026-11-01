@@ -160,6 +160,9 @@ const Profile = () => {
                 isAnonymous: data.isAnonymous,
                 backgroundImage: data.backgroundImage,
                 imageUrl: data.imageUrl,
+                scheduledDate: data.scheduledDate,
+                openDate: data.openDate,
+                isTimeCapsule: data.isTimeCapsule,
             });
             setNoteToEdit(null); // Clear edit state
         } else {
@@ -176,6 +179,9 @@ const Profile = () => {
                 isAnonymous: data.isAnonymous,
                 backgroundImage: data.backgroundImage,
                 imageUrl: data.imageUrl,
+                scheduledDate: data.scheduledDate,
+                openDate: data.openDate,
+                isTimeCapsule: data.isTimeCapsule,
             });
         }
     };
