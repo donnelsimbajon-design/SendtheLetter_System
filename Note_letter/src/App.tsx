@@ -19,7 +19,7 @@ import Creator from './Pages/Creator';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-    return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+    return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
 function App() {
@@ -31,7 +31,7 @@ function App() {
         } else {
             socketService.disconnect();
         }
-    }, [isAuthenticated, user]);
+    }, [isAuthenticated, user?.id]);
 
     return (
         <Router>
