@@ -1,512 +1,168 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, LockKeyhole } from 'lucide-react';
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api';
-import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { useNoteStore } from '../../store/noteStore';
-import { MapPin, Calendar, UserPlus, UserMinus, Sparkles, PenLine, Search, MessageCircle, UserCheck, X } from 'lucide-react';
-import { Button } from '../../components/ui/button';
+import WriterProfileScreen, { type WriterFeedNote, type WriterPublicProfile } from '../../components/WriterProfileScreen';
 import LetterViewModal from '../../components/LetterViewModal';
-import Notecard from '../../components/Notecard';
-import { Note } from '../../types/note';
-import { motion } from 'framer-motion';
-import { format } from 'date-fns';
-import { getImageUrl } from '../../lib/utils';
+import type { Note } from '../../types/note';
 
-interface UserProfile {
-    id: number;
-    username: string;
-    email: string;
-    createdAt: string;
-    followerCount: number;
-    followingCount: number;
-    isFollowing: boolean;
-    bio?: string;
-    location?: string;
-    avatar?: string;
-    coverImage?: string;
-}
+type FriendState = 'none' | 'sent' | 'received' | 'friends';
+type FriendStatus = { status: FriendState; requestId: number | null };
+const authHeader = () => ({ Authorization: `Bearer ${localStorage.getItem('token') || ''}` });
 
-const UserProfilePage = () => {
-    const { username } = useParams<{ username: string }>();
+export default function UserProfilePage() {
+    const { username = '' } = useParams<{ username: string }>();
     const navigate = useNavigate();
-    const currentUser = useAuthStore((state) => state.user);
-    const { userPublicLetters, fetchUserPublicLetters } = useNoteStore();
-    const [publicReposts, setPublicReposts] = useState<Note[]>([]);
-
-    const [profile, setProfile] = useState<UserProfile | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState('Letters');
-    const [friendStatus, setFriendStatus] = useState<'none' | 'pending' | 'friends' | 'received'>('none');
-    const [requestId, setRequestId] = useState<number | null>(null);
-    const [isSender, setIsSender] = useState(false);
-
-    const tabs = ['Letters', 'Repost', 'About', 'Pen Pals'];
+    const currentUser = useAuthStore(state => state.user);
+    const [profile, setProfile] = useState<WriterPublicProfile | null>(null);
+    const [posts, setPosts] = useState<Note[]>([]);
+    const [reposts, setReposts] = useState<WriterFeedNote[]>([]);
+    const [selected, setSelected] = useState<Note | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [actionError, setActionError] = useState('');
+    const [actionBusy, setActionBusy] = useState(false);
+    const [friendState, setFriendState] = useState<FriendStatus>({ status: 'none', requestId: null });
+    const [reload, setReload] = useState(0);
 
     useEffect(() => {
-        if (username) {
-            fetchProfile();
-            fetchUserPublicLetters(username);
-            fetchPublicReposts(username);
-        }
-    }, [username]);
+        if (!username) return;
+        let active = true;
+        setLoading(true);
+        setError('');
+        setProfile(null);
+        setPosts([]);
+        setReposts([]);
+        setSelected(null);
+        setActionError('');
+        const load = async () => {
+            const token = localStorage.getItem('token');
+            const headers = token ? authHeader() : {};
+            const name = encodeURIComponent(username);
+            try {
+                const [profileRes, letterRes, repostRes] = await Promise.all([
+                    fetch(`${API_ENDPOINTS.users}/profile/${name}`, { headers }),
+                    fetch(`${API_ENDPOINTS.letters}/user/${name}`, { headers }),
+                    fetch(`${API_ENDPOINTS.letters}/user/${name}/reposts`, { headers }),
+                ]);
+                if (profileRes.status === 404) throw new Error('This writer profile was not found.');
+                if (!profileRes.ok || !letterRes.ok || !repostRes.ok) throw new Error('This profile is temporarily unavailable. Please try again.');
+                const [profileInfo, publicPosts, sharedPosts] = await Promise.all([profileRes.json(), letterRes.json(), repostRes.json()]);
+                if (!active) return;
+                setProfile(profileInfo);
+                setPosts(Array.isArray(publicPosts) ? publicPosts : []);
+                setReposts(Array.isArray(sharedPosts) ? sharedPosts : []);
+            } catch (err: any) {
+                if (active) setError(err?.message || 'This profile is not available.');
+            } finally {
+                if (active) setLoading(false);
+            }
+        };
+        void load();
+        return () => { active = false; };
+    }, [username, reload]);
 
     useEffect(() => {
-        if (profile?.id && currentUser?.id) {
-            fetchFriendStatus();
+        if (!profile?.id || !currentUser?.id || Number(profile.id) === Number(currentUser.id)) {
+            setFriendState({ status: 'none', requestId: null });
+            return;
         }
+        let active = true;
+        const fetchStatus = async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/friends/status/${profile.id}`, { headers: authHeader() });
+                if (!response.ok) return;
+                const data = await response.json();
+                if (!active) return;
+                setFriendState({
+                    status: data.status === 'friends' ? 'friends' : data.status === 'pending' ? (data.isSender ? 'sent' : 'received') : 'none',
+                    requestId: Number(data.requestId) || null,
+                });
+            } catch {
+                if (active) setActionError('Pen pal connection status is temporarily unavailable.');
+            }
+        };
+        void fetchStatus();
+        return () => { active = false; };
     }, [profile?.id, currentUser?.id]);
 
-    const fetchFriendStatus = async () => {
-        if (!profile?.id) return;
+    const toggleFollow = async () => {
+        if (!profile || actionBusy) return;
+        setActionBusy(true);
+        setActionError('');
         try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${API_BASE_URL}/api/friends/status/${profile.id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setFriendStatus(data.status); // 'none', 'friends', 'pending'
-                setIsSender(false); // Reset default
-
-                if (data.status === 'pending') {
-                    setRequestId(data.requestId);
-                    setIsSender(data.isSender);
-
-                    // If we are NOT the sender, it means we received it
-                    if (!data.isSender) {
-                        setFriendStatus('received');
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Error fetching friend status:', error);
-        }
-    };
-
-    const handleSendFriendRequest = async () => {
-        if (!profile?.id) return;
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${API_BASE_URL}/api/friends/request`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({ recipientId: profile.id })
-            });
-
-            if (response.ok) {
-                setFriendStatus('pending');
-                setIsSender(true);
-            } else {
-                const data = await response.json();
-                console.error('Failed to send request:', data);
-
-                // If it says "Request already pending", just update UI to match reality
-                if (data.message === 'Request already pending') {
-                    setFriendStatus('pending');
-                    setIsSender(true);
-                } else {
-                    // Show the specific error message from the backend if available
-                    alert(`Failed to send request: ${data.error || data.message || 'Unknown error'}`);
-                }
-            }
-        } catch (error) {
-            console.error('Error sending friend request:', error);
-            alert('Error connecting to server. Please try again.');
-        }
-    };
-
-    const handleCancelFriendRequest = async () => {
-        if (!requestId) return;
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${API_BASE_URL}/api/friends/cancel`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({ requestId })
-            });
-            if (response.ok) {
-                fetchFriendStatus();
-            }
-        } catch (error) {
-            console.error('Error cancelling friend request:', error);
-        }
-    };
-
-    const handleAcceptFriendRequest = async () => {
-        if (!requestId) return;
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${API_BASE_URL}/api/friends/accept`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({ requestId })
-            });
-            if (response.ok) {
-                setFriendStatus('friends');
-            }
-        } catch (error) {
-            console.error('Error accepting friend request:', error);
-        }
-    };
-
-    const fetchPublicReposts = async (username: string) => {
-        try {
-            const token = localStorage.getItem('token');
-            const headers: any = {};
-            if (token) headers.Authorization = `Bearer ${token}`;
-
-            const response = await fetch(`${API_ENDPOINTS.letters}/user/${username}/reposts`, {
-                headers,
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setPublicReposts(data);
-            }
-        } catch (error) {
-            console.error('Error fetching public reposts:', error);
-        }
-    };
-
-    const fetchProfile = async () => {
-        if (!username) return;
-        setIsLoading(true);
-        try {
-            const token = localStorage.getItem('token');
-            const headers: any = {};
-            if (token) headers.Authorization = `Bearer ${token}`;
-
-            const response = await fetch(`${API_ENDPOINTS.users}/profile/${username}`, {
-                headers,
-            });
-            if (!response.ok) throw new Error('Failed to fetch profile');
-            const data = await response.json();
-            setProfile(data);
-        } catch (error) {
-            console.error('Error fetching profile:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleToggleFollow = async () => {
-        if (!currentUser || !profile?.id) return;
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${API_ENDPOINTS.users}/${profile.id}/toggle`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            if (!response.ok) throw new Error('Failed to toggle follow');
-            const data = await response.json();
-
-            setProfile(prev => prev ? {
-                ...prev,
-                isFollowing: data.isFollowing,
-                followerCount: data.isFollowing ? prev.followerCount + 1 : prev.followerCount - 1
+            const response = await fetch(`${API_ENDPOINTS.users}/${profile.id}/toggle`, { method: 'POST', headers: authHeader() });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(result.message || 'Could not update your follow.');
+            setProfile(previous => previous ? {
+                ...previous,
+                isFollowing: Boolean(result.isFollowing),
+                followerCount: Math.max(0, (previous.followerCount || 0) + (result.isFollowing ? 1 : -1))
             } : null);
-        } catch (error) {
-            console.error('Error toggling follow:', error);
-        }
+        } catch (err: any) {
+            setActionError(err?.message || 'Could not follow this writer.');
+        } finally { setActionBusy(false); }
     };
 
-    const handleNoteClick = (note: Note) => {
-        setSelectedNote(note);
-        setIsViewModalOpen(true);
+    const changeFriend = async () => {
+        if (!profile || !currentUser || actionBusy || friendState.status === 'friends') return;
+        setActionBusy(true);
+        setActionError('');
+        try {
+            const operation = friendState.status === 'none' ? 'request' : friendState.status === 'sent' ? 'cancel' : 'accept';
+            const body = operation === 'request' ? { recipientId: profile.id } : { requestId: friendState.requestId };
+            const response = await fetch(`${API_BASE_URL}/api/friends/${operation}`, {
+                method: 'POST', headers: { ...authHeader(), 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(result.message || 'Could not update your pen pal request.');
+            setFriendState({
+                status: operation === 'request' ? 'sent' : operation === 'cancel' ? 'none' : 'friends',
+                requestId: operation === 'request' ? Number(result.id) || null : null,
+            });
+        } catch (err: any) {
+            setActionError(err?.message || 'Could not complete this action.');
+        } finally { setActionBusy(false); }
     };
 
-    if (isLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-background">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-            </div>
-        );
-    }
+    const isSelf = !!currentUser && Number(currentUser.id) === Number(profile?.id);
+    const friendLabel: Record<FriendState, string> = {
+        none: 'Add pen pal',
+        sent: 'Cancel request',
+        received: 'Accept request',
+        friends: 'Pen pals ✓'
+    };
 
-    if (!profile) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
-                <p>User not found.</p>
-            </div>
-        );
-    }
+    if (loading && !profile) return <div className="flex min-h-[55vh] flex-col items-center justify-center gap-3 rounded-[30px] border border-border bg-card"><div className="h-9 w-9 animate-spin rounded-full border-2 border-border border-t-primary" /><p className="text-sm text-muted-foreground">Opening this writer's profile…</p></div>;
 
-    return (
-        <div className="min-h-screen bg-background text-foreground pb-20 font-sans selection:bg-primary/20">
-            {/* Immersive Cover Section */}
-            <div className="relative h-[50vh] w-full overflow-hidden">
-                {profile.coverImage ? (
-                    <motion.div
-                        initial={{ scale: 1.1 }}
-                        animate={{ scale: 1 }}
-                        transition={{ duration: 1.5, ease: "easeOut" }}
-                        className="absolute inset-0 bg-cover bg-center"
-                        style={{ backgroundImage: `url(${getImageUrl(profile.coverImage)})` }}
-                    />
-                ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900" />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/20 to-background" />
-            </div>
+    if (!profile) return <div className="mx-auto max-w-xl rounded-[30px] border border-border bg-card p-8 text-center shadow-sm sm:p-12">
+        <LockKeyhole size={36} className="mx-auto text-muted-foreground" /><h1 className="mt-5 font-editorial text-3xl">Profile unavailable</h1>
+        <p className="mt-3 text-sm leading-7 text-muted-foreground">{error || 'This writer could not be found.'}</p>
+        <div className="mt-6 flex justify-center gap-3"><button onClick={() => setReload(n => n + 1)} className="rounded-full bg-primary px-5 py-3 text-xs font-bold text-primary-foreground">Retry</button><Link to="/dashboard/community" className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-3 text-xs font-bold"><ArrowLeft size={15} /> Community</Link></div>
+    </div>;
 
-            <div className="container mx-auto px-4 md:px-6 -mt-32 relative z-10">
-                <div className="flex flex-col items-center">
-                    {/* Minimalist Profile Header */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="flex flex-col items-center text-center mb-12 w-full max-w-2xl"
-                    >
-                        <div className="relative mb-6 group">
-                            <div className="w-32 h-32 md:w-40 md:h-40 rounded-full p-1 bg-background/50 backdrop-blur-sm border border-white/10 shadow-2xl">
-                                <div className="w-full h-full rounded-full overflow-hidden relative">
-                                    {profile.avatar ? (
-                                        <img
-                                            src={getImageUrl(profile.avatar)}
-                                            alt={profile.username}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
-                                            <span className="text-5xl font-light text-primary">{profile.username[0].toUpperCase()}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        <h1 className="text-4xl md:text-5xl font-bold mb-3 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white/90 to-white/60">
-                            {profile.username}
-                        </h1>
-
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6 font-medium tracking-wide">
-                            {profile.location && (
-                                <span className="flex items-center gap-1.5">
-                                    <MapPin size={14} /> {profile.location}
-                                </span>
-                            )}
-                            <span className="w-1 h-1 rounded-full bg-white/20" />
-                            <span className="flex items-center gap-1.5">
-                                <Calendar size={14} /> Joined {format(new Date(profile.createdAt), 'MMMM yyyy')}
-                            </span>
-                        </div>
-
-                        {profile.bio && (
-                            <p className="text-lg text-muted-foreground/80 leading-relaxed max-w-lg font-light">
-                                {profile.bio}
-                            </p>
-                        )}
-
-                        <div className="flex gap-6 mt-8 items-center">
-                            <div className="text-center">
-                                <div className="text-2xl font-bold text-foreground">{userPublicLetters.length}</div>
-                                <div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Letters</div>
-                            </div>
-                            <div className="w-px h-10 bg-white/10" />
-                            <div className="text-center">
-                                <div className="text-2xl font-bold text-foreground">{profile.followerCount}</div>
-                                <div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Followers</div>
-                            </div>
-                            <div className="w-px h-10 bg-white/10" />
-                            <div className="text-center">
-                                <div className="text-2xl font-bold text-foreground">{profile.followingCount}</div>
-                                <div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Following</div>
-                            </div>
-                        </div>
-
-                        {/* Follow & Message Buttons */}
-                        {currentUser && currentUser.id !== profile?.id && (
-                            <div className="mt-8 flex gap-3 flex-wrap justify-center">
-                                {/* Friend Button */}
-                                {friendStatus === 'friends' ? (
-                                    <Button variant="outline" className="rounded-full px-6 border-green-500 text-green-600 bg-green-50 hover:bg-green-100 hover:text-green-700">
-                                        <UserCheck className="w-4 h-4 mr-2" />
-                                        Friends
-                                    </Button>
-                                ) : friendStatus === 'pending' ? (
-                                    isSender ? (
-                                        <Button onClick={handleCancelFriendRequest} variant="outline" className="rounded-full px-6 border-red-500/50 text-red-500 hover:bg-red-500/10 hover:text-red-600">
-                                            <X className="w-4 h-4 mr-2" />
-                                            Cancel Request
-                                        </Button>
-                                    ) : (
-                                        <Button onClick={handleAcceptFriendRequest} className="rounded-full px-6 bg-green-600 hover:bg-green-700">
-                                            <UserPlus className="w-4 h-4 mr-2" />
-                                            Accept Request
-                                        </Button>
-                                    )
-                                ) : friendStatus === 'received' ? (
-                                    <Button onClick={handleAcceptFriendRequest} className="rounded-full px-6 bg-green-600 hover:bg-green-700">
-                                        <UserPlus className="w-4 h-4 mr-2" />
-                                        Accept Request
-                                    </Button>
-                                ) : (
-                                    <Button onClick={handleSendFriendRequest} className="rounded-full px-6 bg-stone-900 text-white hover:bg-stone-800">
-                                        <UserPlus className="w-4 h-4 mr-2" />
-                                        Add Friend
-                                    </Button>
-                                )}
-
-                                <Button
-                                    onClick={handleToggleFollow}
-                                    variant={profile.isFollowing ? "outline" : "secondary"}
-                                    className="rounded-full px-6"
-                                >
-                                    {profile.isFollowing ? (
-                                        <>
-                                            <UserMinus className="w-4 h-4 mr-2" />
-                                            Unfollow
-                                        </>
-                                    ) : (
-                                        <>
-                                            <UserPlus className="w-4 h-4 mr-2" />
-                                            Follow
-                                        </>
-                                    )}
-                                </Button>
-                                {friendStatus === 'friends' && (
-                                    <Button
-                                        onClick={() => navigate(`/dashboard/messages?userId=${profile.id}`)}
-                                        variant="secondary"
-                                        className="rounded-full px-6"
-                                    >
-                                        <MessageCircle className="w-4 h-4 mr-2" />
-                                        Message
-                                    </Button>
-                                )}
-                            </div>
-                        )}
-                    </motion.div>
-
-                    {/* Minimalist Tabs */}
-                    <div className="w-full max-w-4xl mb-10">
-                        <div className="flex justify-center items-center gap-8 border-b border-white/5 pb-4 overflow-x-auto scrollbar-hide">
-                            {tabs.map((tab) => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setActiveTab(tab)}
-                                    className={`
-                                        text-sm font-medium transition-all duration-300 relative px-2 py-1
-                                        ${activeTab === tab ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}
-                                    `}
-                                >
-                                    {tab}
-                                    {activeTab === tab && (
-                                        <motion.div
-                                            layoutId="activeTab"
-                                            className="absolute -bottom-[17px] left-0 right-0 h-0.5 bg-primary"
-                                        />
-                                    )}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Content Area */}
-                    <div className="w-full max-w-5xl">
-                        {activeTab === 'About' ? (
-                            <motion.div
-                                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                className="max-w-2xl mx-auto text-center py-12"
-                            >
-                                <Sparkles className="w-8 h-8 text-primary/50 mx-auto mb-6" />
-                                <h3 className="text-xl font-light mb-4">More About {profile.username}</h3>
-                                <p className="text-muted-foreground leading-loose">
-                                    {profile.bio || "This user hasn't written a long bio yet."}
-                                </p>
-                            </motion.div>
-                        ) : activeTab === 'Pen Pals' ? (
-                            <motion.div
-                                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                className="text-center py-20"
-                            >
-                                <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
-                                    <PenLine size={32} className="text-muted-foreground" />
-                                </div>
-                                <h3 className="text-xl font-medium mb-2">Pen Pals</h3>
-                                <p className="text-muted-foreground">Followers and Following list coming soon.</p>
-                            </motion.div>
-                        ) : (
-                            <>
-                                {/* Action Bar */}
-                                <div className="flex justify-between items-center mb-8 px-2">
-                                    <div className="relative w-full max-w-xs group">
-                                        <Search className="absolute left-0 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
-                                        <input
-                                            placeholder="Search letters..."
-                                            className="w-full bg-transparent border-b border-white/10 py-2 pl-8 text-sm focus:outline-none focus:border-primary transition-colors placeholder:text-muted-foreground/50"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Grid */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {activeTab === 'Letters' ? (
-                                        userPublicLetters.length > 0 ? (
-                                            userPublicLetters.map((note, index) => (
-                                                <motion.div
-                                                    key={note.id}
-                                                    initial={{ opacity: 0, y: 20 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    transition={{ delay: index * 0.05 }}
-                                                >
-                                                    <Notecard note={note} onClick={handleNoteClick} />
-                                                </motion.div>
-                                            ))
-                                        ) : (
-                                            <div className="col-span-full text-center py-20">
-                                                <p className="text-muted-foreground font-light text-lg">
-                                                    No public letters published yet.
-                                                </p>
-                                            </div>
-                                        )
-                                    ) : activeTab === 'Repost' ? (
-                                        publicReposts.length > 0 ? (
-                                            publicReposts.map((note, index) => (
-                                                <motion.div
-                                                    key={note.id}
-                                                    initial={{ opacity: 0, y: 20 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    transition={{ delay: index * 0.05 }}
-                                                >
-                                                    <Notecard note={note} onClick={handleNoteClick} />
-                                                </motion.div>
-                                            ))
-                                        ) : (
-                                            <div className="col-span-full text-center py-20">
-                                                <p className="text-muted-foreground font-light text-lg">
-                                                    No reposts yet.
-                                                </p>
-                                            </div>
-                                        )
-                                    ) : null}
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            <LetterViewModal
-                isOpen={isViewModalOpen}
-                onClose={() => setIsViewModalOpen(false)}
-                note={selectedNote}
-            />
-
-
-        </div>
-    );
-};
-
-export default UserProfilePage;
+    return <>
+        {isSelf && <div className="mx-auto mb-4 flex max-w-[1190px] flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card px-5 py-3 text-xs"><span className="text-muted-foreground">This is how visitors see your public profile. Your private letters are hidden.</span><Link to="/dashboard/profile" className="font-bold text-primary underline underline-offset-4">Manage my profile</Link></div>}
+        <WriterProfileScreen
+            profile={profile}
+            letters={posts}
+            reposts={reposts}
+            loading={loading}
+            error={error}
+            onRetry={() => setReload(n => n + 1)}
+            onRefresh={() => setReload(n => n + 1)}
+            onOpenLetter={setSelected}
+            onFollow={isSelf ? undefined : () => void toggleFollow()}
+            followBusy={actionBusy}
+            onMessage={isSelf ? undefined : () => navigate(`/dashboard/messages?userId=${profile.id}`)}
+            friendAction={isSelf ? undefined : {
+                label: friendLabel[friendState.status],
+                onClick: friendState.status === 'friends' ? undefined : () => void changeFriend(),
+                disabled: actionBusy || friendState.status === 'friends',
+            }}
+            actionError={actionError}
+        />
+        <LetterViewModal isOpen={!!selected} onClose={() => setSelected(null)} note={selected} />
+    </>;
+}
