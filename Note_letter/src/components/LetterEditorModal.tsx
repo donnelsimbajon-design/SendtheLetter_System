@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog';
 import CharacterBadge from './CharacterBadge';
-import LetterPagePhoto from './LetterPagePhoto';
+import LetterFlowEditor from './LetterFlowEditor';
 import { useAuthStore } from '../store/authStore';
 import { useWriterPreferences } from '../store/writerPreferences';
 import { cn } from '../lib/utils';
@@ -55,7 +55,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
     const preferences = useWriterPreferences(s => s.preferences);
 
     const [title, setTitle] = useState('');
-    const { pages, pageIndex, setPageIndex, resetBook, updateText, addPage, removeBlank, addPhoto, setCaption, removeImage, updateImageLayout, bookError, setBookError, content, wordCount } = useLetterBook();
+    const { pages, pageIndex, setPageIndex, resetBook, updateText, updateComposedText, addPage, removeBlank, addPhoto, setCaption, removeImage, updateImageLayout, bookError, setBookError, content, wordCount } = useLetterBook();
     const [recipientName, setRecipientName] = useState('');
     const [recipientAddress, setRecipientAddress] = useState('');
     const [category, setCategory] = useState('Other');
@@ -82,6 +82,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
     const pendingSave = useRef<Promise<boolean> | null>(null);
     const publishing = useRef(false);
     const revision = useRef(0);
+    const caretAnchor = useRef(0);
 
     const editingPublished = Boolean(initialData?.id && initialData.status !== 'draft');
     const markDirty = () => { revision.current += 1; setIsDirty(true); setConfirming(false); };
@@ -274,33 +275,49 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
 
     const page = pages[Math.min(pageIndex, pages.length - 1)];
     const paper = papers.find(p => p.value === backgroundImage) || papers[0];
-    const photoEditor = page.imageData ? <div className="mt-4 rounded-[18px] border border-[#dbcbb7]/70 bg-white/35 p-3 text-[#39483c]">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs font-bold">Arrange this photo</p>
-            <label className="flex items-center gap-2 text-xs font-semibold">Placement
-                <select aria-label="Photo placement relative to letter text" value={page.imagePlacement || 'after'}
-                    onChange={event => { updateImageLayout({ imagePlacement: event.target.value as 'before' | 'after' }); markDirty(); }}
-                    className="rounded-lg border border-[#c7b9a7] bg-white px-2 py-2 text-[#39483c]">
-                    <option value="before">Above the words</option><option value="after">Below the words</option>
+    const photoControls = page.imageData ? <section aria-label="Photo layout controls" className="mt-3 rounded-2xl border border-[#d9caba] bg-[#fffbf6] p-3 text-[#39483c]">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-bold">Photo in this letter</p>
+            <label className="flex items-center gap-2 text-xs font-semibold">Layout
+                <select aria-label="Photo position" value={page.imagePlacement || 'after'}
+                    onChange={event => {
+                        updateImageLayout({ imagePlacement: event.target.value as 'left' | 'right' | 'before' | 'after',
+                            ...(event.target.value === 'left' || event.target.value === 'right'
+                                ? { imageAnchor: page.imageAnchor ?? caretAnchor.current, imageWidth: Math.min(page.imageWidth ?? 42, 65) } : {}) });
+                        markDirty();
+                    }}
+                    className="min-h-10 rounded-lg border border-[#c7b9a7] bg-white px-3 py-2">
+                    <option value="right">Wrap text · photo right</option>
+                    <option value="left">Wrap text · photo left</option>
+                    <option value="before">Above the words</option>
+                    <option value="after">Below the words</option>
                 </select>
             </label>
         </div>
-        <LetterPagePhoto page={page} editable onChange={updateImageLayout} onCommit={markDirty} />
-        <label className="flex items-center gap-3 text-xs font-semibold">
-            <span className="shrink-0">Photo size</span>
-            <input type="range" min="30" max="90" step="5" value={page.imageWidth ?? 70}
-                onChange={event => { updateImageLayout({ imageWidth: Number(event.target.value) }); markDirty(); }}
-                aria-label="Photo width as percentage of page" className="min-w-0 flex-1 accent-[#344a3c]" />
-            <output className="w-9 text-right">{page.imageWidth ?? 70}%</output>
-        </label>
+        <p className="mt-2 text-[11px] text-[#806e5d]">Write naturally around the photo. Drag it into another paragraph or place it at your cursor.</p>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+            <button type="button" onClick={() => {
+                updateImageLayout({ imageAnchor: caretAnchor.current, imagePlacement: 'right',
+                    imageWidth: Math.min(page.imageWidth ?? 42, 65) });
+                markDirty();
+            }} className="min-h-10 rounded-full border border-[#c7b9a7] bg-white px-3 text-xs font-semibold hover:bg-[#f4eadc]">Place photo at cursor</button>
+            <label className="flex min-w-[160px] flex-1 items-center gap-3 text-xs font-semibold">
+                Photo width
+                <input type="range" min="30" max={page.imagePlacement === 'left' || page.imagePlacement === 'right' ? 65 : 90}
+                    step="5" aria-label="Photo width as percentage of page"
+                    value={Math.min(page.imageWidth ?? 42, page.imagePlacement === 'left' || page.imagePlacement === 'right' ? 65 : 90)}
+                    onChange={event => { updateImageLayout({ imageWidth: Number(event.target.value) }); markDirty(); }}
+                    className="min-w-0 flex-1 accent-[#344a3c]" />
+                <output>{Math.min(page.imageWidth ?? 42, page.imagePlacement === 'left' || page.imagePlacement === 'right' ? 65 : 90)}%</output>
+            </label>
+        </div>
         <label htmlFor="letter-image-caption" className="sr-only">Caption for this photo</label>
         <input id="letter-image-caption" maxLength={140} value={page.caption || ''}
-            onChange={event => { setCaption(event.target.value); markDirty(); }} placeholder="Add a little caption…"
-            className="mt-3 h-9 w-full border-b border-[#c7b9a7] bg-transparent text-center font-serif text-sm italic text-[#39483c] outline-none placeholder:text-[#8a7a6d]" />
-        <button type="button" onClick={() => { removeImage(); markDirty(); }} className="mx-auto mt-2 flex items-center gap-1.5 text-xs font-semibold text-[#785c4f] underline">Remove this photo</button>
-    </div> : null;
+            onChange={event => { setCaption(event.target.value); markDirty(); }} placeholder="Optional photo caption…"
+            className="mt-3 h-9 w-full border-b border-[#c7b9a7] bg-transparent text-center font-serif text-sm italic outline-none" />
+        <button type="button" onClick={() => { removeImage(); markDirty(); }} className="mt-2 text-xs font-semibold text-[#785c4f] underline">Remove photo</button>
+    </section> : null;
 
-    const scheduled = (isTimeCapsule ? openDate : scheduledDate) && (utcDate(isTimeCapsule ? openDate : scheduledDate) || '') > new Date().toISOString();
     const actionLabel = editingPublished ? 'Save changes' : scheduled ? 'Schedule letter' : isPublic ? 'Publish letter' : 'Finish private letter';
     const earliestLocalDate = localDateInput(new Date(Date.now() + 60_000));
     const timeZoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -389,60 +406,71 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                 </aside>
 
                 <div className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-[hsl(var(--background))] p-3 sm:p-5 lg:p-7">
-                    <div className={cn('relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[19px] border border-[#e9dfd1] shadow-[0_12px_40px_rgba(64,48,31,.09)] sm:rounded-[24px]', paper.className)} style={imageUrl ? { backgroundImage: `linear-gradient(rgba(14,19,14,.6),rgba(14,19,14,.56)),url("${imageUrl}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}>
-                        <div className={cn('relative flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-7 sm:px-10 sm:py-9 lg:px-12', imageUrl ? 'text-white' : 'text-[#35483d]')}
+                    <div className={cn('relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[19px] border border-[#e9dfd1] shadow-[0_12px_40px_rgba(64,48,31,.09)] sm:rounded-[24px]', paper.className)} >
+                        <div className={cn('relative flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-7 sm:px-10 sm:py-9 lg:px-12', 'text-[#35483d]')}
                             onDragOver={event => { if (Array.from(event.dataTransfer.types).includes('Files')) event.preventDefault(); }}
                             onDrop={event => {
                                 const file = Array.from(event.dataTransfer.files).find(item => item.type.startsWith('image/'));
                                 if (!file) return;
                                 event.preventDefault();
-                                void addPhoto(file).then(() => { markDirty(); setNotice('Photo added. Drag it to place it anywhere inside the photo area.'); })
+                                void addPhoto(file, caretAnchor.current).then(() => { markDirty(); setNotice('Photo inserted in the page. Choose left/right wrap or move it to another paragraph.'); })
                                     .catch(error => setBookError(error instanceof Error ? error.message : 'Could not add photo.'));
                             }}>
-                            <div className={cn('mb-7 flex items-center justify-between gap-2 border-b pb-4 text-[10px] font-bold uppercase tracking-[.20em]', imageUrl ? 'border-white/40 text-white/80' : 'border-[#dcd6c8] text-[#9a796b]')}>
+                            <div className={cn('mb-7 flex items-center justify-between gap-2 border-b pb-4 text-[10px] font-bold uppercase tracking-[.20em]', 'border-[#dcd6c8] text-[#9a796b]')}>
                                 <span className="inline-flex items-center gap-2"><CharacterBadge name="lumi" tone="rose" size="xs" /> A letter from the heart</span>
                                 <span className="hidden sm:inline">{category}</span>
                             </div>
                             {pageIndex === 0 ? <>
                             <label className="sr-only" htmlFor="letter-title">Letter title</label>
-                            <input id="letter-title" maxLength={255} value={title} onChange={e => { setTitle(e.target.value); markDirty(); }} placeholder="Give your letter a title…" className={cn('w-full border-none bg-transparent p-0 font-editorial text-[clamp(1.55rem,3.5vw,2.6rem)] font-semibold leading-tight tracking-tight outline-none placeholder:opacity-40', imageUrl ? 'text-white placeholder:text-white' : 'text-[#35483d] placeholder:text-[#988d83]')} />
-                            <div className={cn('mt-6 flex items-center border-b pb-3', imageUrl ? 'border-white/35' : 'border-[#dcd6c8]')}>
-                                <span className={cn('shrink-0 font-serif text-lg italic', imageUrl ? 'text-white/80' : 'text-[#7d786c]')}>Dear</span>
+                            <input id="letter-title" maxLength={255} value={title} onChange={e => { setTitle(e.target.value); markDirty(); }} placeholder="Give your letter a title…" className={cn('w-full border-none bg-transparent p-0 font-editorial text-[clamp(1.55rem,3.5vw,2.6rem)] font-semibold leading-tight tracking-tight outline-none placeholder:opacity-40', 'text-[#35483d] placeholder:text-[#988d83]')} />
+                            <div className={cn('mt-6 flex items-center border-b pb-3', 'border-[#dcd6c8]')}>
+                                <span className={cn('shrink-0 font-serif text-lg italic', 'text-[#7d786c]')}>Dear</span>
                                 <label className="sr-only" htmlFor="letter-recipient">Recipient</label>
-                                <input id="letter-recipient" maxLength={255} value={recipientName} onChange={e => { setRecipientName(e.target.value); markDirty(); }} placeholder="someone special…" className={cn('ml-2 min-w-0 flex-1 bg-transparent text-lg font-semibold outline-none placeholder:opacity-40', imageUrl ? 'text-white placeholder:text-white' : 'text-[#35483d] placeholder:text-[#9c958c]')} />
+                                <input id="letter-recipient" maxLength={255} value={recipientName} onChange={e => { setRecipientName(e.target.value); markDirty(); }} placeholder="someone special…" className={cn('ml-2 min-w-0 flex-1 bg-transparent text-lg font-semibold outline-none placeholder:opacity-40', 'text-[#35483d] placeholder:text-[#9c958c]')} />
                                 <span className="font-serif text-lg">,</span>
                             </div>
-                            </> : <div className={cn('mb-7 border-b pb-4', imageUrl ? 'border-white/30 text-white/90' : 'border-[#dcd6c8] text-[#756b60]')}>
+                            </> : <div className={cn('mb-7 border-b pb-4', 'border-[#dcd6c8] text-[#756b60]')}>
                                 <p className="font-editorial text-xl leading-snug">{title || 'Untitled letter'}</p>
                                 <p className="mt-2 text-xs font-semibold italic">…continued on page {pageIndex + 1}</p>
                             </div>}
-                            <div className={cn('mb-1 flex flex-wrap items-center justify-between gap-2', imageUrl ? 'text-white/85' : 'text-[#8b7361]')}>
+                            <div className={cn('mb-1 flex flex-wrap items-center justify-between gap-2', 'text-[#8b7361]')}>
                                 <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.16em]"><CharacterBadge name="basa" tone="gold" size="xs" /> Page {pageIndex + 1} of {pages.length}</span>
-                                <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-current/30 px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-white/15"><CharacterBadge name="piko" tone="paper" size="xs" /> Insert image in page <input type="file" className="sr-only" accept="image/png,image/jpeg,image/webp" onChange={async (event) => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; try { await addPhoto(file); markDirty(); setNotice('Photo added. Drag it to place it in the page.'); } catch (error: any) { setBookError(error?.message || 'Could not insert photo.'); } }} /></label>
+                                <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-current/30 px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-white/15"><CharacterBadge name="piko" tone="paper" size="xs" /> Insert image in page <input type="file" className="sr-only" accept="image/png,image/jpeg,image/webp" onChange={async (event) => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; try { await addPhoto(file, caretAnchor.current); markDirty(); setNotice('Photo inserted at your cursor. Text now flows around it.'); } catch (error: any) { setBookError(error?.message || 'Could not insert photo.'); } }} /></label>
                             </div>
-                            {page.imageData && <p className="mt-2 text-xs text-[#9a796b]">Drag the photo within its frame, adjust the size slider, or move it above/below your writing.</p>}
-                            <label className="sr-only" htmlFor="letter-content">Your letter</label>
-                            {page.imagePlacement === 'before' && photoEditor}
-                            <textarea id="letter-content" value={page.text} onChange={e => { if (updateText(e.target.value)) markDirty(); }} onPaste={event => {
-                                const image = Array.from(event.clipboardData.items).find(item => item.kind === 'file' && item.type.startsWith('image/'));
-                                if (image) {
-                                    event.preventDefault();
-                                    const file = image.getAsFile();
-                                    if (!file) return;
-                                    void addPhoto(file).then(() => {
-                                        markDirty();
-                                        setNotice('Pasted image added inside your book page.');
-                                    }).catch(error => setBookError(error instanceof Error ? error.message : 'Could not paste this photo.'));
-                                    return;
-                                }
-                                const text = event.clipboardData.getData('text/plain');
-                                if (/data:image\/(?:png|jpeg|webp);base64,/i.test(text) || /[A-Za-z0-9+/]{256,}={0,2}/.test(text)) {
-                                    event.preventDefault();
-                                    setBookError('You pasted encoded photo data. Click "Insert image in page" instead.');
-                                }
-                            }} placeholder={"Tell them what you've been meaning to say…\n\nStart with a memory, a feeling, or just a simple hello."} className={cn('mt-7 min-h-[230px] w-full flex-1 resize-none border-0 bg-transparent p-0 text-base leading-[1.9] outline-none placeholder:opacity-50 sm:text-lg', font, imageUrl ? 'text-white placeholder:text-white' : 'text-[#35483d] placeholder:text-[#8b9188]')} />
-                            {page.imagePlacement !== 'before' && photoEditor}
-                            <div className={cn('mt-8 flex justify-end gap-2 border-t pt-5 font-serif italic', imageUrl ? 'border-white/35 text-white/80' : 'border-[#dcd6c8] text-[#817e72]')}><span>With care,</span><span className="font-semibold">{isAnonymous ? 'Anonymous' : (user?.username?.includes('@') ? user.username.split('@')[0] : user?.username) || 'Me'}</span></div>
+                            {photoControls}
+                            {page.imageData
+                                ? <LetterFlowEditor key={pageIndex} page={page} font={font}
+                                    onChange={(text, anchor) => { if (updateComposedText(text, anchor)) markDirty(); }}
+                                    onCursor={anchor => { caretAnchor.current = anchor; }}
+                                    onMovePhoto={anchor => { updateImageLayout({ imageAnchor: anchor, imagePlacement: 'right', imageWidth: Math.min(page.imageWidth ?? 42, 65) }); markDirty(); }}
+                                    onPhotoFile={(file, anchor) => {
+                                        void addPhoto(file, anchor).then(() => { markDirty(); setNotice('Photo inserted on the next page.'); })
+                                            .catch(error => setBookError(error instanceof Error ? error.message : 'Could not add photo.'));
+                                    }}
+                                    onError={setBookError}
+                                />
+                                : <><label className="sr-only" htmlFor="letter-content">Your letter</label>
+                                    <textarea id="letter-content" value={page.text}
+                                        onSelect={event => { caretAnchor.current = event.currentTarget.selectionStart; }}
+                                        onClick={event => { caretAnchor.current = event.currentTarget.selectionStart; }}
+                                        onChange={event => { caretAnchor.current = event.currentTarget.selectionStart; if (updateText(event.target.value)) markDirty(); }}
+                                        onPaste={event => {
+                                            const image = Array.from(event.clipboardData.items).find(item => item.kind === 'file' && item.type.startsWith('image/'));
+                                            if (image) {
+                                                event.preventDefault();
+                                                const file = image.getAsFile();
+                                                if (file) void addPhoto(file, event.currentTarget.selectionStart).then(markDirty).catch(error => setBookError(error instanceof Error ? error.message : 'Could not paste image.'));
+                                                return;
+                                            }
+                                            const text = event.clipboardData.getData('text/plain');
+                                            if (/data:image\\/(?:png|jpeg|webp);base64,/i.test(text) || /[A-Za-z0-9+/]{256,}={0,2}/.test(text)) {
+                                                event.preventDefault();
+                                                setBookError('Insert photos with the image button, not encoded data.');
+                                            }
+                                        }}
+                                        placeholder={"Tell them what you've been meaning to say…\\n\\nStart with a memory, a feeling, or just a simple hello."}
+                                        className={cn('mt-7 min-h-[280px] w-full flex-1 resize-none border-0 bg-transparent p-0 text-base leading-[1.9] outline-none placeholder:opacity-50 sm:text-lg', font, 'text-[#35483d] placeholder:text-[#8b9188]')} /></>}
+                            <div className={cn('mt-8 flex justify-end gap-2 border-t pt-5 font-serif italic', 'border-[#dcd6c8] text-[#817e72]')}><span>With care,</span><span className="font-semibold">{isAnonymous ? 'Anonymous' : (user?.username?.includes('@') ? user.username.split('@')[0] : user?.username) || 'Me'}</span></div>
                         </div>
                     </div>
                     <nav aria-label="Book page controls" className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card/80 p-2">
