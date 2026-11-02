@@ -46,6 +46,7 @@ export const startScheduledLetterWorker = (io: Server) => {
                             actorId: letter.userId,
                             type: letter.isTimeCapsule ? 'time_capsule_opened' : 'scheduled_letter_published',
                             entityId: letter.id,
+                            letterId: letter.id,
                         }, { transaction });
                     });
 
