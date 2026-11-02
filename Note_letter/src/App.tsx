@@ -21,8 +21,11 @@ import AdminDashboard from './Pages/AdminDashboard';
 import PublicLetterPage from './Pages/user/PublicLetterPage';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-    return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+    const { pathname, search } = useLocation();
+    const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+    const isVerifying = useAuthStore(state => state.isVerifying);
+    if (isVerifying) return <main className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground">Checking your writing space…</main>;
+    return isAuthenticated ? <>{children}</> : <Navigate to={`/login?returnTo=${encodeURIComponent(pathname + search)}`} replace />;
 };
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
@@ -43,15 +46,17 @@ const Landing = () => {
 };
 
 function App() {
-    const { user, isAuthenticated, token } = useAuthStore();
+    const { user, isAuthenticated, token, isVerifying, verifySession } = useAuthStore();
+
+    useEffect(() => { void verifySession(); }, [verifySession]);
 
     useEffect(() => {
-        if (isAuthenticated && user?.id) {
+        if (!isVerifying && isAuthenticated && user?.id) {
             socketService.connect(user.id, token || '');
         } else {
             socketService.disconnect();
         }
-    }, [isAuthenticated, user?.id, token]);
+    }, [isAuthenticated, isVerifying, user?.id, token]);
 
     return (
         <Router>
