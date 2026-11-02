@@ -1,3 +1,7 @@
+/** Reject image bytes accidentally pasted into letter prose rather than imageData. */
+export const containsEncodedImageText = (text: string): boolean =>
+    /data:image\/(?:png|jpeg|webp);base64,/i.test(text) || /[A-Za-z0-9+/]{256,}={0,2}/.test(text);
+
 export interface StoryPage {
     text: string;
     imageData?: string;
@@ -21,6 +25,9 @@ export function parseStoryPages(value: unknown): { pages: StoryPage[] | null; er
         const caption = (item as any).caption;
         if (typeof text !== 'string' || text.length > 2400 || (caption != null && (typeof caption !== 'string' || caption.length > 140))) {
             return { pages: null, error: 'Each page supports up to 2,400 characters and a short photo caption.' };
+        }
+        if (containsEncodedImageText(text)) {
+            return { pages: null, error: 'Image data was pasted into letter text. Insert the photo into a book page instead.' };
         }
         allText += text;
         const safePage: StoryPage = { text };
