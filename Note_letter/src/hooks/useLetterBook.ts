@@ -59,6 +59,10 @@ export function useLetterBook() {
         setPages(prev => prev.map((page, index) => index === pageIndex ? { ...page, caption } : page));
     };
 
+    const updateImageLayout = (changes: Partial<Pick<StoryPage, 'imageX' | 'imageY' | 'imageWidth' | 'imagePlacement'>>) => {
+        setPages(prev => prev.map((page, index) => index === pageIndex && page.imageData ? { ...page, ...changes } : page));
+    };
+
     const removeImage = () => {
         setPages(prev => prev.map((page, index) => index === pageIndex ? { text: page.text } : page));
     };
@@ -107,7 +111,7 @@ export function useLetterBook() {
 
     return {
         pages, pageIndex, setPageIndex, bookError, setBookError, resetBook,
-        updateText, addPage, removeBlank, addPhoto, setCaption, removeImage,
+        updateText, addPage, removeBlank, addPhoto, setCaption, removeImage, updateImageLayout,
         content: bookPlainText(pages), wordCount: bookWordCount(pages),
     };
 }
