@@ -1,406 +1,214 @@
-import Mascot from '../../components/Mascot';
-
-import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Send, User, Search, MoreVertical, Paperclip, Smile } from 'lucide-react';
-import { format } from 'date-fns';
-import { motion } from 'framer-motion';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, BookHeart, Check, CheckCheck, Heart, Mail, MessageCircle, Search, Send, Sparkles, UserRound } from 'lucide-react';
+import { format, formatDistanceToNow } from 'date-fns';
 import { useAuthStore } from '../../store/authStore';
 import socketService from '../../services/socketService';
-import axios from 'axios';
 import { getImageUrl } from '../../lib/utils';
 import { API_ENDPOINTS } from '../../config/api';
+import Mascot from '../../components/Mascot';
 
-const classNames = (...classes: (string | undefined | null | false)[]) => classes.filter(Boolean).join(' ');
+type Contact = { id: number; username: string; avatar?: string; location?: string };
+type Conversation = { user: Contact; lastMessage: string; lastMessageTime: string; unreadCount: number };
+type Message = { id: number; senderId: number; receiverId: number; content: string; createdAt: string; isRead?: boolean };
 
-interface Conversation {
-    user: {
-        id: number;
-        username: string;
-        avatar?: string;
-        location?: string;
-        isOnline?: boolean;
-    };
-    lastMessage: string;
-    lastMessageTime: string;
-    unreadCount: number;
-    isOnline?: boolean;
-}
+const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem('token') || ''}` });
 
-interface Message {
-    id: number;
-    senderId: number;
-    receiverId: number;
-    content: string;
-    isRead: boolean;
-    createdAt: string;
-    sender?: {
-        id: number;
-        username: string;
-        avatar?: string;
-    };
-}
-
-const Messages = () => {
-    const user = useAuthStore((state) => state.user);
+export default function Messages() {
+    const user = useAuthStore(state => state.user);
     const [searchParams] = useSearchParams();
     const initialUserId = searchParams.get('userId');
-
     const [conversations, setConversations] = useState<Conversation[]>([]);
+    const [selected, setSelected] = useState<Contact | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
-    const [selectedUser, setSelectedUser] = useState<Conversation['user'] | null>(null);
-    const [newMessage, setNewMessage] = useState('');
-    const [searchQuery, setSearchQuery] = useState('');
-    const [isLoadingConvos, setIsLoadingConvos] = useState(true);
+    const [query, setQuery] = useState('');
+    const [draft, setDraft] = useState('');
+    const [listLoading, setListLoading] = useState(true);
+    const [threadLoading, setThreadLoading] = useState(false);
+    const [sending, setSending] = useState(false);
+    const [error, setError] = useState('');
+    const [listError, setListError] = useState('');
+    const [activeMobile, setActiveMobile] = useState(false);
+    const endRef = useRef<HTMLDivElement>(null);
+    const selectedRef = useRef<Contact | null>(null);
 
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    useEffect(() => { selectedRef.current = selected; }, [selected]);
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
+    const loadConversations = useCallback(async () => {
+        try {
+            const response = await fetch(`${API_ENDPOINTS.messages}/conversations`, { headers: authHeaders() });
+            if (!response.ok) throw new Error('Could not load your conversations.');
+            const data = await response.json();
+            setConversations(Array.isArray(data) ? data : []);
+            setListError('');
+        } catch (err: any) {
+            setListError(err?.message || 'Conversations unavailable.');
+        } finally {
+            setListLoading(false);
+        }
+    }, []);
 
-    // Fetch conversations on mount
     useEffect(() => {
-        fetchConversations();
-
-        // Listen for new messages globally to update conversation list
-        const handleNewMessage = (message: any) => {
-            // Update conversation list logic would go here
-            // For now, simplest is to refetch, or optimistically update
-            fetchConversations();
-
-            // If message belongs to current chat, append it
-            if (selectedUser && (message.senderId === selectedUser.id || message.receiverId === selectedUser.id)) {
-                setMessages((prev) => {
-                    // dedupe just in case
-                    if (prev.some(m => m.id === message.id)) return prev;
-                    return [...prev, message];
-                });
+        void loadConversations();
+        const handleIncoming = (incoming: Message) => {
+            void loadConversations();
+            const current = selectedRef.current;
+            if (current && (incoming.senderId === current.id || incoming.receiverId === current.id)) {
+                setMessages(previous => previous.some(item => item.id === incoming.id) ? previous : [...previous, incoming]);
             }
         };
+        socketService.onNewMessage(handleIncoming);
+        const refreshTimer = window.setInterval(() => { if (!document.hidden) void loadConversations(); }, 30000);
+        return () => { socketService.offNewMessage(); window.clearInterval(refreshTimer); };
+    }, [loadConversations]);
 
-        socketService.onNewMessage(handleNewMessage);
-
-        return () => {
-            socketService.offNewMessage();
-        };
-    }, [selectedUser]); // Dependency on selectedUser to know if we should append
-
-    const fetchConversations = async () => {
-        try {
-            const response = await axios.get(`${API_ENDPOINTS.messages}/conversations`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
-            setConversations(response.data);
-            setIsLoadingConvos(false);
-        } catch (error) {
-            console.error('Error fetching conversations:', error);
-            setIsLoadingConvos(false);
-        }
-    };
-
-    // Handle initial user selection from URL
-    // Handle initial user selection from URL
     useEffect(() => {
-        const initChat = async () => {
-            if (initialUserId && !selectedUser) {
-                // Check if user is already in conversations
-                const existingConvo = conversations.find(c => c.user.id === parseInt(initialUserId));
-                if (existingConvo) {
-                    setSelectedUser(existingConvo.user);
-                } else {
-                    // Fetch user details if not in convos (new chat)
-                    try {
-                        const response = await axios.get(`${API_ENDPOINTS.users}/id/${initialUserId}`, {
-                            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-                        });
-
-                        if (response.data) {
-                            setSelectedUser(response.data);
-                        }
-                    } catch (e) {
-                        console.error("User not found by ID", e);
-                    }
-                }
+        if (!initialUserId || !/^\d+$/.test(initialUserId) || listLoading) return;
+        const wanted = Number(initialUserId);
+        if (wanted === user?.id) return;
+        const known = conversations.find(item => item.user.id === wanted);
+        if (known) {
+            setSelected(known.user);
+            setActiveMobile(true);
+            return;
+        }
+        let active = true;
+        (async () => {
+            try {
+                const response = await fetch(`${API_ENDPOINTS.users}/id/${wanted}`, { headers: authHeaders() });
+                if (!response.ok) throw new Error('Could not open this conversation.');
+                const contact = await response.json();
+                if (active && contact.id !== user?.id) { setSelected(contact); setActiveMobile(true); }
+            } catch (error: any) {
+                if (active) setError(error?.message || 'Recipient not found.');
             }
-        };
-
-        if (!isLoadingConvos) {
-            initChat();
-        }
-    }, [initialUserId, conversations, isLoadingConvos]);
-
-    // Fetch messages when a user is selected
-    useEffect(() => {
-        if (selectedUser) {
-            fetchMessages(selectedUser.id);
-        }
-    }, [selectedUser]);
+        })();
+        return () => { active = false; };
+    }, [initialUserId, listLoading, user?.id, conversations]);
 
     useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
+        if (!selected) { setMessages([]); return; }
+        let active = true;
+        setThreadLoading(true);
+        setError('');
+        (async () => {
+            try {
+                const response = await fetch(`${API_ENDPOINTS.messages}/${selected.id}`, { headers: authHeaders() });
+                if (!response.ok) throw new Error('Could not open messages.');
+                const data = await response.json();
+                if (!active) return;
+                setMessages(Array.isArray(data) ? data : []);
+                const mark = await fetch(`${API_ENDPOINTS.messages}/read`, { method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify({ senderId: selected.id }) });
+                if (mark.ok) setConversations(previous => previous.map(convo => convo.user.id === selected.id ? { ...convo, unreadCount: 0 } : convo));
+            } catch (err: any) {
+                if (active) setError(err?.message || 'Could not open this conversation.');
+            } finally {
+                if (active) setThreadLoading(false);
+            }
+        })();
+        return () => { active = false; };
+    }, [selected?.id]);
 
-    const fetchMessages = async (otherUserId: number) => {
+    useEffect(() => { if (activeMobile && selected) endRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }); }, [messages.length, activeMobile, selected?.id]);
+
+    const choose = (contact: Contact) => {
+        setSelected(contact);
+        setActiveMobile(true);
+        setDraft('');
+        setError('');
+    };
+
+    const send = async () => {
+        const text = draft.trim();
+        if (!text || !selected || sending) return;
+        if (text.length > 5000) { setError('Messages must be 5,000 characters or fewer.'); return; }
+        setSending(true);
+        setError('');
         try {
-            const response = await axios.get(`${API_ENDPOINTS.messages}/${otherUserId}`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            const response = await fetch(`${API_ENDPOINTS.messages}/send`, {
+                method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ receiverId: selected.id, content: text }),
             });
-            setMessages(response.data);
-
-            // Mark as read (optional, can be separate call)
-            await axios.post(`${API_ENDPOINTS.messages}/read`, {
-                senderId: otherUserId
-            }, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
-
-            // Update convos unread count locally
-            setConversations(prev => prev.map(c =>
-                c.user.id === otherUserId ? { ...c, unreadCount: 0 } : c
-            ));
-
-        } catch (error) {
-            console.error('Error fetching messages:', error);
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.message || 'Message could not be sent.');
+            setMessages(prev => prev.some(msg => msg.id === data.id) ? prev : [...prev, data]);
+            setDraft('');
+            void loadConversations();
+        } catch (err: any) {
+            setError(err?.message || 'Could not send this message. Your text is still here.');
+        } finally {
+            setSending(false);
         }
     };
 
-    const handleSend = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newMessage.trim() || !selectedUser) return;
+    const filteredConversations = conversations.filter(convo => convo.user.username.toLowerCase().includes(query.toLowerCase()) || convo.lastMessage.toLowerCase().includes(query.toLowerCase()));
+    const activeConversation = conversations.some(c => c.user.id === selected?.id);
 
-        const content = newMessage;
-        setNewMessage('');
+    return <div className="mx-auto max-w-[1380px] space-y-5 pb-0">
+        <header className="flex flex-wrap items-end justify-between gap-3">
+            <div><p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.19em] text-[hsl(var(--accent))]"><Sparkles size={14} /> Your connections</p><h1 className="mt-2 font-editorial text-4xl">Messages</h1><p className="mt-2 text-sm text-muted-foreground">A quieter way to connect, one thoughtful note at a time.</p></div>
+            <Link to="/dashboard/notes" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-xs font-bold hover:bg-muted"><BookHeart size={15} /> Explore writers <ArrowRight size={15} /></Link>
+        </header>
 
-        try {
-            const response = await axios.post(`${API_ENDPOINTS.messages}/send`, {
-                receiverId: selectedUser.id,
-                content
-            }, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
-
-            setMessages((prev) => [...prev, response.data]);
-
-            // Re-fetch conversations to update last message snippet
-            fetchConversations();
-        } catch (error) {
-            console.error('Error sending message:', error);
-        }
-    };
-
-    const filteredConversations = conversations.filter(c =>
-        c.user.username.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    return (
-        <div className="h-[calc(100vh-4rem)] flex gap-0 md:gap-4 md:p-4 bg-background">
-            {/* Contacts Sidebar */}
-            <div className={classNames(
-                "w-full md:w-80 bg-card/50 backdrop-blur-sm md:rounded-2xl border-r md:border border-border/50 flex flex-col overflow-hidden",
-                selectedUser ? "hidden md:flex" : "flex"
-            )}>
-                {/* Search Header */}
-                <div className="p-4 border-b border-border/50">
-                    <h2 className="text-xl font-bold mb-4 px-1">Messages</h2>
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-                        <input
-                            type="text"
-                            placeholder="Search contacts..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-muted/50 rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
-                        />
-                    </div>
+        <div className="flex h-[min(74dvh,760px)] min-h-[530px] overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_14px_45px_rgba(46,50,39,.07)]">
+            <aside className={`flex w-full shrink-0 flex-col border-r border-border bg-background/50 md:w-[325px] lg:w-[360px] ${activeMobile ? 'hidden md:flex' : 'flex'}`} aria-label="Conversations">
+                <div className="border-b border-border p-5">
+                    <div className="flex items-center justify-between"><h2 className="font-editorial text-2xl">Inbox</h2><span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-[hsl(var(--surface-gold))] text-[#56452e]"><Mail size={18} /></span></div>
+                    <div className="relative mt-4"><Search size={17} className="absolute left-3.5 top-3 text-muted-foreground" /><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search conversations…" aria-label="Search conversations" className="h-11 w-full rounded-2xl border border-border bg-card pl-10 pr-4 text-sm outline-none focus:border-primary" /></div>
                 </div>
-
-                {/* Contacts List */}
-                <div className="flex-1 overflow-y-auto">
-                    {filteredConversations.length === 0 && !isLoadingConvos && (
-                        <div className="p-8 text-center text-muted-foreground text-sm">
-                            <Mascot name="piko" className="mx-auto mb-3 h-20 w-20" />
-                            <p>No conversations found.</p>
-                        </div>
-                    )}
-                    {filteredConversations.map((convo) => (
-                        <button
-                            key={convo.user.id}
-                            onClick={() => setSelectedUser(convo.user)}
-                            className={classNames(
-                                "w-full p-4 flex items-center gap-3 border-b border-border/40 transition-colors hover:bg-muted/50",
-                                selectedUser?.id === convo.user.id ? "bg-primary/5 border-l-4 border-l-primary" : "border-l-4 border-l-transparent"
-                            )}
-                        >
-                            <div className="relative">
-                                <div className="w-12 h-12 rounded-full overflow-hidden bg-muted flex items-center justify-center border border-border">
-                                    {convo.user.avatar ? (
-                                        <img src={getImageUrl(convo.user.avatar)} alt={convo.user.username} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <User size={20} className="text-muted-foreground" />
-                                    )}
-                                </div>
-                                {convo.isOnline && (
-                                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-card" />
-                                )}
-                            </div>
-                            <div className="flex-1 text-left min-w-0">
-                                <div className="flex items-center justify-between mb-1">
-                                    <h4 className="font-semibold text-sm truncate">{convo.user.username}</h4>
-                                    <span className="text-xs text-muted-foreground/70">
-                                        {convo.lastMessageTime ? format(new Date(convo.lastMessageTime), 'HH:mm') : ''}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between items-center gap-2">
-                                    <p className={classNames(
-                                        "text-xs truncate flex-1",
-                                        convo.unreadCount > 0 ? "text-foreground font-medium" : "text-muted-foreground"
-                                    )}>
-                                        {convo.lastMessage || 'Sent an attachment'}
-                                    </p>
-                                    {convo.unreadCount > 0 && (
-                                        <span className="min-w-[1.25rem] h-5 px-1.5 flex items-center justify-center bg-primary text-primary-foreground text-[10px] font-bold rounded-full">
-                                            {convo.unreadCount}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        </button>
-                    ))}
+                <div className="min-h-0 flex-1 overflow-y-auto p-2">
+                    {listLoading ? <p className="p-5 text-sm text-muted-foreground">Loading conversations…</p> :
+                        listError ? <div className="p-5 text-sm text-muted-foreground"><p>{listError}</p><button onClick={() => void loadConversations()} className="mt-3 font-bold underline">Try again</button></div> :
+                        filteredConversations.length === 0 ? <div className="flex flex-col items-center px-5 py-12 text-center"><Mascot name="piko" className="h-28 w-28" /><p className="mt-4 font-editorial text-xl">No conversations yet</p><p className="mt-2 text-xs leading-6 text-muted-foreground">Visit a writer's profile to send your first message.</p><Link to="/dashboard/notes" className="mt-5 rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground">Explore community</Link></div> :
+                        filteredConversations.map(convo => <button type="button" key={convo.user.id} onClick={() => choose(convo.user)} className={`flex w-full items-start gap-3 rounded-[19px] px-3 py-4 text-left transition-colors ${selected?.id === convo.user.id ? 'bg-[hsl(var(--surface-gold))]/55' : 'hover:bg-muted/65'}`}>
+                            <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-[18px] bg-[hsl(var(--surface-rose))] text-xl font-semibold">{convo.user.avatar ? <img src={getImageUrl(convo.user.avatar)} alt="" className="h-full w-full object-cover" /> : convo.user.username.slice(0, 1).toUpperCase()}</span>
+                            <span className="min-w-0 flex-1"><span className="flex items-center justify-between gap-2"><strong className="truncate text-sm">{convo.user.username}</strong>{convo.lastMessageTime && <span className="shrink-0 text-[10px] text-muted-foreground">{formatDistanceToNow(new Date(convo.lastMessageTime), { addSuffix: false })}</span>}</span><span className="mt-1 flex items-center justify-between gap-2"><span className="line-clamp-1 text-xs leading-5 text-muted-foreground">{convo.lastMessage}</span>{convo.unreadCount > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">{convo.unreadCount}</span>}</span></span>
+                        </button>)}
                 </div>
-            </div>
+                <div className="border-t border-border bg-card px-4 py-3 text-[11px] text-muted-foreground">Private conversations • Only you and the recipient</div>
+            </aside>
 
-            {/* Chat Area */}
-            {selectedUser ? (
-                <div className="flex-1 flex flex-col bg-card/30 backdrop-blur-sm md:rounded-2xl md:border border-border/50 overflow-hidden h-full">
-                    {/* Chat Header */}
-                    <div className="p-4 border-b border-border/50 flex items-center justify-between bg-card/80 backdrop-blur-md sticky top-0 z-10">
-                        <div className="flex items-center gap-3">
-                            <button className="md:hidden" onClick={() => setSelectedUser(null)}>
-                                <span className="text-xl">←</span>
-                            </button>
-                            <div className="relative">
-                                <div className="w-10 h-10 rounded-full overflow-hidden bg-muted flex items-center justify-center">
-                                    {selectedUser.avatar ? (
-                                        <img src={getImageUrl(selectedUser.avatar)} alt={selectedUser.username} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <User size={20} className="text-muted-foreground" />
-                                    )}
-                                </div>
-                                {selectedUser.isOnline && (
-                                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-card" />
-                                )}
-                            </div>
-                            <div>
-                                <h3 className="font-semibold">{selectedUser.username}</h3>
-                                <p className="text-xs text-muted-foreground">
-                                    {selectedUser.location || 'Online'}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-1">
-                            {/* Actions (Phone/Video) could go here */}
-                            <button className="p-2 hover:bg-muted rounded-full transition-colors">
-                                <MoreVertical size={20} className="text-muted-foreground" />
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Messages Area */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/5 custom-scrollbar">
-                        {messages.length === 0 && (
-                            <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50">
-                                <Mascot name="piko" className="mb-3 h-28 w-28" />
-                                <p>Start the conversation!</p>
-                            </div>
-                        )}
-                        {messages.map((msg, index) => {
-                            const isMe = msg.senderId === user?.id;
-                            const showAvatar = !isMe && (index === 0 || messages[index - 1].senderId !== msg.senderId);
-
-                            return (
-                                <motion.div
-                                    key={msg.id || index}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className={`flex items-end gap-2 ${isMe ? 'justify-end' : 'justify-start'}`}
-                                >
-                                    {!isMe && (
-                                        <div className="w-8 h-8 shrink-0 pb-1">
-                                            {showAvatar && (
-                                                <div className="w-8 h-8 rounded-full overflow-hidden bg-muted border border-border">
-                                                    {msg.sender?.avatar ? (
-                                                        <img src={getImageUrl(msg.sender.avatar)} alt="avatar" className="w-full h-full object-cover" />
-                                                    ) : selectedUser.avatar ? ( // Fallback to selected user avatar if message sender info missing
-                                                        <img src={getImageUrl(selectedUser.avatar)} alt="avatar" className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center"><User size={12} /></div>
-                                                    )}
-                                                </div>
-                                            )}
+            <section className={`min-w-0 flex-1 flex-col bg-card ${!activeMobile ? 'hidden md:flex' : 'flex'}`} aria-label="Conversation thread">
+                {selected ? <>
+                    <header className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-4 sm:px-6">
+                        <button type="button" onClick={() => setActiveMobile(false)} aria-label="Back to conversations" className="rounded-full p-2 text-muted-foreground hover:bg-muted md:hidden"><ArrowLeft size={19} /></button>
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[16px] bg-[hsl(var(--surface-rose))] font-semibold">{selected.avatar ? <img src={getImageUrl(selected.avatar)} alt="" className="h-full w-full object-cover" /> : selected.username[0]?.toUpperCase()}</span>
+                        <div className="min-w-0 flex-1"><h2 className="truncate text-sm font-bold">{selected.username}</h2><p className="mt-1 text-xs text-muted-foreground">Your private conversation</p></div>
+                        <Link to={`/dashboard/profile/${encodeURIComponent(selected.username)}`} className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"><UserRound size={15} /><span className="hidden sm:inline">Profile</span></Link>
+                    </header>
+                    <div className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-gradient-to-b from-[hsl(var(--background))]/50 to-card px-4 py-6 sm:px-8">
+                        {threadLoading ? <p className="text-center text-sm text-muted-foreground">Opening conversation…</p> : messages.length === 0 ? <div className="mx-auto flex max-w-sm flex-col items-center py-14 text-center"><Mascot name="piko" className="h-28 w-28" /><p className="mt-5 font-editorial text-2xl">Start with a hello</p><p className="mt-2 text-sm leading-7 text-muted-foreground">Your first message could make someone's day a little brighter.</p></div> :
+                            messages.map((message, index) => {
+                                const mine = message.senderId === user?.id;
+                                const prior = messages[index - 1];
+                                const showDate = !prior || new Date(message.createdAt).toDateString() !== new Date(prior.createdAt).toDateString();
+                                return <div key={message.id}>
+                                    {showDate && <p className="mb-5 text-center text-[11px] font-bold uppercase tracking-[.14em] text-muted-foreground">{format(new Date(message.createdAt), 'MMM d, yyyy')}</p>}
+                                    <div className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
+                                        <div className={`max-w-[84%] rounded-[22px] px-4 py-3 text-sm shadow-sm sm:max-w-[72%] ${mine ? 'rounded-br-[6px] bg-primary text-primary-foreground' : 'rounded-bl-[6px] border border-border bg-card text-foreground'}`}>
+                                            <p className="whitespace-pre-wrap break-words leading-6">{message.content}</p>
+                                            <div className={`mt-2 flex items-center justify-end gap-1.5 text-[10px] ${mine ? 'text-primary-foreground/75' : 'text-muted-foreground'}`}><span>{format(new Date(message.createdAt), 'h:mm a')}</span>{mine && (message.isRead ? <CheckCheck size={13} /> : <Check size={13} />)}</div>
                                         </div>
-                                    )}
-
-                                    <div
-                                        className={classNames(
-                                            "max-w-[75%] px-4 py-2.5 shadow-sm text-sm relative group",
-                                            isMe
-                                                ? "bg-primary text-primary-foreground rounded-2xl rounded-tr-sm"
-                                                : "bg-card border border-border/50 text-foreground rounded-2xl rounded-tl-sm"
-                                        )}
-                                    >
-                                        <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                                        <p className={classNames(
-                                            "text-[10px] mt-1 text-right opacity-70",
-                                            isMe ? "text-primary-foreground" : "text-muted-foreground"
-                                        )}>
-                                            {format(new Date(msg.createdAt), 'HH:mm')}
-                                        </p>
                                     </div>
-                                </motion.div>
-                            );
-                        })}
-                        <div ref={messagesEndRef} />
+                                </div>;
+                            })}
+                        <div ref={endRef} />
                     </div>
-
-                    {/* Input Area */}
-                    <form onSubmit={handleSend} className="p-4 border-t border-border/50 bg-card/50">
-                        <div className="flex items-center gap-3">
-                            <button type="button" className="p-2 text-muted-foreground hover:bg-muted rounded-full transition-colors">
-                                <Paperclip size={20} />
-                            </button>
-                            <div className="relative flex-1">
-                                <input
-                                    type="text"
-                                    value={newMessage}
-                                    onChange={(e) => setNewMessage(e.target.value)}
-                                    placeholder="Type a message..."
-                                    className="w-full bg-muted/50 px-4 py-3 pr-10 rounded-full border-none focus:outline-none focus:ring-1 focus:ring-primary/30 text-sm text-foreground placeholder:text-muted-foreground"
-                                />
-                                <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                                    <Smile size={20} />
-                                </button>
-                            </div>
-                            <button
-                                type="submit"
-                                disabled={!newMessage.trim()}
-                                className="p-3 bg-primary text-primary-foreground rounded-full hover:shadow-lg hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95"
-                            >
-                                <Send size={20} className="ml-0.5" />
-                            </button>
+                    {error && <p role="alert" className="border-t border-border bg-red-50 px-5 py-2 text-xs text-red-700">{error}</p>}
+                    <form onSubmit={event => { event.preventDefault(); void send(); }} className="shrink-0 border-t border-border bg-card px-4 py-4 sm:px-6">
+                        <div className="flex items-end gap-2 rounded-[22px] border border-border bg-background px-3 py-2 focus-within:border-primary">
+                            <textarea value={draft} onChange={event => setDraft(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); void send(); } }} rows={2} maxLength={5000} placeholder={`Write something kind to ${selected.username}…`} aria-label="Your message" className="max-h-28 min-h-[45px] flex-1 resize-y bg-transparent px-2 py-2 text-sm leading-6 outline-none placeholder:text-muted-foreground" />
+                            <button type="button" title="Add a heart" aria-label="Add a heart emoji" onClick={() => setDraft(prev => prev + ' 💌')} className="mb-1 rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-primary"><Heart size={18} /></button>
+                            <button type="submit" disabled={sending || !draft.trim()} aria-label="Send message" className="mb-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40"><Send size={18} /></button>
                         </div>
+                        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground"><span>Enter to send • Shift+Enter for a new line</span><span>{draft.length} / 5,000</span></div>
                     </form>
-                </div>
-            ) : (
-                <div className="flex-1 hidden md:flex flex-col items-center justify-center bg-card/30 backdrop-blur-sm rounded-2xl border border-border/50 text-muted-foreground">
-                    <Mascot name="piko" className="mb-5 h-36 w-36" />
-                    <h3 className="text-xl font-semibold mb-2">Your Messages</h3>
-                    <p>Select a contact to start chatting</p>
-                </div>
-            )
-            }
-        </div >
-    );
-};
-
-export default Messages;
+                </> : <div className="flex h-full flex-col items-center justify-center px-7 text-center">
+                    <Mascot name="piko" className="h-36 w-36" /><p className="mt-5 text-xs font-bold uppercase tracking-[.2em] text-[hsl(var(--accent))]">A letter in a conversation</p><h2 className="mt-3 font-editorial text-3xl">Every connection starts somewhere.</h2><p className="mt-3 max-w-md text-sm leading-7 text-muted-foreground">Choose someone from your inbox, or visit a writer's profile to start a new conversation.</p><Link to="/dashboard/notes" className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-xs font-bold text-primary-foreground">Find a writer <ArrowRight size={15} /></Link>
+                    {initialUserId && error && <p className="mt-4 text-xs text-red-600">{error}</p>}
+                    {!activeConversation && <span className="sr-only">No conversation selected</span>}
+                </div>}
+            </section>
+        </div>
+    </div>;
+}
