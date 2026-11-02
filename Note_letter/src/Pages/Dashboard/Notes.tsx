@@ -11,7 +11,7 @@ import clsx from 'clsx';
 import Mascot from '../../components/Mascot';
 
 const Notes = () => {
-    const { notes, publicLetters, addNote, fetchMyLetters, fetchPublicLetters } = useNoteStore();
+    const { notes, publicLetters, addNote, fetchMyLetters, fetchPublicLetters, fetchDrafts } = useNoteStore();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState<'public' | 'personal'>('public');
     const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -31,8 +31,12 @@ const Notes = () => {
         note.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const handleLetterCreate = (data: any) => {
-        void addNote({
+    const reloadLetters = async () => {
+        await Promise.all([fetchMyLetters(), fetchPublicLetters(), fetchDrafts()]);
+    };
+
+    const handleLetterCreate = async (data: any) => {
+        await addNote({
             title: data.title || 'Untitled Letter',
             content: data.content,
             category: data.category || 'Other',
@@ -144,6 +148,8 @@ const Notes = () => {
                 isOpen={isEditorOpen}
                 onClose={() => setIsEditorOpen(false)}
                 onSubmit={handleLetterCreate}
+                onDraftSaved={fetchDrafts}
+                onPublished={reloadLetters}
             />
 
             <LetterViewModal
