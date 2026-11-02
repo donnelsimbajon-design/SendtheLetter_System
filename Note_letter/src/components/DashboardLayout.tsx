@@ -46,6 +46,14 @@ const DashboardLayout = () => {
           <Link to="/dashboard" className="flex min-w-0 items-center gap-2 sm:gap-3">
             <img src="/sendtheletter-logo.svg" alt="SendTheLetter" className="h-10 w-[154px] object-contain object-left sm:h-12 sm:w-[218px]" />
           </Link>
+          <nav aria-label="Workspace navigation" className="hidden min-w-0 flex-1 items-center justify-center gap-1 xl:flex">
+            {navigation.map(({ to, label, mascot, end }) => (
+              <NavLink key={to} to={to} end={end}
+                className={({ isActive }) => `inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition-colors 2xl:gap-2 2xl:px-4 ${isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}>
+                <CharacterBadge name={mascot} tone="paper" size="xs" /><span>{label}</span>
+              </NavLink>
+            ))}
+          </nav>
           <div className="ml-2 flex shrink-0 items-center gap-1 sm:gap-4">
             <NotificationsMenu />
             <div className="relative">
@@ -73,7 +81,7 @@ const DashboardLayout = () => {
       </header>
 
       <div className="mx-auto flex max-w-[1600px] pt-[72px]">
-        <aside className="sticky top-[72px] hidden h-[calc(100vh-72px)] w-[248px] shrink-0 flex-col border-r border-border/70 bg-background/80 px-5 py-8 lg:flex">
+        <aside className="sticky top-[72px] hidden h-[calc(100vh-72px)] w-[248px] shrink-0 flex-col border-r border-border/70 bg-background/80 px-5 py-8 lg:flex xl:hidden">
           <p className="mb-4 px-3 text-[11px] font-bold uppercase tracking-[.18em] text-muted-foreground">Workspace</p>
           <nav className="space-y-1.5">
             {navigation.map(({ to, label, mascot, end }) => (
