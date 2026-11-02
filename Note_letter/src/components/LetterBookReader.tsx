@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import CharacterBadge from './CharacterBadge';
 import LetterPagePhoto from './LetterPagePhoto';
+import { clampImageAnchor } from '../lib/letterImageLayout';
 import type { StoryPage } from '../types/note';
 import { bookPagesFromContent, bookWordCount } from '../lib/letterBook';
 import { getImageUrl } from '../lib/utils';
@@ -38,7 +39,10 @@ export default function LetterBookReader({ title, content, letterPages, recipien
     const paperBackground = gradients[backgroundImage || ''] || 'linear-gradient(145deg,#fffdf9,#f8f2e7)';
     const progress = ((pageIndex + 1) / Math.max(1, pages.length)) * 100;
     const imageSource = page.imageData;
-    const photo = imageSource ? <><LetterPagePhoto page={page} />{page.caption && <p className="my-2 break-words text-center font-serif text-sm italic text-[#8b7969]">{page.caption}</p>}</> : null;
+    const anchor = clampImageAnchor(page);
+    const beforePhoto = page.text.slice(0, anchor);
+    const afterPhoto = page.text.slice(anchor);
+
     return <div className={`overflow-hidden rounded-[22px] border border-[#e4d9c9] bg-[#fffdf9] shadow-[0_14px_35px_rgba(60,46,31,.08)] ${className}`}>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e6ddd2] bg-[#fffaf3] px-5 py-3 text-[#785e4b] sm:px-7">
             <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.16em]"><CharacterBadge name="basa" tone="gold" size="sm" /> The letter book</div>
@@ -53,9 +57,11 @@ export default function LetterBookReader({ title, content, letterPages, recipien
                     <p className="mt-4 text-xs font-semibold tracking-[.1em] text-[#a27c68]">BY {author}</p>
                     {recipientName && <p className="mt-8 font-serif text-lg italic text-[#665d4e]">Dear {recipientName},</p>}
                 </> : <p className="mb-6 font-serif text-lg italic text-[#796f60]">{title} — continued</p>}
-                {page.imagePlacement === 'before' && photo}
-                <div className={`mt-6 flex-1 break-words whitespace-pre-wrap text-[15px] leading-[1.95] sm:text-[17px] ${font || 'font-serif'}`}>{page.text || (imageSource ? '' : 'A quiet page, waiting for words.')}</div>
-                {page.imagePlacement !== 'before' && photo}
+                <div data-testid="letter-reader-flow" className={`mt-6 flow-root min-w-0 flex-1 break-words whitespace-pre-wrap text-[15px] leading-[1.95] sm:text-[17px] ${font || 'font-serif'}`}>
+                    {beforePhoto}
+                    {imageSource && <LetterPagePhoto page={page} />}
+                    {afterPhoto || (!page.text && !imageSource ? 'A quiet page, waiting for words.' : '')}
+                </div>
                 <div className="mt-8 flex items-center justify-between border-t border-[#a58d75]/25 pt-4 text-xs text-[#9b8473]">
                     <span>{pageIndex === pages.length - 1 ? 'With care,' : 'Turn the page…'}</span><span className="font-serif font-semibold">{pageIndex === pages.length - 1 ? author : 'SendTheLetter'}</span>
                 </div>
