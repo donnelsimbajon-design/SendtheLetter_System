@@ -144,12 +144,16 @@ export const getPublicLetters = async (req: Request, res: Response) => {
                 }
 
                 const letterData = letter.toJSON() as any;
-
+                const anonymous = Boolean(letterData.isAnonymous);
+                // Never reveal the author ID, user object, or avatar for anonymous public letters.
+                const { user: _author, userId: _ownerId, ...safeLetter } = letterData;
+                void _author;
+                void _ownerId;
                 return {
-                    ...letterData,
-                    authorName: letterData.user?.username || 'Unknown',
-                    authorAvatar: letterData.user?.avatar || null,
-                    authorId: letterData.user?.id || null,
+                    ...safeLetter,
+                    authorName: anonymous ? 'Anonymous Writer' : (letterData.user?.username || 'Unknown'),
+                    authorAvatar: anonymous ? null : (letterData.user?.avatar || null),
+                    authorId: anonymous ? null : (letterData.user?.id || null),
                     likeCount,
                     commentCount,
                     isLikedByUser,
