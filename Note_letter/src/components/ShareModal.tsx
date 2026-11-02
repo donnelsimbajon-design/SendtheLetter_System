@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
-import { Search, Check, User as UserIcon, Copy, Mail, Facebook, Instagram, MessageCircle, Share2, Lock } from 'lucide-react';
+import { Check, User as UserIcon, Copy, Mail, Facebook, Instagram, Lock } from 'lucide-react';
+import CharacterBadge from './CharacterBadge';
 import { useAuthStore } from '../store/authStore';
 import { getImageUrl } from '../lib/utils';
 import axios from 'axios';
@@ -172,9 +173,9 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                     <Button type="button" variant="outline" onClick={shareEmail} className="justify-start gap-2"><Mail size={16} /> Email</Button>
                                     <Button type="button" variant="outline" onClick={shareFacebook} className="justify-start gap-2"><Facebook size={16} /> Facebook</Button>
-                                    <Button type="button" variant="outline" onClick={() => shareNative('Messenger')} className="justify-start gap-2"><MessageCircle size={16} /> Messenger</Button>
+                                    <Button type="button" variant="outline" onClick={() => shareNative('Messenger')} className="justify-start gap-2"><CharacterBadge name="chika" tone="paper" size="sm" /> Messenger</Button>
                                     <Button type="button" variant="outline" onClick={() => shareNative('Instagram')} className="justify-start gap-2"><Instagram size={16} /> Instagram</Button>
-                                    <Button type="button" variant="outline" onClick={() => shareNative('your device')} className="justify-start gap-2"><Share2 size={16} /> More options</Button>
+                                    <Button type="button" variant="outline" onClick={() => shareNative('your device')} className="justify-start gap-2"><CharacterBadge name="piko" tone="paper" size="sm" /> More options</Button>
                                     <Button type="button" variant="outline" onClick={copyLink} className="justify-start gap-2"><Copy size={16} /> Copy link</Button>
                                 </div>
                             </>
@@ -190,7 +191,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
                             <p className="text-xs text-muted-foreground">Choose a friend to send an in-app message.</p>
                         </div>
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                            <CharacterBadge name="suri" tone="paper" size="xs" className="absolute left-3 top-1/2 -translate-y-1/2" />
                             <input type="text" placeholder="Search friends..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-muted/50 rounded-lg border border-transparent focus:border-primary/20 focus:bg-background focus:outline-none transition-all text-sm" />
                         </div>
                         <div className="space-y-2">

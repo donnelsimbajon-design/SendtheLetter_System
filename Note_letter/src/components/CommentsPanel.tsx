@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
-import { Gift, ImagePlus, MessageCircle, PanelLeftClose, Send, Sparkles, UserRound, X } from 'lucide-react';
+import { ImagePlus, PanelLeftClose, X } from 'lucide-react';
+import CharacterBadge from './CharacterBadge';
 import { Link } from 'react-router-dom';
 import { API_ENDPOINTS } from '../config/api';
 import { getImageUrl } from '../lib/utils';
@@ -190,13 +191,13 @@ export default function CommentsPanel({ shareToken, letterId, actions, onCollaps
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             {publicToken && <div className="flex gap-2 border-b border-stone-100 px-4 py-3">
-                <button type="button" onClick={() => setTab('comments')} className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors ${tab === 'comments' ? 'bg-[#283f36] text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}><MessageCircle size={14} className="mr-1 inline" /> Comments</button>
-                <button type="button" onClick={() => setTab('gifts')} className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors ${tab === 'gifts' ? 'bg-[#283f36] text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}><Gift size={14} className="mr-1 inline" /> Gifts {giftCount ? `· ${giftCount}` : ''}</button>
+                <button type="button" onClick={() => setTab('comments')} className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors ${tab === 'comments' ? 'bg-[#283f36] text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}><CharacterBadge name="chika" tone="paper" size="xs" className="mr-1 inline-flex align-middle" /> Comments</button>
+                <button type="button" onClick={() => setTab('gifts')} className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors ${tab === 'gifts' ? 'bg-[#283f36] text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}><CharacterBadge name="sely" tone="rose" size="xs" className="mr-1 inline-flex align-middle" /> Gifts {giftCount ? `· ${giftCount}` : ''}</button>
             </div>}
             {tab === 'comments' || !publicToken ? <div className="space-y-4 p-4">
                 {loading ? <p className="py-16 text-center text-sm text-stone-400">Loading comments…</p> :
                     entries.filter(entry => entry.kind === 'comment').length === 0 ?
-                        <div className="flex min-h-[32vh] flex-col items-center justify-center px-4 text-center text-stone-400"><MessageCircle size={32} className="mb-3 opacity-30" /><p className="text-sm">No comments yet.</p><p className="mt-1 text-xs">Be the first to share your thoughts!</p></div> :
+                        <div className="flex min-h-[32vh] flex-col items-center justify-center px-4 text-center text-stone-400"><CharacterBadge name="chika" tone="paper" size="xl" className="mb-3" /><p className="text-sm">No comments yet.</p><p className="mt-1 text-xs">Be the first to share your thoughts!</p></div> :
                         entries.filter(entry => entry.kind === 'comment').map(entry =>
                             <article key={entry.id} className="flex gap-3">
                                 <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#efe8e0] text-sm font-semibold text-[#a06c56]">
@@ -216,7 +217,7 @@ export default function CommentsPanel({ shareToken, letterId, actions, onCollaps
                             </article>)
                 }
             </div> : <div className="p-4">
-                <div className="mb-4 flex items-center gap-2 text-sm text-stone-600"><Sparkles size={16} /> Send a little love to this letter</div>
+                <div className="mb-4 flex items-center gap-2 text-sm text-stone-600"><CharacterBadge name="sely" tone="rose" size="sm" /> Send a little love to this letter</div>
                 <div className="grid grid-cols-3 gap-2.5">
                     {gifts.map(gift => (
                         <button
@@ -250,7 +251,7 @@ export default function CommentsPanel({ shareToken, letterId, actions, onCollaps
 
         <div className="shrink-0 border-t border-stone-100 bg-white px-4 pb-4 pt-3">
             {publicToken && <div className="mb-3 flex gap-2" role="group" aria-label="Comment identity">
-                {isAuthenticated && user && <button type="button" onClick={() => setMode('account')} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${mode === 'account' ? 'bg-[#283f36] text-white' : 'bg-stone-100 text-stone-600'}`}><UserRound size={13} className="mr-1 inline" /> My account</button>}
+                {isAuthenticated && user && <button type="button" onClick={() => setMode('account')} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${mode === 'account' ? 'bg-[#283f36] text-white' : 'bg-stone-100 text-stone-600'}`}><CharacterBadge name="sely" tone="paper" size="xs" className="mr-1 inline-flex align-middle" /> My account</button>}
                 <button type="button" onClick={() => setMode('guest')} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${mode === 'guest' ? 'bg-[#283f36] text-white' : 'bg-stone-100 text-stone-600'}`}>Guest mode</button>
             </div>}
             {publicToken && mode === 'guest' && <input aria-label="Guest nickname" value={nickname} maxLength={40} onChange={e => setNickname(e.target.value)} placeholder="Guest nickname" className="mb-3 w-full rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-[#a06c56]" />}
@@ -263,7 +264,7 @@ export default function CommentsPanel({ shareToken, letterId, actions, onCollaps
                     {publicToken && <><input ref={uploadRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" aria-label="Attach photo review" onChange={e => handlePhoto(e.target.files?.[0])} /><button type="button" onClick={() => uploadRef.current?.click()} aria-label="Attach photo" title="Attach photo review" className="shrink-0 p-1 text-stone-500 hover:text-[#a06c56]"><ImagePlus size={18} /></button></>}
                     <textarea rows={1} value={comment} maxLength={publicToken ? 1200 : 5000} onChange={e => setComment(e.target.value)} placeholder="Write a comment…" aria-label="Write a comment" className="min-h-[32px] max-h-24 w-full resize-y bg-transparent py-1 text-sm text-stone-800 outline-none" />
                 </div>
-                <button type="submit" disabled={sending || (!comment.trim() && !imageData) || (!publicToken && !isAuthenticated)} aria-label="Post comment" className="shrink-0 rounded-full bg-[#283f36] p-3 text-white hover:bg-[#375747] disabled:opacity-40"><Send size={17} /></button>
+                <button type="submit" disabled={sending || (!comment.trim() && !imageData) || (!publicToken && !isAuthenticated)} aria-label="Post comment" className="shrink-0 rounded-full bg-[#283f36] p-3 text-white hover:bg-[#375747] disabled:opacity-40"><CharacterBadge name="piko" tone="paper" size="sm" /></button>
             </form>}
             {imageData && <div className="mt-2 flex items-center gap-2"><img src={imageData} alt="Attached photo preview" className="h-14 w-14 rounded-lg object-cover" /><button type="button" onClick={() => setImageData(null)} className="flex items-center gap-1 text-xs text-stone-500"><X size={13} /> Remove photo</button></div>}
         </div>

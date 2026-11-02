@@ -13,9 +13,9 @@ import { useWriterPreferences } from '../store/writerPreferences';
 
 const navigation = [
   { to: '/dashboard', label: 'Overview', mascot: 'lumi', end: true },
-  { to: '/dashboard/notes', label: 'My library', mascot: 'sely', end: false },
-  { to: '/dashboard/community', label: 'Community', mascot: 'tala', end: false },
-  { to: '/dashboard/messages', label: 'Messages', mascot: 'piko', end: false },
+  { to: '/dashboard/notes', label: 'My library', mascot: 'basa', end: false },
+  { to: '/dashboard/community', label: 'Community', mascot: 'chika', end: false },
+  { to: '/dashboard/messages', label: 'Messages', mascot: 'chika', end: false },
   { to: '/dashboard/profile', label: 'My profile', mascot: 'lumi', end: false },
 ] as const;
 
@@ -62,7 +62,7 @@ const DashboardLayout = () => {
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="relative">
               <button onClick={() => { const next = !showNotifications; setShowNotifications(next); if (next && unreadCount > 0) void markNotificationsRead(); }} className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="Notifications">
-                <CharacterBadge name="tala" tone="gold" size="sm" />
+                <CharacterBadge name="nori" tone="gold" size="sm" />
                 {unreadCount > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[hsl(var(--accent))] ring-2 ring-card" />}
               </button>
               {showNotifications && (
@@ -74,7 +74,7 @@ const DashboardLayout = () => {
                         <p className="text-sm leading-5"><span className="font-semibold">{notification.actor?.username || 'Someone'}</span>{notification.type === 'like' ? ' liked your letter ' : notification.type === 'friend_request' ? ' sent you a friend request' : notification.type === 'follow' ? ' started following you' : ' commented on your letter '}<span className="font-medium">{notification.letter?.title || 'your letter'}</span></p>
                         <p className="mt-1 text-xs text-muted-foreground">{formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}</p>
                       </Link>
-                    )) : <div className="flex flex-col items-center px-4 py-6 text-center text-sm text-muted-foreground"><Mascot name="tala" className="mb-2 h-20 w-20" /><p>No notifications yet.</p></div>}
+                    )) : <div className="flex flex-col items-center px-4 py-6 text-center text-sm text-muted-foreground"><Mascot name="nori" className="mb-2 h-20 w-20" /><p>No notifications yet.</p></div>}
                   </div>
                 </div>
               )}
@@ -112,7 +112,7 @@ const DashboardLayout = () => {
                 <CharacterBadge name={mascot} tone="paper" size="sm" />{label}
               </NavLink>
             ))}
-            {user?.role === 'admin' && <NavLink to="/admin" className={({ isActive }) => `flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition-colors ${isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}><CharacterBadge name="tala" tone="gold" size="sm" />Admin panel</NavLink>}
+            {user?.role === 'admin' && <NavLink to="/admin" className={({ isActive }) => `flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition-colors ${isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}><CharacterBadge name="susi" tone="sage" size="sm" />Admin panel</NavLink>}
           </nav>
           <div className="mt-auto rounded-2xl bg-[hsl(var(--surface-rose))] p-4 text-[#49363B]">
             <p className="font-editorial text-lg leading-snug">Some words deserve a little more time.</p>
@@ -136,7 +136,7 @@ const DashboardLayout = () => {
             <CharacterBadge name={mascot} tone="paper" size="sm" /><span>{label}</span>
           </NavLink>
         ))}
-        {user?.role === 'admin' && <NavLink to="/admin" className={({ isActive }) => `flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-medium ${isActive ? 'text-primary' : 'text-muted-foreground'}`}><CharacterBadge name="tala" tone="gold" size="sm" /><span>Admin</span></NavLink>}
+        {user?.role === 'admin' && <NavLink to="/admin" className={({ isActive }) => `flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-medium ${isActive ? 'text-primary' : 'text-muted-foreground'}`}><CharacterBadge name="susi" tone="sage" size="sm" /><span>Admin</span></NavLink>}
       </nav>
     </div>
   );

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AlertTriangle, CheckCircle2, FileText, RefreshCw, Search, ShieldCheck, Users } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
+import CharacterBadge from '../components/CharacterBadge';
 import { API_BASE_URL } from '../config/api';
 import { useAuthStore } from '../store/authStore';
 
@@ -62,23 +63,23 @@ const AdminDashboard = () => {
   return (
     <div className="mx-auto max-w-7xl space-y-8">
       <header className="flex flex-wrap items-center justify-between gap-4">
-        <div><p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[.18em] text-muted-foreground"><ShieldCheck size={15} /> Administration</p><h1 className="mt-2 font-editorial text-4xl">Admin panel</h1><p className="mt-2 text-sm text-muted-foreground">Manage accounts and moderate public letters.</p></div>
+        <div><p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[.18em] text-muted-foreground"><CharacterBadge name="susi" tone="sage" size="sm" /> Administration</p><h1 className="mt-2 font-editorial text-4xl">Admin panel</h1><p className="mt-2 text-sm text-muted-foreground">Manage accounts and moderate public letters.</p></div>
         <button onClick={() => void load(search)} disabled={loading} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-sm font-semibold hover:bg-muted disabled:opacity-50"><RefreshCw size={16} className={loading ? 'animate-spin' : ''} /> Refresh</button>
       </header>
       {error && <div role="alert" className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error}</div>}
       {notice && <div role="status" className="rounded-2xl border border-border bg-card p-4 text-sm">{notice}</div>}
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {[
-          { label: 'Total accounts', value: overview?.users ?? '—', icon: Users },
-          { label: 'Active accounts', value: overview?.activeUsers ?? '—', icon: CheckCircle2 },
-          { label: 'Suspended accounts', value: overview?.suspendedUsers ?? '—', icon: AlertTriangle },
-          { label: 'All letters', value: overview?.letters ?? '—', icon: FileText },
-          { label: 'Public letters', value: overview?.publicLetters ?? '—', icon: FileText },
-          { label: 'Saved drafts', value: overview?.drafts ?? '—', icon: FileText },
-        ].map(({ label, value, icon: Icon }) => <div key={label} className="rounded-3xl border border-border bg-card p-5"><div className="flex items-center justify-between text-muted-foreground"><span className="text-sm">{label}</span><Icon size={18} /></div><p className="mt-3 font-editorial text-3xl">{value}</p></div>)}
+        {([
+          { label: 'Total accounts', value: overview?.users ?? '—', mascot: 'chika', tone: 'sage' },
+          { label: 'Active accounts', value: overview?.activeUsers ?? '—', mascot: 'sely', tone: 'rose' },
+          { label: 'Suspended accounts', value: overview?.suspendedUsers ?? '—', mascot: 'susi', tone: 'rose' },
+          { label: 'All letters', value: overview?.letters ?? '—', mascot: 'basa', tone: 'gold' },
+          { label: 'Public letters', value: overview?.publicLetters ?? '—', mascot: 'piko', tone: 'sage' },
+          { label: 'Saved drafts', value: overview?.drafts ?? '—', mascot: 'lumi', tone: 'gold' },
+        ] as const).map(({ label, value, mascot, tone }) => <div key={label} className="rounded-3xl border border-border bg-card p-5"><div className="flex items-center justify-between text-muted-foreground"><span className="text-sm">{label}</span><CharacterBadge name={mascot} tone={tone} size="lg" /></div><p className="mt-3 font-editorial text-3xl">{value}</p></div>)}
       </section>
       <form onSubmit={(event) => { event.preventDefault(); void load(search); }} className="flex flex-wrap gap-2">
-        <div className="flex min-w-[240px] flex-1 items-center gap-2 rounded-full border border-border bg-card px-4"><Search size={17} className="text-muted-foreground" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search users or letters" className="h-11 w-full bg-transparent text-sm outline-none" /></div>
+        <div className="flex min-w-[240px] flex-1 items-center gap-2 rounded-full border border-border bg-card px-4"><CharacterBadge name="suri" tone="paper" size="sm" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search users or letters" className="h-11 w-full bg-transparent text-sm outline-none" /></div>
         <button type="submit" className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">Search</button>
         {search && <button type="button" onClick={() => { setSearch(''); void load(''); }} className="rounded-full border border-border px-4 py-2.5 text-sm">Clear</button>}
       </form>

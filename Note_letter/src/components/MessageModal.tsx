@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
-import { Send, User as UserIcon } from 'lucide-react';
+import { User as UserIcon } from 'lucide-react';
+import CharacterBadge from './CharacterBadge';
 import { useAuthStore } from '../store/authStore';
 import socketService from '../services/socketService';
 import axios from 'axios';
@@ -127,7 +128,7 @@ const MessageModal: React.FC<MessageModalProps> = ({ isOpen, onClose, otherUser 
                 <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background">
                     {messages.length === 0 && (
                         <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50">
-                            <Send size={48} className="mb-2" />
+                            <CharacterBadge name="chika" tone="sage" size="xl" className="mb-2" />
                             <p>Start a conversation</p>
                         </div>
                     )}
@@ -169,7 +170,7 @@ const MessageModal: React.FC<MessageModalProps> = ({ isOpen, onClose, otherUser 
                             className="rounded-full w-10 h-10 shrink-0"
                             disabled={!newMessage.trim()}
                         >
-                            <Send size={18} />
+                            <CharacterBadge name="piko" tone="paper" size="sm" />
                         </Button>
                     </form>
                 </div>

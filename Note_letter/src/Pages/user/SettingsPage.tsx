@@ -11,9 +11,9 @@ import type { MascotName } from '../../components/Mascot';
 type Tab = 'account' | 'privacy' | 'appearance' | 'help';
 const tabs: { value: Tab; label: string; description: string; mascot: MascotName }[] = [
     { value: 'account', label: 'Account', description: 'Your profile and password', mascot: 'sely' },
-    { value: 'privacy', label: 'Privacy & writing', description: 'How your letters begin', mascot: 'lumi' },
+    { value: 'privacy', label: 'Privacy & writing', description: 'How your letters begin', mascot: 'susi' },
     { value: 'appearance', label: 'Display & accessibility', description: 'Make it feel like yours', mascot: 'tala' },
-    { value: 'help', label: 'Help & support', description: 'Answers and feedback', mascot: 'piko' },
+    { value: 'help', label: 'Help & support', description: 'Answers and feedback', mascot: 'chika' },
 ];
 const themeChoices: { value: ThemeChoice; title: string; description: string; tint: string; foreground: string }[] = [
     { value: 'warm', title: 'Warm editorial', description: 'Cream, paper and sage', tint: '#f3ece1', foreground: '#344a3c' },
@@ -111,13 +111,13 @@ const SettingsPage = () => {
                     </section>
                 </>}
                 {tab === 'privacy' && <section className="rounded-[28px] border border-border bg-card p-6 shadow-sm sm:p-8">
-                    <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[.16em] text-[hsl(var(--accent))]"><CharacterBadge name="lumi" tone="sage" size="sm" /> Privacy by design</p>
+                    <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[.16em] text-[hsl(var(--accent))]"><CharacterBadge name="susi" tone="sage" size="sm" /> Privacy by design</p>
                     <h2 className="mt-2 font-editorial text-3xl">Your words, your choice</h2>
                     <p className="mt-3 text-sm leading-7 text-muted-foreground">These defaults apply when you start a new letter. They do not change letters you have already written or shared.</p>
                     <SettingToggle title="Make new letters public by default" description="Off is the safest choice. Turn on only if you usually share your letters with everyone." enabled={preferences.defaultPublic} onChange={value => change('defaultPublic', value)} />
                     <SettingToggle title="Write anonymously by default" description="Hide your writer name when you choose to publish a new letter publicly." enabled={preferences.defaultAnonymous} onChange={value => change('defaultAnonymous', value)} />
                     <SettingToggle title="Confirm before publishing" description="Ask for a final review before a letter goes live or is scheduled." enabled={preferences.confirmBeforePublishing} onChange={value => change('confirmBeforePublishing', value)} />
-                    <div className="mt-5 flex gap-3 rounded-2xl bg-[hsl(var(--surface-gold))] p-4 text-[#51442f]"><CharacterBadge name="sely" tone="paper" size="sm" /><p className="text-xs leading-6">Sharing uses a random link token, but anyone with a valid public link can read that published letter. Private, drafts and unreleased letters remain protected by server checks.</p></div>
+                    <div className="mt-5 flex gap-3 rounded-2xl bg-[hsl(var(--surface-gold))] p-4 text-[#51442f]"><CharacterBadge name="susi" tone="paper" size="sm" /><p className="text-xs leading-6">Sharing uses a random link token, but anyone with a valid public link can read that published letter. Private, drafts and unreleased letters remain protected by server checks.</p></div>
                 </section>}
                 {tab === 'appearance' && <div className="space-y-5">
                     <section className="rounded-[28px] border border-border bg-card p-6 shadow-sm sm:p-8">
@@ -141,13 +141,13 @@ const SettingsPage = () => {
                     <button type="button" onClick={restoreDefaults} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-3 text-sm font-semibold hover:bg-muted"><RotateCcw size={16} /> Reset display and writing preferences</button>
                 </div>}
                 {tab === 'help' && <section className="rounded-[28px] border border-border bg-card p-6 shadow-sm sm:p-8">
-                    <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[.16em] text-[hsl(var(--accent))]"><CharacterBadge name="piko" tone="rose" size="sm" /> Here to help</p><h2 className="mt-2 font-editorial text-3xl">Need a hand?</h2><p className="mt-3 text-sm leading-7 text-muted-foreground">Explore how the app works, contact the project, or report a problem.</p>
+                    <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[.16em] text-[hsl(var(--accent))]"><CharacterBadge name="chika" tone="rose" size="sm" /> Here to help</p><h2 className="mt-2 font-editorial text-3xl">Need a hand?</h2><p className="mt-3 text-sm leading-7 text-muted-foreground">Explore how the app works, contact the project, or report a problem.</p>
                     <div className="mt-6 grid gap-3">
-                        <Link to="/services" className="flex items-center gap-4 rounded-2xl border border-border p-4 hover:bg-muted"><CharacterBadge name="lumi" tone="gold" size="md" /><span className="flex-1"><strong className="block text-sm">Explore SendTheLetter</strong><span className="text-xs text-muted-foreground">Learn about writing, saving and sharing letters</span></span><ChevronRight size={18} /></Link>
-                        <Link to="/contact" className="flex items-center gap-4 rounded-2xl border border-border p-4 hover:bg-muted"><CharacterBadge name="piko" tone="sage" size="md" /><span className="flex-1"><strong className="block text-sm">Contact & feedback</strong><span className="text-xs text-muted-foreground">Share a suggestion or ask a question</span></span><ChevronRight size={18} /></Link>
+                        <Link to="/services" className="flex items-center gap-4 rounded-2xl border border-border p-4 hover:bg-muted"><CharacterBadge name="basa" tone="gold" size="md" /><span className="flex-1"><strong className="block text-sm">Explore SendTheLetter</strong><span className="text-xs text-muted-foreground">Learn about writing, saving and sharing letters</span></span><ChevronRight size={18} /></Link>
+                        <Link to="/contact" className="flex items-center gap-4 rounded-2xl border border-border p-4 hover:bg-muted"><CharacterBadge name="chika" tone="sage" size="md" /><span className="flex-1"><strong className="block text-sm">Contact & feedback</strong><span className="text-xs text-muted-foreground">Share a suggestion or ask a question</span></span><ChevronRight size={18} /></Link>
                         <Link to="/contact" className="flex items-center gap-4 rounded-2xl border border-border p-4 hover:bg-muted"><CharacterBadge name="tala" tone="rose" size="md" /><span className="flex-1"><strong className="block text-sm">Report a problem</strong><span className="text-xs text-muted-foreground">Explain the issue through the contact page</span></span><ChevronRight size={18} /></Link>
                     </div>
-                    <div className="mt-6 rounded-2xl bg-muted/70 p-4 text-xs leading-6 text-muted-foreground"><CharacterBadge name="tala" tone="paper" size="xs" className="mr-2 align-middle" /> Tips: Use private mode for personal letters. Share public letters using their generated link; never share your password or authentication token.</div>
+                    <div className="mt-6 rounded-2xl bg-muted/70 p-4 text-xs leading-6 text-muted-foreground"><CharacterBadge name="susi" tone="paper" size="xs" className="mr-2 align-middle" /> Tips: Use private mode for personal letters. Share public letters using their generated link; never share your password or authentication token.</div>
                 </section>}
             </div>
         </div>

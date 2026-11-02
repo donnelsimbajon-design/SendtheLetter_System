@@ -11,9 +11,9 @@ const Creator = () => (
         <div><p className="text-xs font-bold uppercase tracking-[.2em] text-[hsl(var(--accent))]">The creator</p><h1 className="mt-5 font-editorial text-5xl leading-[1.08] sm:text-7xl">Building meaningful connection, one letter at a time.</h1><p className="mt-7 text-lg leading-8 text-muted-foreground">SendTheLetter began with a simple idea: make a digital space where words can breathe. It brings together thoughtful writing, community sharing, and conversations in one place.</p><Link to="/about" className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">Discover the story <ArrowRight size={16}/></Link></div>
       </section>
       <section className="mt-20 grid gap-5 md:grid-cols-3">{([
-          { mascot: 'tala', tone: 'gold', title: 'Built with care', body: 'A modern web application shaped around a clear and useful experience.' },
+          { mascot: 'suri', tone: 'gold', title: 'Built with care', body: 'A modern web application shaped around a clear and useful experience.' },
           { mascot: 'sely', tone: 'rose', title: 'Made for people', body: 'The product puts expression, privacy choices, and connection first.' },
-          { mascot: 'lumi', tone: 'sage', title: 'Always evolving', body: 'The best improvements start by listening, testing, and refining.' },
+          { mascot: 'araw', tone: 'sage', title: 'Always evolving', body: 'The best improvements start by listening, testing, and refining.' },
         ] as const).map(({ mascot, tone, title, body }) => <article key={title} className="rounded-3xl border border-border bg-card p-7"><CharacterBadge name={mascot} tone={tone} size="lg" /><h2 className="mt-5 font-editorial text-2xl">{title}</h2><p className="mt-3 text-sm leading-7 text-muted-foreground">{body}</p></article>)}</section>
     </main>
   </div>
