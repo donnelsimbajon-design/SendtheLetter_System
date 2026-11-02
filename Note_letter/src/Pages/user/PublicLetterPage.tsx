@@ -162,6 +162,7 @@ const PublicLetterPage = () => {
                         <button type="button" onClick={() => window.print()} className="inline-flex items-center gap-2 rounded-full border border-[#d8cfc1] bg-[#fffdf8] px-4 py-2 text-sm text-[#263b35] hover:bg-white"><Printer size={15} /> Print / Save as PDF</button>
                     </div>
                 </div>
+                {!letter.isAnonymous && letter.authorName && letter.authorName !== 'Unknown' && <Link to={`/writers/${encodeURIComponent(letter.authorName)}`} className="no-print mt-4 inline-flex rounded-full border border-[#d8cfc1] bg-white px-4 py-2 text-sm font-semibold text-[#263b35] hover:underline">Visit {letter.authorName}'s profile</Link>}
                 {imageStatus && <p role="status" className="no-print mt-2 text-right text-xs text-[#52645d]">{imageStatus}</p>}
                 <article className="public-letter-sheet mt-7">
                     <LetterBookReader

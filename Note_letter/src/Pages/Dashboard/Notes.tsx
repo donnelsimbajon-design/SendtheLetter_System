@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useNoteStore } from '../../store/noteStore';
 import Notecard from '../../components/Notecard';
 import { ArrowRight } from 'lucide-react';
@@ -19,6 +19,13 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'popular'>('newest');
     const [params, setParams] = useSearchParams();
+    const navigate = useNavigate();
+    const openWriterProfile = (username: string) => {
+        if (!username.trim()) return;
+        setIsViewModalOpen(false);
+        setSelectedNote(null);
+        navigate(`/writers/${encodeURIComponent(username)}`);
+    };
     const [activeTab, setActiveTab] = useState<'public' | 'personal' | 'drafts' | 'scheduled' | 'archived'>(initialTab);
     useEffect(() => { setActiveTab(initialTab); }, [initialTab]);
     const [scheduledNotes, setScheduledNotes] = useState<Note[]>([]);
@@ -202,7 +209,7 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                         <p className="mt-3 line-clamp-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{note.content}</p>
                         <div className="mt-auto flex items-center justify-between border-t border-border/80 pt-4 text-xs font-semibold text-primary"><span>{activeTab === 'drafts' ? 'Continue writing' : 'Review scheduled letter'}</span><CharacterBadge name="lumi" tone="sage" size="xs" /></div>
                     </button>
-                ) : <Notecard key={note.id} note={note} onClick={handleNoteClick} />)}
+                ) : <Notecard key={note.id} note={note} onClick={handleNoteClick} onAuthorClick={openWriterProfile} />)}
 
                 {filteredNotes.length === 0 && (
                     <div className="col-span-full flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-border rounded-3xl bg-muted/10">
@@ -230,6 +237,7 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                 isOpen={isViewModalOpen}
                 onClose={() => setIsViewModalOpen(false)}
                 note={selectedNote}
+                onAuthorClick={openWriterProfile}
             />
         </div>
     );

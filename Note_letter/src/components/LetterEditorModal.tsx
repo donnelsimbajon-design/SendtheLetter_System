@@ -370,7 +370,24 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                                 <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-current/30 px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-white/15"><ImagePlus size={15} /> Insert image in page <input type="file" className="sr-only" accept="image/png,image/jpeg,image/webp" onChange={async (event) => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; try { await addPhoto(file); markDirty(); setNotice('Photo added inside your book page.'); } catch (error: any) { setBookError(error?.message || 'Could not insert photo.'); } }} /></label>
                             </div>
                             <label className="sr-only" htmlFor="letter-content">Your letter</label>
-                            <textarea id="letter-content" value={page.text} onChange={e => { if (updateText(e.target.value)) markDirty(); }} placeholder={"Tell them what you've been meaning to say…\n\nStart with a memory, a feeling, or just a simple hello."} className={cn('mt-7 min-h-[230px] w-full flex-1 resize-none border-0 bg-transparent p-0 text-base leading-[1.9] outline-none placeholder:opacity-50 sm:text-lg', font, imageUrl ? 'text-white placeholder:text-white' : 'text-[#35483d] placeholder:text-[#8b9188]')} />
+                            <textarea id="letter-content" value={page.text} onChange={e => { if (updateText(e.target.value)) markDirty(); }} onPaste={event => {
+                                const image = Array.from(event.clipboardData.items).find(item => item.kind === 'file' && item.type.startsWith('image/'));
+                                if (image) {
+                                    event.preventDefault();
+                                    const file = image.getAsFile();
+                                    if (!file) return;
+                                    void addPhoto(file).then(() => {
+                                        markDirty();
+                                        setNotice('Pasted image added inside your book page.');
+                                    }).catch(error => setBookError(error instanceof Error ? error.message : 'Could not paste this photo.'));
+                                    return;
+                                }
+                                const text = event.clipboardData.getData('text/plain');
+                                if (/data:image\/(?:png|jpeg|webp);base64,/i.test(text) || /[A-Za-z0-9+/]{256,}={0,2}/.test(text)) {
+                                    event.preventDefault();
+                                    setBookError('You pasted encoded photo data. Click "Insert image in page" instead.');
+                                }
+                            }} placeholder={"Tell them what you've been meaning to say…\n\nStart with a memory, a feeling, or just a simple hello."} className={cn('mt-7 min-h-[230px] w-full flex-1 resize-none border-0 bg-transparent p-0 text-base leading-[1.9] outline-none placeholder:opacity-50 sm:text-lg', font, imageUrl ? 'text-white placeholder:text-white' : 'text-[#35483d] placeholder:text-[#8b9188]')} />
                             {page.imageData && <div className="mt-4 rounded-[18px] border border-[#dbcbb7]/70 bg-white/35 p-3">
                                 <img src={page.imageData} alt={page.caption || 'Photo inside this letter'} className="mx-auto max-h-48 w-full rounded-xl object-contain sm:max-h-56" />
                                 <label htmlFor="letter-image-caption" className="sr-only">Caption for this photo</label>
