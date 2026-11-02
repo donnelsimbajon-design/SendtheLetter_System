@@ -14,9 +14,9 @@ import { useWriterPreferences } from '../store/writerPreferences';
 const navigation = [
   { to: '/dashboard', label: 'Overview', mascot: 'lumi', end: true },
   { to: '/dashboard/notes', label: 'My library', mascot: 'basa', end: false },
-  { to: '/dashboard/community', label: 'Community', mascot: 'chika', end: false },
+  { to: '/dashboard/community', label: 'Community', mascot: 'piko', end: false },
   { to: '/dashboard/messages', label: 'Messages', mascot: 'chika', end: false },
-  { to: '/dashboard/profile', label: 'My profile', mascot: 'lumi', end: false },
+  { to: '/dashboard/profile', label: 'My profile', mascot: 'sely', end: false },
 ] as const;
 
 const DashboardLayout = () => {
