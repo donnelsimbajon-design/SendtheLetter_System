@@ -83,7 +83,7 @@ export function useLetterBook() {
         setPages(prev => prev.map((page, index) => index === pageIndex ? { ...page, caption } : page));
     };
 
-    const updateImageLayout = (changes: Partial<Pick<StoryPage, 'imageX' | 'imageY' | 'imageWidth' | 'imagePlacement'>>) => {
+    const updateImageLayout = (changes: Partial<Pick<StoryPage, 'imageX' | 'imageY' | 'imageWidth' | 'imagePlacement' | 'imageAnchor'>>) => {
         setPages(prev => prev.map((page, index) => index === pageIndex && page.imageData ? { ...page, ...changes } : page));
     };
 
