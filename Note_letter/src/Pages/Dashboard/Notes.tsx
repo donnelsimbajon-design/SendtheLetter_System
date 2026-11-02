@@ -104,17 +104,39 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
     useEffect(() => {
         const id = params.get('letterId');
         if (!id) return;
-        const found = isCommunity
-            ? publicLetters.find(note => String(note.id) === id && note.isPublic && note.status === 'published' && !note.isArchived)
-            : notes.find(note => String(note.id) === id);
-        if (!found) return;
-        if (!isCommunity) setActiveTab(notes.some(note => String(note.id) === id) ? 'personal' : 'personal');
-        setSelectedNote(found);
-        setIsViewModalOpen(true);
+
+        if (isCommunity) {
+            const released = publicLetters.find(note => String(note.id) === id &&
+                note.isPublic && note.status === 'published' && !note.isArchived &&
+                (!note.openDate || new Date(note.openDate).getTime() <= Date.now()) &&
+                (!note.scheduledDate || new Date(note.scheduledDate).getTime() <= Date.now()));
+            if (!released) return;
+            setSelectedNote(released);
+            setIsViewModalOpen(true);
+        } else {
+            // A Library deep link may reference a draft, scheduled letter, or archive.
+            // Look only in the current owner's lists, never in the public feed.
+            const target = ([
+                { tab: 'personal' as const, note: notes.find(note => String(note.id) === id) },
+                { tab: 'drafts' as const, note: drafts.find(note => String(note.id) === id) },
+                { tab: 'scheduled' as const, note: scheduledNotes.find(note => String(note.id) === id) },
+                { tab: 'archived' as const, note: archived.find(note => String(note.id) === id) },
+            ]).find(item => item.note);
+            if (!target?.note) return;
+            setActiveTab(target.tab);
+            if (target.tab === 'drafts' || target.tab === 'scheduled') {
+                setEditingNote(target.note);
+                setIsEditorOpen(true);
+            } else if (target.tab === 'personal') {
+                setSelectedNote(target.note);
+                setIsViewModalOpen(true);
+            }
+            // Archived letters are displayed in the Archive tab with a Restore action.
+        }
         const next = new URLSearchParams(params);
         next.delete('letterId');
         setParams(next, { replace: true });
-    }, [isCommunity, notes, publicLetters, params, setParams]);
+    }, [isCommunity, notes, drafts, scheduledNotes, archived, publicLetters, params, setParams]);
 
     const reloadLetters = async () => {
         await Promise.all([fetchMyLetters(), fetchPublicLetters(), fetchDrafts(), fetchArchivedLetters(), fetchScheduledNotes()]);
