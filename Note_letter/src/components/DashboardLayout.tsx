@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
-import { Bell, BookHeart, FileText, Home, LogOut, MessageCircle, PenLine, UserRound, Palette, ShieldCheck } from 'lucide-react';
+import { Bell, BookHeart, ChevronDown, FileText, Home, MessageCircle, PenLine, UserRound, ShieldCheck } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useAuthStore } from '../store/authStore';
 import { useNoteStore } from '../store/noteStore';
 import socketService from '../services/socketService';
 import { getImageUrl } from '../lib/utils';
 import Mascot from './Mascot';
+import ProfileDropdown from './ProfileDropdown';
+import { useWriterPreferences } from '../store/writerPreferences';
 
 const navigation = [
   { to: '/dashboard', label: 'Overview', icon: Home, end: true },
@@ -17,10 +19,10 @@ const navigation = [
 
 const DashboardLayout = () => {
   const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
   const location = useLocation();
-  const [theme, setTheme] = useState<'warm' | 'cool' | 'dark'>('warm');
-  const [showThemes, setShowThemes] = useState(false);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const preferences = useWriterPreferences(state => state.preferences);
+  const loadForUser = useWriterPreferences(state => state.loadForUser);
   const [showNotifications, setShowNotifications] = useState(false);
   const { notifications, fetchNotifications, markNotificationsRead } = useNoteStore();
   const unreadCount = notifications.filter((notification) => !notification.isRead).length;
@@ -32,16 +34,18 @@ const DashboardLayout = () => {
   }, [fetchNotifications]);
 
   useEffect(() => {
-    const saved = localStorage.getItem('sendtheletter-theme');
-    if (saved === 'cool' || saved === 'dark' || saved === 'warm') setTheme(saved);
-  }, []);
+    loadForUser(user?.id);
+  }, [loadForUser, user?.id]);
 
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === 'warm') root.removeAttribute('data-theme');
-    else root.setAttribute('data-theme', theme);
-    localStorage.setItem('sendtheletter-theme', theme);
-  }, [theme]);
+    if (preferences.theme === 'warm') root.removeAttribute('data-theme');
+    else root.setAttribute('data-theme', preferences.theme);
+    root.dataset.readingSize = preferences.readingSize;
+    root.dataset.reduceMotion = String(preferences.reduceMotion);
+  }, [preferences]);
+
+  useEffect(() => { setShowAccountMenu(false); setShowNotifications(false); }, [location.pathname]);
 
   const pageTitle = navigation.find((item) => item.to === location.pathname)?.label || 'Your space';
 
@@ -74,35 +78,25 @@ const DashboardLayout = () => {
               )}
             </div>
             <div className="relative">
-              <button onClick={() => setShowThemes((value) => !value)} className="flex h-10 items-center gap-2 rounded-full border border-border bg-background px-3 text-sm font-medium hover:bg-muted" aria-label="Choose color theme">
-                <Palette size={16} /><span className="hidden sm:inline">Appearance</span>
+              <button
+                type="button"
+                onClick={() => setShowAccountMenu(value => !value)}
+                aria-label="Account, settings and appearance"
+                aria-haspopup="menu"
+                aria-expanded={showAccountMenu}
+                className="group flex h-11 items-center gap-2 rounded-full border border-border bg-background/80 p-1 pr-2.5 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary sm:gap-3 sm:pr-3"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[hsl(var(--surface-gold))] font-semibold text-[#394a3b] ring-2 ring-card">
+                  {user?.avatar ? <img src={getImageUrl(user.avatar)} alt="" className="h-full w-full object-cover" /> : (user?.username?.slice(0, 1).toUpperCase() || 'W')}
+                </span>
+                <span className="hidden max-w-40 min-w-0 text-left sm:block">
+                  <span className="block truncate text-sm font-semibold leading-tight">{user?.username || 'Writer'}</span>
+                  <span className="block text-[11px] text-muted-foreground">My account</span>
+                </span>
+                <ChevronDown size={16} className={`text-muted-foreground transition-transform ${showAccountMenu ? 'rotate-180' : ''}`} />
               </button>
-              {showThemes && (
-                <div className="absolute right-0 top-12 z-50 w-48 rounded-2xl border border-border bg-card p-2 shadow-xl">
-                  {([
-                    ['warm', 'Warm editorial', 'bg-[#263B35]'],
-                    ['cool', 'Cool blue', 'bg-[#526E9D]'],
-                    ['dark', 'Forest dark', 'bg-[#A9B9A6]'],
-                  ] as const).map(([value, label, swatch]) => (
-                    <button key={value} onClick={() => { setTheme(value); setShowThemes(false); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm hover:bg-muted">
-                      <span className={`h-4 w-4 rounded-full ${swatch}`} />{label}{theme === value && <span className="ml-auto text-primary">✓</span>}
-                    </button>
-                  ))}
-                </div>
-              )}
+              <ProfileDropdown isOpen={showAccountMenu} onClose={() => setShowAccountMenu(false)} />
             </div>
-            <div className="hidden text-right sm:block">
-              <p className="text-sm font-semibold">{user?.username || 'Writer'}</p>
-              <p className="text-xs text-muted-foreground">Your personal space</p>
-            </div>
-            <div className="flex h-10 w-10 overflow-hidden items-center justify-center rounded-full bg-[hsl(var(--surface-gold))] font-semibold text-foreground">
-              {user?.avatar ? (
-                <img src={getImageUrl(user.avatar)} alt={user.username} className="h-full w-full object-cover" />
-              ) : (user?.username?.slice(0, 1).toUpperCase() || 'W')}
-            </div>
-            <button onClick={logout} className="hidden h-10 items-center gap-2 rounded-full px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground sm:flex" title="Sign out">
-              <LogOut size={17} /><span>Sign out</span>
-            </button>
           </div>
         </div>
       </header>
@@ -128,7 +122,7 @@ const DashboardLayout = () => {
         <main className="min-w-0 flex-1 px-4 pb-28 pt-7 sm:px-6 lg:px-10 lg:py-10">
           <div className="mb-7 flex items-center justify-between lg:hidden">
             <div><p className="text-xs font-semibold uppercase tracking-[.16em] text-muted-foreground">Workspace</p><p className="font-editorial text-2xl">{pageTitle}</p></div>
-            <button onClick={logout} className="rounded-full border border-border p-2.5 text-muted-foreground" aria-label="Sign out"><LogOut size={18} /></button>
+            <Link to="/dashboard/settings" className="rounded-full border border-border px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-muted" aria-label="Open settings">Settings</Link>
           </div>
           <Outlet />
         </main>
