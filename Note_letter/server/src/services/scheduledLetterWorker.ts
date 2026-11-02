@@ -19,6 +19,7 @@ export const startScheduledLetterWorker = (io: Server) => {
             const dueLetters = await Letter.findAll({
                 where: {
                     status: 'scheduled',
+                    isArchived: false,
                     [Op.or]: [
                         { isTimeCapsule: true, openDate: { [Op.lte]: now } },
                         { isTimeCapsule: false, scheduledDate: { [Op.lte]: now } },
@@ -35,7 +36,7 @@ export const startScheduledLetterWorker = (io: Server) => {
                             transaction,
                             lock: transaction.LOCK.UPDATE,
                         });
-                        if (!letter || letter.status !== 'scheduled') return null;
+                        if (!letter || letter.status !== 'scheduled' || letter.isArchived) return null;
 
                         const releaseAt = letter.isTimeCapsule ? letter.openDate : letter.scheduledDate;
                         if (!releaseAt || releaseAt.getTime() > Date.now()) return null;
