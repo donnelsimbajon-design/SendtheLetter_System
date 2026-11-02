@@ -5,11 +5,11 @@ on:
       - 'Note_letter/server/src/**'
       - 'Note_letter/server/package.json'
       - 'Note_letter/server/test/**'
-      - 'Note_letter/server/test/**'
       - 'Note_letter/server/package-lock.json'
       - '.github/workflows/backend-ci.yml'
   pull_request:
     paths:
+      - 'Note_letter/server/test/**'
       - 'Note_letter/server/src/**'
       - 'Note_letter/server/package.json'
       - 'Note_letter/server/package-lock.json'
