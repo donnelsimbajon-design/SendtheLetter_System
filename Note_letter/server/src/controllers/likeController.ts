@@ -50,6 +50,7 @@ export const toggleLike = async (req: AuthRequest, res: Response) => {
                     actorId: userId,
                     type: 'like',
                     entityId: letter.id,
+                    letterId: letter.id,
                 });
 
                 // Emit real-time notification
