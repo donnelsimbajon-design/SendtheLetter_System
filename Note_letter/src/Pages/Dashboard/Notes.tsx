@@ -29,6 +29,13 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
     };
     const [activeTab, setActiveTab] = useState<'public' | 'personal' | 'drafts' | 'scheduled' | 'archived'>(initialTab);
     useEffect(() => { setActiveTab(initialTab); }, [initialTab]);
+    useEffect(() => {
+        if (isCommunity) return;
+        const requested = params.get('tab');
+        if (requested === 'drafts' || requested === 'personal' || requested === 'scheduled' || requested === 'archived') {
+            setActiveTab(requested);
+        }
+    }, [isCommunity, params]);
     const [scheduledNotes, setScheduledNotes] = useState<Note[]>([]);
     const [restoringId, setRestoringId] = useState<string | null>(null);
     const [restoreError, setRestoreError] = useState('');
