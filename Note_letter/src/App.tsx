@@ -9,6 +9,7 @@ import ProfilePage from './Pages/user/ProfilePage';
 import UserProfilePage from './Pages/user/UserProfilePage';
 import MessagesPage from './Pages/user/MessagesPage';
 import DashboardPage from './Pages/user/DashboardPage';
+import SettingsPage from './Pages/user/SettingsPage';
 import Home from './Pages/Home';
 import About from './Pages/About';
 import Services from './Pages/Services';
@@ -65,6 +66,7 @@ function App() {
                     <Route path="profile" element={<ProfilePage />} />
                     <Route path="profile/:username" element={<UserProfilePage />} />
                     <Route path="messages" element={<MessagesPage />} />
+                    <Route path="settings" element={<SettingsPage />} />
                 </Route>
             </Routes>
         </Router>
