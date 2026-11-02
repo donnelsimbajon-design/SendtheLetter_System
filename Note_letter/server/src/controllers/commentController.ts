@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import Comment from '../models/Comment';
 import User from '../models/User';
 import Letter from '../models/Letter';
+import { isBlockedBetween } from '../services/blockService';
 
 interface AuthRequest extends Request {
     user?: any;
@@ -24,6 +25,8 @@ export const createComment = async (req: AuthRequest, res: Response) => {
         if (!letter || letter.isArchived || (!isOwner && (!letter.isPublic || letter.status !== 'published' || notReleased))) {
             return res.status(404).json({ message: 'Letter not found' });
         }
+
+        if (await isBlockedBetween(userId, letter.userId)) return res.status(403).json({ message: 'Comments are unavailable between these accounts.' });
 
         const comment = await Comment.create({
             letterId: parseInt(letterId),
