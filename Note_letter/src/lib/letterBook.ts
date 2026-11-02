@@ -21,10 +21,9 @@ function splitOverflow(text: string, page: StoryPage): [string, string] {
     const candidate = Math.min(text.length, maxChars);
     const part = text.slice(0, candidate);
     const regex = /\S+\s*/g;
-    let match: RegExpExecArray | null;
     let words = 0;
     let end = 0;
-    while ((match = regex.exec(part))) {
+    while (regex.exec(part)) {
         words++;
         if (words > maxWords) break;
         end = regex.lastIndex;
