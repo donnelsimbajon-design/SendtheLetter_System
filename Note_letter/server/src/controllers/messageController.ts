@@ -4,6 +4,7 @@ import { Op, QueryTypes } from 'sequelize';
 import Message from '../models/Message';
 import User from '../models/User';
 import sequelize from '../config/database';
+import { isBlockedBetween } from '../services/blockService';
 
 interface AuthRequest extends Request {
     user?: any;
@@ -22,6 +23,7 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
         if (receiverUserId === senderId) return res.status(400).json({ message: 'You cannot message yourself.' });
         const receiverUser = await User.findByPk(receiverUserId);
         if (!receiverUser || !receiverUser.isActive) return res.status(404).json({ message: 'Recipient not found.' });
+        if (await isBlockedBetween(senderId, receiverUserId)) return res.status(403).json({ message: 'Messaging is unavailable between these accounts.' });
 
         const message = await Message.create({
             senderId,

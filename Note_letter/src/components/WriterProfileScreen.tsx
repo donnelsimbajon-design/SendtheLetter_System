@@ -42,6 +42,7 @@ interface Props {
     followBusy?: boolean;
     onMessage?: () => void;
     friendAction?: { label: string; onClick?: () => void; disabled?: boolean; secondaryLabel?: string; secondaryClick?: () => void };
+    blockAction?: { blocked: boolean; canInteract: boolean; busy: boolean; onClick: () => void };
     actionError?: string;
     onDismissActionError?: () => void;
     onRefresh?: () => void;
@@ -61,7 +62,7 @@ const topTabs: { id: ProfileTab; text: string; mascot: MascotName }[] = [
 
 export default function WriterProfileScreen({
     profile, ownProfile = false, letters, reposts, loading = false, error = '', onRetry,
-    onOpenLetter, onEditProfile, onWriteLetter, onFollow, followBusy, onMessage, friendAction,
+    onOpenLetter, onEditProfile, onWriteLetter, onFollow, followBusy, onMessage, friendAction, blockAction,
     actionError = '', onDismissActionError, onRefresh,
 }: Props) {
     const signedIn = useAuthStore(state => state.isAuthenticated);
@@ -217,10 +218,16 @@ export default function WriterProfileScreen({
                             <button type="button" onClick={onEditProfile} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-xs font-bold hover:bg-muted"><CharacterBadge name="lumi" tone="paper" size="xs" /> Edit profile</button>
                             <button type="button" onClick={onWriteLetter} className="inline-flex min-h-10 items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground hover:opacity-90"><CharacterBadge name="lumi" tone="paper" size="xs" /> Write a letter</button>
                         </> : isSelfVisitor ? <Link to="/dashboard/profile" className="inline-flex min-h-10 items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground"><CharacterBadge name="lumi" tone="paper" size="xs" /> Manage my profile</Link> : <>
+                            {blockAction && !blockAction.canInteract ? <span className="rounded-full border border-border bg-muted px-4 py-2.5 text-xs text-muted-foreground">Interactions unavailable</span> : <>
                             {signedIn ? <button type="button" onClick={onFollow} disabled={followBusy} className={`inline-flex min-h-10 items-center gap-2 rounded-full px-4 py-2.5 text-xs font-bold disabled:opacity-50 ${profile.isFollowing ? 'border border-border bg-background hover:bg-muted' : 'bg-primary text-primary-foreground hover:opacity-90'}`}>{profile.isFollowing ? <><CharacterBadge name="sely" tone="rose" size="xs" /> Following</> : <><CharacterBadge name="piko" tone="sage" size="xs" /> Follow</>}</button> : <Link to={`/login?returnTo=${encodeURIComponent(profileUrl)}`} className="inline-flex min-h-10 items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground"><CharacterBadge name="piko" tone="sage" size="xs" /> Follow</Link>}
                             {friendAction && signedIn && <button type="button" onClick={friendAction.onClick} disabled={friendAction.disabled || !friendAction.onClick} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-xs font-bold hover:bg-muted disabled:opacity-50"><CharacterBadge name="sely" tone="sage" size="xs" /> {friendAction.label}</button>}
                             {friendAction?.secondaryLabel && friendAction.secondaryClick && signedIn && <button type="button" onClick={friendAction.secondaryClick} disabled={friendAction.disabled} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-xs font-bold text-muted-foreground hover:bg-muted disabled:opacity-50">{friendAction.secondaryLabel}</button>}
                             {signedIn ? <button type="button" onClick={onMessage} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-xs font-bold hover:bg-muted"><CharacterBadge name="chika" tone="sage" size="xs" /> Message</button> : <Link to={`/login?returnTo=${encodeURIComponent(profileUrl)}`} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-xs font-bold"><CharacterBadge name="chika" tone="sage" size="xs" /> Message</Link>}
+                            </>}
+                            {signedIn && blockAction && <button type="button" onClick={blockAction.onClick} disabled={blockAction.busy}
+                                className="inline-flex min-h-10 items-center rounded-full border border-border bg-background px-4 py-2.5 text-xs font-bold text-muted-foreground hover:bg-muted disabled:opacity-50">
+                                {blockAction.blocked ? 'Unblock writer' : 'Block writer'}
+                            </button>}
                         </>}
                         <button type="button" onClick={() => void shareProfile()} aria-label="Copy public profile link" title="Copy public profile link" className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background hover:bg-muted"><CharacterBadge name="piko" tone="paper" size="sm" /></button>
                     </div>

@@ -3,6 +3,7 @@ import Friend from '../models/Friend';
 import User from '../models/User';
 import { Op } from 'sequelize';
 import Notification from '../models/Notification';
+import { isBlockedBetween } from '../services/blockService';
 
 interface AuthRequest extends Request {
     user?: any;
@@ -37,6 +38,7 @@ export const sendFriendRequest = async (req: AuthRequest, res: Response) => {
         }
         const recipient = await User.findByPk(recipientUserId);
         if (!recipient || !recipient.isActive) return res.status(404).json({ message: 'Recipient not found.' });
+        if (await isBlockedBetween(requesterId, recipientUserId)) return res.status(403).json({ message: 'Pen Pal requests are unavailable between these accounts.' });
 
         const friendRequest = await Friend.create({
             requesterId,
@@ -83,6 +85,7 @@ export const acceptFriendRequest = async (req: AuthRequest, res: Response) => {
         if (!friendRequest) {
             return res.status(404).json({ message: 'Request not found' });
         }
+        if (await isBlockedBetween(userId, friendRequest.requesterId)) return res.status(403).json({ message: 'Pen Pal requests are unavailable between these accounts.' });
 
         friendRequest.status = 'accepted';
         await friendRequest.save();

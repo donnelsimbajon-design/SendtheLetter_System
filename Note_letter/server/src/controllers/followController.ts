@@ -4,6 +4,7 @@ import Follow from '../models/Follow';
 import User from '../models/User';
 import Notification from '../models/Notification';
 import { Op } from 'sequelize';
+import { isBlockedBetween } from '../services/blockService';
 
 interface AuthRequest extends Request {
     user?: any;
@@ -20,6 +21,7 @@ export const toggleFollow = async (req: AuthRequest, res: Response) => {
 
         const targetUser = await User.findByPk(followingId);
         if (!targetUser || !targetUser.isActive) return res.status(404).json({ message: 'User not found.' });
+        if (await isBlockedBetween(followerId, followingId)) return res.status(403).json({ message: 'This connection is unavailable.' });
 
         const existingFollow = await Follow.findOne({
             where: { followerId, followingId },

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Like from '../models/Like';
 import Letter from '../models/Letter';
+import { isBlockedBetween } from '../services/blockService';
 
 interface AuthRequest extends Request {
     user?: any;
@@ -16,6 +17,8 @@ export const toggleLike = async (req: AuthRequest, res: Response) => {
         if (!letter || letter.isArchived || (!letter.isPublic && letter.userId !== userId) || (letter.status !== 'published' && letter.userId !== userId)) {
             return res.status(404).json({ message: 'Letter not found' });
         }
+
+        if (await isBlockedBetween(userId, letter.userId)) return res.status(403).json({ message: 'Reactions are unavailable between these accounts.' });
 
         // Check if like already exists
         const existingLike = await Like.findOne({
