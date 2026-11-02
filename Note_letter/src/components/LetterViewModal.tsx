@@ -5,6 +5,8 @@ import { Button } from './ui/button';
 import CharacterBadge from './CharacterBadge';
 import CommentsPanel from './CommentsPanel';
 import LetterBookReader from './LetterBookReader';
+import SpotifyReadingPlayer from './SpotifyReadingPlayer';
+import { parseSpotifyMedia } from '../lib/spotify';
 import { Note } from '../types/note';
 import { cn, getImageUrl } from '../lib/utils';
 import { useAuthStore } from '../store/authStore';
@@ -130,6 +132,7 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
     };
 
     if (!note) return null;
+    const spotifyMedia = parseSpotifyMedia(note.spotifyLink);
 
     return (
         <>
@@ -146,9 +149,9 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                                 <div className="px-3 py-1 rounded-full bg-stone-100 border border-stone-200 text-stone-600 text-sm font-medium">
                                     {note.category || 'Letter'}
                                 </div>
-                                {note.spotifyLink && (
+                                {spotifyMedia && (
                                     <a
-                                        href={note.spotifyLink}
+                                        href={spotifyMedia.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="flex items-center gap-2 text-stone-600 hover:text-[#1DB954] transition-colors"
@@ -188,7 +191,10 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                             </div>
                         </div>
 
-                        <div className={cn("p-8 md:p-12 space-y-8", note.font || 'font-serif')}>
+                        {isOpen && spotifyMedia && <div className="sticky top-[69px] z-10">
+                            <SpotifyReadingPlayer key={`${note.id}:${spotifyMedia.uri}`} spotifyLink={spotifyMedia.url} title={note.title} />
+                        </div>}
+                        <div className={cn("p-6 md:p-10 space-y-8", note.font || 'font-serif')}>
                             {/* Header: Sender & Date */}
                             <div className="flex items-center gap-3 text-stone-600 text-sm">
                                 {!note.isAnonymous && note.authorAvatar ? (
@@ -233,40 +239,6 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                                 coverImage={note.imageUrl}
                                 compact
                             />
-
-                            {/* Spotify Player - Show if letter has music */}
-                            {note.spotifyLink && (
-                                <div className="mt-8 pt-6 border-t border-stone-200">
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <CharacterBadge name="tala" tone="paper" size="xs" />
-                                        <span className="text-sm font-medium text-stone-700">Letter Soundtrack</span>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        {/* Spinning Vinyl Record */}
-                                        <div className="relative w-24 h-24 flex-shrink-0">
-                                            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 shadow-xl animate-spin-slow">
-                                                <div className="absolute inset-3 rounded-full bg-gradient-to-br from-stone-700 to-stone-900">
-                                                    <div className="absolute inset-2 rounded-full bg-stone-950 flex items-center justify-center">
-                                                        <div className="w-3 h-3 rounded-full bg-stone-800"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* Spotify Embed */}
-                                        <div className="flex-1">
-                                            <iframe
-                                                src={note.spotifyLink.replace('open.spotify.com', 'open.spotify.com/embed')}
-                                                width="100%"
-                                                height="80"
-                                                frameBorder="0"
-                                                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                                                loading="lazy"
-                                                className="rounded-xl"
-                                            ></iframe>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
 
                         </div>
                     </div>
