@@ -34,6 +34,20 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
     const [restoreError, setRestoreError] = useState('');
     const [editingNote, setEditingNote] = useState<Note | null>(null);
     const [isEditorOpen, setIsEditorOpen] = useState(false);
+    const [starterTemplate, setStarterTemplate] = useState('');
+
+    // A safe, shareable compose link opens an existing editor template.
+    useEffect(() => {
+        if (isCommunity || params.get('compose') !== '1') return;
+        const template = params.get('template') || '';
+        setStarterTemplate(['gratitude', 'future-self', 'apology', 'hello'].includes(template) ? template : '');
+        setEditingNote(null);
+        setIsEditorOpen(true);
+        const next = new URLSearchParams(params);
+        next.delete('compose');
+        next.delete('template');
+        setParams(next, { replace: true });
+    }, [isCommunity, params, setParams]);
 
     // View Modal State
     const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -160,7 +174,7 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                     )) : <span className="px-3 py-2 text-xs font-semibold text-muted-foreground">Public letters only</span>)}
                 </div>
 
-                <Button onClick={() => { setEditingNote(null); setIsEditorOpen(true); }} className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 shadow-lg hover:shadow-xl transition-all">
+                <Button onClick={() => { setStarterTemplate(''); setEditingNote(null); setIsEditorOpen(true); }} className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 shadow-lg hover:shadow-xl transition-all">
                     <CharacterBadge name="lumi" tone="paper" size="sm" />
                     Write a Letter
                 </Button>
@@ -215,7 +229,7 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                         </button>
                     </article>
                 ) : activeTab === 'drafts' || activeTab === 'scheduled' ? (
-                    <button type="button" key={note.id} onClick={() => { setEditingNote(note); setIsEditorOpen(true); }} className="group flex h-[265px] flex-col rounded-[26px] border border-border bg-card p-6 text-left shadow-sm transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg">
+                    <button type="button" key={note.id} onClick={() => { setStarterTemplate(''); setEditingNote(note); setIsEditorOpen(true); }} className="group flex h-[265px] flex-col rounded-[26px] border border-border bg-card p-6 text-left shadow-sm transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg">
                         <span className="flex items-center justify-between text-xs font-bold uppercase tracking-[.14em] text-muted-foreground"><span className="inline-flex items-center gap-2"><CharacterBadge name={activeTab === 'drafts' ? 'lumi' : 'araw'} tone="paper" size="xs" />{activeTab === 'drafts' ? 'Unfinished thought' : 'Coming soon'}</span><ArrowRight size={16} className="transition-transform group-hover:translate-x-1" /></span>
                         <h3 className="mt-6 line-clamp-2 font-editorial text-2xl leading-tight">{note.title || 'Untitled letter'}</h3>
                         <p className="mt-3 line-clamp-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{note.content}</p>
@@ -241,6 +255,7 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                 onClose={() => setIsEditorOpen(false)}
                 onSubmit={handleLetterCreate}
                 initialData={editingNote || undefined}
+                starterTemplate={starterTemplate}
                 onDraftSaved={fetchDrafts}
                 onPublished={async (status, publicLetter) => { await reloadLetters(); if (isCommunity) { if (!publicLetter || status === 'scheduled') navigate('/dashboard/notes'); } else { setActiveTab(status === 'scheduled' ? 'scheduled' : 'personal'); } }}
             />
