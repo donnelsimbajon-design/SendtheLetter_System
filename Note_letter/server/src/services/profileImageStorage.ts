@@ -19,18 +19,39 @@ export function detectImage(file: Express.Multer.File): { extension: string; mim
     return kind;
 }
 
+/**
+ * New Supabase sb_secret_* API keys are not JWTs and must be sent as apikey only.
+ * Legacy service_role JWT keys also require Authorization: Bearer.
+ * Never use a publishable/anon client key for privileged server uploads.
+ */
+export function buildProfileUploadHeaders(secretKey: string, mime: string): Record<string, string> {
+    if (secretKey.startsWith('sb_publishable_')) {
+        throw new Error('Supabase publishable keys cannot authorize server-side profile uploads.');
+    }
+    const headers: Record<string, string> = {
+        apikey: secretKey,
+        'Content-Type': mime,
+        'Cache-Control': 'max-age=3600',
+        'x-upsert': 'false',
+    };
+    if (!secretKey.startsWith('sb_secret_')) {
+        headers.Authorization = `Bearer ${secretKey}`;
+    }
+    return headers;
+}
+
 export async function saveProfileImage(file: Express.Multer.File, userId: number, type: 'avatar' | 'cover'): Promise<string> {
     const kind = detectImage(file);
     const name = `${type}-${randomUUID()}.${kind.extension}`;
     const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, '');
-    const secretKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const secretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
     const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'uploads';
 
     if (supabaseUrl && secretKey) {
         const objectPath = `profiles/${userId}/${name}`;
         const response = await fetch(`${supabaseUrl}/storage/v1/object/${encodeURIComponent(bucket)}/${objectPath}`, {
             method: 'POST',
-            headers: { apikey: secretKey, Authorization: `Bearer ${secretKey}`, 'Content-Type': kind.mime, 'Cache-Control': 'max-age=3600', 'x-upsert': 'false' },
+            headers: buildProfileUploadHeaders(secretKey, kind.mime),
             body: new Uint8Array(file.buffer),
             signal: AbortSignal.timeout(15000),
         });
