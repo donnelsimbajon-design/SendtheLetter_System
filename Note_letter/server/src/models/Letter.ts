@@ -25,7 +25,7 @@ interface LetterAttributes {
     isTimeCapsule?: boolean;
     isArchived?: boolean;
     shareToken?: string;
-    letterPages?: { text: string; imageData?: string; caption?: string }[] | null;
+    letterPages?: { text: string; imageData?: string; caption?: string; imageX?: number; imageY?: number; imageWidth?: number; imagePlacement?: 'before' | 'after' }[] | null;
 }
 
 interface LetterCreationAttributes extends Optional<LetterAttributes, 'id'> { }
@@ -53,7 +53,7 @@ class Letter extends Model<LetterAttributes, LetterCreationAttributes> implement
     public isTimeCapsule?: boolean;
     public isArchived?: boolean;
     public shareToken!: string;
-    public letterPages?: { text: string; imageData?: string; caption?: string }[] | null;
+    public letterPages?: { text: string; imageData?: string; caption?: string; imageX?: number; imageY?: number; imageWidth?: number; imagePlacement?: 'before' | 'after' }[] | null;
 
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
