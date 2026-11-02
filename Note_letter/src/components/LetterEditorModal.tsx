@@ -190,6 +190,8 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
         if (title.trim().length > 255 || content.length > 100000) { setNotice('Please shorten your title or letter.'); return; }
         if (isTimeCapsule && !openDate) { setNotice('Choose an opening date for your time capsule.'); setControlsOpen(true); return; }
         if ((scheduledDate && !utcDate(scheduledDate)) || (isTimeCapsule && !utcDate(openDate))) { setNotice('Choose a valid date and time.'); return; }
+        const releaseDate = isTimeCapsule ? openDate : scheduledDate;
+        if (releaseDate && new Date(releaseDate).getTime() <= Date.now()) { setNotice('Choose a future date and time for delivery.'); setControlsOpen(true); return; }
         if (preferences.confirmBeforePublishing && !confirming) { setConfirming(true); setNotice(''); return; }
         publishing.current = true;
         setBusy(true);
@@ -261,12 +263,14 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
     const paper = papers.find(p => p.value === backgroundImage) || papers[0];
     const scheduled = (isTimeCapsule ? openDate : scheduledDate) && (utcDate(isTimeCapsule ? openDate : scheduledDate) || '') > new Date().toISOString();
     const actionLabel = editingPublished ? 'Save changes' : scheduled ? 'Schedule letter' : isPublic ? 'Publish letter' : 'Finish private letter';
+    const earliestLocalDate = localDateInput(new Date(Date.now() + 60_000));
+    const timeZoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const labelClass = 'block text-[11px] font-bold uppercase tracking-[.16em] text-muted-foreground';
     const fieldClass = 'mt-2 h-11 w-full rounded-xl border border-border bg-card px-3 text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/10';
     const panelClass = 'rounded-[20px] border border-border bg-card p-4';
 
     return <Dialog open={isOpen} onOpenChange={(open) => { if (!open) closeEditor(); }}>
-        <DialogContent className="flex h-[min(94dvh,950px)] w-[calc(100vw-16px)] max-w-[1220px] flex-col gap-0 overflow-hidden rounded-[24px] border border-border bg-card p-0 shadow-[0_30px_90px_rgba(0,0,0,.3)] sm:w-[calc(100vw-40px)] sm:rounded-[30px]">
+        <DialogContent className="flex h-[min(94dvh,950px)] w-[calc(100vw-16px)] min-w-0 max-w-[1220px] flex-col gap-0 overflow-hidden rounded-[24px] border border-border bg-card p-0 shadow-[0_30px_90px_rgba(0,0,0,.3)] sm:w-[calc(100vw-40px)] sm:rounded-[30px]">
             <DialogTitle className="sr-only">{editingPublished ? 'Edit your letter' : 'Write a letter'}</DialogTitle>
             <DialogDescription className="sr-only">Write a thoughtful letter, customize the paper, save as draft or finish publishing.</DialogDescription>
 
@@ -321,9 +325,10 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                             <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-bold uppercase tracking-[.14em]"><span className="inline-flex items-center gap-2"><CharacterBadge name="araw" tone="gold" size="sm" /> Deliver later</span><ChevronDown size={15} /></summary>
                             <div className="mt-4 space-y-3">
                                 <label className="block text-xs font-semibold" htmlFor="letter-schedule">Schedule release</label>
-                                <input id="letter-schedule" type="datetime-local" value={scheduledDate} disabled={isTimeCapsule} onChange={e => { setScheduledDate(e.target.value); markDirty(); }} className={fieldClass} />
+                                <p className="text-[11px] text-muted-foreground">Your time zone: {timeZoneName}. Choose a future local date and time.</p>
+                                <input id="letter-schedule" type="datetime-local" min={earliestLocalDate} value={scheduledDate} disabled={isTimeCapsule} onChange={e => { setScheduledDate(e.target.value); markDirty(); }} className={fieldClass} />
                                 <label className="flex items-center justify-between gap-2 text-xs font-semibold"><span>Time capsule</span><input type="checkbox" checked={isTimeCapsule} onChange={e => { setIsTimeCapsule(e.target.checked); markDirty(); }} className="h-4 w-4 accent-[#344d40]" /></label>
-                                {isTimeCapsule && <><p className="text-[11px] text-muted-foreground">The letter stays sealed until the date you choose.</p><label className="block text-xs font-semibold" htmlFor="letter-open-date">Open date</label><input id="letter-open-date" type="datetime-local" value={openDate} onChange={e => { setOpenDate(e.target.value); markDirty(); }} className={fieldClass} /></>}
+                                {isTimeCapsule && <><p className="text-[11px] text-muted-foreground">The letter stays sealed until the date you choose.</p><label className="block text-xs font-semibold" htmlFor="letter-open-date">Open date</label><input id="letter-open-date" type="datetime-local" min={earliestLocalDate} value={openDate} onChange={e => { setOpenDate(e.target.value); markDirty(); }} className={fieldClass} /></>}
                                 <label className="block text-xs font-semibold" htmlFor="letter-address">Recipient's address (optional)</label>
                                 <input id="letter-address" value={recipientAddress} maxLength={255} onChange={e => { setRecipientAddress(e.target.value); markDirty(); }} placeholder="For your own reference" className={fieldClass} />
                                 <p className="text-[11px] leading-5 text-muted-foreground">Finishing a letter saves it to SendTheLetter. Email delivery is a separate sharing action.</p>
