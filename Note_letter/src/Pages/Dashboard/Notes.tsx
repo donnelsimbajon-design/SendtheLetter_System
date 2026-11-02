@@ -11,10 +11,11 @@ import clsx from 'clsx';
 import Mascot from '../../components/Mascot';
 import { API_ENDPOINTS } from '../../config/api';
 
-const Notes = () => {
+const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public' }) => {
     const { notes, drafts, publicLetters, addNote, fetchMyLetters, fetchPublicLetters, fetchDrafts } = useNoteStore();
     const [searchQuery, setSearchQuery] = useState('');
-    const [activeTab, setActiveTab] = useState<'public' | 'personal' | 'drafts' | 'scheduled'>('public');
+    const [activeTab, setActiveTab] = useState<'public' | 'personal' | 'drafts' | 'scheduled'>(initialTab);
+    useEffect(() => { setActiveTab(initialTab); }, [initialTab]);
     const [scheduledNotes, setScheduledNotes] = useState<Note[]>([]);
     const [editingNote, setEditingNote] = useState<Note | null>(null);
     const [isEditorOpen, setIsEditorOpen] = useState(false);
