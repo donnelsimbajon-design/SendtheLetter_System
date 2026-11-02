@@ -465,6 +465,7 @@ export const getPublicLetterById = async (req: Request, res: Response) => {
             status: data.status,
             isAnonymous: Boolean(data.isAnonymous),
             authorName: data.isAnonymous ? 'Anonymous' : (author?.username || 'Unknown'),
+            authorId: data.isAnonymous ? null : (author?.id || null),
             authorAvatar: data.isAnonymous ? null : (author?.avatar || null),
             createdAt: data.createdAt,
             backgroundImage: data.backgroundImage,
