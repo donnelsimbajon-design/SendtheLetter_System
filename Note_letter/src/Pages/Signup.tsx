@@ -16,6 +16,7 @@ const Signup = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [avatarPreset, setAvatarPreset] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -53,7 +54,7 @@ const Signup = () => {
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
             <div className="space-y-2"><label htmlFor="username" className="text-sm font-semibold">Username</label><div className="relative"><Input id="username" autoComplete="username" required value={username} onChange={(event)=>setUsername(event.target.value)} placeholder="Choose a username" className="h-12 rounded-xl bg-card px-4"/></div></div>
             <div className="space-y-2"><label htmlFor="email" className="text-sm font-semibold">Email address</label><div className="relative"><Input id="email" type="email" autoComplete="email" required value={email} onChange={(event)=>setEmail(event.target.value)} placeholder="you@example.com" className="h-12 rounded-xl bg-card px-4"/></div></div>
-            <div className="space-y-2"><label htmlFor="password" className="text-sm font-semibold">Password</label><div className="relative"><Input id="password" type="password" autoComplete="new-password" minLength={8} required value={password} onChange={(event)=>setPassword(event.target.value)} placeholder="At least 8 characters" className="h-12 rounded-xl bg-card px-4"/></div></div>
+            <div className="space-y-2"><label htmlFor="password" className="text-sm font-semibold">Password</label><div className="relative"><Input id="password" type={showPassword ? "text" : "password"} autoComplete="new-password" minLength={8} required value={password} onChange={(event)=>setPassword(event.target.value)} placeholder="At least 8 characters" className="h-12 rounded-xl bg-card px-4 pr-20"/><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword(current => !current)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-3 py-2 text-xs font-bold text-primary hover:bg-muted">{showPassword ? "Hide" : "Show"}</button></div></div>
             <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
               <AvatarPicker value={avatarPreset} onChange={setAvatarPreset} />
             </div>
