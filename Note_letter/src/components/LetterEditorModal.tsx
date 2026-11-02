@@ -191,7 +191,15 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
         if (isTimeCapsule && !openDate) { setNotice('Choose an opening date for your time capsule.'); setControlsOpen(true); return; }
         if ((scheduledDate && !utcDate(scheduledDate)) || (isTimeCapsule && !utcDate(openDate))) { setNotice('Choose a valid date and time.'); return; }
         const releaseDate = isTimeCapsule ? openDate : scheduledDate;
-        if (releaseDate && new Date(releaseDate).getTime() <= Date.now()) { setNotice('Choose a future date and time for delivery.'); setControlsOpen(true); return; }
+        const releaseWasChanged = !editingPublished ||
+            isTimeCapsule !== Boolean(initialData?.isTimeCapsule) ||
+            scheduledDate !== localDateInput(initialData?.scheduledDate) ||
+            openDate !== localDateInput(initialData?.openDate);
+        if (releaseDate && releaseWasChanged && new Date(releaseDate).getTime() <= Date.now()) {
+            setNotice('Choose a future date and time for delivery.');
+            setControlsOpen(true);
+            return;
+        }
         if (preferences.confirmBeforePublishing && !confirming) { setConfirming(true); setNotice(''); return; }
         publishing.current = true;
         setBusy(true);
