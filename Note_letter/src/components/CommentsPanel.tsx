@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { API_ENDPOINTS } from '../config/api';
 import { getImageUrl } from '../lib/utils';
 import { useAuthStore } from '../store/authStore';
+import ReactionCharacter, { type ReactionCharacterKey } from './ReactionCharacter';
 
 type Entry = {
     id: string;
@@ -20,12 +21,12 @@ type Entry = {
 };
 type GiftTotal = { reaction: string; count: number };
 
-const gifts = [
-    { key: 'heart', emoji: '❤️', label: 'Love' },
-    { key: 'flower', emoji: '🌸', label: 'Flower' },
-    { key: 'star', emoji: '🌟', label: 'Star' },
-    { key: 'hug', emoji: '🤗', label: 'Hug' },
-    { key: 'sparkles', emoji: '✨', label: 'Sparkles' },
+const gifts: { key: ReactionCharacterKey; label: string }[] = [
+    { key: 'heart', label: 'Love' },
+    { key: 'flower', label: 'Flower' },
+    { key: 'star', label: 'Star' },
+    { key: 'hug', label: 'Hug' },
+    { key: 'sparkles', label: 'Sparkles' },
 ];
 
 type Props = {
@@ -216,9 +217,34 @@ export default function CommentsPanel({ shareToken, letterId, actions, onCollaps
                 }
             </div> : <div className="p-4">
                 <div className="mb-4 flex items-center gap-2 text-sm text-stone-600"><Sparkles size={16} /> Send a little love to this letter</div>
-                <div className="grid grid-cols-3 gap-2">{gifts.map(gift => <button type="button" key={gift.key} disabled={sending} onClick={() => void send('gift', gift.key)} className="flex flex-col items-center gap-1 rounded-xl border border-[#ebded0] bg-[#fff8ee] p-3 hover:border-[#cc997d] disabled:opacity-50"><span className="text-2xl">{gift.emoji}</span><span className="text-xs">{gift.label}</span><span className="text-xs text-[#a06c56]">{totals.find(total => total.reaction === gift.key)?.count || 0}</span></button>)}</div>
-                <p className="mt-6 text-xs text-stone-500">Recent gifts</p>
-                <div className="mt-3 space-y-2">{entries.filter(e => e.kind === 'gift').length === 0 ? <p className="text-sm text-stone-400">No gifts yet. Be the first!</p> : entries.filter(e => e.kind === 'gift').map(e => <p key={e.id} className="rounded-xl bg-[#fdfbf8] p-3 text-sm"><strong>{e.displayName}</strong> {e.source === 'account' ? '· Member' : '· Guest'} sent {gifts.find(g => g.key === e.reaction)?.emoji || '🎁'}</p>)}</div>
+                <div className="grid grid-cols-3 gap-2.5">
+                    {gifts.map(gift => (
+                        <button
+                            type="button"
+                            key={gift.key}
+                            disabled={sending}
+                            onClick={() => void send('gift', gift.key)}
+                            aria-label={`Send a ${gift.label} reaction gift`}
+                            className="group flex min-h-[150px] flex-col items-center justify-center gap-1.5 rounded-[18px] border border-[#eedccb] bg-gradient-to-b from-[#fffaf5] to-[#fff4e8] px-2 py-3 transition-all duration-200 hover:-translate-y-1 hover:border-[#d8a88f] hover:shadow-[0_8px_18px_rgba(151,96,82,.12)] active:scale-[.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#98694c] disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            <ReactionCharacter reaction={gift.key} className="transition-transform duration-200 group-hover:scale-105" />
+                            <span className="font-serif text-sm font-semibold text-[#334238]">{gift.label}</span>
+                            <span className="text-xs font-semibold tabular-nums text-[#ad7660]">{totals.find(total => total.reaction === gift.key)?.count || 0}</span>
+                        </button>
+                    ))}
+                </div>
+                <p className="mt-6 text-xs font-medium uppercase tracking-[.12em] text-stone-500">Recent gifts</p>
+                <div className="mt-3 space-y-2">
+                    {entries.filter(e => e.kind === 'gift').length === 0
+                        ? <p className="rounded-xl bg-[#fff9f3] p-3 text-sm text-stone-400">No gifts yet. Be the first!</p>
+                        : entries.filter(e => e.kind === 'gift').map(e => {
+                            const gift = gifts.find(g => g.key === e.reaction);
+                            return <div key={e.id} className="flex items-center gap-3 rounded-2xl border border-[#f0e5d9] bg-[#fffaf6] p-2.5">
+                                <ReactionCharacter reaction={gift?.key || 'heart'} size="sm" />
+                                <p className="min-w-0 text-xs leading-5 text-[#5c655b]"><strong className="break-words text-[#334238]">{e.displayName}</strong> <span className="text-stone-400">· {e.source === 'account' ? 'Member' : 'Guest'}</span><span className="block">Sent {gift?.label || 'a lovely'} gift</span></p>
+                            </div>;
+                        })}
+                </div>
             </div>}
         </div>
 
