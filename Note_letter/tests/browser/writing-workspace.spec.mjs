@@ -22,7 +22,7 @@ const sampleLetters = [
   },
 ];
 
-async function fakeAuthenticatedApi(page) {
+async function fakeAuthenticatedApi(page, letters = sampleLetters) {
   await page.addInitScript((user) => {
     window.localStorage.setItem('token', 'ui-smoke-test-token');
     window.localStorage.setItem('user', JSON.stringify(user));
@@ -34,7 +34,7 @@ async function fakeAuthenticatedApi(page) {
     if (url.pathname === '/api/auth/session') {
       body = { user: sampleUser };
     } else if (url.pathname === '/api/letters/public') {
-      body = sampleLetters;
+      body = letters;
     }
     await route.fulfill({
       status: 200,
@@ -99,4 +99,63 @@ test('signed-in mobile user can find the native Write shortcut', async ({ page }
   await expect(write).toBeVisible();
   await write.click();
   await expect(page.getByRole('dialog').getByLabel('Letter title')).toBeVisible();
+});
+
+test('letter soundtrack follows Spotify playback, countdown, pause and modal cleanup', async ({ page }) => {
+  const musicLetter = {
+    ...sampleLetters[0],
+    spotifyLink: 'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC',
+  };
+  await fakeAuthenticatedApi(page, [musicLetter]);
+  await page.route('https://open.spotify.com/embed/iframe-api/v1', route => route.fulfill({
+    status: 200, contentType: 'application/javascript',
+    body: `
+      window.__spotifyDestroyed = 0;
+      window.onSpotifyIframeApiReady({
+        createController(mount, options, done) {
+          const listeners = {};
+          let paused = true;
+          let position = 60000;
+          let duration = 180000;
+          const emit = () => listeners.playback_update?.({ data: {
+            position, duration, isPaused: paused, isBuffering: false, playingURI: options.uri,
+          } });
+          const controller = {
+            addListener(name, callback) { listeners[name] = callback; },
+            play() { paused = false; listeners.playback_started?.({data: {playingURI: options.uri}}); emit(); },
+            pause() { paused = true; emit(); },
+            seek(seconds) { position = seconds * 1000; emit(); },
+            destroy() { window.__spotifyDestroyed++; mount.replaceChildren(); },
+          };
+          mount.appendChild(document.createElement('div'));
+          done(controller);
+          setTimeout(() => listeners.ready?.({ data: {} }), 0);
+        }
+      });
+    `,
+  }));
+
+  await page.goto('/dashboard/community');
+  await page.getByRole('button', { name: 'Read letter: Thank you for showing up' }).click();
+  const reader = page.getByRole('dialog');
+  await expect(reader.getByRole('region', { name: 'Letter soundtrack' })).toBeVisible();
+  await expect(reader.getByRole('button', { name: 'Pause letter soundtrack' })).toBeVisible();
+  await expect(reader.getByLabel('Soundtrack time remaining')).toContainText(/-1:[0-5][0-9]/);
+  await reader.getByRole('button', { name: 'Pause letter soundtrack' }).click();
+  await expect(reader.getByRole('button', { name: 'Play letter soundtrack' })).toBeVisible();
+  await reader.getByRole('button', { name: 'Play letter soundtrack' }).click();
+  await expect(reader.getByRole('button', { name: 'Pause letter soundtrack' })).toBeVisible();
+  await reader.getByRole('button', { name: 'Restart soundtrack' }).click();
+  await expect(reader.getByLabel('Soundtrack time remaining')).toContainText(/-3:00/);
+  await reader.getByRole('button', { name: 'Close' }).click();
+  await expect(reader).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => window.__spotifyDestroyed)).toBe(1);
+});
+
+test('untrusted Spotify-looking links never become an embedded media player', async ({ page }) => {
+  await fakeAuthenticatedApi(page, [{ ...sampleLetters[0],
+    spotifyLink: 'https://open.spotify.com.bad-domain.example/track/4uLU6hMCjMI75M1A2tKUQC' }]);
+  await page.goto('/dashboard/community');
+  await page.getByRole('button', { name: 'Read letter: Thank you for showing up' }).click();
+  await expect(page.getByRole('region', { name: 'Letter soundtrack' })).toHaveCount(0);
 });
