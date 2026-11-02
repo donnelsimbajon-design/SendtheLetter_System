@@ -1,0 +1,37 @@
+name: Production availability smoke checks
+
+# Read-only checks of the public website and API; never sends test user data.
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/production-smoke.yml'
+      - 'Note_letter/server/src/index.ts'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/production-smoke.yml'
+  schedule:
+    - cron: '27 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Verify production API health JSON
+        shell: bash
+        run: |
+          set -euo pipefail
+          body="$(curl --fail --silent --show-error --location --retry 5 --retry-all-errors --retry-delay 8 --connect-timeout 15 --max-time 70 'https://sendtheletter-api-s2i7.onrender.com/api/health')"
+          printf '%s\n' "$body" | jq --exit-status '.status == "ok"'
+
+      - name: Verify production website responds with HTML
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --retry 5 --retry-all-errors --retry-delay 8 --connect-timeout 15 --max-time 70 --output site.html 'https://sendtheletter-web-phzx.onrender.com/'
+          grep --ignore-case --extended-regexp '<!doctype html|<html' site.html >/dev/null
