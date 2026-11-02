@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Check, ChevronRight, RotateCcw } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useWriterPreferences, type ThemeChoice } from '../../store/writerPreferences';
 import { getImageUrl } from '../../lib/utils';
@@ -111,7 +110,7 @@ const SettingsPage = () => {
 
     return <div className="mx-auto max-w-6xl space-y-7 pb-12">
         <div className="flex items-center justify-between gap-4">
-            <div><Link to="/dashboard" className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground"><ArrowLeft size={15} /> Back to workspace</Link><p className="mt-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.19em] text-[hsl(var(--accent))]"><CharacterBadge name="tala" tone="gold" size="xs" /> Make your space yours</p><h1 className="mt-2 font-editorial text-4xl sm:text-5xl">Settings & privacy</h1><p className="mt-3 max-w-xl text-sm leading-7 text-muted-foreground">A calmer, more personal space for your stories. Changes to your preferences save instantly on this device.</p></div>
+            <div><Link to="/dashboard" className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground">Back to workspace</Link><p className="mt-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.19em] text-[hsl(var(--accent))]"><CharacterBadge name="tala" tone="gold" size="xs" /> Make your space yours</p><h1 className="mt-2 font-editorial text-4xl sm:text-5xl">Settings & privacy</h1><p className="mt-3 max-w-xl text-sm leading-7 text-muted-foreground">A calmer, more personal space for your stories. Changes to your preferences save instantly on this device.</p></div>
         </div>
         <div className="grid gap-5 lg:grid-cols-[270px_minmax(0,1fr)] lg:items-start">
             <aside className="rounded-[27px] border border-border bg-card p-3 shadow-sm lg:sticky lg:top-24">
@@ -130,7 +129,7 @@ const SettingsPage = () => {
                         <div className="flex flex-wrap items-center gap-4 p-6 sm:p-8">
                             <span className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-[hsl(var(--surface-gold))] text-2xl font-semibold">{user?.avatar ? <img src={getImageUrl(user.avatar)} alt="" className="h-full w-full object-cover" /> : user?.username?.[0]?.toUpperCase() || 'W'}</span>
                             <div className="min-w-0 flex-1"><p className="break-words text-base font-semibold">{user?.username}</p><p className="break-all text-sm text-muted-foreground">{user?.email}</p><p className="mt-1 text-xs text-muted-foreground">Your email is used for account sign-in.</p></div>
-                            <Link to="/dashboard/profile" className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-xs font-semibold text-primary-foreground hover:opacity-90">Edit profile <ChevronRight size={15} /></Link>
+                            <Link to="/dashboard/profile" className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-xs font-semibold text-primary-foreground hover:opacity-90">Edit profile</Link>
                         </div>
                     </section>
                     <section className="rounded-[28px] border border-border bg-card p-6 shadow-sm sm:p-8">
@@ -167,7 +166,7 @@ const SettingsPage = () => {
                         <div className="mt-6 grid gap-3 sm:grid-cols-3">
                             {themeChoices.map(choice => <button type="button" key={choice.value} onClick={() => change('theme', choice.value)} aria-pressed={preferences.theme === choice.value} className={`rounded-[20px] border-2 p-3 text-left transition-all hover:-translate-y-0.5 ${preferences.theme === choice.value ? 'border-primary shadow-md' : 'border-border hover:border-muted-foreground'}`}>
                                 <span className="relative mb-3 block h-24 overflow-hidden rounded-xl border border-black/5" style={{ backgroundColor: choice.tint }}><span className="absolute bottom-4 left-4 right-4 rounded-xl p-3 shadow-sm" style={{ backgroundColor: choice.foreground }}><span className="block h-1.5 w-3/4 rounded-full bg-white/70" /><span className="mt-2 block h-1.5 w-1/2 rounded-full bg-white/40" /></span></span>
-                                <span className="flex items-center justify-between text-sm font-bold">{choice.title}{preferences.theme === choice.value && <Check size={16} />}</span><span className="mt-1 block text-xs text-muted-foreground">{choice.description}</span>
+                                <span className="flex items-center justify-between text-sm font-bold">{choice.title}{preferences.theme === choice.value && <span className="text-xs font-bold text-primary">Selected</span>}</span><span className="mt-1 block text-xs text-muted-foreground">{choice.description}</span>
                             </button>)}
                         </div>
                     </section>
@@ -178,14 +177,14 @@ const SettingsPage = () => {
                         </div></div>
                         <SettingToggle title="Reduce motion" description="Minimize animations and decorative movement on this device." enabled={preferences.reduceMotion} onChange={v => change('reduceMotion', v)} />
                     </section>
-                    <button type="button" onClick={restoreDefaults} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-3 text-sm font-semibold hover:bg-muted"><RotateCcw size={16} /> Reset display and writing preferences</button>
+                    <button type="button" onClick={restoreDefaults} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-3 text-sm font-semibold hover:bg-muted">Reset display and writing preferences</button>
                 </div>}
                 {tab === 'help' && <section className="rounded-[28px] border border-border bg-card p-6 shadow-sm sm:p-8">
                     <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[.16em] text-[hsl(var(--accent))]"><CharacterBadge name="chika" tone="rose" size="sm" /> Here to help</p><h2 className="mt-2 font-editorial text-3xl">Need a hand?</h2><p className="mt-3 text-sm leading-7 text-muted-foreground">Explore how the app works, contact the project, or report a problem.</p>
                     <div className="mt-6 grid gap-3">
-                        <Link to="/services" className="flex items-center gap-4 rounded-2xl border border-border p-4 hover:bg-muted"><CharacterBadge name="basa" tone="gold" size="md" /><span className="flex-1"><strong className="block text-sm">Explore SendTheLetter</strong><span className="text-xs text-muted-foreground">Learn about writing, saving and sharing letters</span></span><ChevronRight size={18} /></Link>
-                        <Link to="/contact" className="flex items-center gap-4 rounded-2xl border border-border p-4 hover:bg-muted"><CharacterBadge name="chika" tone="sage" size="md" /><span className="flex-1"><strong className="block text-sm">Contact & feedback</strong><span className="text-xs text-muted-foreground">Share a suggestion or ask a question</span></span><ChevronRight size={18} /></Link>
-                        <Link to="/contact" className="flex items-center gap-4 rounded-2xl border border-border p-4 hover:bg-muted"><CharacterBadge name="tala" tone="rose" size="md" /><span className="flex-1"><strong className="block text-sm">Report a problem</strong><span className="text-xs text-muted-foreground">Explain the issue through the contact page</span></span><ChevronRight size={18} /></Link>
+                        <Link to="/services" className="flex items-center gap-4 rounded-2xl border border-border p-4 hover:bg-muted"><CharacterBadge name="basa" tone="gold" size="md" /><span className="flex-1"><strong className="block text-sm">Explore SendTheLetter</strong><span className="text-xs text-muted-foreground">Learn about writing, saving and sharing letters</span></span></Link>
+                        <Link to="/contact" className="flex items-center gap-4 rounded-2xl border border-border p-4 hover:bg-muted"><CharacterBadge name="chika" tone="sage" size="md" /><span className="flex-1"><strong className="block text-sm">Contact & feedback</strong><span className="text-xs text-muted-foreground">Share a suggestion or ask a question</span></span></Link>
+                        <Link to="/contact" className="flex items-center gap-4 rounded-2xl border border-border p-4 hover:bg-muted"><CharacterBadge name="tala" tone="rose" size="md" /><span className="flex-1"><strong className="block text-sm">Report a problem</strong><span className="text-xs text-muted-foreground">Explain the issue through the contact page</span></span></Link>
                     </div>
                     <div className="mt-6 rounded-2xl bg-muted/70 p-4 text-xs leading-6 text-muted-foreground"><CharacterBadge name="susi" tone="paper" size="xs" className="mr-2 align-middle" /> Tips: Use private mode for personal letters. Share public letters using their generated link; never share your password or authentication token.</div>
                 </section>}
