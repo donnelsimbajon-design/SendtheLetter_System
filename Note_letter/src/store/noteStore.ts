@@ -10,6 +10,7 @@ export interface Notification {
     actorId: number;
     type: 'comment' | 'like' | 'friend_request' | 'follow' | 'time_capsule_opened' | 'scheduled_letter_published' | string;
     entityId: number;
+    letterId?: number | null;
     isRead: boolean;
     createdAt: string;
     actor?: {
