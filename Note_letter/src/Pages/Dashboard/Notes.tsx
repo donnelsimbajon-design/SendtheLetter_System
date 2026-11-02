@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useNoteStore } from '../../store/noteStore';
 import Notecard from '../../components/Notecard';
 import { ArrowRight } from 'lucide-react';
@@ -15,6 +16,9 @@ import { API_ENDPOINTS } from '../../config/api';
 const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public' }) => {
     const { notes, drafts, archived, publicLetters, addNote, fetchMyLetters, fetchPublicLetters, fetchDrafts, fetchArchivedLetters, restoreArchivedNote } = useNoteStore();
     const [searchQuery, setSearchQuery] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState('all');
+    const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'popular'>('newest');
+    const [params, setParams] = useSearchParams();
     const [activeTab, setActiveTab] = useState<'public' | 'personal' | 'drafts' | 'scheduled' | 'archived'>(initialTab);
     useEffect(() => { setActiveTab(initialTab); }, [initialTab]);
     const [scheduledNotes, setScheduledNotes] = useState<Note[]>([]);
@@ -43,10 +47,35 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
     }, [fetchMyLetters, fetchPublicLetters, fetchDrafts, fetchArchivedLetters]);
 
     const visibleNotes = activeTab === 'public' ? publicLetters : activeTab === 'personal' ? notes : activeTab === 'drafts' ? drafts : activeTab === 'archived' ? archived : scheduledNotes;
-    const filteredNotes = visibleNotes.filter((note) =>
-        note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        note.title.toLowerCase().includes(searchQuery.toLowerCase())
+    const categories = useMemo(
+        () => Array.from(new Set(visibleNotes.map(note => note.category || note.type || 'Other'))).sort(),
+        [visibleNotes]
     );
+    const filteredNotes = useMemo(() => {
+        const query = searchQuery.trim().toLowerCase();
+        return visibleNotes.filter(note => {
+            const category = note.category || note.type || 'Other';
+            return (categoryFilter === 'all' || category === categoryFilter) &&
+                (!query || [note.title, note.content, note.authorName || '', category].some(value => value.toLowerCase().includes(query)));
+        }).sort((a, b) => sortOrder === 'popular'
+            ? ((b.likeCount || 0) + (b.commentCount || 0)) - ((a.likeCount || 0) + (a.commentCount || 0))
+            : sortOrder === 'oldest'
+                ? new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+                : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }, [visibleNotes, searchQuery, categoryFilter, sortOrder]);
+
+    useEffect(() => {
+        const id = params.get('letterId');
+        if (!id) return;
+        const found = notes.find(note => String(note.id) === id) || publicLetters.find(note => String(note.id) === id);
+        if (!found) return;
+        setActiveTab(notes.some(note => String(note.id) === id) ? 'personal' : 'public');
+        setSelectedNote(found);
+        setIsViewModalOpen(true);
+        const next = new URLSearchParams(params);
+        next.delete('letterId');
+        setParams(next, { replace: true });
+    }, [notes, publicLetters, params, setParams]);
 
     const reloadLetters = async () => {
         await Promise.all([fetchMyLetters(), fetchPublicLetters(), fetchDrafts(), fetchArchivedLetters(), fetchScheduledNotes()]);
@@ -111,7 +140,7 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                         { key: 'scheduled', label: 'Scheduled', mascot: 'araw' },
                         { key: 'archived', label: 'Archived', mascot: 'susi' },
                     ] as const).map(({ key, label, mascot }) => (
-                        <button type="button" key={key} onClick={() => setActiveTab(key)} className={clsx('inline-flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition-colors', activeTab === key ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:bg-card/60 hover:text-foreground')}>
+                        <button type="button" key={key} onClick={() => { setActiveTab(key); setCategoryFilter('all'); }} aria-pressed={activeTab === key} className={clsx('inline-flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition-colors', activeTab === key ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:bg-card/60 hover:text-foreground')}>
                             <CharacterBadge name={mascot} tone="paper" size="xs" /> {label}
                         </button>
                     ))}
@@ -134,8 +163,23 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                         className="pl-10 bg-transparent border-none focus-visible:ring-0"
                     />
                 </div>
-
+                <label className="flex w-full items-center gap-2 text-xs font-semibold text-muted-foreground md:w-auto">
+                    Category
+                    <select value={categoryFilter} onChange={event => setCategoryFilter(event.target.value)} className="min-h-11 flex-1 rounded-xl border border-border bg-background px-3 text-foreground md:min-w-32">
+                        <option value="all">All categories</option>
+                        {categories.map(category => <option key={category} value={category}>{category}</option>)}
+                    </select>
+                </label>
+                <label className="flex w-full items-center gap-2 text-xs font-semibold text-muted-foreground md:w-auto">
+                    Sort
+                    <select value={sortOrder} onChange={event => setSortOrder(event.target.value as 'newest' | 'oldest' | 'popular')} className="min-h-11 flex-1 rounded-xl border border-border bg-background px-3 text-foreground md:min-w-28">
+                        <option value="newest">Newest</option>
+                        <option value="oldest">Oldest</option>
+                        <option value="popular">Most appreciated</option>
+                    </select>
+                </label>
             </div>
+            <p aria-live="polite" className="text-xs text-muted-foreground">Showing {filteredNotes.length} of {visibleNotes.length} letters</p>
 
             {restoreError && <p role="alert" className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{restoreError}</p>}
 
@@ -163,10 +207,10 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                 {filteredNotes.length === 0 && (
                     <div className="col-span-full flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-border rounded-3xl bg-muted/10">
                         <Mascot name={activeTab === 'personal' ? 'basa' : activeTab === 'scheduled' ? 'araw' : activeTab === 'drafts' ? 'lumi' : activeTab === 'archived' ? 'susi' : 'chika'} className="mb-3 h-28 w-28" />
-                        <h3 className="text-xl font-semibold mb-2">{searchQuery ? 'No matching letters' : 'No letters found'}</h3>
+                        <h3 className="text-xl font-semibold mb-2">{searchQuery || categoryFilter !== 'all' ? 'No matching letters' : 'No letters found'}</h3>
                         <p className="text-muted-foreground max-w-sm">
-                            {searchQuery
-                                ? 'Try a different search term.'
+                            {searchQuery || categoryFilter !== 'all'
+                                ? 'Try a different search term or category.'
                                 : activeTab === 'personal' ? 'No finished letters yet. Start by writing one.' : activeTab === 'drafts' ? 'No drafts yet. Save a letter draft and it will appear here.' : activeTab === 'scheduled' ? 'No scheduled letters. You can choose a future release date in the editor.' : activeTab === 'archived' ? 'Your archive is empty. Archived letters will appear here until you restore them.' : 'There are no public letters to display right now.'}
                         </p>
                     </div>
