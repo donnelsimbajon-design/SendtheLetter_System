@@ -95,7 +95,7 @@ export const getMyLetters = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user.id;
         const letters = await Letter.findAll({
-            where: { userId, status: 'published', [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }] },
+            where: { userId, status: 'published', isArchived: false, [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }] },
             order: [['createdAt', 'DESC']],
         });
         res.json(letters);
@@ -109,7 +109,7 @@ export const getDrafts = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user.id;
         const letters = await Letter.findAll({
-            where: { userId, status: 'draft' },
+            where: { userId, status: 'draft', isArchived: false },
             order: [['createdAt', 'DESC']],
         });
         res.json(letters);
@@ -327,7 +327,8 @@ export const getScheduledLetters = async (req: AuthRequest, res: Response) => {
         const letters = await Letter.findAll({
             where: {
                 userId,
-                status: 'scheduled'
+                status: 'scheduled',
+                isArchived: false
             },
             order: [['scheduledDate', 'ASC']],
         });
@@ -347,7 +348,8 @@ export const getTimeCapsules = async (req: AuthRequest, res: Response) => {
             where: {
                 userId,
                 isTimeCapsule: true,
-                status: 'scheduled'
+                status: 'scheduled',
+                isArchived: false
             },
             order: [['openDate', 'ASC']],
         });
@@ -379,6 +381,18 @@ export const archiveLetter = async (req: AuthRequest, res: Response) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
+    }
+};
+
+export const restoreArchivedLetter = async (req: AuthRequest, res: Response) => {
+    try {
+        const letter = await Letter.findOne({ where: { id: req.params.id, userId: req.user.id, isArchived: true } });
+        if (!letter) return res.status(404).json({ message: 'Archived letter not found.' });
+        await letter.update({ isArchived: false });
+        return res.json({ message: 'Letter restored to your library.', letter });
+    } catch (error) {
+        console.error('Unable to restore archived letter:', error);
+        return res.status(500).json({ message: 'Unable to restore letter.' });
     }
 };
 

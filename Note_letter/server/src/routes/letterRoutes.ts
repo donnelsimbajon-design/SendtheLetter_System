@@ -38,6 +38,7 @@ router.get('/scheduled', letterController.getScheduledLetters);
 router.get('/time-capsules', letterController.getTimeCapsules);
 router.get('/archived', letterController.getArchivedLetters);
 router.post('/:id/archive', letterController.archiveLetter);
+router.post('/:id/restore', letterController.restoreArchivedLetter);
 router.get('/reposts', repostController.getUserReposts);
 router.post('/:id/repost', repostController.toggleRepost);
 router.get('/:id/repost/status', repostController.checkRepostStatus);
