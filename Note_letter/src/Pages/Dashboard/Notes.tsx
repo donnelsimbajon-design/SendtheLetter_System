@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNoteStore } from '../../store/noteStore';
 import Notecard from '../../components/Notecard';
-import { Search, PenLine, Lock, Globe } from 'lucide-react';
+import { Search, PenLine, Lock, Globe, Clock3, BookOpen, ArrowRight, Sparkles } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import LetterEditorModal from '../../components/LetterEditorModal';
@@ -9,30 +9,43 @@ import LetterViewModal from '../../components/LetterViewModal';
 import { Note } from '../../types/note';
 import clsx from 'clsx';
 import Mascot from '../../components/Mascot';
+import { API_ENDPOINTS } from '../../config/api';
 
 const Notes = () => {
-    const { notes, publicLetters, addNote, fetchMyLetters, fetchPublicLetters, fetchDrafts } = useNoteStore();
+    const { notes, drafts, publicLetters, addNote, fetchMyLetters, fetchPublicLetters, fetchDrafts } = useNoteStore();
     const [searchQuery, setSearchQuery] = useState('');
-    const [activeTab, setActiveTab] = useState<'public' | 'personal'>('public');
+    const [activeTab, setActiveTab] = useState<'public' | 'personal' | 'drafts' | 'scheduled'>('public');
+    const [scheduledNotes, setScheduledNotes] = useState<Note[]>([]);
+    const [editingNote, setEditingNote] = useState<Note | null>(null);
     const [isEditorOpen, setIsEditorOpen] = useState(false);
 
     // View Modal State
     const [selectedNote, setSelectedNote] = useState<Note | null>(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
-    useEffect(() => {
-        void fetchMyLetters();
-        void fetchPublicLetters();
-    }, [fetchMyLetters, fetchPublicLetters]);
+    const fetchScheduledNotes = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const result = await fetch(`${API_ENDPOINTS.letters}/scheduled`, { headers: { Authorization: `Bearer ${token}` } });
+            if (result.ok) {
+                const data = await result.json();
+                setScheduledNotes(Array.isArray(data) ? data : []);
+            }
+        } catch (error) { console.error('Could not refresh scheduled letters:', error); }
+    };
 
-    const visibleNotes = activeTab === 'public' ? publicLetters : notes;
+    useEffect(() => {
+        void Promise.all([fetchMyLetters(), fetchPublicLetters(), fetchDrafts(), fetchScheduledNotes()]);
+    }, [fetchMyLetters, fetchPublicLetters, fetchDrafts]);
+
+    const visibleNotes = activeTab === 'public' ? publicLetters : activeTab === 'personal' ? notes : activeTab === 'drafts' ? drafts : scheduledNotes;
     const filteredNotes = visibleNotes.filter((note) =>
         note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
         note.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const reloadLetters = async () => {
-        await Promise.all([fetchMyLetters(), fetchPublicLetters(), fetchDrafts()]);
+        await Promise.all([fetchMyLetters(), fetchPublicLetters(), fetchDrafts(), fetchScheduledNotes()]);
     };
 
     const handleLetterCreate = async (data: any) => {
@@ -66,44 +79,25 @@ const Notes = () => {
             {/* Header Section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-foreground">
-                        {activeTab === 'personal' ? 'My Letters' : 'Community Letters'}
-                    </h2>
-                    <p className="text-muted-foreground mt-1">
-                        {activeTab === 'personal'
-                            ? 'Manage your personal correspondence.'
-                            : 'Read letters shared by the community.'}
-                    </p>
+                    <p className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.16em] text-[hsl(var(--accent))]"><Sparkles size={14} /> The letter collection</p>
+                    <h2 className="font-editorial text-4xl tracking-tight text-foreground">{activeTab === 'public' ? 'Community letters' : activeTab === 'personal' ? 'My letters' : activeTab === 'drafts' ? 'Saved drafts' : 'Letters for later'}</h2>
+                    <p className="mt-2 text-sm text-muted-foreground">{activeTab === 'public' ? 'Discover words worth sharing.' : activeTab === 'personal' ? 'Your finished letters, just as you wrote them.' : activeTab === 'drafts' ? 'Pick up where your thoughts left off.' : 'Letters waiting for their special moment.'}</p>
                 </div>
 
-                <div className="flex items-center gap-3 bg-muted/50 p-1.5 rounded-xl border border-border/50">
-                    <button
-                        onClick={() => setActiveTab('personal')}
-                        className={clsx(
-                            "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                            activeTab === 'personal'
-                                ? "bg-background shadow-sm text-foreground ring-1 ring-black/5 dark:ring-white/10"
-                                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-                        )}
-                    >
-                        <Lock size={16} />
-                        <span>Private</span>
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('public')}
-                        className={clsx(
-                            "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                            activeTab === 'public'
-                                ? "bg-background shadow-sm text-foreground ring-1 ring-black/5 dark:ring-white/10"
-                                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-                        )}
-                    >
-                        <Globe size={16} />
-                        <span>Public</span>
-                    </button>
+                <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-border/70 bg-muted/60 p-1.5">
+                    {([
+                        { key: 'public', label: 'Community', icon: Globe },
+                        { key: 'personal', label: 'My letters', icon: Lock },
+                        { key: 'drafts', label: 'Drafts', icon: BookOpen },
+                        { key: 'scheduled', label: 'Scheduled', icon: Clock3 },
+                    ] as const).map(({ key, label, icon: Icon }) => (
+                        <button type="button" key={key} onClick={() => setActiveTab(key)} className={clsx('inline-flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition-colors', activeTab === key ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:bg-card/60 hover:text-foreground')}>
+                            <Icon size={15} /> {label}
+                        </button>
+                    ))}
                 </div>
 
-                <Button onClick={() => setIsEditorOpen(true)} className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 shadow-lg hover:shadow-xl transition-all">
+                <Button onClick={() => { setEditingNote(null); setIsEditorOpen(true); }} className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 shadow-lg hover:shadow-xl transition-all">
                     <PenLine size={18} />
                     Write a Letter
                 </Button>
@@ -125,9 +119,14 @@ const Notes = () => {
 
             {/* Notes Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredNotes.map((note) => (
-                    <Notecard key={note.id} note={note} onClick={handleNoteClick} />
-                ))}
+                {filteredNotes.map((note) => activeTab === 'drafts' || activeTab === 'scheduled' ? (
+                    <button type="button" key={note.id} onClick={() => { setEditingNote(note); setIsEditorOpen(true); }} className="group flex h-[265px] flex-col rounded-[26px] border border-border bg-card p-6 text-left shadow-sm transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg">
+                        <span className="flex items-center justify-between text-xs font-bold uppercase tracking-[.14em] text-muted-foreground"><span className="inline-flex items-center gap-2">{activeTab === 'drafts' ? <BookOpen size={15} /> : <Clock3 size={15} />}{activeTab === 'drafts' ? 'Unfinished thought' : 'Coming soon'}</span><ArrowRight size={16} className="transition-transform group-hover:translate-x-1" /></span>
+                        <h3 className="mt-6 line-clamp-2 font-editorial text-2xl leading-tight">{note.title || 'Untitled letter'}</h3>
+                        <p className="mt-3 line-clamp-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{note.content}</p>
+                        <div className="mt-auto flex items-center justify-between border-t border-border/80 pt-4 text-xs font-semibold text-primary"><span>{activeTab === 'drafts' ? 'Continue writing' : 'Review scheduled letter'}</span><PenLine size={16} /></div>
+                    </button>
+                ) : <Notecard key={note.id} note={note} onClick={handleNoteClick} />)}
 
                 {filteredNotes.length === 0 && (
                     <div className="col-span-full flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-border rounded-3xl bg-muted/10">
@@ -136,9 +135,7 @@ const Notes = () => {
                         <p className="text-muted-foreground max-w-sm">
                             {searchQuery
                                 ? 'Try a different search term.'
-                                : activeTab === 'personal'
-                                  ? "You haven't written any letters yet. Click 'Write a Letter' to start!"
-                                  : 'There are no public letters to display right now.'}
+                                : activeTab === 'personal' ? 'No finished letters yet. Start by writing one.' : activeTab === 'drafts' ? 'No drafts yet. Save a letter draft and it will appear here.' : activeTab === 'scheduled' ? 'No scheduled letters. You can choose a future release date in the editor.' : 'There are no public letters to display right now.'}
                         </p>
                     </div>
                 )}
@@ -148,8 +145,9 @@ const Notes = () => {
                 isOpen={isEditorOpen}
                 onClose={() => setIsEditorOpen(false)}
                 onSubmit={handleLetterCreate}
+                initialData={editingNote || undefined}
                 onDraftSaved={fetchDrafts}
-                onPublished={reloadLetters}
+                onPublished={async (status, publicLetter) => { await reloadLetters(); setActiveTab(status === 'scheduled' ? 'scheduled' : publicLetter ? 'public' : 'personal'); }}
             />
 
             <LetterViewModal
