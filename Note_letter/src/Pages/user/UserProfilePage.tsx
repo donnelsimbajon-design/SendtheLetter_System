@@ -126,6 +126,24 @@ export default function UserProfilePage() {
         } finally { setActionBusy(false); }
     };
 
+    const declineRequest = async () => {
+        if (!friendState.requestId || actionBusy) return;
+        setActionBusy(true);
+        setActionError('');
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/friends/decline`, {
+                method: 'POST',
+                headers: { ...authHeader(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ requestId: friendState.requestId })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(result.message || 'Could not decline this request.');
+            setFriendState({ status: 'none', requestId: null });
+        } catch (err: any) {
+            setActionError(err?.message || 'Could not decline this pen pal request.');
+        } finally { setActionBusy(false); }
+    };
+
     const isSelf = !!currentUser && Number(currentUser.id) === Number(profile?.id);
     const friendLabel: Record<FriendState, string> = {
         none: 'Add pen pal',
@@ -160,8 +178,11 @@ export default function UserProfilePage() {
                 label: friendLabel[friendState.status],
                 onClick: friendState.status === 'friends' ? undefined : () => void changeFriend(),
                 disabled: actionBusy || friendState.status === 'friends',
+                secondaryLabel: friendState.status === 'received' ? 'Decline' : undefined,
+                secondaryClick: friendState.status === 'received' ? () => void declineRequest() : undefined,
             }}
             actionError={actionError}
+            onDismissActionError={() => setActionError('')}
         />
         <LetterViewModal isOpen={!!selected} onClose={() => setSelected(null)} note={selected} />
     </>;
