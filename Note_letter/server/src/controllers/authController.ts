@@ -147,6 +147,8 @@ export const changePassword = async (req: Request & { user?: { id: number } }, r
         if (!user || !user.isActive) return res.status(401).json({ message: 'Please sign in again.' });
         if (!(await user.validatePassword(currentPassword))) return res.status(403).json({ message: 'Current password is incorrect.' });
         await user.update({ password_hash: newPassword, tokenVersion: user.tokenVersion + 1 });
+        const io = req.app.get('io');
+        if (io) io.in('user_' + user.id).disconnectSockets(true);
         res.setHeader('Cache-Control', 'no-store');
         return res.json({ message: 'Password updated successfully. All prior sessions were revoked.', reauthRequired: true });
     } catch (error) {
