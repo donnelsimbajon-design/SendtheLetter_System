@@ -406,6 +406,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                             </div>
                             {page.imageData && <p className="mt-2 text-xs text-[#9a796b]">Drag the photo within its frame, adjust the size slider, or move it above/below your writing.</p>}
                             <label className="sr-only" htmlFor="letter-content">Your letter</label>
+                            {page.imagePlacement === 'before' && photoEditor}
                             <textarea id="letter-content" value={page.text} onChange={e => { if (updateText(e.target.value)) markDirty(); }} onPaste={event => {
                                 const image = Array.from(event.clipboardData.items).find(item => item.kind === 'file' && item.type.startsWith('image/'));
                                 if (image) {
@@ -424,7 +425,6 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                                     setBookError('You pasted encoded photo data. Click "Insert image in page" instead.');
                                 }
                             }} placeholder={"Tell them what you've been meaning to say…\n\nStart with a memory, a feeling, or just a simple hello."} className={cn('mt-7 min-h-[230px] w-full flex-1 resize-none border-0 bg-transparent p-0 text-base leading-[1.9] outline-none placeholder:opacity-50 sm:text-lg', font, imageUrl ? 'text-white placeholder:text-white' : 'text-[#35483d] placeholder:text-[#8b9188]')} />
-                            {page.imagePlacement === 'before' && photoEditor}
                             {page.imagePlacement !== 'before' && photoEditor}
                             <div className={cn('mt-8 flex justify-end gap-2 border-t pt-5 font-serif italic', imageUrl ? 'border-white/35 text-white/80' : 'border-[#dcd6c8] text-[#817e72]')}><span>With care,</span><span className="font-semibold">{isAnonymous ? 'Anonymous' : (user?.username?.includes('@') ? user.username.split('@')[0] : user?.username) || 'Me'}</span></div>
                         </div>
