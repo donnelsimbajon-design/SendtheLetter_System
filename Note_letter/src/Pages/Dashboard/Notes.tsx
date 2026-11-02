@@ -14,6 +14,7 @@ import CharacterBadge from '../../components/CharacterBadge';
 import { API_ENDPOINTS } from '../../config/api';
 
 const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public' }) => {
+    const isCommunity = initialTab === 'public';
     const { notes, drafts, archived, publicLetters, isLoadingPublic, publicError, addNote, fetchMyLetters, fetchPublicLetters, fetchDrafts, fetchArchivedLetters, restoreArchivedNote } = useNoteStore();
     const [searchQuery, setSearchQuery] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
@@ -24,7 +25,7 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
         if (!username.trim()) return;
         setIsViewModalOpen(false);
         setSelectedNote(null);
-        navigate(`/writers/${encodeURIComponent(username)}`);
+        navigate(`/dashboard/profile/${encodeURIComponent(username)}`);
     };
     const [activeTab, setActiveTab] = useState<'public' | 'personal' | 'drafts' | 'scheduled' | 'archived'>(initialTab);
     useEffect(() => { setActiveTab(initialTab); }, [initialTab]);
@@ -53,7 +54,12 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
         void Promise.all([fetchMyLetters(), fetchPublicLetters(), fetchDrafts(), fetchArchivedLetters(), fetchScheduledNotes()]);
     }, [fetchMyLetters, fetchPublicLetters, fetchDrafts, fetchArchivedLetters]);
 
-    const visibleNotes = activeTab === 'public' ? publicLetters : activeTab === 'personal' ? notes : activeTab === 'drafts' ? drafts : activeTab === 'archived' ? archived : scheduledNotes;
+    const visibleNotes = isCommunity
+        ? publicLetters.filter(note => note.isPublic && note.status === 'published' && !note.isArchived &&
+            (!note.openDate || new Date(note.openDate).getTime() <= Date.now()) &&
+            (!note.scheduledDate || new Date(note.scheduledDate).getTime() <= Date.now()))
+        : activeTab === 'personal' ? notes.filter(note => note.status === 'published' && !note.isArchived)
+        : activeTab === 'drafts' ? drafts : activeTab === 'archived' ? archived : scheduledNotes;
     const categories = useMemo(
         () => Array.from(new Set(visibleNotes.map(note => note.category || note.type || 'Other'))).sort(),
         [visibleNotes]
@@ -74,15 +80,17 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
     useEffect(() => {
         const id = params.get('letterId');
         if (!id) return;
-        const found = notes.find(note => String(note.id) === id) || publicLetters.find(note => String(note.id) === id);
+        const found = isCommunity
+            ? publicLetters.find(note => String(note.id) === id && note.isPublic && note.status === 'published' && !note.isArchived)
+            : notes.find(note => String(note.id) === id);
         if (!found) return;
-        setActiveTab(notes.some(note => String(note.id) === id) ? 'personal' : 'public');
+        if (!isCommunity) setActiveTab(notes.some(note => String(note.id) === id) ? 'personal' : 'personal');
         setSelectedNote(found);
         setIsViewModalOpen(true);
         const next = new URLSearchParams(params);
         next.delete('letterId');
         setParams(next, { replace: true });
-    }, [notes, publicLetters, params, setParams]);
+    }, [isCommunity, notes, publicLetters, params, setParams]);
 
     const reloadLetters = async () => {
         await Promise.all([fetchMyLetters(), fetchPublicLetters(), fetchDrafts(), fetchArchivedLetters(), fetchScheduledNotes()]);
@@ -135,13 +143,12 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <p className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.16em] text-[hsl(var(--accent))]"><CharacterBadge name="basa" tone="gold" size="xs" /> The letter collection</p>
-                    <h2 className="font-editorial text-4xl tracking-tight text-foreground">{activeTab === 'public' ? 'Community letters' : activeTab === 'personal' ? 'My letters' : activeTab === 'drafts' ? 'Saved drafts' : activeTab === 'archived' ? 'Archived letters' : 'Letters for later'}</h2>
-                    <p className="mt-2 text-sm text-muted-foreground">{activeTab === 'public' ? 'Discover words worth sharing.' : activeTab === 'personal' ? 'Your finished letters, just as you wrote them.' : activeTab === 'drafts' ? 'Pick up where your thoughts left off.' : activeTab === 'archived' ? 'Letters you have set aside. Restore them whenever you are ready.' : 'Letters waiting for their special moment.'}</p>
+                    <h2 className="font-editorial text-4xl tracking-tight text-foreground">{isCommunity ? 'Community letters' : activeTab === 'personal' ? 'My letters' : activeTab === 'drafts' ? 'Saved drafts' : activeTab === 'archived' ? 'Archived letters' : 'Letters for later'}</h2>
+                    <p className="mt-2 text-sm text-muted-foreground">{isCommunity ? 'Only published public letters appear here. Private writing stays in My library.' : activeTab === 'personal' ? 'Your finished letters, just as you wrote them.' : activeTab === 'drafts' ? 'Pick up where your thoughts left off.' : activeTab === 'archived' ? 'Letters you have set aside. Restore them whenever you are ready.' : 'Letters waiting for their special moment.'}</p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-border/70 bg-muted/60 p-1.5">
-                    {([
-                        { key: 'public', label: 'Community', mascot: 'chika' },
+                    {(!isCommunity ? ([
                         { key: 'personal', label: 'My letters', mascot: 'basa' },
                         { key: 'drafts', label: 'Drafts', mascot: 'lumi' },
                         { key: 'scheduled', label: 'Scheduled', mascot: 'araw' },
@@ -150,7 +157,7 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                         <button type="button" key={key} onClick={() => { setActiveTab(key); setCategoryFilter('all'); }} aria-pressed={activeTab === key} className={clsx('inline-flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition-colors', activeTab === key ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:bg-card/60 hover:text-foreground')}>
                             <CharacterBadge name={mascot} tone="paper" size="xs" /> {label}
                         </button>
-                    ))}
+                    )) : <span className="px-3 py-2 text-xs font-semibold text-muted-foreground">Public letters only</span>)}
                 </div>
 
                 <Button onClick={() => { setEditingNote(null); setIsEditorOpen(true); }} className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 shadow-lg hover:shadow-xl transition-all">
@@ -188,11 +195,11 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
             </div>
             <p aria-live="polite" className="text-xs text-muted-foreground">Showing {filteredNotes.length} of {visibleNotes.length} letters</p>
 
-            {activeTab === 'public' && publicError && <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+            {isCommunity && publicError && <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
                 <span>Community letters could not load: {publicError}</span>
                 <button type="button" onClick={() => void fetchPublicLetters()} className="font-bold underline">Try again</button>
             </div>}
-            {activeTab === 'public' && isLoadingPublic && publicLetters.length === 0 && <p role="status" className="text-sm text-muted-foreground">Loading community letters…</p>}
+            {isCommunity && isLoadingPublic && publicLetters.length === 0 && <p role="status" className="text-sm text-muted-foreground">Loading community letters…</p>}
             {restoreError && <p role="alert" className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{restoreError}</p>}
 
             {/* Notes Grid */}
@@ -235,7 +242,7 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                 onSubmit={handleLetterCreate}
                 initialData={editingNote || undefined}
                 onDraftSaved={fetchDrafts}
-                onPublished={async (status, publicLetter) => { await reloadLetters(); setActiveTab(status === 'scheduled' ? 'scheduled' : publicLetter ? 'public' : 'personal'); }}
+                onPublished={async (status, publicLetter) => { await reloadLetters(); if (isCommunity) { if (!publicLetter || status === 'scheduled') navigate('/dashboard/notes'); } else { setActiveTab(status === 'scheduled' ? 'scheduled' : 'personal'); } }}
             />
 
             <LetterViewModal
