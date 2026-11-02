@@ -104,6 +104,12 @@ if (writer) {
 // Report this launch blocker explicitly without hiding successful privacy checks.
 const brokenRoutes = [];
 for (const route of ['/', '/dashboard/community', '/dashboard/notes', '/writers/__route_smoke__']) {
+    // A single missing catch-all rewrite breaks all deep links. Avoid repeated
+    // slow CDN 404 lookups until this site-wide configuration is corrected.
+    if (brokenRoutes.length) {
+        console.warn('::warning::Skipping remaining direct routes until the Render catch-all rewrite is configured.');
+        break;
+    }
     try {
         const response = await request(WEB, route);
         const html = await response.text();
