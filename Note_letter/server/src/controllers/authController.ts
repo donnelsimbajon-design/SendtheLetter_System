@@ -23,7 +23,7 @@ const generateToken = (user: User) => {
     const secret = process.env.JWT_SECRET;
     if (!secret || secret.length < 32) throw new Error('JWT_SECRET must be configured with at least 32 characters.');
     return jwt.sign(
-        { id: user.id, username: user.username, email: user.email, role: user.role },
+        { id: user.id, username: user.username, email: user.email, role: user.role, tokenVersion: user.tokenVersion },
         secret,
         { expiresIn: '24h' }
     );
@@ -133,7 +133,7 @@ export const updateProfile = async (req: Request & { user?: { id: number } }, re
 /**
  * Change password only after verifying the current password.
  * Sequelize's beforeUpdate hook hashes the new password with bcrypt.
- * Existing JWTs remain valid until their normal expiration (24 hours).
+ * Revoking existing JWTs is mandatory when the password changes.
  */
 export const changePassword = async (req: Request & { user?: { id: number } }, res: Response) => {
     try {
@@ -146,9 +146,9 @@ export const changePassword = async (req: Request & { user?: { id: number } }, r
         const user = await User.findByPk(req.user?.id);
         if (!user || !user.isActive) return res.status(401).json({ message: 'Please sign in again.' });
         if (!(await user.validatePassword(currentPassword))) return res.status(403).json({ message: 'Current password is incorrect.' });
-        await user.update({ password_hash: newPassword });
+        await user.update({ password_hash: newPassword, tokenVersion: user.tokenVersion + 1 });
         res.setHeader('Cache-Control', 'no-store');
-        return res.json({ message: 'Password updated successfully. Use the new password when signing in again.' });
+        return res.json({ message: 'Password updated successfully. All prior sessions were revoked.', reauthRequired: true });
     } catch (error) {
         console.error('Password change failed:', error);
         return res.status(500).json({ message: 'Could not update your password. Please try again.' });
