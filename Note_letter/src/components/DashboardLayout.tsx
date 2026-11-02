@@ -1,12 +1,9 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
 import { useAuthStore } from '../store/authStore';
-import { useNoteStore } from '../store/noteStore';
-import socketService from '../services/socketService';
 import { getImageUrl } from '../lib/utils';
-import Mascot from './Mascot';
+import NotificationsMenu from './NotificationsMenu';
 import CharacterBadge from './CharacterBadge';
 import ProfileDropdown from './ProfileDropdown';
 import { useWriterPreferences } from '../store/writerPreferences';
@@ -25,15 +22,6 @@ const DashboardLayout = () => {
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const preferences = useWriterPreferences(state => state.preferences);
   const loadForUser = useWriterPreferences(state => state.loadForUser);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const { notifications, fetchNotifications, markNotificationsRead } = useNoteStore();
-  const unreadCount = notifications.filter((notification) => !notification.isRead).length;
-
-  useEffect(() => {
-    void fetchNotifications();
-    socketService.onNewNotification(() => { void fetchNotifications(); });
-    return () => socketService.offNewNotification();
-  }, [fetchNotifications]);
 
   useEffect(() => {
     loadForUser(user?.id);
@@ -47,7 +35,7 @@ const DashboardLayout = () => {
     root.dataset.reduceMotion = String(preferences.reduceMotion);
   }, [preferences]);
 
-  useEffect(() => { setShowAccountMenu(false); setShowNotifications(false); }, [location.pathname]);
+  useEffect(() => { setShowAccountMenu(false); }, [location.pathname]);
 
   const pageTitle = navigation.find((item) => item.to === location.pathname)?.label || 'Your space';
 
@@ -60,25 +48,7 @@ const DashboardLayout = () => {
             <span className="font-editorial text-xl font-semibold tracking-tight">SendTheLetter</span>
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
-            <div className="relative">
-              <button onClick={() => { const next = !showNotifications; setShowNotifications(next); if (next && unreadCount > 0) void markNotificationsRead(); }} className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="Notifications">
-                <CharacterBadge name="nori" tone="gold" size="sm" />
-                {unreadCount > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[hsl(var(--accent))] ring-2 ring-card" />}
-              </button>
-              {showNotifications && (
-                <div className="absolute right-0 top-12 z-50 w-[min(21rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-card shadow-xl">
-                  <div className="flex items-center justify-between border-b border-border px-4 py-3"><p className="text-sm font-semibold">Notifications</p><span className="text-xs text-muted-foreground">{unreadCount ? `${unreadCount} new` : 'All caught up'}</span></div>
-                  <div className="max-h-80 overflow-y-auto">
-                    {notifications.length ? notifications.slice(0, 12).map((notification) => (
-                      <Link key={notification.id} to={notification.actor?.username ? `/dashboard/profile/${notification.actor.username}` : '/dashboard'} onClick={() => setShowNotifications(false)} className="block border-b border-border/70 px-4 py-3 last:border-0 hover:bg-muted/60">
-                        <p className="text-sm leading-5"><span className="font-semibold">{notification.actor?.username || 'Someone'}</span>{notification.type === 'like' ? ' liked your letter ' : notification.type === 'friend_request' ? ' sent you a friend request' : notification.type === 'follow' ? ' started following you' : ' commented on your letter '}<span className="font-medium">{notification.letter?.title || 'your letter'}</span></p>
-                        <p className="mt-1 text-xs text-muted-foreground">{formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}</p>
-                      </Link>
-                    )) : <div className="flex flex-col items-center px-4 py-6 text-center text-sm text-muted-foreground"><Mascot name="nori" className="mb-2 h-20 w-20" /><p>No notifications yet.</p></div>}
-                  </div>
-                </div>
-              )}
-            </div>
+            <NotificationsMenu />
             <div className="relative">
               <button
                 type="button"

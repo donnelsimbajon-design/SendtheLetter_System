@@ -8,8 +8,9 @@ export interface Notification {
     id: number;
     userId: number;
     actorId: number;
-    type: 'comment' | 'like' | 'friend_request' | 'follow';
+    type: 'comment' | 'like' | 'friend_request' | 'follow' | 'time_capsule_opened' | 'scheduled_letter_published' | string;
     entityId: number;
+    letterId?: number | null;
     isRead: boolean;
     createdAt: string;
     actor?: {
@@ -48,6 +49,7 @@ interface NoteState {
     toggleLike: (letterId: string) => Promise<void>;
     fetchNotifications: () => Promise<void>;
     markNotificationsRead: () => Promise<void>;
+    markNotificationRead: (id: number) => Promise<void>;
 }
 
 const API_URL = API_ENDPOINTS.letters;
@@ -389,15 +391,27 @@ export const useNoteStore = create<NoteState>((set, get) => ({
     markNotificationsRead: async () => {
         try {
             const token = localStorage.getItem('token');
-            await fetch(`${API_BASE_URL}/api/notifications/read`, {
+            const response = await fetch(`${API_BASE_URL}/api/notifications/read`, {
                 method: 'PUT',
                 headers: { Authorization: `Bearer ${token}` },
             });
+            if (!response.ok) throw new Error('Could not mark notifications as read.');
             set((state) => ({
                 notifications: state.notifications.map(n => ({ ...n, isRead: true }))
             }));
         } catch (error: any) {
             console.error('Error marking notifications read:', error);
         }
+    },
+    markNotificationRead: async (id: number) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE_URL}/api/notifications/${id}/read`, {
+            method: 'PUT',
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) throw new Error('Could not mark notification as read.');
+        set((state) => ({
+            notifications: state.notifications.map((item) => item.id === id ? { ...item, isRead: true } : item),
+        }));
     },
 }));

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
 import Letter from '../models/Letter';
+import { validateFutureRelease } from '../services/releaseSchedule';
 import User from '../models/User';
 import sequelize from '../config/database';
 import { Op } from 'sequelize';
@@ -60,6 +61,10 @@ export const createLetter = async (req: AuthRequest, res: Response) => {
         const releaseTime = releaseAt ? new Date(releaseAt).getTime() : null;
         if (releaseTime !== null && !Number.isFinite(releaseTime)) {
             return res.status(400).json({ message: 'Enter a valid release date' });
+        }
+        if (status !== 'draft') {
+            const schedulingError = validateFutureRelease(releaseAt);
+            if (schedulingError) return res.status(400).json({ message: schedulingError });
         }
         const releaseIsFuture = releaseTime !== null && releaseTime > Date.now();
         const effectiveStatus = status === 'draft' ? 'draft' : (releaseIsFuture ? 'scheduled' : (status || 'published'));
@@ -292,6 +297,12 @@ export const updateLetter = async (req: AuthRequest, res: Response) => {
 
         if (letter.status !== 'draft' && nextIsTimeCapsule && !nextReleaseAt) {
             return res.status(400).json({ message: 'Choose an opening date for your Time Capsule' });
+        }
+        if (letter.status !== 'draft' && nextReleaseAt && (
+            updates.scheduledDate !== undefined || updates.openDate !== undefined || updates.isTimeCapsule !== undefined
+        )) {
+            const schedulingError = validateFutureRelease(nextReleaseAt);
+            if (schedulingError) return res.status(400).json({ message: schedulingError });
         }
         if (letter.status !== 'draft' && nextReleaseAt) {
             const releaseTime = nextReleaseAt instanceof Date ? nextReleaseAt.getTime() : Date.parse(String(nextReleaseAt));

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { Op } from 'sequelize';
 import User from '../models/User';
+import { saveProfileImage } from '../services/profileImageStorage';
 
 // A strict allowlist prevents arbitrary URLs or user-supplied paths from being saved.
 const isApprovedAvatar = (value: unknown): value is string =>
@@ -119,8 +120,8 @@ export const updateProfile = async (req: Request & { user?: { id: number } }, re
         if (avatarPreset) user.avatar = avatarPreset;
 
         const files = (req as any).files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-        if (files?.avatar?.[0]) user.avatar = `/uploads/${files.avatar[0].filename}`;
-        if (files?.coverImage?.[0]) user.coverImage = `/uploads/${files.coverImage[0].filename}`;
+        if (files?.avatar?.[0]) user.avatar = await saveProfileImage(files.avatar[0], user.id, 'avatar');
+        if (files?.coverImage?.[0]) user.coverImage = await saveProfileImage(files.coverImage[0], user.id, 'cover');
 
         await user.save();
         return res.json({ message: 'Profile updated successfully.', user: publicUser(user) });
