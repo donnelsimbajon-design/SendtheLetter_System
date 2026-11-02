@@ -10,6 +10,8 @@ const registerLimiter = createRateLimiter(60 * 60 * 1000, 5);
 
 router.post('/register', registerLimiter, authController.register);
 router.post('/login', loginLimiter, authController.login);
+const passwordLimiter = createRateLimiter(15 * 60 * 1000, 5);
+router.put('/change-password', authenticateToken, passwordLimiter, authController.changePassword);
 router.put('/profile', authenticateToken, upload.fields([
     { name: 'avatar', maxCount: 1 },
     { name: 'coverImage', maxCount: 1 },
