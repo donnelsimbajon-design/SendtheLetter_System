@@ -14,6 +14,7 @@ interface LetterEditorModalProps {
     onClose: () => void;
     onSubmit: (data: any) => Promise<void> | void;
     initialData?: any;
+    starterTemplate?: string;
     onDraftSaved?: () => Promise<void> | void;
     onPublished?: (status?: string, isPublic?: boolean) => Promise<void> | void;
 }
@@ -49,7 +50,7 @@ const localDateInput = (value?: string | Date | null) => {
 };
 const utcDate = (value: string) => value && Number.isFinite(new Date(value).getTime()) ? new Date(value).toISOString() : null;
 
-const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, onSubmit, initialData, onDraftSaved, onPublished }) => {
+const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, onSubmit, initialData, starterTemplate, onDraftSaved, onPublished }) => {
     const user = useAuthStore(s => s.user);
     const preferences = useWriterPreferences(s => s.preferences);
 
@@ -88,11 +89,12 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
         if (!isOpen) return;
         publishing.current = false;
         draftIdRef.current = initialData?.status === 'draft' && initialData.id ? String(initialData.id) : null;
-        setTitle(initialData?.title || '');
-        resetBook(initialData?.content || '', initialData?.letterPages);
+        const starter = !initialData ? templates.find(template => template.value === starterTemplate) : undefined;
+        setTitle(initialData?.title || starter?.title || '');
+        resetBook(initialData?.content || starter?.content || '', initialData?.letterPages);
         setRecipientName(initialData?.recipientName || '');
         setRecipientAddress(initialData?.recipientAddress || '');
-        setCategory(initialData?.type || initialData?.category || 'Other');
+        setCategory(initialData?.type || initialData?.category || starter?.category || 'Other');
         setFont(initialData?.font || 'font-serif');
         setIsAnonymous(initialData?.isAnonymous ?? preferences.defaultAnonymous);
         setIsPublic(initialData?.isPublic ?? preferences.defaultPublic);
@@ -102,14 +104,14 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
         setScheduledDate(localDateInput(initialData?.scheduledDate));
         setIsTimeCapsule(initialData?.isTimeCapsule || false);
         setOpenDate(localDateInput(initialData?.openDate));
-        setSelectedTemplate('');
+        setSelectedTemplate(starter?.value || '');
         setLastSaved('');
         setNotice('');
         setIsDirty(false);
         setConfirming(false);
         setControlsOpen(false);
         revision.current = 0;
-    }, [isOpen, initialData, preferences.defaultPublic, preferences.defaultAnonymous]);
+    }, [isOpen, initialData, starterTemplate, preferences.defaultPublic, preferences.defaultAnonymous]);
 
     const payload = () => ({
         title: title.trim(),
