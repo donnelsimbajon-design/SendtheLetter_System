@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
-import { Bell, BookHeart, ChevronDown, FileText, Home, MessageCircle, PenLine, UserRound, ShieldCheck } from 'lucide-react';
+import { Bell, BookHeart, ChevronDown, FileText, Globe2, Home, MessageCircle, PenLine, UserRound, ShieldCheck } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useAuthStore } from '../store/authStore';
 import { useNoteStore } from '../store/noteStore';
@@ -12,7 +12,8 @@ import { useWriterPreferences } from '../store/writerPreferences';
 
 const navigation = [
   { to: '/dashboard', label: 'Overview', icon: Home, end: true },
-  { to: '/dashboard/notes', label: 'Letters', icon: FileText, end: false },
+  { to: '/dashboard/notes', label: 'My library', icon: FileText, end: false },
+  { to: '/dashboard/community', label: 'Community', icon: Globe2, end: false },
   { to: '/dashboard/messages', label: 'Messages', icon: MessageCircle, end: false },
   { to: '/dashboard/profile', label: 'My profile', icon: UserRound, end: false },
 ];
