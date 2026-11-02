@@ -18,6 +18,7 @@ import Services from './Pages/Services';
 import Contact from './Pages/Contact';
 import Login from './Pages/Login';
 import Signup from './Pages/Signup';
+import PasswordRecoveryPage from './Pages/PasswordRecoveryPage';
 import Creator from './Pages/Creator';
 import AdminDashboard from './Pages/AdminDashboard';
 import PublicLetterPage from './Pages/user/PublicLetterPage';
@@ -41,7 +42,7 @@ const Landing = () => {
     const params = new URLSearchParams(search);
     const route = params.get('route') || '';
     // Static hosting fallback for direct refreshes of known React routes.
-    if (/^\/(?:dashboard(?:\/.*)?|login|signup|about|services|contact|creator|admin|writers\/[^/?#]+)(?:\?.*)?$/.test(route) && !route.startsWith('//')) {
+    if (/^\/(?:dashboard(?:\/.*)?|login|signup|forgot-password|reset-password|about|services|contact|creator|admin|writers\/[^/?#]+)(?:\?.*)?$/.test(route) && !route.startsWith('//')) {
         return <Navigate to={route} replace />;
     }
     return params.has('s') ? <PublicLetterPage /> : <Home />;
@@ -69,6 +70,8 @@ function App() {
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
+                <Route path="/forgot-password" element={<PasswordRecoveryPage mode="request" />} />
+                <Route path="/reset-password" element={<PasswordRecoveryPage mode="confirm" />} />
                 <Route path="/creator" element={<Creator />} />
                 <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
                 <Route path="/letters/:id" element={<PublicLetterPage />} />

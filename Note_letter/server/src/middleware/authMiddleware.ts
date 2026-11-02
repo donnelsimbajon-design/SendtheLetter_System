@@ -25,7 +25,7 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
             return res.status(401).json({ message: 'Invalid authentication token.' });
         }
         const user = await User.findByPk(Number(decoded.id));
-        if (!user || !user.isActive) {
+        if (!user || !user.isActive || Number(decoded.tokenVersion ?? 0) !== user.tokenVersion) {
             return res.status(401).json({ message: 'This account is unavailable.' });
         }
         req.user = { id: user.id, username: user.username, email: user.email, role: user.role };
@@ -52,7 +52,7 @@ export const optionalAuth = async (req: AuthRequest, _res: Response, next: NextF
         const decoded = jwt.verify(token, jwtSecret()) as JwtPayload;
         if (decoded && typeof decoded !== 'string' && Number.isInteger(Number(decoded.id))) {
             const user = await User.findByPk(Number(decoded.id));
-            if (user?.isActive) {
+            if (user?.isActive && Number(decoded.tokenVersion ?? 0) === user.tokenVersion) {
                 req.user = { id: user.id, username: user.username, email: user.email, role: user.role };
             }
         }

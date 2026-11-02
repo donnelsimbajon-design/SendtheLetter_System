@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Check, ChevronRight, RotateCcw } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useWriterPreferences, type ThemeChoice } from '../../store/writerPreferences';
@@ -36,6 +36,8 @@ const SettingsPage = () => {
     const change = useWriterPreferences(state => state.change);
     const restoreDefaults = useWriterPreferences(state => state.restoreDefaults);
     const [params, setParams] = useSearchParams();
+    const navigate = useNavigate();
+    const logout = useAuthStore(state => state.logout);
     const tab = (tabs.some(t => t.value === params.get('tab')) ? params.get('tab') : 'account') as Tab;
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -66,7 +68,8 @@ const SettingsPage = () => {
             setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
-            setFeedback('Password changed successfully. Use your new password the next time you sign in.');
+            logout();
+            navigate('/login?passwordChanged=1', { replace: true });
         } catch (error: any) {
             setFeedback(error?.message || 'Something went wrong.');
         } finally {
@@ -104,7 +107,7 @@ const SettingsPage = () => {
                             <label className="grid gap-2 text-sm font-semibold">Current password<input required autoComplete="current-password" type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} className="h-12 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:border-primary" /></label>
                             <label className="grid gap-2 text-sm font-semibold">New password<input required minLength={8} maxLength={72} autoComplete="new-password" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="h-12 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:border-primary" /></label>
                             <label className="grid gap-2 text-sm font-semibold">Confirm new password<input required minLength={8} maxLength={72} autoComplete="new-password" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="h-12 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:border-primary" /></label>
-                            <p className="text-xs text-muted-foreground">Use at least 8 characters. Existing sign-ins can remain active until their normal session expiry.</p>
+                            <p className="text-xs text-muted-foreground">Use at least 8 characters. All devices will be signed out after a password change.</p>
                             {feedback && <p role="status" className="rounded-xl bg-muted px-4 py-3 text-sm">{feedback}</p>}
                             <button type="submit" disabled={savingPassword} className="inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"><CharacterBadge name="lumi" tone="paper" size="xs" />{savingPassword ? 'Updating…' : 'Update password'}</button>
                         </form>
