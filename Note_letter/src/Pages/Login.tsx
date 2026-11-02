@@ -11,7 +11,13 @@ const Login = () => {
   const [params] = useSearchParams();
   const sessionNotice = useAuthStore(state => state.sessionNotice);
   const requested = params.get('returnTo') || '/dashboard';
-  const returnTo = /^\/dashboard(?:\/[^?#]*)?(?:\?[^#]*)?$/.test(requested) && !requested.startsWith('//') ? requested : '/dashboard';
+  const safeInternalReturn = requested.startsWith('/') && !requested.startsWith('//') && !/[\\\r\n]/.test(requested) && (
+    /^\/dashboard(?:\/[^?#]*)?(?:\?[^#]*)?$/.test(requested) ||
+    /^\/writers\/[^/?#]+(?:\?[^#]*)?$/.test(requested) ||
+    /^\/letters\/[^/?#]+(?:\?[^#]*)?$/.test(requested) ||
+    /^\/\?s=[a-f0-9]{48}$/.test(requested)
+  );
+  const returnTo = safeInternalReturn ? requested : '/dashboard';
   const login = useAuthStore((state) => state.login);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
