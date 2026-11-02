@@ -36,7 +36,7 @@ const Signup = () => {
   };
 
   return (
-    <main className="grid min-h-screen bg-background lg:grid-cols-[.9fr_1fr]">
+    <main id="main-content" className="grid min-h-screen bg-background lg:grid-cols-[.9fr_1fr]">
       <section className="relative hidden overflow-hidden bg-[hsl(var(--surface-rose))] p-12 text-[#49363B] lg:flex lg:flex-col lg:justify-between xl:p-16">
         <Link to="/" className="relative z-10 flex items-center gap-3"><CharacterBadge name="lumi" tone="paper" size="md" className="!h-11 !w-11" /><span className="font-editorial text-2xl">SendTheLetter</span></Link>
         <div className="relative z-10 max-w-xl"><p className="text-xs font-bold uppercase tracking-[.22em] opacity-65">A fresh page</p><h1 className="mt-5 font-editorial text-6xl leading-[1.08] xl:text-7xl">Make room for what matters.</h1><p className="mt-6 max-w-md leading-7 opacity-75">Create a little corner of the internet for thoughtful words, quiet moments, and meaningful connection.</p></div>
