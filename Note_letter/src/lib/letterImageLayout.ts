@@ -1,4 +1,5 @@
 import type { StoryPage } from '../types/note';
+import type { CSSProperties } from 'react';
 
 /** The stored anchor is a character offset into the single source-of-truth page text. */
 export const clampImageAnchor = (page: StoryPage): number => {
@@ -15,7 +16,7 @@ export const photoWidth = (page: StoryPage): number => {
     return Math.max(30, Math.min(isWrappedPhoto(page) ? 65 : 90, value));
 };
 
-export const photoLayoutStyle = (page: StoryPage): React.CSSProperties => {
+export const photoLayoutStyle = (page: StoryPage): CSSProperties => {
     const wrapped = isWrappedPhoto(page);
     return {
         float: wrapped ? page.imagePlacement as 'left' | 'right' : 'none',
