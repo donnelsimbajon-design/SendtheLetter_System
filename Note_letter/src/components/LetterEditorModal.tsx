@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog';
-import { BookHeart, Check, ChevronDown, Clock3, EyeOff, Feather, FileCheck2, Globe2, ImagePlus, LockKeyhole, Music2, Palette, PenLine, Save, Send, Settings2, ShieldCheck, Sparkles, Type, WandSparkles } from 'lucide-react';
+import { BookHeart, Check, ChevronDown, Clock3, EyeOff, Feather, FileCheck2, Globe2, ImagePlus, LockKeyhole, Music2, Palette, PenLine, Save, Send, Settings2, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useWriterPreferences } from '../store/writerPreferences';
 import { cn } from '../lib/utils';
@@ -281,7 +281,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                     <div className="mb-5 hidden lg:block"><p className="font-editorial text-xl">Make it yours</p><p className="mt-1 text-xs leading-5 text-muted-foreground">A few thoughtful details, only if you want them.</p></div>
                     <div className="space-y-4 pb-3">
                         <div className={panelClass}>
-                            <label className={labelClass} htmlFor="letter-starting-point"><WandSparkles size={13} className="mr-1 inline" /> Need inspiration?</label>
+                            <label className={labelClass} htmlFor="letter-starting-point"><Sparkles size={13} className="mr-1 inline" /> Need inspiration?</label>
                             <select id="letter-starting-point" value={selectedTemplate} onChange={e => selectPrompt(e.target.value)} className={fieldClass}><option value="">Choose a starting point</option>{templates.map(t => <option key={t.value} value={t.value}>{t.name}</option>)}</select>
                             <p className="mt-2 text-[11px] leading-5 text-muted-foreground">Templates are optional. Your words are what matter.</p>
                         </div>
