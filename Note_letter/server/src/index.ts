@@ -95,7 +95,7 @@ io.use(async (socket, next) => {
             return next(new Error('Invalid authentication token.'));
         }
         const user = await User.findByPk(Number(decoded.id));
-        if (!user || !user.isActive) return next(new Error('Account unavailable.'));
+        if (!user || !user.isActive || Number(decoded.tokenVersion ?? 0) !== user.tokenVersion) return next(new Error('Account unavailable.'));
         socket.data.userId = user.id;
         return next();
     } catch {
