@@ -3,6 +3,7 @@ import { Op } from 'sequelize';
 import Letter from '../models/Letter';
 import User from '../models/User';
 import Repost from '../models/Repost';
+import { isBlockedBetween } from '../services/blockService';
 import { publicLetterDTO } from '../services/publicLetterDTO';
 
 interface AuthRequest extends Request {
@@ -27,6 +28,7 @@ export const toggleRepost = async (req: AuthRequest, res: Response) => {
             await existingRepost.destroy();
             res.json({ reposted: false });
         } else {
+            if (await isBlockedBetween(userId, letter.userId)) return res.status(403).json({ message: 'Reposts are unavailable between these accounts.' });
             await Repost.create({ userId, letterId });
             res.json({ reposted: true });
         }
