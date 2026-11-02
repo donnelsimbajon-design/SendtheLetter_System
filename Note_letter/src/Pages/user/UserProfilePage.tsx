@@ -23,6 +23,8 @@ export default function UserProfilePage() {
     const [error, setError] = useState('');
     const [actionError, setActionError] = useState('');
     const [actionBusy, setActionBusy] = useState(false);
+    const [blockBusy, setBlockBusy] = useState(false);
+    const [blockState, setBlockState] = useState<{ blocked: boolean; canInteract: boolean } | null>(null);
     const [friendState, setFriendState] = useState<FriendStatus>({ status: 'none', requestId: null });
     const [reload, setReload] = useState(0);
 
@@ -86,6 +88,52 @@ export default function UserProfilePage() {
         void fetchStatus();
         return () => { active = false; };
     }, [profile?.id, currentUser?.id]);
+
+    useEffect(() => {
+        if (!profile?.id || !currentUser?.id || Number(profile.id) === Number(currentUser.id)) {
+            setBlockState(null);
+            return;
+        }
+        let active = true;
+        setBlockState({ blocked: false, canInteract: false });
+        (async () => {
+            try {
+                const response = await fetch(`${API_ENDPOINTS.users}/${profile.id}/block-status`, { headers: authHeader() });
+                if (!response.ok) throw new Error('Could not check connection permissions.');
+                const data = await response.json();
+                if (active) setBlockState({ blocked: data.blocked === true, canInteract: data.canInteract === true });
+            } catch {
+                if (active) setActionError('Connection permissions are temporarily unavailable.');
+            }
+        })();
+        return () => { active = false; };
+    }, [profile?.id, currentUser?.id]);
+
+    const toggleBlock = async () => {
+        if (!profile || !currentUser || !blockState || blockBusy) return;
+        if (!blockState.blocked && !window.confirm('Block this writer? Existing Follow and Pen Pal connections will be removed.')) return;
+        setBlockBusy(true);
+        setActionError('');
+        try {
+            const response = await fetch(`${API_ENDPOINTS.users}/${profile.id}/block`, {
+                method: blockState.blocked ? 'DELETE' : 'POST', headers: authHeader(),
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(result.message || 'Could not update block status.');
+            setBlockState({ blocked: result.blocked === true, canInteract: result.canInteract === true });
+            if (result.blocked) {
+                setFriendState({ status: 'none', requestId: null });
+                setProfile(previous => previous ? {
+                    ...previous, isFollowing: false,
+                    followerCount: Math.max(0, (previous.followerCount || 0) - (previous.isFollowing ? 1 : 0)),
+                } : null);
+            }
+        } catch (err) {
+            setActionError(err instanceof Error ? err.message : 'Could not update block status.');
+        } finally {
+            setBlockBusy(false);
+        }
+    };
 
     const toggleFollow = async () => {
         if (!profile || actionBusy) return;
@@ -173,6 +221,7 @@ export default function UserProfilePage() {
             onOpenLetter={setSelected}
             onFollow={isSelf ? undefined : () => void toggleFollow()}
             followBusy={actionBusy}
+            blockAction={!isSelf && currentUser && blockState ? { ...blockState, busy: blockBusy, onClick: () => void toggleBlock() } : undefined}
             onMessage={isSelf ? undefined : () => navigate(`/dashboard/messages?userId=${profile.id}`)}
             friendAction={isSelf ? undefined : {
                 label: friendLabel[friendState.status],
