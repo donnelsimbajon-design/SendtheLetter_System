@@ -49,8 +49,8 @@ const Home = () => {
           <div className="mx-auto grid max-w-7xl gap-8 px-5 py-12 sm:px-8 md:grid-cols-3 md:py-16">
             {([
               { mascot: 'lumi', tone: 'gold', title: 'Write freely', body: 'A calm, considered space to put your thoughts into words.' },
-              { mascot: 'tala', tone: 'sage', title: 'Keep it personal', body: 'Choose what you share and what stays yours.' },
-              { mascot: 'sely', tone: 'rose', title: 'Hold on to moments', body: 'Keep meaningful letters close and return whenever you need.' },
+              { mascot: 'susi', tone: 'sage', title: 'Keep it personal', body: 'Choose what you share and what stays yours.' },
+              { mascot: 'basa', tone: 'rose', title: 'Hold on to moments', body: 'Keep meaningful letters close and return whenever you need.' },
             ] as const).map(({ mascot, tone, title, body }) => <article key={title} className="flex gap-4"><CharacterBadge name={mascot} tone={tone} size="lg" /><div><h2 className="font-editorial text-xl">{title}</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">{body}</p></div></article>)}
           </div>
         </section>
