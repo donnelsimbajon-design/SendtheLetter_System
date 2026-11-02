@@ -1,10 +1,16 @@
-export type MascotName = 'lumi' | 'tala' | 'sely' | 'piko';
+export type MascotName = 'lumi' | 'tala' | 'sely' | 'piko' | 'nori' | 'chika' | 'susi' | 'basa' | 'suri' | 'araw';
 
 const mascotDescriptions: Record<MascotName, string> = {
   lumi: 'Lumi, the friendly letter mascot',
   tala: 'Tala, the reminder star mascot',
   sely: 'Sely, the heart-shaped letter seal mascot',
   piko: 'Piko, the paper-plane message mascot',
+  nori: 'Nori, the cheerful notification bell',
+  chika: 'Chika, the friendly chat bubble',
+  susi: 'Susi, the safe and smiling privacy lock',
+  basa: 'Basa, the happy reading book',
+  suri: 'Suri, the curious magnifying glass',
+  araw: 'Araw, the joyful reminder calendar',
 };
 
 interface MascotProps {
