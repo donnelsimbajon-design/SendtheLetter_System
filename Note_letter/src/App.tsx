@@ -33,7 +33,13 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 
 const Landing = () => {
     const { search } = useLocation();
-    return new URLSearchParams(search).has('s') ? <PublicLetterPage /> : <Home />;
+    const params = new URLSearchParams(search);
+    const route = params.get('route') || '';
+    // Static hosting fallback for direct refreshes of known React routes.
+    if (/^\/(?:dashboard(?:\/.*)?|login|signup|about|services|contact|creator|admin)(?:\?.*)?$/.test(route) && !route.startsWith('//')) {
+        return <Navigate to={route} replace />;
+    }
+    return params.has('s') ? <PublicLetterPage /> : <Home />;
 };
 
 function App() {
