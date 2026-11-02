@@ -79,6 +79,17 @@ test('community filters published letters by their actual categories', async ({ 
   await expect(page.getByText('Showing 2 of 2 public letters')).toBeVisible();
 });
 
+test('keyboard readers can open a public letter card', async ({ page }) => {
+  await fakeAuthenticatedApi(page);
+  await page.goto('/dashboard/community');
+  const read = page.getByRole('button', { name: 'Read letter: Thank you for showing up' });
+  await expect(read).toBeVisible();
+  await read.focus();
+  await expect(read).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('dialog')).toBeVisible();
+});
+
 test('signed-in mobile user can find the native Write shortcut', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile-chromium', 'Mobile only');
   await fakeAuthenticatedApi(page);
