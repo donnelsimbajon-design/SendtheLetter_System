@@ -134,3 +134,12 @@
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* Small-screen resilience for long letter content and touch controls. */
+@media (max-width: 639px) {
+  html, body, #root { min-width: 0; max-width: 100%; }
+  main { min-width: 0; }
+  main img, main video, main canvas { max-width: 100%; }
+  main pre { max-width: 100%; overflow-x: auto; }
+  input, textarea, select { font-size: 16px; }
+}

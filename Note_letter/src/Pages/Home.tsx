@@ -9,20 +9,20 @@ const Home = () => {
   const startLink = isAuthenticated ? '/dashboard' : '/signup';
 
   return (
-    <div className="min-h-screen overflow-hidden bg-background text-foreground">
+    <div className="min-h-screen min-w-0 overflow-x-clip bg-background text-foreground">
       <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur-xl">
-        <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-8">
-          <Link to="/" className="flex items-center gap-3"><img src="/sendtheletter-logo.svg" alt="SendTheLetter" className="h-12 w-[205px] object-contain object-left sm:w-[240px]" /></Link>
-          <nav className="hidden items-center gap-8 text-sm font-medium text-muted-foreground md:flex"><Link className="hover:text-foreground" to="/about">Our story</Link><Link className="hover:text-foreground" to="/services">What you can do</Link><Link className="hover:text-foreground" to="/contact">Contact</Link></nav>
-          <div className="flex items-center gap-2"><Link to={isAuthenticated ? '/dashboard' : '/login'} className="hidden rounded-full px-4 py-2.5 text-sm font-semibold hover:bg-muted sm:inline-flex">{isAuthenticated ? 'My space' : 'Sign in'}</Link><Link to={startLink} className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-transform hover:-translate-y-0.5">Start writing <ArrowRight size={15} /></Link></div>
+        <div className="mx-auto flex min-h-[72px] max-w-7xl flex-wrap items-center justify-between gap-2 px-3 py-2 sm:px-8 md:min-h-[76px]">
+          <Link to="/" className="flex items-center gap-3"><img src="/sendtheletter-logo.svg" alt="SendTheLetter" className="h-10 w-[152px] object-contain object-left min-[380px]:w-[180px] sm:h-12 sm:w-[218px]" /></Link>
+          <nav className="hidden items-center gap-5 text-sm font-medium text-muted-foreground lg:flex"><Link className="hover:text-foreground" to="/about">Our story</Link><Link className="hover:text-foreground" to="/services">What you can do</Link><Link className="hover:text-foreground" to="/contact">Contact</Link></nav>
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2"><Link to={isAuthenticated ? '/dashboard' : '/login'} className="hidden rounded-full px-4 py-2.5 text-sm font-semibold hover:bg-muted sm:inline-flex">{isAuthenticated ? 'My space' : 'Sign in'}</Link><Link to={startLink} className="inline-flex min-h-10 items-center gap-1 rounded-full bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition-transform hover:-translate-y-0.5 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm">Start writing <ArrowRight size={15} /></Link></div>
         </div>
       </header>
 
       <main>
-        <section className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 pb-20 pt-16 sm:px-8 sm:pt-24 lg:grid-cols-[1.04fr_.96fr] lg:gap-16 lg:pb-28">
+        <section className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 pb-20 pt-12 sm:px-8 sm:pt-24 lg:grid-cols-[1.04fr_.96fr] lg:gap-16 lg:pb-28">
           <div className="relative z-10">
             <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold tracking-wide text-muted-foreground"><span className="h-2 w-2 rounded-full bg-[hsl(var(--accent))]" /> A little more human, a little less hurried</p>
-            <h1 className="font-editorial text-[clamp(3.3rem,7vw,6.6rem)] leading-[.99] tracking-[-.045em]">Some things are <span className="italic text-[hsl(var(--accent))]">better</span> in a letter.</h1>
+            <h1 className="font-editorial text-[clamp(2.65rem,9vw,6.6rem)] leading-[.99] tracking-[-.045em]">Some things are <span className="italic text-[hsl(var(--accent))]">better</span> in a letter.</h1>
             <p className="mt-7 max-w-xl text-base leading-8 text-muted-foreground sm:text-lg">A thoughtful place to write what matters, keep the words you aren't ready to send, and share a little more of yourself with the people who matter.</p>
             <div className="mt-9 flex flex-wrap items-center gap-3"><Link to={startLink} className="inline-flex items-center gap-3 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-md transition-transform hover:-translate-y-0.5">Write your first letter <CharacterBadge name="lumi" tone="paper" size="sm" /></Link><Link to="/services" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3.5 text-sm font-semibold hover:bg-muted">Explore the experience <ArrowRight size={16} /></Link></div>
             <div className="mt-12 flex items-center gap-8 border-t border-border pt-6"><div><p className="font-editorial text-2xl">Your pace</p><p className="mt-1 text-xs text-muted-foreground">No rush, no pressure</p></div><div className="h-10 w-px bg-border" /><div><p className="font-editorial text-2xl">Your words</p><p className="mt-1 text-xs text-muted-foreground">A space that feels yours</p></div></div>
@@ -59,7 +59,7 @@ const Home = () => {
           <div className="mb-4 flex justify-center"><CharacterBadge name="tala" tone="gold" size="lg" /></div><h2 className="mx-auto mt-5 max-w-2xl font-editorial text-4xl leading-tight sm:text-5xl">A few honest words can travel a long way.</h2><p className="mx-auto mt-5 max-w-xl text-base leading-7 text-muted-foreground">Start with a blank page. We'll keep the space ready.</p><Link to={startLink} className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground">Find your words <ArrowRight size={16}/></Link>
         </section>
       </main>
-      <footer className="border-t border-border bg-card"><div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-8"><span className="font-editorial text-lg font-semibold text-foreground">SendTheLetter</span><span>A little more meaning in every message.</span><div className="flex gap-5"><Link to="/about" className="hover:text-foreground">About</Link><Link to="/services" className="hover:text-foreground">Features</Link><Link to="/contact" className="hover:text-foreground">Contact</Link></div></div></footer>
+      <footer className="border-t border-border bg-card"><div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-8"><span className="font-editorial text-lg font-semibold text-foreground">SendTheLetter</span><span>A little more meaning in every message.</span><div className="flex flex-wrap gap-5"><Link to="/about" className="hover:text-foreground">About</Link><Link to="/services" className="hover:text-foreground">Features</Link><Link to="/contact" className="hover:text-foreground">Contact</Link></div></div></footer>
     </div>
   );
 };
