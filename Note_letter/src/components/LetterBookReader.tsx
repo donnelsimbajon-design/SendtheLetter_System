@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, BookOpen, Feather, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, Feather } from 'lucide-react';
 import type { StoryPage } from '../types/note';
 import { bookPagesFromContent, bookWordCount } from '../lib/letterBook';
 import { getImageUrl } from '../lib/utils';
