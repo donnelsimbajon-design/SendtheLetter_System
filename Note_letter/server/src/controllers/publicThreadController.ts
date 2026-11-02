@@ -5,6 +5,7 @@ import Letter from '../models/Letter';
 import Comment from '../models/Comment';
 import User from '../models/User';
 import { createRateLimiter } from '../middleware/rateLimit';
+import { isBlockedBetween } from '../services/blockService';
 
 type AuthedRequest = Request & { user?: { id: number; username: string } };
 const validToken = /^[a-f0-9]{48}$/;
@@ -134,6 +135,7 @@ export const postPublicThread = async (req: AuthedRequest, res: Response) => {
             const user = await User.findByPk(req.user.id, { attributes: ['id', 'username', 'isActive'] });
             if (!user?.isActive) return res.status(401).json({ message: 'Account unavailable. Sign in again.' });
             userId = user.id;
+            if (await isBlockedBetween(userId, letter.userId)) return res.status(403).json({ message: 'Interactions are unavailable between these accounts.' });
             displayName = user.username.slice(0, 40);
         } else {
             const name = typeof req.body?.displayName === 'string' ? req.body.displayName.trim() : '';
