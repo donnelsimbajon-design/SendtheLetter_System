@@ -16,8 +16,7 @@ const Sidebar = () => {
     return (
         <div className="h-screen w-64 bg-background border-r border-border/50 flex flex-col">
             <div className="p-6 flex items-center gap-2">
-                <img src="/logo.png" alt="Logo" className="h-8 w-8 object-contain" />
-                <h1 className="text-xl font-serif font-bold text-foreground tracking-wide">SentTheLetter</h1>
+                <img src="/sendtheletter-logo.svg" alt="SendTheLetter" className="h-11 w-full max-w-[215px] object-contain object-left" />
             </div>
 
             <nav className="flex-1 px-4 space-y-2">
