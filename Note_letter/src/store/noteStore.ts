@@ -31,6 +31,8 @@ interface NoteState {
     notifications: Notification[];
     isLoading: boolean;
     error: string | null;
+    isLoadingPublic: boolean;
+    publicError: string | null;
     archived: Note[];
     fetchArchivedLetters: () => Promise<void>;
     archiveNote: (id: string) => Promise<void>;
@@ -62,6 +64,8 @@ export const useNoteStore = create<NoteState>((set, get) => ({
     notifications: [],
     isLoading: false,
     error: null,
+    isLoadingPublic: false,
+    publicError: null,
     archived: [],
 
     fetchArchivedLetters: async () => {
@@ -156,7 +160,7 @@ export const useNoteStore = create<NoteState>((set, get) => ({
     },
 
     fetchPublicLetters: async () => {
-        set({ isLoading: true, error: null });
+        set({ isLoadingPublic: true, publicError: null });
         try {
             const token = localStorage.getItem('token');
             const headers: any = {};
@@ -165,11 +169,11 @@ export const useNoteStore = create<NoteState>((set, get) => ({
             const response = await fetch(`${API_URL}/public`, { headers });
             if (!response.ok) throw new Error('Failed to fetch public letters');
             const data = await response.json();
-            set({ publicLetters: data });
+            set({ publicLetters: Array.isArray(data) ? data : [], publicError: null });
         } catch (error: any) {
-            set({ error: error.message });
+            set({ publicError: error instanceof Error ? error.message : 'Unable to load public letters.' });
         } finally {
-            set({ isLoading: false });
+            set({ isLoadingPublic: false });
         }
     },
 
