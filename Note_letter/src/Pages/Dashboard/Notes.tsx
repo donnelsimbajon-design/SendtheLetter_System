@@ -89,10 +89,10 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
 
                 <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-border/70 bg-muted/60 p-1.5">
                     {([
-                        { key: 'public', label: 'Community', mascot: 'tala' },
-                        { key: 'personal', label: 'My letters', mascot: 'lumi' },
-                        { key: 'drafts', label: 'Drafts', mascot: 'sely' },
-                        { key: 'scheduled', label: 'Scheduled', mascot: 'piko' },
+                        { key: 'public', label: 'Community', mascot: 'chika' },
+                        { key: 'personal', label: 'My letters', mascot: 'basa' },
+                        { key: 'drafts', label: 'Drafts', mascot: 'lumi' },
+                        { key: 'scheduled', label: 'Scheduled', mascot: 'araw' },
                     ] as const).map(({ key, label, mascot }) => (
                         <button type="button" key={key} onClick={() => setActiveTab(key)} className={clsx('inline-flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition-colors', activeTab === key ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:bg-card/60 hover:text-foreground')}>
                             <CharacterBadge name={mascot} tone="paper" size="xs" /> {label}
@@ -109,7 +109,7 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
             {/* Search and Filter Bar */}
             <div className="flex flex-col md:flex-row gap-4 items-center bg-card p-2 rounded-xl border border-border/50 shadow-sm">
                 <div className="relative flex-1 w-full">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                    <CharacterBadge name="suri" tone="paper" size="xs" className="absolute left-3 top-1/2 -translate-y-1/2" />
                     <Input
                         placeholder="Search letters..."
                         value={searchQuery}
@@ -124,7 +124,7 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredNotes.map((note) => activeTab === 'drafts' || activeTab === 'scheduled' ? (
                     <button type="button" key={note.id} onClick={() => { setEditingNote(note); setIsEditorOpen(true); }} className="group flex h-[265px] flex-col rounded-[26px] border border-border bg-card p-6 text-left shadow-sm transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg">
-                        <span className="flex items-center justify-between text-xs font-bold uppercase tracking-[.14em] text-muted-foreground"><span className="inline-flex items-center gap-2"><CharacterBadge name={activeTab === 'drafts' ? 'sely' : 'piko'} tone="paper" size="xs" />{activeTab === 'drafts' ? 'Unfinished thought' : 'Coming soon'}</span><ArrowRight size={16} className="transition-transform group-hover:translate-x-1" /></span>
+                        <span className="flex items-center justify-between text-xs font-bold uppercase tracking-[.14em] text-muted-foreground"><span className="inline-flex items-center gap-2"><CharacterBadge name={activeTab === 'drafts' ? 'lumi' : 'araw'} tone="paper" size="xs" />{activeTab === 'drafts' ? 'Unfinished thought' : 'Coming soon'}</span><ArrowRight size={16} className="transition-transform group-hover:translate-x-1" /></span>
                         <h3 className="mt-6 line-clamp-2 font-editorial text-2xl leading-tight">{note.title || 'Untitled letter'}</h3>
                         <p className="mt-3 line-clamp-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{note.content}</p>
                         <div className="mt-auto flex items-center justify-between border-t border-border/80 pt-4 text-xs font-semibold text-primary"><span>{activeTab === 'drafts' ? 'Continue writing' : 'Review scheduled letter'}</span><CharacterBadge name="lumi" tone="sage" size="xs" /></div>
@@ -133,7 +133,7 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
 
                 {filteredNotes.length === 0 && (
                     <div className="col-span-full flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-border rounded-3xl bg-muted/10">
-                        <Mascot name={activeTab === 'personal' ? 'lumi' : 'sely'} className="mb-3 h-28 w-28" />
+                        <Mascot name={activeTab === 'personal' ? 'basa' : activeTab === 'scheduled' ? 'araw' : activeTab === 'drafts' ? 'lumi' : 'chika'} className="mb-3 h-28 w-28" />
                         <h3 className="text-xl font-semibold mb-2">{searchQuery ? 'No matching letters' : 'No letters found'}</h3>
                         <p className="text-muted-foreground max-w-sm">
                             {searchQuery
