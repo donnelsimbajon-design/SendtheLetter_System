@@ -1,5 +1,6 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database';
+import User from './User';
 
 interface FollowAttributes {
     id: number;
@@ -49,5 +50,12 @@ Follow.init(
         tableName: 'follows',
     }
 );
+
+// Both directions must be registered before controllers use Sequelize eager loading.
+// These associations describe existing foreign keys; they do not alter the database.
+User.hasMany(Follow, { foreignKey: 'followerId', as: 'outgoingFollows' });
+User.hasMany(Follow, { foreignKey: 'followingId', as: 'incomingFollows' });
+Follow.belongsTo(User, { foreignKey: 'followerId', as: 'follower' });
+Follow.belongsTo(User, { foreignKey: 'followingId', as: 'following' });
 
 export default Follow;
