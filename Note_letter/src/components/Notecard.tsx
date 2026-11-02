@@ -1,5 +1,6 @@
 import { Note } from '../types/note';
-import { Trash2, Heart, MessageCircle, Music } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
+import CharacterBadge from './CharacterBadge';
 import { format } from 'date-fns';
 import clsx from 'clsx';
 import { useNoteStore } from '../store/noteStore';
@@ -112,7 +113,7 @@ const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
                             </button>
                         )}
                         {note.spotifyLink && (
-                            <Music size={12} className={clsx("ml-auto", iconColor)} />
+                            <CharacterBadge name="tala" tone="gold" size="xs" className="ml-auto" />
                         )}
                     </div>
                     <h3 className={clsx("text-xl font-medium line-clamp-1 mb-2 transition-colors font-serif tracking-wide", textColor, !isImageBackground && !backgroundClass && "group-hover:text-primary")}>
@@ -151,6 +152,7 @@ const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
                     {/* Like Button */}
                     <button
                         onClick={handleLike}
+                        aria-label={note.isLikedByUser ? "Unlike this letter" : "Like this letter"}
                         className={clsx(
                             "flex items-center gap-1.5 text-xs transition-colors px-2 py-1 rounded-full cursor-pointer",
                             note.isLikedByUser
@@ -158,7 +160,7 @@ const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
                                 : clsx(iconColor, "hover:text-red-500")
                         )}
                     >
-                        <Heart size={14} fill={note.isLikedByUser ? "currentColor" : "none"} />
+                        <CharacterBadge name="sely" tone={note.isLikedByUser ? "rose" : "paper"} size="xs" />
                         <span>{note.likeCount || 0}</span>
                     </button>
 
@@ -168,9 +170,10 @@ const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
                             e.stopPropagation();
                             onClick?.(note);
                         }}
+                        aria-label="View comments"
                         className={clsx("flex items-center gap-1.5 text-xs px-2 py-1 rounded-full transition-colors cursor-pointer", iconColor, hoverIconColor)}
                     >
-                        <MessageCircle size={14} />
+                        <CharacterBadge name="piko" tone="paper" size="xs" />
                         <span>{note.commentCount || 0}</span>
                     </button>
                 </div>

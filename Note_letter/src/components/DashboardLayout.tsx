@@ -1,22 +1,23 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
-import { Bell, BookHeart, ChevronDown, FileText, Globe2, Home, MessageCircle, PenLine, UserRound, ShieldCheck } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useAuthStore } from '../store/authStore';
 import { useNoteStore } from '../store/noteStore';
 import socketService from '../services/socketService';
 import { getImageUrl } from '../lib/utils';
 import Mascot from './Mascot';
+import CharacterBadge from './CharacterBadge';
 import ProfileDropdown from './ProfileDropdown';
 import { useWriterPreferences } from '../store/writerPreferences';
 
 const navigation = [
-  { to: '/dashboard', label: 'Overview', icon: Home, end: true },
-  { to: '/dashboard/notes', label: 'My library', icon: FileText, end: false },
-  { to: '/dashboard/community', label: 'Community', icon: Globe2, end: false },
-  { to: '/dashboard/messages', label: 'Messages', icon: MessageCircle, end: false },
-  { to: '/dashboard/profile', label: 'My profile', icon: UserRound, end: false },
-];
+  { to: '/dashboard', label: 'Overview', mascot: 'lumi', end: true },
+  { to: '/dashboard/notes', label: 'My library', mascot: 'sely', end: false },
+  { to: '/dashboard/community', label: 'Community', mascot: 'tala', end: false },
+  { to: '/dashboard/messages', label: 'Messages', mascot: 'piko', end: false },
+  { to: '/dashboard/profile', label: 'My profile', mascot: 'lumi', end: false },
+] as const;
 
 const DashboardLayout = () => {
   const user = useAuthStore((state) => state.user);
@@ -55,13 +56,13 @@ const DashboardLayout = () => {
       <header className="fixed inset-x-0 top-0 z-40 h-[72px] border-b border-border/80 bg-card/95 backdrop-blur-xl">
         <div className="mx-auto flex h-full max-w-[1600px] items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/dashboard" className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground"><BookHeart size={21} /></span>
+            <CharacterBadge name="lumi" tone="forest" size="md" className="!h-10 !w-10" />
             <span className="font-editorial text-xl font-semibold tracking-tight">SendTheLetter</span>
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="relative">
               <button onClick={() => { const next = !showNotifications; setShowNotifications(next); if (next && unreadCount > 0) void markNotificationsRead(); }} className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="Notifications">
-                <Bell size={17} />
+                <CharacterBadge name="tala" tone="gold" size="sm" />
                 {unreadCount > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[hsl(var(--accent))] ring-2 ring-card" />}
               </button>
               {showNotifications && (
@@ -106,17 +107,17 @@ const DashboardLayout = () => {
         <aside className="sticky top-[72px] hidden h-[calc(100vh-72px)] w-[248px] shrink-0 flex-col border-r border-border/70 bg-background/80 px-5 py-8 lg:flex">
           <p className="mb-4 px-3 text-[11px] font-bold uppercase tracking-[.18em] text-muted-foreground">Workspace</p>
           <nav className="space-y-1.5">
-            {navigation.map(({ to, label, icon: Icon, end }) => (
-              <NavLink key={to} to={to} end={end} className={({ isActive }) => `flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition-colors ${isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}>
-                <Icon size={18} strokeWidth={1.8} />{label}
+            {navigation.map(({ to, label, mascot, end }) => (
+              <NavLink key={to} to={to} end={end} className={({ isActive }) => `flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors ${isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}>
+                <CharacterBadge name={mascot} tone="paper" size="sm" />{label}
               </NavLink>
             ))}
-            {user?.role === 'admin' && <NavLink to="/admin" className={({ isActive }) => `flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition-colors ${isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}><ShieldCheck size={18} />Admin panel</NavLink>}
+            {user?.role === 'admin' && <NavLink to="/admin" className={({ isActive }) => `flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition-colors ${isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}><CharacterBadge name="tala" tone="gold" size="sm" />Admin panel</NavLink>}
           </nav>
           <div className="mt-auto rounded-2xl bg-[hsl(var(--surface-rose))] p-4 text-[#49363B]">
             <p className="font-editorial text-lg leading-snug">Some words deserve a little more time.</p>
             <p className="mt-2 text-xs leading-relaxed opacity-80">Make room for the things you want to say.</p>
-            <Link to="/dashboard/notes" className="mt-3 inline-flex items-center gap-2 text-xs font-bold">Write a letter <PenLine size={13} /></Link>
+            <Link to="/dashboard/notes" className="mt-3 inline-flex items-center gap-2 text-xs font-bold">Write a letter <CharacterBadge name="lumi" size="xs" tone="paper" /></Link>
           </div>
         </aside>
 
@@ -130,12 +131,12 @@ const DashboardLayout = () => {
       </div>
 
       <nav className={`fixed inset-x-0 bottom-0 z-40 grid ${user?.role === "admin" ? "grid-cols-6" : "grid-cols-5"} border-t border-border bg-card/95 px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur-xl lg:hidden`}>
-        {navigation.map(({ to, label, icon: Icon, end }) => (
+        {navigation.map(({ to, label, mascot, end }) => (
           <NavLink key={to} to={to} end={end} className={({ isActive }) => `flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-medium ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
-            <Icon size={20} strokeWidth={1.9} /><span>{label}</span>
+            <CharacterBadge name={mascot} tone="paper" size="sm" /><span>{label}</span>
           </NavLink>
         ))}
-        {user?.role === 'admin' && <NavLink to="/admin" className={({ isActive }) => `flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-medium ${isActive ? 'text-primary' : 'text-muted-foreground'}`}><ShieldCheck size={20} /><span>Admin</span></NavLink>}
+        {user?.role === 'admin' && <NavLink to="/admin" className={({ isActive }) => `flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-medium ${isActive ? 'text-primary' : 'text-muted-foreground'}`}><CharacterBadge name="tala" tone="gold" size="sm" /><span>Admin</span></NavLink>}
       </nav>
     </div>
   );

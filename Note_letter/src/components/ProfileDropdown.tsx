@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Check, HelpCircle, LogOut, Moon, Palette, Settings2, ShieldCheck, Sun, UserRound, MessageSquareWarning } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, LogOut } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { getImageUrl } from '../lib/utils';
+import CharacterBadge from './CharacterBadge';
 import { useWriterPreferences, type ThemeChoice } from '../store/writerPreferences';
 
 interface ProfileDropdownProps { isOpen: boolean; onClose: () => void; }
@@ -52,7 +53,7 @@ const ProfileDropdown = ({ isOpen, onClose }: ProfileDropdownProps) => {
                     <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold">{user?.username || 'Writer'}</span><span className="block truncate text-xs text-muted-foreground">{user?.email || 'Your writing space'}</span></span>
                     <ChevronRight size={18} className="text-muted-foreground" />
                 </Link>
-                <Link to="/dashboard/profile" onClick={onClose} className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-muted px-3 py-2.5 text-xs font-bold hover:bg-muted/80"><UserRound size={15} /> View my profile</Link>
+                <Link to="/dashboard/profile" onClick={onClose} className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-muted px-3 py-2.5 text-xs font-bold hover:bg-muted/80"><CharacterBadge name="sely" tone="rose" size="xs" /> View my profile</Link>
             </div>
 
             {showAppearance ? <>
@@ -68,17 +69,17 @@ const ProfileDropdown = ({ isOpen, onClose }: ProfileDropdownProps) => {
                 <Link to="/dashboard/settings?tab=appearance" onClick={onClose} className="mx-2 mt-3 flex items-center justify-center rounded-xl border border-border px-3 py-2.5 text-xs font-semibold hover:bg-muted">More display settings</Link>
             </> : <>
                 <div className="mt-3 space-y-0.5">
-                    <Link role="menuitem" to="/dashboard/settings" onClick={onClose} className={itemClass}><span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted"><Settings2 size={18} /></span><span className="flex-1">Settings & privacy</span><ChevronRight size={17} /></Link>
-                    <button role="menuitem" type="button" onClick={() => setShowAppearance(true)} className={itemClass}><span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">{theme === 'dark' ? <Moon size={18} /> : <Palette size={18} />}</span><span className="flex-1">Display & appearance</span><ChevronRight size={17} /></button>
-                    <Link role="menuitem" to="/dashboard/settings?tab=privacy" onClick={onClose} className={itemClass}><span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted"><ShieldCheck size={18} /></span><span className="flex-1">Privacy & sharing</span><ChevronRight size={17} /></Link>
-                    <Link role="menuitem" to="/dashboard/settings?tab=help" onClick={onClose} className={itemClass}><span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted"><HelpCircle size={18} /></span><span className="flex-1">Help & support</span><ChevronRight size={17} /></Link>
-                    <Link role="menuitem" to="/contact" onClick={onClose} className={itemClass}><span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted"><MessageSquareWarning size={18} /></span><span className="flex-1">Report a problem</span><ChevronRight size={17} /></Link>
+                    <Link role="menuitem" to="/dashboard/settings" onClick={onClose} className={itemClass}><span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted"><CharacterBadge name="tala" tone="sage" size="sm" /></span><span className="flex-1">Settings & privacy</span><ChevronRight size={17} /></Link>
+                    <button role="menuitem" type="button" onClick={() => setShowAppearance(true)} className={itemClass}><span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted"><CharacterBadge name="tala" tone="gold" size="sm" /></span><span className="flex-1">Display & appearance</span><ChevronRight size={17} /></button>
+                    <Link role="menuitem" to="/dashboard/settings?tab=privacy" onClick={onClose} className={itemClass}><span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted"><CharacterBadge name="lumi" tone="sage" size="sm" /></span><span className="flex-1">Privacy & sharing</span><ChevronRight size={17} /></Link>
+                    <Link role="menuitem" to="/dashboard/settings?tab=help" onClick={onClose} className={itemClass}><span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted"><CharacterBadge name="piko" tone="rose" size="sm" /></span><span className="flex-1">Help & support</span><ChevronRight size={17} /></Link>
+                    <Link role="menuitem" to="/contact" onClick={onClose} className={itemClass}><span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted"><CharacterBadge name="piko" tone="gold" size="sm" /></span><span className="flex-1">Report a problem</span><ChevronRight size={17} /></Link>
                 </div>
                 <div className="mt-2 border-t border-border pt-2">
                     <button role="menuitem" type="button" onClick={logoutNow} className={`${itemClass} hover:bg-red-500/10 hover:text-red-600`}><span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted"><LogOut size={18} /></span><span className="flex-1">Log out</span></button>
                 </div>
             </>}
-            <div className="mt-2 flex items-center justify-center gap-2 border-t border-border/70 pt-3 text-[11px] text-muted-foreground"><Sun size={12} /> A quiet place for your words</div>
+            <div className="mt-2 flex items-center justify-center gap-2 border-t border-border/70 pt-3 text-[11px] text-muted-foreground"><CharacterBadge name="tala" tone="gold" size="xs" /> A quiet place for your words</div>
         </div>
     </>;
 };

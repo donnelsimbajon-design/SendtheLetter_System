@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, BookHeart, Check, CheckCheck, Heart, Mail, Search, Send, Sparkles, UserRound } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, CheckCheck, Search } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useAuthStore } from '../../store/authStore';
 import socketService from '../../services/socketService';
 import { getImageUrl } from '../../lib/utils';
 import { API_ENDPOINTS } from '../../config/api';
 import Mascot from '../../components/Mascot';
+import CharacterBadge from '../../components/CharacterBadge';
 
 type Contact = { id: number; username: string; avatar?: string; location?: string };
 type Conversation = { user: Contact; lastMessage: string; lastMessageTime: string; unreadCount: number };
@@ -146,14 +147,14 @@ export default function Messages() {
 
     return <div className="mx-auto max-w-[1380px] space-y-5 pb-0">
         <header className="flex flex-wrap items-end justify-between gap-3">
-            <div><p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.19em] text-[hsl(var(--accent))]"><Sparkles size={14} /> Your connections</p><h1 className="mt-2 font-editorial text-4xl">Messages</h1><p className="mt-2 text-sm text-muted-foreground">A quieter way to connect, one thoughtful note at a time.</p></div>
-            <Link to="/dashboard/community" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-xs font-bold hover:bg-muted"><BookHeart size={15} /> Explore writers <ArrowRight size={15} /></Link>
+            <div><p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.19em] text-[hsl(var(--accent))]"><CharacterBadge name="tala" tone="gold" size="xs" /> Your connections</p><h1 className="mt-2 font-editorial text-4xl">Messages</h1><p className="mt-2 text-sm text-muted-foreground">A quieter way to connect, one thoughtful note at a time.</p></div>
+            <Link to="/dashboard/community" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-xs font-bold hover:bg-muted"><CharacterBadge name="lumi" tone="sage" size="xs" /> Explore writers <ArrowRight size={15} /></Link>
         </header>
 
         <div className="flex h-[min(74dvh,760px)] min-h-[530px] overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_14px_45px_rgba(46,50,39,.07)]">
             <aside className={`flex w-full shrink-0 flex-col border-r border-border bg-background/50 md:w-[325px] lg:w-[360px] ${activeMobile ? 'hidden md:flex' : 'flex'}`} aria-label="Conversations">
                 <div className="border-b border-border p-5">
-                    <div className="flex items-center justify-between"><h2 className="font-editorial text-2xl">Inbox</h2><span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-[hsl(var(--surface-gold))] text-[#56452e]"><Mail size={18} /></span></div>
+                    <div className="flex items-center justify-between"><h2 className="font-editorial text-2xl">Inbox</h2><CharacterBadge name="piko" tone="gold" size="sm" /></div>
                     <div className="relative mt-4"><Search size={17} className="absolute left-3.5 top-3 text-muted-foreground" /><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search conversations…" aria-label="Search conversations" className="h-11 w-full rounded-2xl border border-border bg-card pl-10 pr-4 text-sm outline-none focus:border-primary" /></div>
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto p-2">
@@ -174,7 +175,7 @@ export default function Messages() {
                         <button type="button" onClick={() => setActiveMobile(false)} aria-label="Back to conversations" className="rounded-full p-2 text-muted-foreground hover:bg-muted md:hidden"><ArrowLeft size={19} /></button>
                         <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[16px] bg-[hsl(var(--surface-rose))] font-semibold">{selected.avatar ? <img src={getImageUrl(selected.avatar)} alt="" className="h-full w-full object-cover" /> : selected.username[0]?.toUpperCase()}</span>
                         <div className="min-w-0 flex-1"><h2 className="truncate text-sm font-bold">{selected.username}</h2><p className="mt-1 text-xs text-muted-foreground">Your private conversation</p></div>
-                        <Link to={`/dashboard/profile/${encodeURIComponent(selected.username)}`} className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"><UserRound size={15} /><span className="hidden sm:inline">Profile</span></Link>
+                        <Link to={`/dashboard/profile/${encodeURIComponent(selected.username)}`} className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"><CharacterBadge name="lumi" tone="sage" size="xs" /><span className="hidden sm:inline">Profile</span></Link>
                     </header>
                     <div className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-gradient-to-b from-[hsl(var(--background))]/50 to-card px-4 py-6 sm:px-8">
                         {threadLoading ? <p className="text-center text-sm text-muted-foreground">Opening conversation…</p> : messages.length === 0 ? <div className="mx-auto flex max-w-sm flex-col items-center py-14 text-center"><Mascot name="piko" className="h-28 w-28" /><p className="mt-5 font-editorial text-2xl">Start with a hello</p><p className="mt-2 text-sm leading-7 text-muted-foreground">Your first message could make someone's day a little brighter.</p></div> :
@@ -198,8 +199,8 @@ export default function Messages() {
                     <form onSubmit={event => { event.preventDefault(); void send(); }} className="shrink-0 border-t border-border bg-card px-4 py-4 sm:px-6">
                         <div className="flex items-end gap-2 rounded-[22px] border border-border bg-background px-3 py-2 focus-within:border-primary">
                             <textarea value={draft} onChange={event => setDraft(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); void send(); } }} rows={2} maxLength={5000} placeholder={`Write something kind to ${selected.username}…`} aria-label="Your message" className="max-h-28 min-h-[45px] flex-1 resize-y bg-transparent px-2 py-2 text-sm leading-6 outline-none placeholder:text-muted-foreground" />
-                            <button type="button" title="Add a heart" aria-label="Add a heart emoji" onClick={() => setDraft(prev => prev + ' 💌')} className="mb-1 rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-primary"><Heart size={18} /></button>
-                            <button type="submit" disabled={sending || !draft.trim()} aria-label="Send message" className="mb-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40"><Send size={18} /></button>
+                            <button type="button" title="Add a heart" aria-label="Add a heart emoji" onClick={() => setDraft(prev => prev + ' 💌')} className="mb-1 rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-primary"><CharacterBadge name="sely" tone="rose" size="sm" /></button>
+                            <button type="submit" disabled={sending || !draft.trim()} aria-label="Send message" className="mb-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40"><CharacterBadge name="piko" tone="forest" size="sm" /></button>
                         </div>
                         <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground"><span>Enter to send • Shift+Enter for a new line</span><span>{draft.length} / 5,000</span></div>
                     </form>
