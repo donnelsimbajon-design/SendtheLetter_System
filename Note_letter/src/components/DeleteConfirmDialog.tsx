@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Archive, Trash2 } from 'lucide-react';
@@ -7,8 +7,8 @@ import { Archive, Trash2 } from 'lucide-react';
 interface DeleteConfirmDialogProps {
     isOpen: boolean;
     onClose: () => void;
-    onArchive: () => void;
-    onDelete: () => void;
+    onArchive: () => Promise<void> | void;
+    onDelete: () => Promise<void> | void;
     title?: string;
 }
 
@@ -19,9 +19,24 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
     onDelete,
     title = 'Delete Letter'
 }) => {
+    const [busy, setBusy] = useState<'archive' | 'delete' | null>(null);
+    const [error, setError] = useState('');
+    const perform = async (action: 'archive' | 'delete') => {
+        if (busy) return;
+        setBusy(action);
+        setError('');
+        try {
+            if (action === 'archive') await onArchive(); else await onDelete();
+            onClose();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'The action failed. Please try again.');
+        } finally {
+            setBusy(null);
+        }
+    };
     return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[425px]">
+        <Dialog open={isOpen} onOpenChange={(open) => { if (!open && !busy) onClose(); }}>
+            <DialogContent className="sm:max-w-[425px]" onClick={event => event.stopPropagation()}>
                 <DialogHeader>
                     <DialogTitle>{title}</DialogTitle>
                     <DialogDescription>
@@ -33,31 +48,28 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
                         You can <span className="font-bold text-stone-700">Archive</span> it to hide it from your profile but keep it for later, or <span className="font-bold text-red-500">Delete Permanently</span> to remove it forever.
                     </p>
                 </div>
+                {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
                 <DialogFooter className="flex-col sm:flex-row gap-2">
-                    <Button variant="outline" onClick={onClose} className="sm:mr-auto">
+                    <Button variant="outline" onClick={onClose} disabled={busy !== null} className="sm:mr-auto">
                         Cancel
                     </Button>
                     <Button
                         variant="secondary"
-                        onClick={() => {
-                            onArchive();
-                            onClose();
-                        }}
+                        onClick={() => { void perform('archive'); }}
+                        disabled={busy !== null}
                         className="flex items-center gap-2"
                     >
                         <Archive size={16} />
-                        Archive
+                        {busy === 'archive' ? 'Archiving…' : 'Archive'}
                     </Button>
                     <Button
                         variant="destructive"
-                        onClick={() => {
-                            onDelete();
-                            onClose();
-                        }}
+                        onClick={() => { void perform('delete'); }}
+                        disabled={busy !== null}
                         className="flex items-center gap-2"
                     >
                         <Trash2 size={16} />
-                        Delete
+                        {busy === 'delete' ? 'Deleting…' : 'Delete'}
                     </Button>
                 </DialogFooter>
             </DialogContent>
