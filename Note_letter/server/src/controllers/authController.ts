@@ -154,3 +154,16 @@ export const changePassword = async (req: Request & { user?: { id: number } }, r
         return res.status(500).json({ message: 'Could not update your password. Please try again.' });
     }
 };
+
+/** Confirm a stored session on app refresh without resetting healthy sessions. */
+export const getSession = async (req: Request & { user?: { id: number } }, res: Response) => {
+    try {
+        const user = await User.findByPk(req.user?.id);
+        if (!user || !user.isActive) return res.status(401).json({ message: 'Your session has expired. Please sign in again.' });
+        res.setHeader('Cache-Control', 'no-store');
+        return res.json({ user: publicUser(user) });
+    } catch (error) {
+        console.error('Unable to check session:', error);
+        return res.status(503).json({ message: 'Session verification is temporarily unavailable.' });
+    }
+};
