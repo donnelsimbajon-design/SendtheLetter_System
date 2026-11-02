@@ -14,7 +14,12 @@ export const toggleLike = async (req: AuthRequest, res: Response) => {
 
         // Check if letter exists
         const letter = await Letter.findByPk(letterId);
-        if (!letter || letter.isArchived || (!letter.isPublic && letter.userId !== userId) || (letter.status !== 'published' && letter.userId !== userId)) {
+        const isOwner = !!letter && Number(letter.userId) === Number(userId);
+        const notReleased = !!letter && (
+            (letter.openDate && letter.openDate.getTime() > Date.now()) ||
+            (letter.scheduledDate && letter.scheduledDate.getTime() > Date.now())
+        );
+        if (!letter || letter.isArchived || letter.status !== 'published' || (!isOwner && (!letter.isPublic || notReleased))) {
             return res.status(404).json({ message: 'Letter not found' });
         }
 
@@ -90,7 +95,12 @@ export const getLikes = async (req: AuthRequest, res: Response) => {
         const { id: letterId } = req.params;
         const userId = req.user?.id;
         const letter = await Letter.findByPk(letterId);
-        if (!letter || letter.isArchived || (!letter.isPublic && letter.userId !== userId) || (letter.status !== 'published' && letter.userId !== userId)) {
+        const isOwner = !!letter && Number(letter.userId) === Number(userId);
+        const notReleased = !!letter && (
+            (letter.openDate && letter.openDate.getTime() > Date.now()) ||
+            (letter.scheduledDate && letter.scheduledDate.getTime() > Date.now())
+        );
+        if (!letter || letter.isArchived || letter.status !== 'published' || (!isOwner && (!letter.isPublic || notReleased))) {
             return res.status(404).json({ message: 'Letter not found' });
         }
 
