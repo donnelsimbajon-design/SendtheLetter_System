@@ -12,7 +12,7 @@ interface LetterEditorModalProps {
     onSubmit: (data: any) => Promise<void> | void;
     initialData?: any;
     onDraftSaved?: () => Promise<void> | void;
-    onPublished?: () => Promise<void> | void;
+    onPublished?: (status?: string, isPublic?: boolean) => Promise<void> | void;
 }
 
 const fonts = [
@@ -195,6 +195,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
             if (pendingSave.current) await pendingSave.current;
             const data = payload();
             const existingId = editingPublished ? String(initialData.id) : draftIdRef.current;
+            let finalStatus = scheduled ? 'scheduled' : 'published';
             if (existingId) {
                 const token = localStorage.getItem('token');
                 if (!token) throw new Error('Please sign in again.');
@@ -206,10 +207,11 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                 });
                 const result = await response.json().catch(() => ({}));
                 if (!response.ok) throw new Error(result.message || 'Could not finish your letter.');
+                finalStatus = result.letter?.status || finalStatus;
             } else {
                 await onSubmit({ ...data, status: 'published' });
             }
-            await onPublished?.();
+            await onPublished?.(finalStatus, isPublic);
             setIsDirty(false);
             onClose();
         } catch (error: any) {
