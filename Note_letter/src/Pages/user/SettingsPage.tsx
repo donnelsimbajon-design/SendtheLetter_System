@@ -11,7 +11,7 @@ const tabs: { value: Tab; label: string; description: string; icon: typeof UserR
     { value: 'account', label: 'Account', description: 'Your profile and password', icon: UserRound },
     { value: 'privacy', label: 'Privacy & writing', description: 'How your letters begin', icon: ShieldCheck },
     { value: 'appearance', label: 'Display & accessibility', description: 'Make it feel like yours', icon: Palette },
-    { value: 'help', label: 'Help & support', description: 'Answers and feedback', icon: CircleHelp },
+    { value: 'help', label: 'Help & support', description: 'Answers and feedback', icon: HelpCircle },
 ];
 const themeChoices: { value: ThemeChoice; title: string; description: string; tint: string; foreground: string }[] = [
     { value: 'warm', title: 'Warm editorial', description: 'Cream, paper and sage', tint: '#f3ece1', foreground: '#344a3c' },
@@ -139,11 +139,11 @@ const SettingsPage = () => {
                     <button type="button" onClick={restoreDefaults} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-3 text-sm font-semibold hover:bg-muted"><RotateCcw size={16} /> Reset display and writing preferences</button>
                 </div>}
                 {tab === 'help' && <section className="rounded-[28px] border border-border bg-card p-6 shadow-sm sm:p-8">
-                    <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[.16em] text-[hsl(var(--accent))]"><CircleHelp size={16} /> Here to help</p><h2 className="mt-2 font-editorial text-3xl">Need a hand?</h2><p className="mt-3 text-sm leading-7 text-muted-foreground">Explore how the app works, contact the project, or report a problem.</p>
+                    <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[.16em] text-[hsl(var(--accent))]"><HelpCircle size={16} /> Here to help</p><h2 className="mt-2 font-editorial text-3xl">Need a hand?</h2><p className="mt-3 text-sm leading-7 text-muted-foreground">Explore how the app works, contact the project, or report a problem.</p>
                     <div className="mt-6 grid gap-3">
                         <Link to="/services" className="flex items-center gap-4 rounded-2xl border border-border p-4 hover:bg-muted"><BookOpen size={20} /><span className="flex-1"><strong className="block text-sm">Explore SendTheLetter</strong><span className="text-xs text-muted-foreground">Learn about writing, saving and sharing letters</span></span><ChevronRight size={18} /></Link>
                         <Link to="/contact" className="flex items-center gap-4 rounded-2xl border border-border p-4 hover:bg-muted"><Mail size={20} /><span className="flex-1"><strong className="block text-sm">Contact & feedback</strong><span className="text-xs text-muted-foreground">Share a suggestion or ask a question</span></span><ChevronRight size={18} /></Link>
-                        <Link to="/contact" className="flex items-center gap-4 rounded-2xl border border-border p-4 hover:bg-muted"><WandSparkles size={20} /><span className="flex-1"><strong className="block text-sm">Report a problem</strong><span className="text-xs text-muted-foreground">Explain the issue through the contact page</span></span><ChevronRight size={18} /></Link>
+                        <Link to="/contact" className="flex items-center gap-4 rounded-2xl border border-border p-4 hover:bg-muted"><Sparkles size={20} /><span className="flex-1"><strong className="block text-sm">Report a problem</strong><span className="text-xs text-muted-foreground">Explain the issue through the contact page</span></span><ChevronRight size={18} /></Link>
                     </div>
                     <div className="mt-6 rounded-2xl bg-muted/70 p-4 text-xs leading-6 text-muted-foreground"><Globe size={15} className="mr-2 inline" /> Tips: Use private mode for personal letters. Share public letters using their generated link; never share your password or authentication token.</div>
                 </section>}
