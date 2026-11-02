@@ -45,7 +45,7 @@ async function fakeAuthenticatedApi(page) {
   });
 }
 
-test('signed-in writer can open the selected native template and focus mode', async ({ page }) => {
+test('signed-in writer can open the selected native template and focus mode', async ({ page }, testInfo) => {
   await fakeAuthenticatedApi(page);
   await page.goto('/dashboard/notes?compose=1&template=future-self');
 
@@ -58,6 +58,10 @@ test('signed-in writer can open the selected native template and focus mode', as
   await expect(editor.getByRole('button', { name: 'Exit focus' })).toBeVisible();
   await expect(editor.getByRole('complementary', { name: 'Letter customization' })).toBeHidden();
   await editor.getByRole('button', { name: 'Exit focus' }).click();
+  // On mobile, the customization panel is intentionally collapsed by default.
+  if (testInfo.project.name === 'mobile-chromium') {
+    await editor.getByRole('button', { name: 'Customize' }).click();
+  }
   await expect(editor.getByRole('complementary', { name: 'Letter customization' })).toBeVisible();
 });
 
