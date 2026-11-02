@@ -4,6 +4,8 @@ on:
     paths:
       - 'Note_letter/server/src/**'
       - 'Note_letter/server/package.json'
+      - 'Note_letter/server/test/**'
+      - 'Note_letter/server/test/**'
       - 'Note_letter/server/package-lock.json'
       - '.github/workflows/backend-ci.yml'
   pull_request:
@@ -28,3 +30,4 @@ jobs:
           cache-dependency-path: Note_letter/server/package-lock.json
       - run: npm ci
       - run: npm run build
+      - run: npm run test:associations
