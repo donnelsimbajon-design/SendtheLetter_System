@@ -129,7 +129,7 @@ const DashboardLayout = () => {
         </main>
       </div>
 
-      <nav className={`fixed inset-x-0 bottom-0 z-40 grid ${user?.role === "admin" ? "grid-cols-5" : "grid-cols-4"} border-t border-border bg-card/95 px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur-xl lg:hidden`}>
+      <nav className={`fixed inset-x-0 bottom-0 z-40 grid ${user?.role === "admin" ? "grid-cols-6" : "grid-cols-5"} border-t border-border bg-card/95 px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur-xl lg:hidden`}>
         {navigation.map(({ to, label, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={end} className={({ isActive }) => `flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-medium ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
             <Icon size={20} strokeWidth={1.9} /><span>{label}</span>
