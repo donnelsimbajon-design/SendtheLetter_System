@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, Upload, Camera } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { API_ENDPOINTS } from '../config/api';
@@ -14,7 +14,9 @@ interface EditProfileModalProps {
 }
 
 const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => {
-    const { user } = useAuthStore();
+    const user = useAuthStore(state => state.user);
+    const setUserFromProfile = useAuthStore(state => state.setUserFromProfile);
+    const [feedback, setFeedback] = useState('');
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         username: user?.username || '',
@@ -26,6 +28,17 @@ const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => {
     const [avatarPreview, setAvatarPreview] = useState<string>(getImageUrl(user?.avatar));
     const [avatarPreset, setAvatarPreset] = useState<string | null>(isPresetAvatar(user?.avatar) ? user!.avatar! : null);
     const [coverPreview, setCoverPreview] = useState<string>(getImageUrl(user?.coverImage));
+
+    useEffect(() => {
+        if (!isOpen) return;
+        setFormData({ username: user?.username || '', bio: user?.bio || '', location: user?.location || '' });
+        setAvatarFile(null);
+        setCoverFile(null);
+        setAvatarPreset(isPresetAvatar(user?.avatar) ? user!.avatar! : null);
+        setAvatarPreview(getImageUrl(user?.avatar));
+        setCoverPreview(getImageUrl(user?.coverImage));
+        setFeedback('');
+    }, [isOpen, user?.id]);
 
     if (!isOpen) return null;
 
@@ -49,6 +62,7 @@ const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        setFeedback('');
         try {
             const formDataToSend = new FormData();
             formDataToSend.append('username', formData.username);
@@ -76,19 +90,15 @@ const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => {
 
             if (!response.ok) {
                 console.error('Server error response:', resData);
-                alert(`Error: ${resData.message}\nDetails: ${resData.error || 'No details'}`);
-                throw new Error(resData.message);
+                throw new Error(resData.message || 'Unable to update profile.');
             }
 
-            // Update local storage and state
-            localStorage.setItem('user', JSON.stringify(resData.user));
-            alert('Profile updated successfully!');
-
-            // Reload to show new images
-            window.location.reload();
+            // Keep the current route and session; no hard page reload required.
+            setUserFromProfile(resData.user);
+            onClose();
         } catch (error: any) {
             console.error('Failed to update profile:', error);
-            alert(`Failed to update profile: ${error.message}`);
+            setFeedback(error?.message || 'Could not save profile changes.');
         } finally {
             setLoading(false);
         }
@@ -107,6 +117,7 @@ const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => {
                 <div className="p-8">
                     <h2 className="text-2xl font-light mb-8 text-center">Edit Profile</h2>
 
+                    {feedback && <div role="alert" className="mb-5 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">{feedback}</div>}
                     <form onSubmit={handleSubmit} className="space-y-8">
                         {/* Images Section */}
                         <div className="space-y-6">
