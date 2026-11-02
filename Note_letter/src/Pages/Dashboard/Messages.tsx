@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, BookHeart, Check, CheckCheck, Heart, Mail, MessageCircle, Search, Send, Sparkles, UserRound } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookHeart, Check, CheckCheck, Heart, Mail, Search, Send, Sparkles, UserRound } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useAuthStore } from '../../store/authStore';
 import socketService from '../../services/socketService';
