@@ -318,6 +318,8 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
         <button type="button" onClick={() => { removeImage(); markDirty(); }} className="mt-2 text-xs font-semibold text-[#785c4f] underline">Remove photo</button>
     </section> : null;
 
+    const scheduled = Boolean((isTimeCapsule ? openDate : scheduledDate) &&
+        (utcDate(isTimeCapsule ? openDate : scheduledDate) || '') > new Date().toISOString());
     const actionLabel = editingPublished ? 'Save changes' : scheduled ? 'Schedule letter' : isPublic ? 'Publish letter' : 'Finish private letter';
     const earliestLocalDate = localDateInput(new Date(Date.now() + 60_000));
     const timeZoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
