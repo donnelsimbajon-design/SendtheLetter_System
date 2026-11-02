@@ -185,7 +185,7 @@ export const useNoteStore = create<NoteState>((set, get) => ({
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify(noteData),
+                body: JSON.stringify({ ...noteData, type: noteData.category || 'Other' }),
             });
             if (!response.ok) throw new Error('Failed to create letter');
             const newLetter = await response.json();
