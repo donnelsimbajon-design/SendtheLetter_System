@@ -43,11 +43,10 @@ const DashboardLayout = () => {
     <div className="min-h-screen bg-background">
       <header className="fixed inset-x-0 top-0 z-40 h-[72px] border-b border-border/80 bg-card/95 backdrop-blur-xl">
         <div className="mx-auto flex h-full max-w-[1600px] items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link to="/dashboard" className="flex items-center gap-3">
-            <CharacterBadge name="lumi" tone="forest" size="md" className="!h-10 !w-10" />
-            <span className="font-editorial text-xl font-semibold tracking-tight">SendTheLetter</span>
+          <Link to="/dashboard" className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <img src="/sendtheletter-logo.svg" alt="SendTheLetter" className="h-10 w-[154px] object-contain object-left sm:h-12 sm:w-[218px]" />
           </Link>
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="ml-2 flex shrink-0 items-center gap-1 sm:gap-4">
             <NotificationsMenu />
             <div className="relative">
               <button
@@ -91,8 +90,8 @@ const DashboardLayout = () => {
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 px-4 pb-28 pt-7 sm:px-6 lg:px-10 lg:py-10">
-          <div className="mb-7 flex items-center justify-between lg:hidden">
+        <main className="min-w-0 w-full flex-1 px-3 pb-32 pt-5 sm:px-6 sm:pt-7 lg:px-10 lg:py-10">
+          <div className="mb-6 flex min-w-0 flex-wrap items-center justify-between gap-3 lg:hidden">
             <div><p className="text-xs font-semibold uppercase tracking-[.16em] text-muted-foreground">Workspace</p><p className="font-editorial text-2xl">{pageTitle}</p></div>
             <Link to="/dashboard/settings" className="rounded-full border border-border px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-muted" aria-label="Open settings">Settings</Link>
           </div>
@@ -100,10 +99,10 @@ const DashboardLayout = () => {
         </main>
       </div>
 
-      <nav className={`fixed inset-x-0 bottom-0 z-40 grid ${user?.role === "admin" ? "grid-cols-6" : "grid-cols-5"} border-t border-border bg-card/95 px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur-xl lg:hidden`}>
+      <nav className={`fixed inset-x-0 bottom-0 z-40 grid ${user?.role === "admin" ? "grid-cols-6" : "grid-cols-5"} border-t border-border bg-card/95 px-1 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur-xl lg:hidden sm:px-3`}>
         {navigation.map(({ to, label, mascot, end }) => (
-          <NavLink key={to} to={to} end={end} className={({ isActive }) => `flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-medium ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
-            <CharacterBadge name={mascot} tone="paper" size="sm" /><span>{label}</span>
+          <NavLink key={to} to={to} end={end} className={({ isActive }) => `flex min-w-0 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[9px] font-medium sm:text-[11px] ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
+            <CharacterBadge name={mascot} tone="paper" size="sm" /><span className="max-w-full truncate text-center">{label}</span>
           </NavLink>
         ))}
         {user?.role === 'admin' && <NavLink to="/admin" className={({ isActive }) => `flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-medium ${isActive ? 'text-primary' : 'text-muted-foreground'}`}><CharacterBadge name="susi" tone="sage" size="sm" /><span>Admin</span></NavLink>}
