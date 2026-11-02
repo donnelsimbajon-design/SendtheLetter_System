@@ -41,6 +41,7 @@ interface Props {
     onMessage?: () => void;
     friendAction?: { label: string; onClick?: () => void; disabled?: boolean };
     actionError?: string;
+    onDismissActionError?: () => void;
     onRefresh?: () => void;
 }
 
@@ -59,7 +60,7 @@ const topTabs: { id: ProfileTab; text: string; icon: typeof BookOpen }[] = [
 export default function WriterProfileScreen({
     profile, ownProfile = false, letters, reposts, loading = false, error = '', onRetry,
     onOpenLetter, onEditProfile, onWriteLetter, onFollow, followBusy, onMessage, friendAction,
-    actionError = '', onRefresh,
+    actionError = '', onDismissActionError, onRefresh,
 }: Props) {
     const signedIn = useAuthStore(state => state.isAuthenticated);
     const currentUserId = useAuthStore(state => state.user?.id);
@@ -233,7 +234,7 @@ export default function WriterProfileScreen({
             {topTabs.map(({ id, text, icon: Icon }) => <button key={id} type="button" onClick={() => { setTab(id); setFeedback(''); setCategory('All'); }} aria-current={tab === id ? 'page' : undefined} className={`inline-flex min-w-fit flex-1 items-center justify-center gap-2 rounded-[15px] px-3 py-3 text-xs font-bold transition-colors sm:text-sm ${tab === id ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}><Icon size={16} /> {text}</button>)}
         </nav>
 
-        {(feedback || actionError) && <div role="status" className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-xs font-semibold"><span>{actionError || feedback}</span><button type="button" aria-label="Dismiss message" onClick={() => setFeedback('')} className="rounded-full p-1 hover:bg-muted"><X size={15} /></button></div>}
+        {(feedback || actionError) && <div role="status" className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-xs font-semibold"><span>{actionError || feedback}</span><button type="button" aria-label="Dismiss message" onClick={() => { setFeedback(''); onDismissActionError?.(); }} className="rounded-full p-1 hover:bg-muted"><X size={15} /></button></div>}
         <div className="grid items-start gap-5 lg:grid-cols-[315px_minmax(0,1fr)]">
             <aside className="space-y-4 lg:sticky lg:top-[155px]">
                 <div className="rounded-[25px] border border-border bg-card p-5 shadow-sm sm:p-6">
@@ -261,7 +262,7 @@ export default function WriterProfileScreen({
                     <Link to="/dashboard/notes" className="mt-4 flex items-center justify-between rounded-xl bg-white/75 px-4 py-3 text-xs font-bold hover:bg-white"><span className="flex items-center gap-2"><LockKeyhole size={15} /> Open my private library</span><ArrowRight size={15} /></Link>
                     <Link to="/dashboard/settings" className="mt-2 flex items-center justify-between rounded-xl border border-[#cad4c0] px-4 py-3 text-xs font-bold hover:bg-white/40"><span className="flex items-center gap-2"><Settings2 size={15} /> Profile settings</span><ArrowRight size={15} /></Link>
                     <Link to={profileUrl} className="mt-3 inline-flex items-center gap-2 text-xs font-semibold underline underline-offset-4"><Globe2 size={14} /> View as a visitor</Link>
-                </div> : <Link to="/dashboard/community" className="block rounded-[25px] bg-[#344a3c] p-5 text-[#fff7ea] sm:p-6">
+                </div> : <Link to={signedIn ? "/dashboard/community" : "/"} className="block rounded-[25px] bg-[#344a3c] p-5 text-[#fff7ea] sm:p-6">
                     <p className="text-xs font-semibold uppercase tracking-[.16em] text-[#d1e0ca]">From one writer to another</p><h2 className="mt-2 font-editorial text-xl">More letters await.</h2><p className="mt-2 text-xs leading-6 text-[#e7e7d8]">Find other voices and discover stories worth keeping.</p><span className="mt-4 inline-flex items-center gap-2 text-xs font-bold">Explore community <ArrowRight size={15} /></span>
                 </Link>}
             </aside>
