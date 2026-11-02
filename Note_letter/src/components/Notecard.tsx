@@ -1,5 +1,4 @@
 import { Note } from '../types/note';
-import { Trash2 } from 'lucide-react';
 import CharacterBadge from './CharacterBadge';
 import { format } from 'date-fns';
 import clsx from 'clsx';
@@ -74,13 +73,13 @@ const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
     const hoverIconColor = isImageBackground ? "hover:text-white" : (backgroundClass ? "hover:text-stone-800" : "hover:text-primary");
 
     return (
-        <div
-            onClick={() => onClick?.(note)}
+        <article
             className={clsx(
-                "group p-6 rounded-3xl border transition-all duration-300 cursor-pointer relative overflow-hidden h-[280px] flex flex-col hover:-translate-y-1",
+                "group p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden h-[280px] flex flex-col hover:-translate-y-1 focus-within:border-primary/40 focus-within:shadow-md",
                 backgroundClass && !isImageBackground ? [backgroundClass, "border-stone-200/50 shadow-sm"] : "bg-card border-border shadow-sm hover:border-primary/30 hover:shadow-md"
             )}
         >
+            <button type="button" className="absolute inset-0 z-[5] rounded-3xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" aria-label={`Read letter: ${note.title || 'Untitled letter'}`} onClick={() => onClick?.(note)} />
             {/* Background Image Cover */}
             {isImageBackground && (
                 <div className="absolute inset-0 z-0 pointer-events-none">
@@ -102,7 +101,7 @@ const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
                 <div className="absolute top-0 left-0 w-1 h-full bg-primary/0 group-hover:bg-primary/100 transition-all duration-500" />
             )}
 
-            <div className="flex justify-between items-start mb-4 relative z-10">
+            <div className="pointer-events-none flex justify-between items-start mb-4 relative z-10">
                 <div className="flex-1 pr-4">
                     <div className="flex items-center gap-2 mb-3">
                         <span className={clsx("text-[10px] font-medium uppercase tracking-widest", metaColor)}>
@@ -119,7 +118,7 @@ const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
                                 disabled={!note.authorName || note.authorName === 'Unknown' || note.authorName === 'A Writer'}
                                 aria-label={`View ${note.authorName || 'writer'} profile`}
                                 className={clsx(
-                                    "text-[10px] font-medium uppercase tracking-widest hover:underline transition-all",
+                                    "pointer-events-auto relative z-20 text-[10px] font-medium uppercase tracking-widest hover:underline transition-all",
                                     isImageBackground ? "text-white/90 hover:text-white" : (backgroundClass ? "text-stone-800 hover:text-stone-900" : "text-primary/80 hover:text-primary")
                                 )}
                             >
@@ -143,10 +142,10 @@ const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
                             // Show dialog instead of immediate delete
                             setIsDeleteDialogOpen(true);
                         }}
-                        className={clsx("p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all", iconColor, "hover:text-red-500")}
+                        className={clsx("pointer-events-auto relative z-20 min-h-9 rounded-full px-2 text-[11px] font-bold opacity-100 transition-all sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100", iconColor, "hover:text-red-500")}
                         title="Delete note"
                     >
-                        <Trash2 size={16} />
+                        Remove
                     </button>
                 )}
             </div>
@@ -155,7 +154,7 @@ const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
                 {note.content}
             </p>
 
-            <div className="flex justify-between items-center relative z-10 mt-4">
+            <div className="pointer-events-none flex justify-between items-center relative z-10 mt-4">
                 <div className="flex items-center gap-3">
                     <span className={clsx("text-[10px] uppercase tracking-wider px-2 py-1 rounded-md", isImageBackground ? "bg-white/10 text-white/80 backdrop-blur-sm" : (backgroundClass ? "text-stone-600 bg-stone-900/5" : "text-primary/80 bg-primary/5"))}>
                         {note.category || note.type || 'General'}
@@ -169,7 +168,7 @@ const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
                         disabled={liking}
                         aria-label={note.isLikedByUser ? "Unlike this letter" : "Like this letter"}
                         className={clsx(
-                            "flex items-center gap-1.5 text-xs transition-colors px-2 py-1 rounded-full cursor-pointer",
+                            "pointer-events-auto relative z-20 flex min-h-9 items-center gap-1.5 text-xs transition-colors px-2 py-1 rounded-full cursor-pointer",
                             note.isLikedByUser
                                 ? "text-red-500 bg-red-500/10"
                                 : clsx(iconColor, "hover:text-red-500")
@@ -186,7 +185,7 @@ const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
                             onClick?.(note);
                         }}
                         aria-label="View comments"
-                        className={clsx("flex items-center gap-1.5 text-xs px-2 py-1 rounded-full transition-colors cursor-pointer", iconColor, hoverIconColor)}
+                        className={clsx("pointer-events-auto relative z-20 flex min-h-9 items-center gap-1.5 text-xs px-2 py-1 rounded-full transition-colors cursor-pointer", iconColor, hoverIconColor)}
                     >
                         <CharacterBadge name="piko" tone="paper" size="xs" />
                         <span>{note.commentCount || 0}</span>
@@ -201,7 +200,7 @@ const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
                 onDelete={() => deleteNote(String(note.id))}
                 title={`Delete "${note.title || 'Untitled'}"?`}
             />
-        </div >
+        </article>
     );
 };
 
