@@ -9,6 +9,7 @@ router.use(authenticateToken);
 
 router.post('/send', messageController.sendMessage);
 router.get('/conversations', messageController.getConversations);
+router.get('/history/:otherUserId', messageController.getMessagePage);
 router.get('/:otherUserId', messageController.getMessages);
 router.post('/read', messageController.markAsRead);
 
