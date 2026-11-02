@@ -101,6 +101,51 @@ export const getMessages = async (req: AuthRequest, res: Response) => {
     }
 };
 
+/** Cursor-paginated conversation history, restricted to the authenticated participant. */
+export const getMessagePage = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = Number(req.user.id);
+        const peerId = Number(req.params.otherUserId);
+        const before = req.query.before == null ? null : Number(req.query.before);
+        if (!Number.isSafeInteger(peerId) || peerId <= 0 || (before !== null && (!Number.isSafeInteger(before) || before <= 0))) {
+            return res.status(400).json({ message: 'Invalid conversation cursor.' });
+        }
+        const where = {
+            [Op.or]: [
+                { senderId: userId, receiverId: peerId },
+                { senderId: peerId, receiverId: userId },
+            ],
+            ...(before === null ? {} : { id: { [Op.lt]: before } }),
+        };
+        const rows = await Message.findAll({ where, order: [['id', 'DESC']], limit: 51 });
+        const hasMore = rows.length > 50;
+        const page = rows.slice(0, 50).reverse();
+        const profiles = await User.findAll({
+            where: { id: { [Op.in]: [userId, peerId] } },
+            attributes: ['id', 'username', 'avatar'],
+        });
+        const users = new Map(profiles.map(user => [user.id, user.toJSON()]));
+        const messages = page.map(msg => ({
+            id: msg.id,
+            senderId: msg.senderId,
+            receiverId: msg.receiverId,
+            content: msg.content,
+            isRead: msg.isRead,
+            createdAt: msg.createdAt,
+            sender: users.get(msg.senderId) || { id: msg.senderId, username: 'Unknown' },
+            receiver: users.get(msg.receiverId) || { id: msg.receiverId, username: 'Unknown' },
+        }));
+        res.setHeader('Cache-Control', 'no-store');
+        return res.json({
+            messages,
+            nextBeforeId: hasMore && page.length ? page[0].id : null,
+        });
+    } catch (error) {
+        console.error('Unable to load message history:', error);
+        return res.status(500).json({ message: 'Unable to open messages.' });
+    }
+};
+
 export const markAsRead = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user.id;

@@ -22,6 +22,8 @@ export default function Messages() {
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [selected, setSelected] = useState<Contact | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
+    const [nextBeforeId, setNextBeforeId] = useState<number | null>(null);
+    const [historyBusy, setHistoryBusy] = useState(false);
     const [query, setQuery] = useState('');
     const [draft, setDraft] = useState('');
     const [listLoading, setListLoading] = useState(true);
@@ -31,6 +33,7 @@ export default function Messages() {
     const [listError, setListError] = useState('');
     const [activeMobile, setActiveMobile] = useState(false);
     const endRef = useRef<HTMLDivElement>(null);
+    const skipNextScroll = useRef(false);
     const selectedRef = useRef<Contact | null>(null);
 
     useEffect(() => { selectedRef.current = selected; }, [selected]);
@@ -88,17 +91,19 @@ export default function Messages() {
     }, [initialUserId, listLoading, user?.id, conversations]);
 
     useEffect(() => {
-        if (!selected) { setMessages([]); return; }
+        if (!selected) { setMessages([]); setNextBeforeId(null); return; }
         let active = true;
         setThreadLoading(true);
+        setNextBeforeId(null);
         setError('');
         (async () => {
             try {
-                const response = await fetch(`${API_ENDPOINTS.messages}/${selected.id}`, { headers: authHeaders() });
+                const response = await fetch(`${API_ENDPOINTS.messages}/history/${selected.id}`, { headers: authHeaders() });
                 if (!response.ok) throw new Error('Could not open messages.');
                 const data = await response.json();
                 if (!active) return;
-                setMessages(Array.isArray(data) ? data : []);
+                setMessages(Array.isArray(data.messages) ? data.messages : []);
+                setNextBeforeId(typeof data.nextBeforeId === 'number' ? data.nextBeforeId : null);
                 const mark = await fetch(`${API_ENDPOINTS.messages}/read`, { method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify({ senderId: selected.id }) });
                 if (mark.ok) setConversations(previous => previous.map(convo => convo.user.id === selected.id ? { ...convo, unreadCount: 0 } : convo));
             } catch (err: any) {
@@ -110,7 +115,33 @@ export default function Messages() {
         return () => { active = false; };
     }, [selected?.id]);
 
-    useEffect(() => { if (activeMobile && selected) endRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }); }, [messages.length, activeMobile, selected?.id]);
+    useEffect(() => {
+        if (skipNextScroll.current) { skipNextScroll.current = false; return; }
+        if (activeMobile && selected) endRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' });
+    }, [messages.length, activeMobile, selected?.id]);
+
+    const loadOlder = async () => {
+        if (!selected || nextBeforeId === null || historyBusy) return;
+        const peerId = selected.id;
+        setHistoryBusy(true);
+        setError('');
+        try {
+            const response = await fetch(`${API_ENDPOINTS.messages}/history/${peerId}?before=${nextBeforeId}`, { headers: authHeaders() });
+            if (!response.ok) throw new Error('Could not load older messages.');
+            const data = await response.json();
+            if (selectedRef.current?.id !== peerId) return;
+            skipNextScroll.current = true;
+            setMessages(previous => {
+                const existing = new Set(previous.map(message => message.id));
+                return [...(Array.isArray(data.messages) ? data.messages.filter((message: Message) => !existing.has(message.id)) : []), ...previous];
+            });
+            setNextBeforeId(typeof data.nextBeforeId === 'number' ? data.nextBeforeId : null);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Could not load history.');
+        } finally {
+            setHistoryBusy(false);
+        }
+    };
 
     const choose = (contact: Contact) => {
         setSelected(contact);
@@ -178,6 +209,7 @@ export default function Messages() {
                         <Link to={`/dashboard/profile/${encodeURIComponent(selected.username)}`} className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"><CharacterBadge name="lumi" tone="sage" size="xs" /><span className="hidden sm:inline">Profile</span></Link>
                     </header>
                     <div className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-gradient-to-b from-[hsl(var(--background))]/50 to-card px-4 py-6 sm:px-8">
+                        {!threadLoading && nextBeforeId !== null && <div className="mb-5 text-center"><button type="button" disabled={historyBusy} onClick={() => void loadOlder()} className="rounded-full border border-border bg-card px-4 py-2 text-xs font-bold text-primary disabled:opacity-50">{historyBusy ? 'Loading…' : 'Load older messages'}</button></div>}
                         {threadLoading ? <p className="text-center text-sm text-muted-foreground">Opening conversation…</p> : messages.length === 0 ? <div className="mx-auto flex max-w-sm flex-col items-center py-14 text-center"><Mascot name="chika" className="h-28 w-28" /><p className="mt-5 font-editorial text-2xl">Start with a hello</p><p className="mt-2 text-sm leading-7 text-muted-foreground">Your first message could make someone's day a little brighter.</p></div> :
                             messages.map((message, index) => {
                                 const mine = message.senderId === user?.id;
