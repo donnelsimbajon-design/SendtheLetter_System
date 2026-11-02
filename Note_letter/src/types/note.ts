@@ -7,9 +7,12 @@ export interface Comment {
     createdAt: Date | string;
 }
 
+export interface StoryPage { text: string; imageData?: string; caption?: string; }
+
 export interface Note {
     id: string;
     shareToken?: string;
+    letterPages?: StoryPage[] | null;
     title: string;
     content: string;
     category?: string;
