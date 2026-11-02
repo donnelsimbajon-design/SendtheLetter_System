@@ -41,7 +41,7 @@ const Landing = () => {
     const params = new URLSearchParams(search);
     const route = params.get('route') || '';
     // Static hosting fallback for direct refreshes of known React routes.
-    if (/^\/(?:dashboard(?:\/.*)?|login|signup|about|services|contact|creator|admin|writers/[^/?#]+)(?:\?.*)?$/.test(route) && !route.startsWith('//')) {
+    if (/^\/(?:dashboard(?:\/.*)?|login|signup|about|services|contact|creator|admin|writers\/[^/?#]+)(?:\?.*)?$/.test(route) && !route.startsWith('//')) {
         return <Navigate to={route} replace />;
     }
     return params.has('s') ? <PublicLetterPage /> : <Home />;
