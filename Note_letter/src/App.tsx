@@ -8,6 +8,7 @@ import UserNotePage from './Pages/user/UserNotePage';
 import CommunityPage from './Pages/user/CommunityPage';
 import ProfilePage from './Pages/user/ProfilePage';
 import UserProfilePage from './Pages/user/UserProfilePage';
+import PublicWriterPage from './Pages/user/PublicWriterPage';
 import MessagesPage from './Pages/user/MessagesPage';
 import DashboardPage from './Pages/user/DashboardPage';
 import SettingsPage from './Pages/user/SettingsPage';
@@ -40,7 +41,7 @@ const Landing = () => {
     const params = new URLSearchParams(search);
     const route = params.get('route') || '';
     // Static hosting fallback for direct refreshes of known React routes.
-    if (/^\/(?:dashboard(?:\/.*)?|login|signup|about|services|contact|creator|admin)(?:\?.*)?$/.test(route) && !route.startsWith('//')) {
+    if (/^\/(?:dashboard(?:\/.*)?|login|signup|about|services|contact|creator|admin|writers/[^/?#]+)(?:\?.*)?$/.test(route) && !route.startsWith('//')) {
         return <Navigate to={route} replace />;
     }
     return params.has('s') ? <PublicLetterPage /> : <Home />;
@@ -71,6 +72,7 @@ function App() {
                 <Route path="/creator" element={<Creator />} />
                 <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
                 <Route path="/letters/:id" element={<PublicLetterPage />} />
+                <Route path="/writers/:username" element={<PublicWriterPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
                 <Route path="/dashboard" element={<PrivateRoute><DashboardLayout /></PrivateRoute>}>
                     <Route index element={<DashboardPage />} />
