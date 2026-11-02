@@ -29,7 +29,7 @@ function fromStorage(userId?: number | null): WriterPreferences {
         const obj = stored ? JSON.parse(stored) : {};
         const oldTheme = localStorage.getItem('sendtheletter-theme');
         return {
-            theme: ['warm', 'cool', 'dark'].includes(obj.theme) ? obj.theme : ['warm', 'cool', 'dark'].includes(oldTheme) ? oldTheme as ThemeChoice : defaults.theme,
+            theme: ['warm', 'cool', 'dark'].includes(obj.theme) ? obj.theme : ['warm', 'cool', 'dark'].includes(oldTheme || '') ? oldTheme as ThemeChoice : defaults.theme,
             readingSize: obj.readingSize === 'large' ? 'large' : 'normal',
             reduceMotion: obj.reduceMotion === true,
             defaultPublic: obj.defaultPublic === true,
