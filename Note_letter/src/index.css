@@ -143,3 +143,14 @@
   main pre { max-width: 100%; overflow-x: auto; }
   input, textarea, select { font-size: 16px; }
 }
+
+/* Inline letter photos stay inside narrow mobile paper widths. On wider
+   screens they float alongside text, exactly as they do in the editor. */
+@media (max-width: 520px) {
+  figure[data-letter-photo],
+  figure[data-editable-letter-photo] {
+    float: none !important;
+    width: min(100%, 320px) !important;
+    margin: 16px auto !important;
+  }
+}
