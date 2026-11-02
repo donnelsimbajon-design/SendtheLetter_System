@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dialog';
 // VisuallyHidden removed
 import { Button } from './ui/button';
-import { Music, Heart, Repeat, PenLine, Share2, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Music, Repeat, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import CharacterBadge from './CharacterBadge';
 import CommentsPanel from './CommentsPanel';
 import LetterBookReader from './LetterBookReader';
 import { Note } from '../types/note';
@@ -177,7 +178,7 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                                         }}
                                         className="text-stone-500 hover:text-stone-800"
                                     >
-                                        <PenLine size={18} />
+                                        <CharacterBadge name="lumi" tone="paper" size="sm" />
                                         <span className="sr-only">Edit Letter</span>
                                     </Button>
                                 )}
@@ -276,8 +277,8 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                             onCommentCountChange={setCommentCount}
                             actions={<>
                                 <button type="button" onClick={handleRepost} disabled={!user} className={cn("inline-flex items-center gap-1 text-xs hover:text-green-600 disabled:opacity-40", isReposted && "text-green-600")} title="Repost"><Repeat size={17} /><span>{repostCount}</span></button>
-                                <button type="button" onClick={() => setIsShareModalOpen(true)} disabled={!user} className="text-stone-600 hover:text-blue-500 disabled:opacity-40" title="Share"><Share2 size={17} /></button>
-                                <button type="button" onClick={handleLike} disabled={!user} className={cn("inline-flex items-center gap-1 text-xs hover:text-rose-500 disabled:opacity-40", isLiked && "text-rose-500")} title="Like"><Heart size={17} className={cn(isLiked && "fill-rose-500")} /><span>{likeCount}</span></button>
+                                <button type="button" onClick={() => setIsShareModalOpen(true)} disabled={!user} className="text-stone-600 hover:text-blue-500 disabled:opacity-40" title="Share"><CharacterBadge name="piko" tone="paper" size="sm" /></button>
+                                <button type="button" onClick={handleLike} disabled={!user} className={cn("inline-flex items-center gap-1 text-xs hover:text-rose-500 disabled:opacity-40", isLiked && "text-rose-500")} title="Like"><CharacterBadge name="sely" tone={isLiked ? "rose" : "paper"} size="sm" /><span>{likeCount}</span></button>
                                 <span className="sr-only">{commentCount} comments</span>
                             </>}
                         />}
