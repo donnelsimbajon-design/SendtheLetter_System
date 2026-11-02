@@ -12,7 +12,7 @@ const Home = () => {
     <div className="min-h-screen overflow-hidden bg-background text-foreground">
       <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur-xl">
         <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-8">
-          <Link to="/" className="flex items-center gap-3"><CharacterBadge name="lumi" tone="forest" size="md" className="!h-10 !w-10" /><span className="font-editorial text-xl font-semibold">SendTheLetter</span></Link>
+          <Link to="/" className="flex items-center gap-3"><img src="/sendtheletter-logo.svg" alt="SendTheLetter" className="h-12 w-[205px] object-contain object-left sm:w-[240px]" /></Link>
           <nav className="hidden items-center gap-8 text-sm font-medium text-muted-foreground md:flex"><Link className="hover:text-foreground" to="/about">Our story</Link><Link className="hover:text-foreground" to="/services">What you can do</Link><Link className="hover:text-foreground" to="/contact">Contact</Link></nav>
           <div className="flex items-center gap-2"><Link to={isAuthenticated ? '/dashboard' : '/login'} className="hidden rounded-full px-4 py-2.5 text-sm font-semibold hover:bg-muted sm:inline-flex">{isAuthenticated ? 'My space' : 'Sign in'}</Link><Link to={startLink} className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-transform hover:-translate-y-0.5">Start writing <ArrowRight size={15} /></Link></div>
         </div>
