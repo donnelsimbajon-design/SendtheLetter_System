@@ -5,6 +5,7 @@ import { useAuthStore } from '../store/authStore';
 import { useWriterPreferences } from '../store/writerPreferences';
 import { cn } from '../lib/utils';
 import { API_ENDPOINTS } from '../config/api';
+import { useLetterBook } from '../hooks/useLetterBook';
 
 interface LetterEditorModalProps {
     isOpen: boolean;
@@ -51,7 +52,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
     const preferences = useWriterPreferences(s => s.preferences);
 
     const [title, setTitle] = useState('');
-    const [content, setContent] = useState('');
+    const { pages, pageIndex, setPageIndex, resetBook, updateText, addPage, removeBlank, addPhoto, setCaption, removeImage, bookError, setBookError, content, wordCount } = useLetterBook();
     const [recipientName, setRecipientName] = useState('');
     const [recipientAddress, setRecipientAddress] = useState('');
     const [category, setCategory] = useState('Other');
@@ -86,7 +87,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
         publishing.current = false;
         draftIdRef.current = initialData?.status === 'draft' && initialData.id ? String(initialData.id) : null;
         setTitle(initialData?.title || '');
-        setContent(initialData?.content || '');
+        resetBook(initialData?.content || '', initialData?.letterPages);
         setRecipientName(initialData?.recipientName || '');
         setRecipientAddress(initialData?.recipientAddress || '');
         setCategory(initialData?.type || initialData?.category || 'Other');
@@ -113,6 +114,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
         recipientName: recipientName.trim(),
         recipientAddress: recipientAddress.trim(),
         content: content.trim(),
+        letterPages: pages,
         type: category,
         category,
         font,
@@ -168,7 +170,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
         if (!isOpen || editingPublished || !canSave || !isDirty || publishing.current) return;
         const timer = window.setTimeout(() => { if (!publishing.current) void saveDraft(); }, 10000);
         return () => window.clearTimeout(timer);
-    }, [isOpen, editingPublished, title, content, recipientName, recipientAddress, category, font, isAnonymous, isPublic, backgroundImage, imageUrl, spotifyLink, scheduledDate, openDate, isTimeCapsule, isDirty]);
+    }, [isOpen, editingPublished, title, pages, recipientName, recipientAddress, category, font, isAnonymous, isPublic, backgroundImage, imageUrl, spotifyLink, scheduledDate, openDate, isTimeCapsule, isDirty]);
 
     const closeEditor = () => {
         if (busy || isSaving) return;
@@ -229,7 +231,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
         if ((title.trim() || content.trim()) && !window.confirm('Replace the current title and message with this starting point?')) return;
         setSelectedTemplate(value);
         setTitle(template.title);
-        setContent(template.content);
+        resetBook(template.content);
         setCategory(template.category);
         markDirty();
     };
@@ -254,7 +256,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
         reader.readAsDataURL(file);
     };
 
-    const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+    const page = pages[Math.min(pageIndex, pages.length - 1)];
     const paper = papers.find(p => p.value === backgroundImage) || papers[0];
     const scheduled = (isTimeCapsule ? openDate : scheduledDate) && (utcDate(isTimeCapsule ? openDate : scheduledDate) || '') > new Date().toISOString();
     const actionLabel = editingPublished ? 'Save changes' : scheduled ? 'Schedule letter' : isPublic ? 'Publish letter' : 'Finish private letter';
@@ -345,7 +347,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                                 <span className="font-serif text-lg">,</span>
                             </div>
                             <label className="sr-only" htmlFor="letter-content">Your letter</label>
-                            <textarea id="letter-content" value={content} maxLength={100000} onChange={e => { setContent(e.target.value); markDirty(); }} placeholder="Tell them what you've been meaning to say…\n\nStart with a memory, a feeling, or just a simple hello." className={cn('mt-7 min-h-[230px] w-full flex-1 resize-none border-0 bg-transparent p-0 text-base leading-[1.9] outline-none placeholder:opacity-50 sm:text-lg', font, imageUrl ? 'text-white placeholder:text-white' : 'text-[#35483d] placeholder:text-[#8b9188]')} />
+                            <textarea id="letter-content" value={page.text} maxLength={2400} onChange={e => { if (updateText(e.target.value)) markDirty(); }} placeholder={"Tell them what you've been meaning to say…\n\nStart with a memory, a feeling, or just a simple hello."} className={cn('mt-7 min-h-[230px] w-full flex-1 resize-none border-0 bg-transparent p-0 text-base leading-[1.9] outline-none placeholder:opacity-50 sm:text-lg', font, imageUrl ? 'text-white placeholder:text-white' : 'text-[#35483d] placeholder:text-[#8b9188]')} />
                             <div className={cn('mt-8 flex justify-end gap-2 border-t pt-5 font-serif italic', imageUrl ? 'border-white/35 text-white/80' : 'border-[#dcd6c8] text-[#817e72]')}><span>With care,</span><span className="font-semibold">{isAnonymous ? 'Anonymous' : user?.username || 'Me'}</span></div>
                         </div>
                     </div>
