@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dial
 import { Button } from './ui/button';
 import { Music, Heart, Repeat, PenLine, Share2, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import CommentsPanel from './CommentsPanel';
+import LetterBookReader from './LetterBookReader';
 import { Note } from '../types/note';
 import { cn, getImageUrl } from '../lib/utils';
 import { useAuthStore } from '../store/authStore';
@@ -211,15 +212,20 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                                 </div>
                             </div>
 
-                            {/* Salutation */}
-                            <div className="font-bold text-stone-900 text-lg">
-                                Dear {note.recipientName ? note.recipientName.split(' ')[0] : 'Friend'},
-                            </div>
-
-                            {/* Body */}
-                            <div className="min-h-[200px] text-stone-900 leading-relaxed text-lg whitespace-pre-wrap">
-                                {note.content}
-                            </div>
+                            <LetterBookReader
+                                key={String(note.id)}
+                                title={note.title}
+                                content={note.content}
+                                letterPages={note.letterPages}
+                                recipientName={note.recipientName}
+                                authorName={note.authorName}
+                                isAnonymous={note.isAnonymous}
+                                category={note.type || note.category}
+                                font={note.font}
+                                backgroundImage={note.backgroundImage}
+                                coverImage={note.imageUrl}
+                                compact
+                            />
 
                             {/* Spotify Player - Show if letter has music */}
                             {note.spotifyLink && (
@@ -255,13 +261,6 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                                 </div>
                             )}
 
-                            {/* Closing */}
-                            <div className="space-y-2 pt-8">
-                                <p className="text-stone-800">Kind regards,</p>
-                                <p className="font-bold text-xl signature text-stone-900">
-                                    {note.isAnonymous ? 'A Friend' : note.authorName || 'Me'}
-                                </p>
-                            </div>
                         </div>
                     </div>
 
