@@ -338,6 +338,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                                 <span className="inline-flex items-center gap-2"><Feather size={14} /> A letter from the heart</span>
                                 <span className="hidden sm:inline">{category}</span>
                             </div>
+                            {pageIndex === 0 ? <>
                             <label className="sr-only" htmlFor="letter-title">Letter title</label>
                             <input id="letter-title" maxLength={255} value={title} onChange={e => { setTitle(e.target.value); markDirty(); }} placeholder="Give your letter a title…" className={cn('w-full border-none bg-transparent p-0 font-editorial text-[clamp(1.55rem,3.5vw,2.6rem)] font-semibold leading-tight tracking-tight outline-none placeholder:opacity-40', imageUrl ? 'text-white placeholder:text-white' : 'text-[#35483d] placeholder:text-[#988d83]')} />
                             <div className={cn('mt-6 flex items-center border-b pb-3', imageUrl ? 'border-white/35' : 'border-[#dcd6c8]')}>
@@ -346,6 +347,10 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                                 <input id="letter-recipient" maxLength={255} value={recipientName} onChange={e => { setRecipientName(e.target.value); markDirty(); }} placeholder="someone special…" className={cn('ml-2 min-w-0 flex-1 bg-transparent text-lg font-semibold outline-none placeholder:opacity-40', imageUrl ? 'text-white placeholder:text-white' : 'text-[#35483d] placeholder:text-[#9c958c]')} />
                                 <span className="font-serif text-lg">,</span>
                             </div>
+                            </> : <div className={cn('mb-7 border-b pb-4', imageUrl ? 'border-white/30 text-white/90' : 'border-[#dcd6c8] text-[#756b60]')}>
+                                <p className="font-editorial text-xl leading-snug">{title || 'Untitled letter'}</p>
+                                <p className="mt-2 text-xs font-semibold italic">…continued on page {pageIndex + 1}</p>
+                            </div>}
                             <div className={cn('mb-1 flex flex-wrap items-center justify-between gap-2', imageUrl ? 'text-white/85' : 'text-[#8b7361]')}>
                                 <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.16em]"><BookHeart size={15} /> Page {pageIndex + 1} of {pages.length}</span>
                                 <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-current/30 px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-white/15"><ImagePlus size={15} /> Insert image in page <input type="file" className="sr-only" accept="image/png,image/jpeg,image/webp" onChange={async (event) => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; try { await addPhoto(file); markDirty(); setNotice('Photo added inside your book page.'); } catch (error: any) { setBookError(error?.message || 'Could not insert photo.'); } }} /></label>
