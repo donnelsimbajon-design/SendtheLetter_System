@@ -8,6 +8,7 @@ export default function PublicWriterPage() {
     const loggedIn = useAuthStore(state => state.isAuthenticated);
 
     return <div className="min-h-screen bg-background text-foreground">
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-primary focus:px-5 focus:py-3 focus:text-sm focus:font-bold focus:text-primary-foreground">Skip to main content</a>
         <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-xl">
             <div className="mx-auto flex min-h-[72px] max-w-[1250px] items-center justify-between gap-3 px-4 py-3 sm:px-6">
                 <Link to="/" aria-label="SendTheLetter home" className="inline-flex min-w-0 items-center">
@@ -25,8 +26,12 @@ export default function PublicWriterPage() {
                 </nav>
             </div>
         </header>
-        <main id="main-content" className="mx-auto max-w-[1250px] px-4 pb-12 pt-7 sm:px-6">
+        <main id="main-content" tabIndex={-1} className="mx-auto max-w-[1250px] px-4 pb-12 pt-7 sm:px-6">
             <UserProfilePage />
+            {!loggedIn && <aside className="mt-10 flex flex-col items-start justify-between gap-5 rounded-[1.8rem] bg-primary p-6 text-primary-foreground sm:flex-row sm:items-center sm:p-8">
+                <div className="flex items-start gap-4"><CharacterBadge name="lumi" tone="paper" size="lg" /><div><h2 className="font-editorial text-2xl sm:text-3xl">Every writer starts somewhere.</h2><p className="mt-2 max-w-lg text-sm leading-6 opacity-85">Read a story that moved you? There is room here for your own words, too.</p></div></div>
+                <Link to="/signup" className="inline-flex min-h-12 shrink-0 items-center rounded-full bg-[hsl(var(--surface-gold))] px-6 py-3 text-sm font-bold text-[#493D2A]">Write your first letter</Link>
+            </aside>}
         </main>
         <footer className="flex items-center justify-center gap-2 border-t border-border bg-card px-5 py-7 text-center text-xs text-muted-foreground">
             <CharacterBadge name="sely" tone="paper" size="xs" />
