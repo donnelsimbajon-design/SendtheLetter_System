@@ -129,3 +129,28 @@ export const updateProfile = async (req: Request & { user?: { id: number } }, re
         return res.status(500).json({ message: 'Unable to update profile.' });
     }
 };
+
+/**
+ * Change password only after verifying the current password.
+ * Sequelize's beforeUpdate hook hashes the new password with bcrypt.
+ * Existing JWTs remain valid until their normal expiration (24 hours).
+ */
+export const changePassword = async (req: Request & { user?: { id: number } }, res: Response) => {
+    try {
+        const currentPassword = typeof req.body?.currentPassword === 'string' ? req.body.currentPassword : '';
+        const newPassword = typeof req.body?.newPassword === 'string' ? req.body.newPassword : '';
+        if (!currentPassword || newPassword.length < 8 || Buffer.byteLength(newPassword, 'utf8') > 72) {
+            return res.status(400).json({ message: 'Enter your current password and a new password of at least 8 characters (72-byte maximum).' });
+        }
+        if (currentPassword === newPassword) return res.status(400).json({ message: 'Choose a new password different from your current one.' });
+        const user = await User.findByPk(req.user?.id);
+        if (!user || !user.isActive) return res.status(401).json({ message: 'Please sign in again.' });
+        if (!(await user.validatePassword(currentPassword))) return res.status(403).json({ message: 'Current password is incorrect.' });
+        await user.update({ password_hash: newPassword });
+        res.setHeader('Cache-Control', 'no-store');
+        return res.json({ message: 'Password updated successfully. Use the new password when signing in again.' });
+    } catch (error) {
+        console.error('Password change failed:', error);
+        return res.status(500).json({ message: 'Could not update your password. Please try again.' });
+    }
+};
