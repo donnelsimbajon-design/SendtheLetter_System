@@ -34,3 +34,22 @@ test('rejects unsafe positioning values', () => {
         assert.ok(result.error, JSON.stringify(invalid));
     }
 });
+
+test('preserves safe anchored left/right float layouts for final reader', () => {
+    for (const imagePlacement of ['left', 'right'] as const) {
+        const pages = parseStoryPages([{ text: 'Some words here', imageData: photo, imagePlacement, imageAnchor: 5, imageWidth: 45 }]);
+        assert.equal(pages.error, undefined);
+        assert.deepEqual(pages.pages?.[0], { text: 'Some words here', imageData: photo, imagePlacement, imageAnchor: 5, imageWidth: 45 });
+    }
+});
+
+test('rejects invalid cursor offsets and unsafe floating placement', () => {
+    for (const invalid of [
+        { imageAnchor: -1 }, { imageAnchor: 50 }, { imageAnchor: 1.5 },
+        { imageAnchor: NaN }, { imageAnchor: '3' },
+        { imagePlacement: 'absolute' }, { imagePlacement: '<script>' },
+    ]) {
+        const result = parseStoryPages([{ text: 'Sample', imageData: photo, ...invalid }]);
+        assert.ok(result.error, JSON.stringify(invalid));
+    }
+});
