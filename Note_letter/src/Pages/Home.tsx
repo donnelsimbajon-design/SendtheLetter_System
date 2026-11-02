@@ -77,6 +77,7 @@ const Home = () => {
 
   return (
     <div className="min-h-screen min-w-0 overflow-x-clip bg-background text-foreground">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-primary focus:px-5 focus:py-3 focus:text-sm focus:font-bold focus:text-primary-foreground">Skip to main content</a>
       <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur-xl">
         <div className="mx-auto flex min-h-[72px] max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-2 sm:px-8 md:min-h-[80px]">
           <Link to="/" aria-label="SendTheLetter home" className="inline-flex shrink-0 items-center">
@@ -98,7 +99,7 @@ const Home = () => {
         </div>
       </header>
 
-      <main id="main-content">
+      <main id="main-content" tabIndex={-1}>
         <section className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 pb-16 pt-12 sm:px-8 sm:pb-20 sm:pt-20 lg:grid-cols-[1.04fr_.96fr] lg:gap-12 lg:pb-24 lg:pt-24">
           <div className="relative z-10">
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-[11px] font-bold tracking-wide text-muted-foreground sm:px-4">
