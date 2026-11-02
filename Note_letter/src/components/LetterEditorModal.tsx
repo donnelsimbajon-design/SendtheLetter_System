@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog';
-import { BookHeart, Check, ChevronDown, Clock3, EyeOff, ArrowLeft, ArrowRight, Trash2, Feather, FileCheck2, Globe2, ImagePlus, LockKeyhole, Music2, Palette, PenLine, Save, Send, Settings2, ShieldCheck, Sparkles } from 'lucide-react';
+import { Check, ChevronDown, ArrowLeft, ArrowRight, Trash2, Globe2, ImagePlus, LockKeyhole, Music2, Palette, Save, Settings2, Sparkles } from 'lucide-react';
+import CharacterBadge from './CharacterBadge';
 import { useAuthStore } from '../store/authStore';
 import { useWriterPreferences } from '../store/writerPreferences';
 import { cn } from '../lib/utils';
@@ -271,11 +272,11 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
 
             <header className="relative flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border bg-card px-5 py-4 pr-14 sm:px-7 sm:pr-16">
                 <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[hsl(var(--surface-gold))] text-[#564932]"><BookHeart size={22} /></div>
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[hsl(var(--surface-gold))] text-[#564932]"><CharacterBadge name="lumi" tone="gold" size="md" /></div>
                     <div><p className="text-[10px] font-bold uppercase tracking-[.19em] text-[hsl(var(--accent))]">Your writing desk</p><h2 className="font-editorial text-xl font-semibold sm:text-2xl">{editingPublished ? 'Edit your letter' : 'A letter starts here'}</h2></div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="hidden rounded-full bg-muted px-3 py-1.5 text-[11px] font-medium text-muted-foreground sm:inline-flex"><ShieldCheck size={13} className="mr-1" /> {isPublic ? 'Public' : 'Private'} draft</span>
+                    <span className="hidden rounded-full bg-muted px-3 py-1.5 text-[11px] font-medium text-muted-foreground sm:inline-flex"><CharacterBadge name="susi" tone="paper" size="xs" className="mr-1" /> {isPublic ? 'Public' : 'Private'} draft</span>
                     <button type="button" onClick={() => setControlsOpen(value => !value)} aria-expanded={controlsOpen} className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-2 text-xs font-semibold hover:bg-muted lg:hidden"><Settings2 size={16} /> Customize <ChevronDown size={14} className={controlsOpen ? 'rotate-180' : ''} /></button>
                 </div>
             </header>
@@ -285,7 +286,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                     <div className="mb-5 hidden lg:block"><p className="font-editorial text-xl">Make it yours</p><p className="mt-1 text-xs leading-5 text-muted-foreground">A few thoughtful details, only if you want them.</p></div>
                     <div className="space-y-4 pb-3">
                         <div className={panelClass}>
-                            <label className={labelClass} htmlFor="letter-starting-point"><Sparkles size={13} className="mr-1 inline" /> Need inspiration?</label>
+                            <label className={labelClass} htmlFor="letter-starting-point"><CharacterBadge name="tala" tone="gold" size="xs" className="mr-1 inline-flex" /> Need inspiration?</label>
                             <select id="letter-starting-point" value={selectedTemplate} onChange={e => selectPrompt(e.target.value)} className={fieldClass}><option value="">Choose a starting point</option>{templates.map(t => <option key={t.value} value={t.value}>{t.name}</option>)}</select>
                             <p className="mt-2 text-[11px] leading-5 text-muted-foreground">Templates are optional. Your words are what matter.</p>
                         </div>
@@ -299,13 +300,13 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                             <div className="mt-2 grid grid-cols-6 gap-2">{papers.map(p => <button type="button" key={p.name} title={p.name} aria-label={`Use ${p.name} paper`} aria-pressed={backgroundImage === p.value} onClick={() => { setBackgroundImage(p.value); markDirty(); }} className={cn('relative h-9 min-w-0 rounded-xl border-2 transition-transform hover:scale-105', p.className, backgroundImage === p.value ? 'border-primary ring-2 ring-primary/20' : 'border-border')}>{backgroundImage === p.value && <Check size={14} className="mx-auto text-[#294335]" />}</button>)}</div>
                         </div>
                         <div className={panelClass}>
-                            <p className={labelClass}><Globe2 size={13} className="mr-1 inline" /> Visibility</p>
+                            <p className={labelClass}><CharacterBadge name="susi" tone="sage" size="xs" className="mr-1 inline-flex" /> Visibility</p>
                             <div className="mt-3 grid grid-cols-2 gap-2">
-                                <button type="button" onClick={() => { setIsPublic(false); markDirty(); }} aria-pressed={!isPublic} className={cn('flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-xs font-semibold', !isPublic ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background text-foreground')}><LockKeyhole size={15} /> Private</button>
-                                <button type="button" onClick={() => { setIsPublic(true); markDirty(); }} aria-pressed={isPublic} className={cn('flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-xs font-semibold', isPublic ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background text-foreground')}><Globe2 size={15} /> Public</button>
+                                <button type="button" onClick={() => { setIsPublic(false); markDirty(); }} aria-pressed={!isPublic} className={cn('flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-xs font-semibold', !isPublic ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background text-foreground')}><CharacterBadge name="susi" tone="paper" size="xs" /> Private</button>
+                                <button type="button" onClick={() => { setIsPublic(true); markDirty(); }} aria-pressed={isPublic} className={cn('flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-xs font-semibold', isPublic ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background text-foreground')}><CharacterBadge name="piko" tone="paper" size="xs" /> Public</button>
                             </div>
                             <p className="mt-2 text-[11px] leading-5 text-muted-foreground">{isPublic ? 'Public letters can be discovered and shared. Guests can react after publishing.' : 'Private letters stay out of the public feed. You decide when to share.'}</p>
-                            <label className="mt-4 flex cursor-pointer items-center justify-between gap-3 rounded-xl bg-background px-3 py-3 text-xs font-semibold"><span className="inline-flex items-center gap-2"><EyeOff size={15} /> Post anonymously</span><input type="checkbox" checked={isAnonymous} onChange={e => { setIsAnonymous(e.target.checked); markDirty(); }} className="h-4 w-4 accent-[#344d40]" /></label>
+                            <label className="mt-4 flex cursor-pointer items-center justify-between gap-3 rounded-xl bg-background px-3 py-3 text-xs font-semibold"><span className="inline-flex items-center gap-2"><CharacterBadge name="susi" tone="paper" size="xs" /> Post anonymously</span><input type="checkbox" checked={isAnonymous} onChange={e => { setIsAnonymous(e.target.checked); markDirty(); }} className="h-4 w-4 accent-[#344d40]" /></label>
                         </div>
                         <details className={panelClass}>
                             <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-bold uppercase tracking-[.14em]"><span className="inline-flex items-center gap-2"><Music2 size={16} /> Attachments</span><ChevronDown size={15} /></summary>
@@ -317,7 +318,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                             </div>
                         </details>
                         <details className={panelClass}>
-                            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-bold uppercase tracking-[.14em]"><span className="inline-flex items-center gap-2"><Clock3 size={16} /> Deliver later</span><ChevronDown size={15} /></summary>
+                            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-bold uppercase tracking-[.14em]"><span className="inline-flex items-center gap-2"><CharacterBadge name="araw" tone="gold" size="sm" /> Deliver later</span><ChevronDown size={15} /></summary>
                             <div className="mt-4 space-y-3">
                                 <label className="block text-xs font-semibold" htmlFor="letter-schedule">Schedule release</label>
                                 <input id="letter-schedule" type="datetime-local" value={scheduledDate} disabled={isTimeCapsule} onChange={e => { setScheduledDate(e.target.value); markDirty(); }} className={fieldClass} />
@@ -335,7 +336,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                     <div className={cn('relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[19px] border border-[#e9dfd1] shadow-[0_12px_40px_rgba(64,48,31,.09)] sm:rounded-[24px]', paper.className)} style={imageUrl ? { backgroundImage: `linear-gradient(rgba(14,19,14,.6),rgba(14,19,14,.56)),url("${imageUrl}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}>
                         <div className={cn('relative flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-7 sm:px-10 sm:py-9 lg:px-12', imageUrl ? 'text-white' : 'text-[#35483d]')}>
                             <div className={cn('mb-7 flex items-center justify-between gap-2 border-b pb-4 text-[10px] font-bold uppercase tracking-[.20em]', imageUrl ? 'border-white/40 text-white/80' : 'border-[#dcd6c8] text-[#9a796b]')}>
-                                <span className="inline-flex items-center gap-2"><Feather size={14} /> A letter from the heart</span>
+                                <span className="inline-flex items-center gap-2"><CharacterBadge name="lumi" tone="rose" size="xs" /> A letter from the heart</span>
                                 <span className="hidden sm:inline">{category}</span>
                             </div>
                             {pageIndex === 0 ? <>
@@ -352,7 +353,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                                 <p className="mt-2 text-xs font-semibold italic">…continued on page {pageIndex + 1}</p>
                             </div>}
                             <div className={cn('mb-1 flex flex-wrap items-center justify-between gap-2', imageUrl ? 'text-white/85' : 'text-[#8b7361]')}>
-                                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.16em]"><BookHeart size={15} /> Page {pageIndex + 1} of {pages.length}</span>
+                                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.16em]"><CharacterBadge name="basa" tone="gold" size="xs" /> Page {pageIndex + 1} of {pages.length}</span>
                                 <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-current/30 px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-white/15"><ImagePlus size={15} /> Insert image in page <input type="file" className="sr-only" accept="image/png,image/jpeg,image/webp" onChange={async (event) => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; try { await addPhoto(file); markDirty(); setNotice('Photo added inside your book page.'); } catch (error: any) { setBookError(error?.message || 'Could not insert photo.'); } }} /></label>
                             </div>
                             <label className="sr-only" htmlFor="letter-content">Your letter</label>
@@ -375,22 +376,22 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                         </div>
                         <button type="button" disabled={pageIndex >= pages.length - 1} onClick={() => setPageIndex(Math.min(pages.length - 1, pageIndex + 1))} className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground disabled:opacity-35">Next <ArrowRight size={14} /></button>
                     </nav>
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-muted-foreground"><span className="inline-flex items-center gap-2"><PenLine size={14} /> {wordCount} {wordCount === 1 ? 'word' : 'words'} written</span><span className="inline-flex items-center gap-1.5">{isSaving ? <><Save size={14} className="animate-pulse" /> Saving draft…</> : lastSaved ? <><Check size={14} /> Saved at {lastSaved}</> : <><Sparkles size={14} /> Every word matters</>}</span></div>
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-muted-foreground"><span className="inline-flex items-center gap-2"><CharacterBadge name="lumi" tone="paper" size="xs" /> {wordCount} {wordCount === 1 ? 'word' : 'words'} written</span><span className="inline-flex items-center gap-1.5">{isSaving ? <><Save size={14} className="animate-pulse" /> Saving draft…</> : lastSaved ? <><Check size={14} /> Saved at {lastSaved}</> : <><Sparkles size={14} /> Every word matters</>}</span></div>
                 </div>
             </div>
 
             {bookError && <div role="alert" className="mx-5 mt-2 rounded-xl bg-red-50 px-4 py-2 text-xs text-red-800">{bookError}</div>}
             {notice && <div role="alert" className="mx-5 mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-semibold text-amber-900 sm:mx-7">{notice}</div>}
             {confirming && <div className="mx-5 mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-muted/80 px-4 py-3 sm:mx-7">
-                <div className="min-w-0"><p className="flex items-center gap-2 text-sm font-bold"><FileCheck2 size={17} /> Ready to finish this letter?</p><p className="mt-1 text-xs text-muted-foreground">{isPublic ? 'Public: other people can read and share it.' : 'Private: only you can access it.'} {scheduled ? 'It will be released at your selected date.' : 'It will be saved immediately.'}</p></div>
+                <div className="min-w-0"><p className="flex items-center gap-2 text-sm font-bold"><CharacterBadge name="sely" tone="sage" size="sm" /> Ready to finish this letter?</p><p className="mt-1 text-xs text-muted-foreground">{isPublic ? 'Public: other people can read and share it.' : 'Private: only you can access it.'} {scheduled ? 'It will be released at your selected date.' : 'It will be saved immediately.'}</p></div>
                 <div className="flex items-center gap-2"><button type="button" onClick={() => setConfirming(false)} className="rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold">Review again</button><button type="button" disabled={busy} onClick={() => void publish()} className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Yes, continue</button></div>
             </div>}
 
             <footer className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-border bg-card px-4 py-3 sm:px-7 sm:py-4">
                 <div className="hidden items-center gap-2 text-xs text-muted-foreground sm:flex">{isPublic ? <Globe2 size={16} /> : <LockKeyhole size={16} />}<span>{isPublic ? 'Visible to the community when released' : 'Just for you, unless you share it'}</span></div>
                 <div className="ml-auto flex w-full items-center gap-2 sm:w-auto">
-                    <button type="button" onClick={() => void saveAndClose()} disabled={busy || isSaving || editingPublished || !canSave} className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-border bg-background px-4 text-xs font-bold hover:bg-muted disabled:opacity-40 sm:flex-none sm:px-5"><Save size={16} /> Save draft</button>
-                    <button type="button" onClick={() => void publish()} disabled={busy || isSaving || !canSave} className="inline-flex h-11 flex-[1.3] items-center justify-center gap-2 rounded-full bg-primary px-4 text-xs font-bold text-primary-foreground shadow-md transition-transform hover:-translate-y-0.5 disabled:opacity-40 sm:flex-none sm:px-6">{busy ? 'Working…' : actionLabel} <Send size={16} /></button>
+                    <button type="button" onClick={() => void saveAndClose()} disabled={busy || isSaving || editingPublished || !canSave} className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-border bg-background px-4 text-xs font-bold hover:bg-muted disabled:opacity-40 sm:flex-none sm:px-5"><CharacterBadge name="basa" tone="paper" size="xs" /> Save draft</button>
+                    <button type="button" onClick={() => void publish()} disabled={busy || isSaving || !canSave} className="inline-flex h-11 flex-[1.3] items-center justify-center gap-2 rounded-full bg-primary px-4 text-xs font-bold text-primary-foreground shadow-md transition-transform hover:-translate-y-0.5 disabled:opacity-40 sm:flex-none sm:px-6">{busy ? 'Working…' : actionLabel} <CharacterBadge name="piko" tone="paper" size="xs" /></button>
                 </div>
             </footer>
         </DialogContent>
