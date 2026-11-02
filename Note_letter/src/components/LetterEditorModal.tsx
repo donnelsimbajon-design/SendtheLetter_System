@@ -463,12 +463,12 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                                                 return;
                                             }
                                             const text = event.clipboardData.getData('text/plain');
-                                            if (/data:image\\/(?:png|jpeg|webp);base64,/i.test(text) || /[A-Za-z0-9+/]{256,}={0,2}/.test(text)) {
+                                            if (/data:image\/(?:png|jpeg|webp);base64,/i.test(text) || /[A-Za-z0-9+/]{256,}={0,2}/.test(text)) {
                                                 event.preventDefault();
                                                 setBookError('Insert photos with the image button, not encoded data.');
                                             }
                                         }}
-                                        placeholder={"Tell them what you've been meaning to say…\\n\\nStart with a memory, a feeling, or just a simple hello."}
+                                        placeholder={"Tell them what you've been meaning to say…\n\nStart with a memory, a feeling, or just a simple hello."}
                                         className={cn('mt-7 min-h-[280px] w-full flex-1 resize-none border-0 bg-transparent p-0 text-base leading-[1.9] outline-none placeholder:opacity-50 sm:text-lg', font, 'text-[#35483d] placeholder:text-[#8b9188]')} /></>}
                             <div className={cn('mt-8 flex justify-end gap-2 border-t pt-5 font-serif italic', 'border-[#dcd6c8] text-[#817e72]')}><span>With care,</span><span className="font-semibold">{isAnonymous ? 'Anonymous' : (user?.username?.includes('@') ? user.username.split('@')[0] : user?.username) || 'Me'}</span></div>
                         </div>
