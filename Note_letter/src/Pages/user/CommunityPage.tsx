@@ -289,7 +289,7 @@ export default function CommunityPage() {
 
                     <div className="flex flex-wrap items-center justify-between gap-2 px-1">
                         <p aria-live="polite" className="text-xs text-muted-foreground">
-                            Showing {Math.min(visibleCount, filteredLetters.length)} of {filteredLetters.length} public letters
+                            Showing {Math.min(visibleCount, filteredLetters.length)} of {letters.length} public letters
                         </p>
                         {hasFilters && <button type="button" onClick={resetFilters} className="min-h-10 rounded-full px-3 text-xs font-bold text-primary underline-offset-4 hover:underline">Clear filters</button>}
                     </div>
