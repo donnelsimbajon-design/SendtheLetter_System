@@ -5,6 +5,7 @@ import socketService from './services/socketService';
 import { useAuthStore } from './store/authStore';
 import DashboardLayout from './components/DashboardLayout';
 import UserNotePage from './Pages/user/UserNotePage';
+import CommunityPage from './Pages/user/CommunityPage';
 import ProfilePage from './Pages/user/ProfilePage';
 import UserProfilePage from './Pages/user/UserProfilePage';
 import MessagesPage from './Pages/user/MessagesPage';
@@ -74,6 +75,7 @@ function App() {
                 <Route path="/dashboard" element={<PrivateRoute><DashboardLayout /></PrivateRoute>}>
                     <Route index element={<DashboardPage />} />
                     <Route path="notes" element={<UserNotePage />} />
+                    <Route path="community" element={<CommunityPage />} />
                     <Route path="profile" element={<ProfilePage />} />
                     <Route path="profile/:username" element={<UserProfilePage />} />
                     <Route path="messages" element={<MessagesPage />} />
