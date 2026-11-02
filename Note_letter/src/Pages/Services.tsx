@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookHeart } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import CharacterBadge from '../components/CharacterBadge';
 import { avatarUrl, type AvatarId } from '../constants/avatars';
 
 type ExperienceFeature = { avatar: AvatarId; title: string; body: string };
@@ -15,7 +16,7 @@ const features: ExperienceFeature[] = [
 
 const Services = () => (
   <div className="min-h-screen bg-background text-foreground">
-    <header className="border-b border-border/70"><div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-8"><Link to="/" className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground"><BookHeart size={21}/></span><span className="font-editorial text-xl font-semibold">SendTheLetter</span></Link><nav className="flex items-center gap-5 text-sm font-medium text-muted-foreground sm:gap-8"><Link to="/about" className="hover:text-foreground">Our story</Link><Link to="/contact" className="hover:text-foreground">Contact</Link><Link to="/login" className="rounded-full bg-primary px-4 py-2.5 text-primary-foreground">Sign in</Link></nav></div></header>
+    <header className="border-b border-border/70"><div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-8"><Link to="/" className="flex items-center gap-3"><CharacterBadge name="lumi" tone="forest" size="md" className="!h-10 !w-10" /><span className="font-editorial text-xl font-semibold">SendTheLetter</span></Link><nav className="flex items-center gap-5 text-sm font-medium text-muted-foreground sm:gap-8"><Link to="/about" className="hover:text-foreground">Our story</Link><Link to="/contact" className="hover:text-foreground">Contact</Link><Link to="/login" className="rounded-full bg-primary px-4 py-2.5 text-primary-foreground">Sign in</Link></nav></div></header>
     <main className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-24">
       <div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[.2em] text-[hsl(var(--accent))]">The experience</p><h1 className="mt-5 font-editorial text-5xl leading-[1.08] sm:text-7xl">Everything starts with a few words.</h1><p className="mt-7 max-w-2xl text-lg leading-8 text-muted-foreground">Tools to help you write, share, and stay connected—without making the experience feel complicated.</p></div>
       <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
