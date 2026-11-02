@@ -20,6 +20,7 @@ const Login = () => {
   const login = useAuthStore((state) => state.login);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -58,7 +59,7 @@ const Login = () => {
           {error && <div role="alert" className="mt-6 rounded-2xl border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
             <div className="space-y-2"><label htmlFor="email" className="text-sm font-semibold">Email address</label><div className="relative"><Input id="email" type="email" autoComplete="email" required value={email} onChange={(event)=>setEmail(event.target.value)} placeholder="you@example.com" className="h-12 rounded-xl bg-card px-4"/></div></div>
-            <div className="space-y-2"><label htmlFor="password" className="text-sm font-semibold">Password</label><div className="relative"><Input id="password" type="password" autoComplete="current-password" required value={password} onChange={(event)=>setPassword(event.target.value)} placeholder="Your password" className="h-12 rounded-xl bg-card px-4"/></div></div>
+            <div className="space-y-2"><label htmlFor="password" className="text-sm font-semibold">Password</label><div className="relative"><Input id="password" type={showPassword ? "text" : "password"} autoComplete="current-password" required value={password} onChange={(event)=>setPassword(event.target.value)} placeholder="Your password" className="h-12 rounded-xl bg-card px-4 pr-20"/><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword(current => !current)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-3 py-2 text-xs font-bold text-primary hover:bg-muted">{showPassword ? "Hide" : "Show"}</button></div></div>
             <div className="text-right text-sm"><Link to="/forgot-password" className="font-semibold text-primary hover:underline">Forgot your password?</Link></div>
             <Button type="submit" disabled={loading} className="h-12 w-full rounded-xl text-sm font-semibold">{loading?'Signing you in...':'Sign in'}</Button>
           </form>
