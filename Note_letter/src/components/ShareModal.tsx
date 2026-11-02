@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
-import { Search, Check, User as UserIcon, Copy, Mail, Facebook, Instagram, Lock } from 'lucide-react';
+import { Check, User as UserIcon, Copy, Mail, Facebook, Instagram, Lock } from 'lucide-react';
 import CharacterBadge from './CharacterBadge';
 import { useAuthStore } from '../store/authStore';
 import { getImageUrl } from '../lib/utils';
