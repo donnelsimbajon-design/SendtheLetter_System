@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import CommentsPanel from '../../components/CommentsPanel';
 import LetterBookReader from '../../components/LetterBookReader';
 import axios from 'axios';
@@ -8,7 +8,8 @@ import { API_ENDPOINTS } from '../../config/api';
 import { Note } from '../../types/note';
 
 const PublicLetterPage = () => {
-    const token = new URLSearchParams(window.location.search).get('s') || '';
+    const { id: routeToken } = useParams();
+    const token = new URLSearchParams(window.location.search).get('s') || routeToken || '';
     const [letter, setLetter] = useState<Note | null>(null);
     const [loading, setLoading] = useState(true);
     const [notFound, setNotFound] = useState(false);
