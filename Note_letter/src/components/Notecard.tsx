@@ -7,6 +7,7 @@ import { useNoteStore } from '../store/noteStore';
 import { useAuthStore } from '../store/authStore';
 import { getImageUrl } from '../lib/utils';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DeleteConfirmDialog from './DeleteConfirmDialog';
 
 interface NotecardProps {
@@ -27,6 +28,7 @@ const backgroundGradients = [
 const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
     const { deleteNote, toggleLike, archiveNote } = useNoteStore();
     const user = useAuthStore((state) => state.user);
+    const navigate = useNavigate();
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
     // Check if current user is the author
@@ -43,9 +45,9 @@ const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
 
     const handleAuthorClick = (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!note.isAnonymous && note.authorName && onAuthorClick) {
-            onAuthorClick(note.authorName);
-        }
+        if (note.isAnonymous || !note.authorName || note.authorName === 'A Writer' || note.authorName === 'Unknown') return;
+        if (onAuthorClick) onAuthorClick(note.authorName);
+        else navigate(`/writers/${encodeURIComponent(note.authorName)}`);
     };
 
     // Find the gradient class based on the stored value
@@ -104,6 +106,8 @@ const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
                         ) : (
                             <button
                                 onClick={handleAuthorClick}
+                                disabled={!note.authorName || note.authorName === 'Unknown' || note.authorName === 'A Writer'}
+                                aria-label={`View ${note.authorName || 'writer'} profile`}
                                 className={clsx(
                                     "text-[10px] font-medium uppercase tracking-widest hover:underline transition-all",
                                     isImageBackground ? "text-white/90 hover:text-white" : (backgroundClass ? "text-stone-800 hover:text-stone-900" : "text-primary/80 hover:text-primary")
