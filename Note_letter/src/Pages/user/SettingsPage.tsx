@@ -44,6 +44,8 @@ const SettingsPage = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [savingPassword, setSavingPassword] = useState(false);
     const [feedback, setFeedback] = useState('');
+    const [exportBusy, setExportBusy] = useState(false);
+    const [exportFeedback, setExportFeedback] = useState('');
 
     const selectTab = (value: Tab) => {
         setParams(value === 'account' ? {} : { tab: value });
@@ -74,6 +76,36 @@ const SettingsPage = () => {
             setFeedback(error?.message || 'Something went wrong.');
         } finally {
             setSavingPassword(false);
+        }
+    };
+
+    const downloadData = async () => {
+        if (exportBusy) return;
+        setExportBusy(true);
+        setExportFeedback('');
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_ENDPOINTS.auth}/export`, {
+                headers: { Authorization: `Bearer ${token || ''}` },
+            });
+            if (!response.ok) {
+                const result = await response.json().catch(() => ({}));
+                throw new Error(result.message || 'Could not download your data.');
+            }
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = `sendtheletter-my-data-${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+            window.setTimeout(() => URL.revokeObjectURL(url), 2000);
+            setExportFeedback('Your data archive is ready.');
+        } catch (err) {
+            setExportFeedback(err instanceof Error ? err.message : 'Could not prepare export.');
+        } finally {
+            setExportBusy(false);
         }
     };
 
@@ -111,6 +143,11 @@ const SettingsPage = () => {
                             {feedback && <p role="status" className="rounded-xl bg-muted px-4 py-3 text-sm">{feedback}</p>}
                             <button type="submit" disabled={savingPassword} className="inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"><CharacterBadge name="lumi" tone="paper" size="xs" />{savingPassword ? 'Updating…' : 'Update password'}</button>
                         </form>
+                    </section>
+                    <section className="rounded-[28px] border border-border bg-card p-6 shadow-sm sm:p-8">
+                        <div className="flex items-start gap-3"><CharacterBadge name="susi" tone="sage" size="lg" /><div><h2 className="font-editorial text-2xl">Download my data</h2><p className="mt-1 text-xs leading-6 text-muted-foreground">Export your account, saved letters, conversations, notifications and social activity as a private JSON archive. Keep the file secure.</p></div></div>
+                        <button type="button" disabled={exportBusy} onClick={() => void downloadData()} className="mt-5 rounded-full border border-border bg-background px-5 py-3 text-xs font-bold hover:bg-muted disabled:opacity-50">{exportBusy ? 'Preparing archive…' : 'Download my data'}</button>
+                        {exportFeedback && <p role="status" className="mt-3 text-xs text-muted-foreground">{exportFeedback}</p>}
                     </section>
                 </>}
                 {tab === 'privacy' && <section className="rounded-[28px] border border-border bg-card p-6 shadow-sm sm:p-8">
