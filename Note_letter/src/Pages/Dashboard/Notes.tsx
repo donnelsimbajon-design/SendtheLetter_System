@@ -281,6 +281,13 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                                 ? 'Try a different search term, choose another topic, or clear the filters.'
                                 : activeTab === 'personal' ? 'No finished letters yet. Start by writing one.' : activeTab === 'drafts' ? 'No drafts yet. Save a letter draft and it will appear here.' : activeTab === 'scheduled' ? 'No scheduled letters. You can choose a future release date in the editor.' : activeTab === 'archived' ? 'Your archive is empty. Archived letters will appear here until you restore them.' : 'There are no public letters to display right now.'}
                         </p>
+                        {searchQuery || categoryFilter !== 'all' ? (
+                            <button type="button" onClick={() => { setSearchQuery(''); setCategoryFilter('all'); }} className="mt-5 min-h-11 rounded-full border border-border bg-card px-5 py-2.5 text-xs font-bold text-primary hover:bg-muted">Show all letters</button>
+                        ) : !isCommunity && activeTab === 'personal' ? (
+                            <button type="button" onClick={() => { setStarterTemplate(''); setEditingNote(null); setIsEditorOpen(true); }} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-bold text-primary-foreground">
+                                <CharacterBadge name="lumi" tone="paper" size="xs" /> Write your first letter
+                            </button>
+                        ) : null}
                     </div>
                 )}
             </div>
