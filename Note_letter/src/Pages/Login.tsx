@@ -48,11 +48,13 @@ const Login = () => {
           <p className="text-xs font-bold uppercase tracking-[.2em] text-[hsl(var(--accent))]">Welcome back</p>
           <h2 className="mt-3 font-editorial text-4xl">Your space is waiting.</h2>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">Sign in to pick up where your words left off.</p>
+          {(params.has('passwordChanged') || params.has('resetSuccess')) && <div role="status" className="mt-6 rounded-2xl border border-border bg-muted p-3 text-sm">Password updated. Sign in with your new password.</div>}
           {!error && sessionNotice && <div role="status" className="mt-6 rounded-2xl border border-border bg-muted/80 p-3 text-sm text-muted-foreground">{sessionNotice}</div>}
           {error && <div role="alert" className="mt-6 rounded-2xl border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
             <div className="space-y-2"><label htmlFor="email" className="text-sm font-semibold">Email address</label><div className="relative"><Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"/><Input id="email" type="email" autoComplete="email" required value={email} onChange={(event)=>setEmail(event.target.value)} placeholder="you@example.com" className="h-12 rounded-xl bg-card pl-11"/></div></div>
             <div className="space-y-2"><label htmlFor="password" className="text-sm font-semibold">Password</label><div className="relative"><LockKeyhole size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"/><Input id="password" type="password" autoComplete="current-password" required value={password} onChange={(event)=>setPassword(event.target.value)} placeholder="Your password" className="h-12 rounded-xl bg-card pl-11"/></div></div>
+            <div className="text-right text-sm"><Link to="/forgot-password" className="font-semibold text-primary hover:underline">Forgot your password?</Link></div>
             <Button type="submit" disabled={loading} className="h-12 w-full rounded-xl text-sm font-semibold">{loading?'Signing you in...':'Sign in'} {!loading&&<ArrowRight size={17} className="ml-2"/>}</Button>
           </form>
           <p className="mt-7 text-center text-sm text-muted-foreground">New here? <Link to="/signup" className="font-semibold text-primary hover:underline">Create an account</Link></p>
