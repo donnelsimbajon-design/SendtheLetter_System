@@ -31,6 +31,8 @@ interface NoteState {
     notifications: Notification[];
     isLoading: boolean;
     error: string | null;
+    isLoadingPublic: boolean;
+    publicError: string | null;
     archived: Note[];
     fetchArchivedLetters: () => Promise<void>;
     archiveNote: (id: string) => Promise<void>;
@@ -62,6 +64,8 @@ export const useNoteStore = create<NoteState>((set, get) => ({
     notifications: [],
     isLoading: false,
     error: null,
+    isLoadingPublic: false,
+    publicError: null,
     archived: [],
 
     fetchArchivedLetters: async () => {
@@ -93,9 +97,9 @@ export const useNoteStore = create<NoteState>((set, get) => ({
 
             // Update local state by removing from all other lists
             set((state) => ({
-                notes: state.notes.filter((n) => n.id !== id),
-                publicLetters: state.publicLetters.filter((n) => n.id !== id),
-                drafts: state.drafts.filter((n) => n.id !== id),
+                notes: state.notes.filter((n) => String(n.id) !== String(id)),
+                publicLetters: state.publicLetters.filter((n) => String(n.id) !== String(id)),
+                drafts: state.drafts.filter((n) => String(n.id) !== String(id)),
                 // We don't add to archived here immediately to keep it simple, 
                 // or we can if the backend returns the archived letter. 
                 // Let's refetch archived letters for consistency.
@@ -156,7 +160,7 @@ export const useNoteStore = create<NoteState>((set, get) => ({
     },
 
     fetchPublicLetters: async () => {
-        set({ isLoading: true, error: null });
+        set({ isLoadingPublic: true, publicError: null });
         try {
             const token = localStorage.getItem('token');
             const headers: any = {};
@@ -165,11 +169,11 @@ export const useNoteStore = create<NoteState>((set, get) => ({
             const response = await fetch(`${API_URL}/public`, { headers });
             if (!response.ok) throw new Error('Failed to fetch public letters');
             const data = await response.json();
-            set({ publicLetters: data });
+            set({ publicLetters: Array.isArray(data) ? data : [], publicError: null });
         } catch (error: any) {
-            set({ error: error.message });
+            set({ publicError: error instanceof Error ? error.message : 'Unable to load public letters.' });
         } finally {
-            set({ isLoading: false });
+            set({ isLoadingPublic: false });
         }
     },
 
@@ -232,12 +236,13 @@ export const useNoteStore = create<NoteState>((set, get) => ({
             });
             if (!response.ok) throw new Error('Could not delete the letter. Please try again.');
             set((state) => ({
-                notes: state.notes.filter((n) => n.id !== id),
-                publicLetters: state.publicLetters.filter((n) => n.id !== id),
-                drafts: state.drafts.filter((n) => n.id !== id)
+                notes: state.notes.filter((n) => String(n.id) !== String(id)),
+                publicLetters: state.publicLetters.filter((n) => String(n.id) !== String(id)),
+                drafts: state.drafts.filter((n) => String(n.id) !== String(id))
             }));
         } catch (error: any) {
             console.error('Error deleting note:', error);
+            throw error;
         }
     },
 
@@ -353,17 +358,17 @@ export const useNoteStore = create<NoteState>((set, get) => ({
             const { liked, likeCount } = await response.json();
             set((state) => ({
                 publicLetters: state.publicLetters.map((letter) =>
-                    letter.id === letterId
+                    String(letter.id) === String(letterId)
                         ? { ...letter, isLikedByUser: liked, likeCount }
                         : letter
                 ),
                 userPublicLetters: state.userPublicLetters.map((letter) =>
-                    letter.id === letterId
+                    String(letter.id) === String(letterId)
                         ? { ...letter, isLikedByUser: liked, likeCount }
                         : letter
                 ),
                 notes: state.notes.map((letter) =>
-                    letter.id === letterId
+                    String(letter.id) === String(letterId)
                         ? { ...letter, isLikedByUser: liked, likeCount }
                         : letter
                 ),

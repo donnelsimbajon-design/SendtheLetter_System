@@ -14,7 +14,7 @@ import CharacterBadge from '../../components/CharacterBadge';
 import { API_ENDPOINTS } from '../../config/api';
 
 const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public' }) => {
-    const { notes, drafts, archived, publicLetters, addNote, fetchMyLetters, fetchPublicLetters, fetchDrafts, fetchArchivedLetters, restoreArchivedNote } = useNoteStore();
+    const { notes, drafts, archived, publicLetters, isLoadingPublic, publicError, addNote, fetchMyLetters, fetchPublicLetters, fetchDrafts, fetchArchivedLetters, restoreArchivedNote } = useNoteStore();
     const [searchQuery, setSearchQuery] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'popular'>('newest');
@@ -188,6 +188,11 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
             </div>
             <p aria-live="polite" className="text-xs text-muted-foreground">Showing {filteredNotes.length} of {visibleNotes.length} letters</p>
 
+            {activeTab === 'public' && publicError && <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+                <span>Community letters could not load: {publicError}</span>
+                <button type="button" onClick={() => void fetchPublicLetters()} className="font-bold underline">Try again</button>
+            </div>}
+            {activeTab === 'public' && isLoadingPublic && publicLetters.length === 0 && <p role="status" className="text-sm text-muted-foreground">Loading community letters…</p>}
             {restoreError && <p role="alert" className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{restoreError}</p>}
 
             {/* Notes Grid */}
