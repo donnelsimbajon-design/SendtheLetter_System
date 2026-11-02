@@ -158,7 +158,7 @@ const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
             <div className="flex justify-between items-center relative z-10 mt-4">
                 <div className="flex items-center gap-3">
                     <span className={clsx("text-[10px] uppercase tracking-wider px-2 py-1 rounded-md", isImageBackground ? "bg-white/10 text-white/80 backdrop-blur-sm" : (backgroundClass ? "text-stone-600 bg-stone-900/5" : "text-primary/80 bg-primary/5"))}>
-                        {note.category || 'General'}
+                        {note.category || note.type || 'General'}
                     </span>
                 </div>
 
