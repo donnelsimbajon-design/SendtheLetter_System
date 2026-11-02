@@ -25,7 +25,7 @@ dotenv.config();
 
 // Report only whether the backend has storage configuration, never its secret value.
 // This check does not prove an upload succeeds; that requires an authenticated test.
-if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+if (process.env.SUPABASE_URL && (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)) {
     console.info('Profile image storage: Supabase credentials detected (upload not yet verified).');
 } else {
     console.warn('Profile image storage: local disk fallback is active; uploads may be lost after redeploy. Configure server-only Supabase credentials.');
