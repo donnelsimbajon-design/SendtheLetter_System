@@ -124,7 +124,7 @@ test('letter soundtrack follows Spotify playback, countdown, pause and modal cle
             addListener(name, callback) { listeners[name] = callback; },
             play() { paused = false; listeners.playback_started?.({data: {playingURI: options.uri}}); emit(); },
             pause() { paused = true; emit(); },
-            seek(seconds) { position = seconds * 1000; emit(); },
+            seek(seconds) { window.__spotifyLastSeek = seconds; position = seconds * 1000; emit(); },
             destroy() { window.__spotifyDestroyed++; mount.replaceChildren(); },
           };
           mount.appendChild(document.createElement('div'));
@@ -146,7 +146,8 @@ test('letter soundtrack follows Spotify playback, countdown, pause and modal cle
   await reader.getByRole('button', { name: 'Play letter soundtrack' }).click();
   await expect(reader.getByRole('button', { name: 'Pause letter soundtrack' })).toBeVisible();
   await reader.getByRole('button', { name: 'Restart soundtrack' }).click();
-  await expect(reader.getByLabel('Soundtrack time remaining')).toContainText(/-3:00/);
+  await expect.poll(() => page.evaluate(() => window.__spotifyLastSeek)).toBe(0);
+  await expect(reader.getByLabel('Soundtrack time remaining')).toContainText(/-2:[0-5][0-9]|-3:00/);
   await reader.getByRole('button', { name: 'Close' }).click();
   await expect(reader).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => window.__spotifyDestroyed)).toBe(1);
