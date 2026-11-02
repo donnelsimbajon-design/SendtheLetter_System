@@ -69,7 +69,7 @@ const AdminDashboard = () => {
       {error && <div role="alert" className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error}</div>}
       {notice && <div role="status" className="rounded-2xl border border-border bg-card p-4 text-sm">{notice}</div>}
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {[
+        {([
           { label: 'Total accounts', value: overview?.users ?? '—', mascot: 'chika', tone: 'sage' },
           { label: 'Active accounts', value: overview?.activeUsers ?? '—', mascot: 'sely', tone: 'rose' },
           { label: 'Suspended accounts', value: overview?.suspendedUsers ?? '—', mascot: 'susi', tone: 'rose' },
