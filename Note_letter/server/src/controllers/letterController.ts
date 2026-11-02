@@ -645,6 +645,8 @@ export const publishDraft = async (req: AuthRequest, res: Response) => {
         const capsule = fields.isTimeCapsule === true;
         if (capsule && !fields.openDate) return res.status(400).json({ message: 'Choose a time capsule opening date.' });
         const releaseValue = capsule ? fields.openDate : fields.scheduledDate;
+        const schedulingError = validateFutureRelease(releaseValue);
+        if (schedulingError) return res.status(400).json({ message: schedulingError });
         const release = releaseValue ? new Date(releaseValue) : null;
         if (release && !Number.isFinite(release.getTime())) {
             return res.status(400).json({ message: 'Enter a valid release date.' });
