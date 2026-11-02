@@ -95,13 +95,13 @@ test('filters the central feed and relevant spotlight without leaked hidden titl
   await page.goto('/dashboard/community');
   await page.getByRole('group', { name: 'Filter public letters by topic' })
     .getByRole('button', { name: 'Gratitude' }).click();
-  await expect(page.getByText('Showing 2 of 2 public letters')).toBeVisible();
+  await expect(page.getByText('Showing 2 of 3 public letters')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'A hello from afar' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Clear filters' }).click();
   await expect(page.getByText('Showing 3 of 3 public letters')).toBeVisible();
 
   await page.getByRole('textbox', { name: 'Search public letters' }).fill('there is no matching story');
-  await expect(page.getByText('Showing 0 of 0 public letters')).toBeVisible();
+  await expect(page.getByText('Showing 0 of 3 public letters')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'No stories match yet' })).toBeVisible();
   await page.getByRole('button', { name: 'Clear filters' }).first().click();
   await expect(page.getByText('Showing 3 of 3 public letters')).toBeVisible();
