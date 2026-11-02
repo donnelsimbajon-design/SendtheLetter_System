@@ -44,21 +44,24 @@ export const sendFriendRequest = async (req: AuthRequest, res: Response) => {
             status: 'pending'
         });
 
-        // Create Notification
-        const notification = await Notification.create({
-            userId: recipientUserId,
-            actorId: requesterId,
-            type: 'friend_request',
-            entityId: friendRequest.id,
-        });
-
-        // Emit socket event
-        const io = (req as any).app.get('io');
-        if (io) {
-            const notificationWithDetails = await Notification.findByPk(notification.id, {
-                include: [{ model: User, as: 'actor', attributes: ['id', 'username', 'avatar'] }]
+        // A notification is best-effort; the saved Pen Pal request must never
+        // be reported as failed just because realtime delivery is unavailable.
+        try {
+            const notification = await Notification.create({
+                userId: recipientUserId,
+                actorId: requesterId,
+                type: 'friend_request',
+                entityId: friendRequest.id,
             });
-            io.to(`user_${recipientUserId}`).emit('new_notification', notificationWithDetails);
+            const io = (req as any).app.get('io');
+            if (io) {
+                const detailed = await Notification.findByPk(notification.id, {
+                    include: [{ model: User, as: 'actor', attributes: ['id', 'username', 'avatar'] }]
+                });
+                io.to(`user_${recipientUserId}`).emit('new_notification', detailed || notification);
+            }
+        } catch (notificationError) {
+            console.error('Pen Pal request saved but notification failed:', notificationError);
         }
 
         res.json(friendRequest);
