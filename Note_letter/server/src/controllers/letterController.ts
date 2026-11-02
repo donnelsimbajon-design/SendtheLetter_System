@@ -429,6 +429,7 @@ export const getPublicLetterById = async (req: Request, res: Response) => {
             shareToken: data.shareToken,
             title: data.title,
             content: data.content,
+            recipientName: data.recipientName,
             type: data.type,
             isPublic: true,
             status: data.status,
