@@ -39,7 +39,7 @@ const Login = () => {
   };
 
   return (
-    <main className="grid min-h-screen bg-background lg:grid-cols-[1fr_.9fr]">
+    <main id="main-content" className="grid min-h-screen bg-background lg:grid-cols-[1fr_.9fr]">
       <section className="relative hidden overflow-hidden bg-primary p-12 text-primary-foreground lg:flex lg:flex-col lg:justify-between xl:p-16">
         <div className="paper-grain absolute inset-0 opacity-30" />
         <Link to="/" className="relative z-10 flex items-center gap-3"><CharacterBadge name="lumi" tone="paper" size="md" className="!h-11 !w-11" /><span className="font-editorial text-2xl">SendTheLetter</span></Link>
