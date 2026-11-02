@@ -14,7 +14,7 @@
   var path = window.location.pathname;
   // Render static sites may return 404 when a React route is loaded directly.
   // Redirect only known in-app paths to the safe root bootstrap.
-  if (/^\/(?:dashboard(?:\/.*)?|login|signup|about|services|contact|creator|admin)$/.test(path)) {
+  if (/^\/(?:dashboard(?:\/.*)?|login|signup|about|services|contact|creator|admin|writers/[^/?#]+)$/.test(path)) {
     var destination = path + window.location.search + window.location.hash;
     window.location.replace('/?route=' + encodeURIComponent(destination));
   }
