@@ -7,6 +7,7 @@ import { useWriterPreferences } from '../store/writerPreferences';
 import { cn } from '../lib/utils';
 import { API_ENDPOINTS } from '../config/api';
 import { useLetterBook } from '../hooks/useLetterBook';
+import { parseSpotifyMedia } from '../lib/spotify';
 
 interface LetterEditorModalProps {
     isOpen: boolean;
@@ -357,8 +358,16 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                         <details className={panelClass}>
                             <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-bold uppercase tracking-[.14em]"><span className="inline-flex items-center gap-2"><CharacterBadge name="piko" tone="paper" size="xs" /> Attachments</span></summary>
                             <div className="mt-4 space-y-3">
-                                <label className="block text-xs font-semibold" htmlFor="letter-spotify">Spotify link (optional)</label>
-                                <input id="letter-spotify" type="url" value={spotifyLink} onChange={e => { setSpotifyLink(e.target.value); markDirty(); }} placeholder="https://open.spotify.com/..." className={fieldClass} />
+                                <label className="block text-xs font-semibold" htmlFor="letter-spotify">Music to read with (Spotify, optional)</label>
+                                <input id="letter-spotify" type="url" value={spotifyLink} onChange={e => { setSpotifyLink(e.target.value); markDirty(); }}
+                                    placeholder="https://open.spotify.com/track/..." aria-describedby="letter-spotify-help"
+                                    aria-invalid={Boolean(spotifyLink.trim() && !parseSpotifyMedia(spotifyLink))}
+                                    className={fieldClass} />
+                                <p id="letter-spotify-help" className={`text-[11px] leading-5 ${spotifyLink.trim() && !parseSpotifyMedia(spotifyLink) ? 'text-rose-700' : 'text-muted-foreground'}`}>
+                                    {spotifyLink.trim() && !parseSpotifyMedia(spotifyLink)
+                                        ? 'Paste a valid open.spotify.com track, playlist, album, show, or episode link. Other links will not play in the reader.'
+                                        : 'Your readers get a mini player with Play/Pause and a remaining-time countdown. Some browsers require tapping Play.'}
+                                </p>
                                 <label htmlFor="letter-image" className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-background p-3 text-xs font-semibold hover:border-primary"><CharacterBadge name="basa" tone="paper" size="xs" /> {imageUrl ? 'Change cover image' : 'Add cover image'}<input id="letter-image" className="sr-only" type="file" accept="image/png,image/jpeg,image/webp" onChange={imageUpload} /></label>
                                 {imageUrl && <button type="button" onClick={() => { setImageUrl(''); markDirty(); }} className="text-xs font-semibold text-muted-foreground underline">Remove image</button>}
                             </div>
