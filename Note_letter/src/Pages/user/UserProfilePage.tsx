@@ -233,6 +233,6 @@ export default function UserProfilePage() {
             actionError={actionError}
             onDismissActionError={() => setActionError('')}
         />
-        <LetterViewModal isOpen={!!selected} onClose={() => setSelected(null)} note={selected} />
+        <LetterViewModal isOpen={!!selected} onClose={() => setSelected(null)} note={selected} onAuthorClick={(name) => navigate(`/writers/${encodeURIComponent(name)}`)} />
     </>;
 }
