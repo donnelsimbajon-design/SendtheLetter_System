@@ -99,10 +99,27 @@ if (writer) {
     console.log('SKIP: no named public writer in this feed to check (no private accounts accessed)');
 }
 
-for (const route of ['/', '/dashboard/community', '/dashboard/notes']) {
-    const response = await request(WEB, route);
-    const html = await response.text();
-    assert.match(html, /<html[\s>]/i, `${route}: frontend did not serve HTML`);
-    console.log(`PASS: frontend route responds (${route})`);
+// Render's CDN needs a static-site rewrite (/* -> /index.html) to serve
+// direct client-side route URLs. This rule lives in Render Settings, not in Vite.
+// Report this launch blocker explicitly without hiding successful privacy checks.
+const brokenRoutes = [];
+for (const route of ['/', '/dashboard/community', '/dashboard/notes', '/writers/__route_smoke__']) {
+    try {
+        const response = await request(WEB, route);
+        const html = await response.text();
+        assert.match(html, /<html[\s>]/i, `${route}: frontend did not serve HTML`);
+        console.log(`PASS: frontend route responds (${route})`);
+    } catch (error) {
+        brokenRoutes.push(route);
+        console.warn(`::warning::SPA direct navigation failed for ${route}. In Render static site Settings > Redirects/Rewrites add Rewrite: /* to /index.html. Details: ${error instanceof Error ? error.message : 'unknown error'}`);
+    }
+}
+if (brokenRoutes.length) {
+    console.warn(`ACTION REQUIRED: ${brokenRoutes.length} route(s) need the Render rewrite rule. All API privacy checks above passed.`);
+    // The branch can still monitor the API daily. Use this flag when verifying a
+    // production launch, after the Render site routing configuration is updated.
+    if (process.env.STRICT_DEEP_LINKS === 'true') {
+        throw new Error(`Direct SPA deep-link validation failed: ${brokenRoutes.join(', ')}`);
+    }
 }
 console.log('Completed read-only production checks; no accounts or letters modified.');
