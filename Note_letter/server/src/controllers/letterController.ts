@@ -4,6 +4,7 @@ import Letter from '../models/Letter';
 import User from '../models/User';
 import sequelize from '../config/database';
 import { Op } from 'sequelize';
+import { parseStoryPages } from '../services/storyPageValidation';
 
 interface AuthRequest extends Request {
     user?: any;
@@ -26,12 +27,15 @@ export const createLetter = async (req: AuthRequest, res: Response) => {
             spotifyLink,
             font,
             isAnonymous,
-            imageUrl
+            imageUrl,
+            letterPages: rawLetterPages
         } = req.body;
         const userId = req.user.id;
         const title = typeof rawTitle === 'string' ? rawTitle.trim() : '';
         const type = typeof rawType === 'string' ? rawType.slice(0, 50) : 'General';
         const isPublic = rawIsPublic === true;
+        const parsedPages = parseStoryPages(rawLetterPages);
+        if (parsedPages.error) return res.status(400).json({ message: parsedPages.error });
 
         if (!title || title.length > 255 || typeof content !== 'string' || !content.trim() || content.length > 100000) {
             return res.status(400).json({ message: 'A title (max 255 characters) and letter content are required.' });
@@ -68,6 +72,7 @@ export const createLetter = async (req: AuthRequest, res: Response) => {
             font,
             isAnonymous,
             imageUrl,
+            letterPages: parsedPages.pages,
         });
 
         res.status(201).json({ message: 'Letter created successfully', letter });
@@ -263,11 +268,16 @@ export const updateLetter = async (req: AuthRequest, res: Response) => {
             'title', 'content', 'type', 'isPublic', 'scheduledDate', 'openDate',
             'isTimeCapsule', 'backgroundImage', 'recipientName', 'recipientAddress',
             'spotifyLink', 'font', 'isAnonymous', 'imageUrl', 'address',
-            'latitude', 'longitude', 'isArchived',
+            'latitude', 'longitude', 'isArchived', 'letterPages',
         ];
         const updates = Object.fromEntries(
             Object.entries(requestedUpdates).filter(([key]) => allowedFields.includes(key))
         );
+        if ('letterPages' in updates) {
+            const parsedPages = parseStoryPages(updates.letterPages);
+            if (parsedPages.error) return res.status(400).json({ message: parsedPages.error });
+            updates.letterPages = parsedPages.pages;
+        }
 
         const letter = await Letter.findByPk(id);
 
@@ -429,6 +439,7 @@ export const getPublicLetterById = async (req: Request, res: Response) => {
             backgroundImage: data.backgroundImage,
             imageUrl: data.imageUrl,
             font: data.font,
+            letterPages: data.letterPages || null,
         });
     } catch (error) {
         console.error('Error fetching public letter:', error);
@@ -594,6 +605,8 @@ export const publishDraft = async (req: AuthRequest, res: Response) => {
         if (typeof fields.imageUrl === 'string' && fields.imageUrl.length > 7500000) {
             return res.status(400).json({ message: 'Letter image is too large.' });
         }
+        const parsedPages = parseStoryPages(fields.letterPages);
+        if (parsedPages.error) return res.status(400).json({ message: parsedPages.error });
         const capsule = fields.isTimeCapsule === true;
         if (capsule && !fields.openDate) return res.status(400).json({ message: 'Choose a time capsule opening date.' });
         const releaseValue = capsule ? fields.openDate : fields.scheduledDate;
@@ -611,6 +624,7 @@ export const publishDraft = async (req: AuthRequest, res: Response) => {
             spotifyLink: typeof fields.spotifyLink === 'string' ? fields.spotifyLink.slice(0, 2048) : letter.spotifyLink,
             backgroundImage: typeof fields.backgroundImage === 'string' ? fields.backgroundImage : letter.backgroundImage,
             imageUrl: typeof fields.imageUrl === 'string' ? fields.imageUrl : letter.imageUrl,
+            letterPages: parsedPages.pages,
             isPublic: fields.isPublic === true,
             isAnonymous: fields.isAnonymous === true,
             scheduledDate: fields.scheduledDate || null,
