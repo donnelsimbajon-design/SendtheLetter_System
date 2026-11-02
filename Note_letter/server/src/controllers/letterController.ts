@@ -11,6 +11,14 @@ interface AuthRequest extends Request {
     user?: any;
 }
 
+/** Remove all subscribers when a letter is hidden, archived, or deleted.
+ * Private content should never continue flowing to old public socket rooms.
+ */
+function revokeLetterRoom(req: Request, id: number) {
+    const io = req.app.get('io');
+    if (io) io.in('letter_' + id).socketsLeave('letter_' + id);
+}
+
 export const createLetter = async (req: AuthRequest, res: Response) => {
     try {
         const {
@@ -239,6 +247,7 @@ export const deleteLetter = async (req: AuthRequest, res: Response) => {
         }
 
         await letter.destroy();
+        revokeLetterRoom(req, letter.id);
         res.json({ message: 'Letter deleted successfully' });
     } catch (error) {
         console.error('Error deleting letter:', error);
@@ -295,6 +304,11 @@ export const updateLetter = async (req: AuthRequest, res: Response) => {
         }
 
         await letter.update(updates);
+        if (!letter.isPublic || letter.status !== 'published' || letter.isArchived ||
+            (letter.openDate && new Date(letter.openDate).getTime() > Date.now()) ||
+            (letter.scheduledDate && new Date(letter.scheduledDate).getTime() > Date.now())) {
+            revokeLetterRoom(req, letter.id);
+        }
         res.json({ message: 'Letter updated successfully', letter });
     } catch (error) {
         console.error('Error updating letter:', error);
@@ -360,6 +374,7 @@ export const archiveLetter = async (req: AuthRequest, res: Response) => {
         }
 
         await letter.update({ isArchived: true });
+        revokeLetterRoom(req, letter.id);
         res.json({ message: 'Letter archived successfully', letter });
     } catch (error) {
         console.error(error);
