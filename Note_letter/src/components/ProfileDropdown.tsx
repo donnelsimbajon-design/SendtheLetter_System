@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Check, HelpCircle, LogOut, Moon, Palette, Settings2, ShieldCheck, UserRound, MessageSquareWarning } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, HelpCircle, LogOut, Moon, Palette, Settings2, ShieldCheck, Sun, UserRound, MessageSquareWarning } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { getImageUrl } from '../lib/utils';
 import { useWriterPreferences, type ThemeChoice } from '../store/writerPreferences';
@@ -71,7 +71,7 @@ const ProfileDropdown = ({ isOpen, onClose }: ProfileDropdownProps) => {
                     <Link role="menuitem" to="/dashboard/settings" onClick={onClose} className={itemClass}><span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted"><Settings2 size={18} /></span><span className="flex-1">Settings & privacy</span><ChevronRight size={17} /></Link>
                     <button role="menuitem" type="button" onClick={() => setShowAppearance(true)} className={itemClass}><span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">{theme === 'dark' ? <Moon size={18} /> : <Palette size={18} />}</span><span className="flex-1">Display & appearance</span><ChevronRight size={17} /></button>
                     <Link role="menuitem" to="/dashboard/settings?tab=privacy" onClick={onClose} className={itemClass}><span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted"><ShieldCheck size={18} /></span><span className="flex-1">Privacy & sharing</span><ChevronRight size={17} /></Link>
-                    <Link role="menuitem" to="/dashboard/settings?tab=help" onClick={onClose} className={itemClass}><span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted"><CircleHelp size={18} /></span><span className="flex-1">Help & support</span><ChevronRight size={17} /></Link>
+                    <Link role="menuitem" to="/dashboard/settings?tab=help" onClick={onClose} className={itemClass}><span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted"><HelpCircle size={18} /></span><span className="flex-1">Help & support</span><ChevronRight size={17} /></Link>
                     <Link role="menuitem" to="/contact" onClick={onClose} className={itemClass}><span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted"><MessageSquareWarning size={18} /></span><span className="flex-1">Report a problem</span><ChevronRight size={17} /></Link>
                 </div>
                 <div className="mt-2 border-t border-border pt-2">
