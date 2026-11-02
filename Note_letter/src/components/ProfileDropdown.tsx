@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Check, CircleHelp, LogOut, Moon, Palette, Settings2, ShieldCheck, Sun, UserRound, MessageSquareWarning } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, HelpCircle, LogOut, Moon, Palette, Settings2, ShieldCheck, UserRound, MessageSquareWarning } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { getImageUrl } from '../lib/utils';
 import { useWriterPreferences, type ThemeChoice } from '../store/writerPreferences';
