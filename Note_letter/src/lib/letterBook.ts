@@ -54,6 +54,10 @@ export function bookPagesFromContent(content = '', stored?: StoryPage[] | null):
             text: page.text,
             ...(typeof page.imageData === 'string' ? { imageData: page.imageData } : {}),
             ...(typeof page.caption === 'string' ? { caption: page.caption } : {}),
+            ...(typeof page.imageX === 'number' && Number.isFinite(page.imageX) ? { imageX: page.imageX } : {}),
+            ...(typeof page.imageY === 'number' && Number.isFinite(page.imageY) ? { imageY: page.imageY } : {}),
+            ...(typeof page.imageWidth === 'number' && Number.isFinite(page.imageWidth) ? { imageWidth: page.imageWidth } : {}),
+            ...(page.imagePlacement === 'before' || page.imagePlacement === 'after' ? { imagePlacement: page.imagePlacement } : {}),
         }));
         return clean.length ? clean : [{ text: '' }];
     }
