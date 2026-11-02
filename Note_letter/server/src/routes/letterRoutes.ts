@@ -24,6 +24,7 @@ router.get('/user/:username/reposts', optionalAuth, repostController.getPublicUs
 
 router.use(authenticateToken);
 router.post('/', letterController.createLetter);
+router.post('/drafts/:id/publish', letterController.publishDraft);
 router.get('/mine', letterController.getMyLetters);
 router.post('/:id/email', letterController.sendLetterByEmail);
 router.get('/drafts', letterController.getDrafts);
