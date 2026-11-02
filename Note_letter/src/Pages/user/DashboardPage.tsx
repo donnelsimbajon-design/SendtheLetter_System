@@ -17,9 +17,9 @@ const DashboardPage = () => {
   }, [fetchMyLetters, fetchDrafts]);
 
   const cards: { label: string; value: string | number; mascot: MascotName; tone: CharacterTone }[] = [
-    { label: 'Your letters', value: notes.length, mascot: 'lumi', tone: 'sage' },
-    { label: 'Saved drafts', value: drafts.length, mascot: 'tala', tone: 'gold' },
-    { label: 'A place to begin', value: 'Today', mascot: 'sely', tone: 'rose' },
+    { label: 'Your letters', value: notes.length, mascot: 'basa', tone: 'sage' },
+    { label: 'Saved drafts', value: drafts.length, mascot: 'lumi', tone: 'gold' },
+    { label: 'A place to begin', value: 'Today', mascot: 'araw', tone: 'rose' },
   ];
 
   return (
@@ -57,7 +57,7 @@ const DashboardPage = () => {
           )}
         </div>
         <div className="rounded-3xl border border-border bg-[hsl(var(--surface-gold))] p-6 text-[#493D2A] sm:p-8">
-          <div className="flex items-center gap-3"><CharacterBadge name="tala" tone="paper" size="md" /><p className="text-xs font-bold uppercase tracking-[.16em] opacity-70">A small reminder</p></div><h2 className="mt-3 font-editorial text-3xl leading-tight">The best letters sound like you.</h2><p className="mt-3 text-sm leading-6 opacity-80">You don't need perfect words. Just honest ones. Keep a draft, take your time, and come back when you're ready.</p>
+          <div className="flex items-center gap-3"><CharacterBadge name="araw" tone="paper" size="md" /><p className="text-xs font-bold uppercase tracking-[.16em] opacity-70">A small reminder</p></div><h2 className="mt-3 font-editorial text-3xl leading-tight">The best letters sound like you.</h2><p className="mt-3 text-sm leading-6 opacity-80">You don't need perfect words. Just honest ones. Keep a draft, take your time, and come back when you're ready.</p>
           <Link to="/dashboard/notes" className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#493D2A] px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90">Open your letters <ArrowRight size={15} /></Link>
         </div>
       </section>
