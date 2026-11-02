@@ -1,9 +1,7 @@
 import multer from 'multer';
 import path from 'path';
 
-// Keep uploads in memory so image signatures are verified before any write.\nconst storage = multer.memoryStorage();
-
-// File filter to accept only images
+// Keep uploads in memory so image signatures are verified before any write.\n// File filter to accept only images
 const fileFilter = (_req: import('express').Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
     const extension = path.extname(file.originalname).toLowerCase();
     const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
@@ -17,7 +15,7 @@ const fileFilter = (_req: import('express').Request, file: Express.Multer.File, 
 
 // Create multer instance
 export const upload = multer({
-    storage: storage,
+    storage: multer.memoryStorage(),
     fileFilter: fileFilter,
     limits: {
         fileSize: 5 * 1024 * 1024 // 5MB limit
