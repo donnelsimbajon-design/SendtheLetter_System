@@ -33,6 +33,7 @@ interface NoteState {
     archived: Note[];
     fetchArchivedLetters: () => Promise<void>;
     archiveNote: (id: string) => Promise<void>;
+    restoreArchivedNote: (id: string) => Promise<void>;
     fetchMyLetters: () => Promise<void>;
     fetchDrafts: () => Promise<void>;
     fetchPublicLetters: () => Promise<void>;
@@ -103,6 +104,19 @@ export const useNoteStore = create<NoteState>((set, get) => ({
             console.error('Error archiving letter:', error);
             throw error;
         }
+    },
+
+    restoreArchivedNote: async (id) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/${id}/restore`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.message || 'Could not restore the archived letter.');
+        }
+        await Promise.all([get().fetchArchivedLetters(), get().fetchMyLetters(), get().fetchDrafts(), get().fetchPublicLetters()]);
     },
 
     fetchMyLetters: async () => {
@@ -210,10 +224,11 @@ export const useNoteStore = create<NoteState>((set, get) => ({
     deleteNote: async (id) => {
         try {
             const token = localStorage.getItem('token');
-            await fetch(`${API_URL}/${id}`, {
+            const response = await fetch(`${API_URL}/${id}`, {
                 method: 'DELETE',
                 headers: { Authorization: `Bearer ${token}` }
             });
+            if (!response.ok) throw new Error('Could not delete the letter. Please try again.');
             set((state) => ({
                 notes: state.notes.filter((n) => n.id !== id),
                 publicLetters: state.publicLetters.filter((n) => n.id !== id),
