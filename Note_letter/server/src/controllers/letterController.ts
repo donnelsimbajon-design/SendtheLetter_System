@@ -576,3 +576,52 @@ ${imageTag}
         return res.status(500).type('text').send('Unable to open this letter');
     }
 };
+
+/**
+ * Publish an existing draft in-place, avoiding duplicate letters after auto-save.
+ * Only the owning account may publish it; existing rows are never deleted.
+ */
+export const publishDraft = async (req: AuthRequest, res: Response) => {
+    try {
+        const letter = await Letter.findOne({ where: { id: req.params.id, userId: req.user.id, status: 'draft' } });
+        if (!letter) return res.status(404).json({ message: 'Draft not found. Reload your drafts and try again.' });
+        const fields = req.body || {};
+        const title = typeof fields.title === 'string' ? fields.title.trim() : '';
+        const content = typeof fields.content === 'string' ? fields.content.trim() : '';
+        if (!title || title.length > 255 || !content || content.length > 100000) {
+            return res.status(400).json({ message: 'A title and letter content are required.' });
+        }
+        if (typeof fields.imageUrl === 'string' && fields.imageUrl.length > 7500000) {
+            return res.status(400).json({ message: 'Letter image is too large.' });
+        }
+        const capsule = fields.isTimeCapsule === true;
+        if (capsule && !fields.openDate) return res.status(400).json({ message: 'Choose a time capsule opening date.' });
+        const releaseValue = capsule ? fields.openDate : fields.scheduledDate;
+        const release = releaseValue ? new Date(releaseValue) : null;
+        if (release && !Number.isFinite(release.getTime())) {
+            return res.status(400).json({ message: 'Enter a valid release date.' });
+        }
+        const effectiveStatus = release && release.getTime() > Date.now() ? 'scheduled' : 'published';
+        await letter.update({
+            title, content,
+            type: typeof fields.type === 'string' ? fields.type.slice(0, 50) : letter.type,
+            recipientName: typeof fields.recipientName === 'string' ? fields.recipientName.slice(0, 255) : letter.recipientName,
+            recipientAddress: typeof fields.recipientAddress === 'string' ? fields.recipientAddress.slice(0, 255) : letter.recipientAddress,
+            font: typeof fields.font === 'string' ? fields.font : letter.font,
+            spotifyLink: typeof fields.spotifyLink === 'string' ? fields.spotifyLink.slice(0, 2048) : letter.spotifyLink,
+            backgroundImage: typeof fields.backgroundImage === 'string' ? fields.backgroundImage : letter.backgroundImage,
+            imageUrl: typeof fields.imageUrl === 'string' ? fields.imageUrl : letter.imageUrl,
+            isPublic: fields.isPublic === true,
+            isAnonymous: fields.isAnonymous === true,
+            scheduledDate: fields.scheduledDate || null,
+            openDate: fields.openDate || null,
+            isTimeCapsule: capsule,
+            status: effectiveStatus,
+        });
+        res.setHeader('Cache-Control', 'no-store');
+        return res.json({ message: effectiveStatus === 'scheduled' ? 'Letter scheduled successfully.' : 'Letter published successfully.', letter });
+    } catch (error) {
+        console.error('Unable to publish draft:', error);
+        return res.status(500).json({ message: 'Could not publish your draft.' });
+    }
+};
