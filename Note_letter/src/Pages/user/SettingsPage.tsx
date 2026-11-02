@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Check, ChevronRight, CircleHelp, EyeOff, Globe, KeyRound, LockKeyhole, Mail, Moon, Palette, RotateCcw, ShieldCheck, Sparkles, Sun, UserRound, WandSparkles } from 'lucide-react';
+import { ArrowLeft, BookOpen, Check, ChevronRight, HelpCircle, EyeOff, Globe, KeyRound, LockKeyhole, Mail, Palette, RotateCcw, ShieldCheck, Sparkles, UserRound } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useWriterPreferences, type ThemeChoice } from '../../store/writerPreferences';
 import { getImageUrl } from '../../lib/utils';
