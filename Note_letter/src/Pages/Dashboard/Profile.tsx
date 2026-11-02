@@ -1,359 +1,202 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { API_ENDPOINTS } from '../../config/api';
 import { useAuthStore } from '../../store/authStore';
 import { useNoteStore } from '../../store/noteStore';
-import { MapPin, Calendar, Camera, PenLine, Search, Settings, Sparkles } from 'lucide-react';
-import { Button } from '../../components/ui/button';
+import { ArrowRight, BookHeart, BookOpen, Camera, Clock3, FileText, Globe2, Heart, LockKeyhole, MapPin, PenLine, Search, Settings2, Sparkles, UserRound, Archive, Repeat2 } from 'lucide-react';
 import LetterEditorModal from '../../components/LetterEditorModal';
 import LetterViewModal from '../../components/LetterViewModal';
 import EditProfileModal from '../../components/EditProfileModal';
 import Notecard from '../../components/Notecard';
-import { Note } from '../../types/note';
-import { motion } from 'framer-motion';
+import type { Note } from '../../types/note';
 import { getImageUrl } from '../../lib/utils';
 
-const Profile = () => {
-    const user = useAuthStore((state) => state.user);
-    const { notes, drafts, archived, addNote, updateNote, fetchMyLetters, fetchDrafts, fetchArchivedLetters } = useNoteStore();
-    const [isEditorOpen, setIsEditorOpen] = useState(false);
-    const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
-    const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-    const [noteToEdit, setNoteToEdit] = useState<Note | null>(null);
-    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState('Letters');
+type Tab = 'all' | 'public' | 'private' | 'drafts' | 'scheduled' | 'archived' | 'reposts' | 'about';
+const sections: { id: Tab; title: string; icon: typeof FileText }[] = [
+    { id: 'all', title: 'My letters', icon: BookOpen },
+    { id: 'public', title: 'Public', icon: Globe2 },
+    { id: 'private', title: 'Private', icon: LockKeyhole },
+    { id: 'drafts', title: 'Drafts', icon: PenLine },
+    { id: 'scheduled', title: 'Scheduled', icon: Clock3 },
+    { id: 'archived', title: 'Archived', icon: Archive },
+    { id: 'reposts', title: 'Reposts', icon: Repeat2 },
+    { id: 'about', title: 'About me', icon: UserRound },
+];
+
+export default function Profile() {
+    const user = useAuthStore(state => state.user);
+    const { notes, drafts, archived, addNote, fetchMyLetters, fetchDrafts, fetchArchivedLetters, fetchPublicLetters } = useNoteStore();
+    const [active, setActive] = useState<Tab>('all');
+    const [query, setQuery] = useState('');
     const [followerCount, setFollowerCount] = useState(0);
     const [followingCount, setFollowingCount] = useState(0);
     const [reposts, setReposts] = useState<Note[]>([]);
+    const [scheduled, setScheduled] = useState<Note[]>([]);
+    const [selected, setSelected] = useState<Note | null>(null);
+    const [editing, setEditing] = useState<Note | null>(null);
+    const [viewOpen, setViewOpen] = useState(false);
+    const [editorOpen, setEditorOpen] = useState(false);
+    const [editProfileOpen, setEditProfileOpen] = useState(false);
 
-
-    const tabs = ['Letters', 'Repost', 'About', 'Pen Pals', 'Archived', 'Drafts'];
-
-    useEffect(() => {
-        fetchMyLetters();
-        fetchDrafts();
-        fetchReposts();
-        fetchArchivedLetters();
-        if (user?.id) {
-            fetchFollowStats();
-        }
-    }, [fetchMyLetters, fetchDrafts, fetchArchivedLetters, user?.id]);
-
-    const fetchFollowStats = async () => {
-        if (!user?.id) return;
+    const refresh = async () => {
+        await Promise.all([fetchMyLetters(), fetchDrafts(), fetchArchivedLetters(), fetchPublicLetters()]);
+        const token = localStorage.getItem('token');
+        const headers = { Authorization: `Bearer ${token}` };
         try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${API_ENDPOINTS.users}/${user.id}/profile`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setFollowerCount(data.followerCount || 0);
-                setFollowingCount(data.followingCount || 0);
+            const [stats, scheduledResponse, repostResponse] = await Promise.all([
+                fetch(`${API_ENDPOINTS.users}/${user?.id}/profile`, { headers }),
+                fetch(`${API_ENDPOINTS.letters}/scheduled`, { headers }),
+                fetch(`${API_ENDPOINTS.letters}/reposts`, { headers }),
+            ]);
+            if (stats.ok) {
+                const data = await stats.json();
+                setFollowerCount(Number(data.followerCount) || 0);
+                setFollowingCount(Number(data.followingCount) || 0);
+            }
+            if (scheduledResponse.ok) {
+                const data = await scheduledResponse.json();
+                setScheduled(Array.isArray(data) ? data : []);
+            }
+            if (repostResponse.ok) {
+                const data = await repostResponse.json();
+                setReposts(Array.isArray(data) ? data : []);
             }
         } catch (error) {
-            console.error('Error fetching follow stats:', error);
+            console.error('Could not refresh profile collection:', error);
         }
     };
 
-    const fetchReposts = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${API_ENDPOINTS.letters}/reposts`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setReposts(data);
-            }
-        } catch (error) {
-            console.error('Error fetching reposts:', error);
-        }
+    useEffect(() => { if (user?.id) void refresh(); }, [user?.id, fetchMyLetters, fetchDrafts, fetchArchivedLetters, fetchPublicLetters]);
+
+    const ownedNotes = useMemo(() => notes.map(note => ({
+        ...note,
+        authorId: user?.id || note.authorId,
+        authorName: user?.username || note.authorName,
+        authorAvatar: user?.avatar || note.authorAvatar,
+    })), [notes, user?.id, user?.username, user?.avatar]);
+
+    const list = active === 'all' ? ownedNotes
+        : active === 'public' ? ownedNotes.filter(n => n.isPublic)
+        : active === 'private' ? ownedNotes.filter(n => !n.isPublic)
+        : active === 'drafts' ? drafts
+        : active === 'scheduled' ? scheduled
+        : active === 'archived' ? archived
+        : active === 'reposts' ? reposts : [];
+    const filtered = list.filter(note => `${note.title} ${note.content}`.toLowerCase().includes(query.trim().toLowerCase()));
+
+    const openComposer = (note?: Note) => {
+        setEditing(note || null);
+        setEditorOpen(true);
     };
 
-    // Filter to show only private letters in the main "Letters" tab
-    const displayNotes = activeTab === 'Drafts'
-        ? drafts
-        : activeTab === 'Repost'
-            ? reposts
-            : activeTab === 'Archived'
-                ? archived
-                : notes;
-
-    const handleLetterSubmit = async (data: any) => {
-        if (noteToEdit) {
-            await updateNote(String(noteToEdit.id), {
-                title: data.title || 'Untitled Letter',
-                content: data.content,
-                type: data.category || 'General',
-                isPublic: data.isPublic,
-                spotifyLink: data.spotifyLink,
-                font: data.font,
-                recipientName: data.recipientName,
-                recipientAddress: data.recipientAddress,
-                isAnonymous: data.isAnonymous,
-                backgroundImage: data.backgroundImage,
-                imageUrl: data.imageUrl,
-                scheduledDate: data.scheduledDate,
-                openDate: data.openDate,
-                isTimeCapsule: data.isTimeCapsule,
-            });
-            setNoteToEdit(null); // Clear edit state
-        } else {
-            await addNote({
-                title: data.title || 'Untitled Letter',
-                content: data.content,
-                type: data.category || 'General',
-                isPublic: data.isPublic,
-                reactions: {},
-                spotifyLink: data.spotifyLink,
-                font: data.font,
-                recipientName: data.recipientName,
-                recipientAddress: data.recipientAddress,
-                isAnonymous: data.isAnonymous,
-                backgroundImage: data.backgroundImage,
-                imageUrl: data.imageUrl,
-                scheduledDate: data.scheduledDate,
-                openDate: data.openDate,
-                isTimeCapsule: data.isTimeCapsule,
-            });
-        }
+    const createLetter = async (data: any) => {
+        await addNote({
+            title: data.title || 'Untitled letter',
+            content: data.content,
+            letterPages: data.letterPages,
+            category: data.category || 'Other',
+            type: data.type || data.category || 'Other',
+            isPublic: Boolean(data.isPublic),
+            reactions: {},
+            spotifyLink: data.spotifyLink,
+            font: data.font,
+            recipientName: data.recipientName,
+            recipientAddress: data.recipientAddress,
+            isAnonymous: data.isAnonymous,
+            backgroundImage: data.backgroundImage,
+            imageUrl: data.imageUrl,
+            scheduledDate: data.scheduledDate,
+            openDate: data.openDate,
+            isTimeCapsule: data.isTimeCapsule,
+            status: 'published',
+        });
     };
 
-    const handleLetterEdit = (note: Note) => {
-        setNoteToEdit(note);
-        setIsEditorOpen(true);
+    const publicCount = ownedNotes.filter(n => n.isPublic).length;
+    const privateCount = ownedNotes.length - publicCount;
+    const tabDescription: Record<Tab, string> = {
+        all: 'Every finished letter you have written.',
+        public: 'Your writing shared with the community.',
+        private: 'Personal letters that stay just yours.',
+        drafts: 'Your unfinished chapters, ready whenever you are.',
+        scheduled: 'Letters waiting for the right moment.',
+        archived: 'Your tucked-away memories. Nothing has been deleted.',
+        reposts: 'Words from other writers you chose to share.',
+        about: 'The writer behind the letters.',
     };
 
-    const handleNoteClick = (note: Note) => {
-        setSelectedNote(note);
-        setIsViewModalOpen(true);
-    };
-
-    return (
-        <div className="min-h-screen bg-background text-foreground pb-20 font-sans selection:bg-primary/20">
-            {/* Immersive Cover Section */}
-            <div className="relative h-[50vh] w-full overflow-hidden">
-                {user?.coverImage ? (
-                    <motion.div
-                        initial={{ scale: 1.1 }}
-                        animate={{ scale: 1 }}
-                        transition={{ duration: 1.5, ease: "easeOut" }}
-                        className="absolute inset-0 bg-cover bg-center"
-                        style={{ backgroundImage: `url(${getImageUrl(user.coverImage)})` }}
-                    />
-                ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900" />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/20 to-background" />
-
-                {/* Floating Action Button */}
-                <div className="absolute top-6 right-6 z-20">
-                    <Button
-                        onClick={() => setIsEditProfileOpen(true)}
-                        variant="ghost"
-                        size="icon"
-                        className="rounded-full bg-black/20 backdrop-blur-md border border-white/10 hover:bg-white/10 text-white transition-all duration-300"
-                    >
-                        <Settings size={20} />
-                    </Button>
+    return <div className="mx-auto max-w-7xl space-y-6 pb-14">
+        <section className="relative overflow-hidden rounded-[30px] border border-border bg-card shadow-sm">
+            <div className="relative h-36 overflow-hidden bg-gradient-to-r from-[#344a3c] via-[#586952] to-[#ad9b7b] sm:h-52">
+                {user?.coverImage && <img src={getImageUrl(user.coverImage)} alt="" className="absolute inset-0 h-full w-full object-cover" />}
+                <div className="absolute inset-0 bg-gradient-to-tr from-black/35 to-transparent" />
+                <div className="absolute left-6 top-6 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3 py-2 text-xs font-bold uppercase tracking-[.16em] text-white backdrop-blur-md"><Sparkles size={15} /> The writer's corner</div>
+                <button type="button" onClick={() => setEditProfileOpen(true)} className="absolute right-5 top-5 inline-flex items-center gap-2 rounded-full border border-white/30 bg-black/25 px-4 py-2 text-xs font-bold text-white backdrop-blur-sm hover:bg-black/40"><Camera size={15} /> Edit cover</button>
+            </div>
+            <div className="relative flex flex-col gap-5 px-6 pb-7 pt-16 sm:flex-row sm:items-end sm:justify-between sm:px-9 sm:pt-12">
+                <div className="absolute -top-10 left-6 flex h-24 w-24 items-center justify-center overflow-hidden rounded-[28px] border-[5px] border-card bg-[hsl(var(--surface-gold))] text-3xl font-bold shadow-xl sm:-top-14 sm:left-9 sm:h-28 sm:w-28">
+                    {user?.avatar ? <img src={getImageUrl(user.avatar)} alt="" className="h-full w-full object-cover" /> : user?.username?.[0]?.toUpperCase() || 'W'}
+                </div>
+                <div className="min-w-0 sm:pl-32">
+                    <p className="mb-1 text-xs font-bold uppercase tracking-[.17em] text-[hsl(var(--accent))]">My personal space</p>
+                    <h1 className="break-words font-editorial text-3xl sm:text-4xl">{user?.username || 'Writer'}</h1>
+                    <p className="mt-1 break-all text-xs text-muted-foreground">{user?.email}</p>
+                    {user?.location && <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground"><MapPin size={13} />{user.location}</p>}
+                    <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">{user?.bio || 'Every meaningful story begins with a few honest words. Add a short bio to introduce yourself.'}</p>
+                </div>
+                <div className="flex shrink-0 flex-wrap gap-2">
+                    <button type="button" onClick={() => setEditProfileOpen(true)} className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-5 py-3 text-xs font-bold hover:bg-muted"><PenLine size={15} /> Edit profile</button>
+                    <Link to="/dashboard/settings" className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-5 py-3 text-xs font-bold hover:bg-muted"><Settings2 size={15} /> Settings</Link>
                 </div>
             </div>
+        </section>
 
-            <div className="container mx-auto px-4 md:px-6 -mt-32 relative z-10">
-                <div className="flex flex-col items-center">
-                    {/* Minimalist Profile Header */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="flex flex-col items-center text-center mb-12 w-full max-w-2xl"
-                    >
-                        <div className="relative mb-6 group">
-                            <div className="w-32 h-32 md:w-40 md:h-40 rounded-full p-1 bg-background/50 backdrop-blur-sm border border-white/10 shadow-2xl">
-                                <div className="w-full h-full rounded-full overflow-hidden relative">
-                                    {user?.avatar ? (
-                                        <img
-                                            src={getImageUrl(user.avatar)}
-                                            alt={user.username}
-                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
-                                            <span className="text-5xl font-light text-primary">{user?.username?.[0]?.toUpperCase() || 'U'}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => setIsEditProfileOpen(true)}
-                                className="absolute bottom-2 right-2 p-2 bg-primary text-primary-foreground rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
-                            >
-                                <Camera size={16} />
-                            </button>
-                        </div>
+        <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+                { title: 'My letters', value: ownedNotes.length, icon: BookHeart },
+                { title: 'Public', value: publicCount, icon: Globe2 },
+                { title: 'Followers', value: followerCount, icon: Heart },
+                { title: 'Following', value: followingCount, icon: UserRound },
+            ].map(({ title, value, icon: Icon }) => <div key={title} className="flex items-center justify-between gap-2 rounded-[22px] border border-border bg-card p-4 shadow-sm sm:p-5"><div><p className="text-xs text-muted-foreground">{title}</p><p className="mt-2 font-editorial text-3xl font-semibold">{value}</p></div><span className="rounded-2xl bg-[hsl(var(--surface-gold))] p-3 text-[#5b4932]"><Icon size={19} /></span></div>)}
+        </section>
 
-                        <h1 className="text-4xl md:text-5xl font-bold mb-3 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white/90 to-white/60">
-                            {user?.username || 'Guest User'}
-                        </h1>
-
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6 font-medium tracking-wide">
-                            {user?.location && (
-                                <>
-                                    <span className="flex items-center gap-1.5">
-                                        <MapPin size={14} /> {user.location}
-                                    </span>
-                                    <span className="w-1 h-1 rounded-full bg-white/20" />
-                                </>
-                            )}
-                            <span className="flex items-center gap-1.5">
-                                <Calendar size={14} /> Joined recently
-                            </span>
-                        </div>
-
-                        {user?.bio && (
-                            <p className="text-lg text-muted-foreground/80 leading-relaxed max-w-lg font-light">
-                                {user.bio}
-                            </p>
-                        )}
-
-                        <div className="flex gap-6 mt-8">
-                            <div className="text-center">
-                                <div className="text-2xl font-bold text-foreground">{notes.length}</div>
-                                <div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Letters</div>
-                            </div>
-                            <div className="w-px h-10 bg-white/10" />
-                            <div className="text-center">
-                                <div className="text-2xl font-bold text-foreground">{followerCount}</div>
-                                <div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Followers</div>
-                            </div>
-                            <div className="w-px h-10 bg-white/10" />
-                            <div className="text-center">
-                                <div className="text-2xl font-bold text-foreground">{followingCount}</div>
-                                <div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Following</div>
-                            </div>
-                        </div>
-                    </motion.div>
-
-                    {/* Minimalist Tabs */}
-                    <div className="w-full max-w-4xl mb-10">
-                        <div className="flex justify-center items-center gap-8 border-b border-white/5 pb-4 overflow-x-auto scrollbar-hide">
-                            {tabs.map((tab) => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setActiveTab(tab)}
-                                    className={`
-                                        text-sm font-medium transition-all duration-300 relative px-2 py-1
-                                        ${activeTab === tab ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}
-                                    `}
-                                >
-                                    {tab}
-                                    {activeTab === tab && (
-                                        <motion.div
-                                            layoutId="activeTab"
-                                            className="absolute -bottom-[17px] left-0 right-0 h-0.5 bg-primary"
-                                        />
-                                    )}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Content Area */}
-                    <div className="w-full max-w-5xl">
-                        {activeTab === 'About' ? (
-                            <motion.div
-                                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                className="max-w-2xl mx-auto text-center py-12"
-                            >
-                                <Sparkles className="w-8 h-8 text-primary/50 mx-auto mb-6" />
-                                <h3 className="text-xl font-light mb-4">More About Me</h3>
-                                <p className="text-muted-foreground leading-loose">
-                                    {user?.bio || "I haven't written a long bio yet, but I love writing letters and connecting with people from all over the world."}
-                                </p>
-                            </motion.div>
-                        ) : activeTab === 'Pen Pals' || activeTab === 'Saved' ? (
-                            <motion.div
-                                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                className="text-center py-20"
-                            >
-                                <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
-                                    <PenLine size={32} className="text-muted-foreground" />
-                                </div>
-                                <h3 className="text-xl font-medium mb-2">Coming Soon</h3>
-                                <p className="text-muted-foreground">This feature is currently being crafted.</p>
-                            </motion.div>
-                        ) : (
-                            <>
-                                {/* Action Bar */}
-                                <div className="flex justify-between items-center mb-8 px-2">
-                                    <div className="relative w-full max-w-xs group">
-                                        <Search className="absolute left-0 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
-                                        <input
-                                            placeholder="Search letters..."
-                                            className="w-full bg-transparent border-b border-white/10 py-2 pl-8 text-sm focus:outline-none focus:border-primary transition-colors placeholder:text-muted-foreground/50"
-                                        />
-                                    </div>
-                                    <Button
-                                        onClick={() => {
-                                            setNoteToEdit(null); // Ensure clean state for new letter
-                                            setIsEditorOpen(true);
-                                        }}
-                                        className="rounded-full w-12 h-12 p-0 bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all hover:scale-105 flex items-center justify-center"
-                                    >
-                                        <PenLine size={20} />
-                                    </Button>
-                                </div>
-
-                                {/* Grid */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {displayNotes.length > 0 ? (
-                                        displayNotes.map((note, index) => (
-                                            <motion.div
-                                                key={note.id}
-                                                initial={{ opacity: 0, y: 20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: index * 0.05 }}
-                                            >
-                                                <Notecard note={note} onClick={handleNoteClick} />
-                                            </motion.div>
-                                        ))
-                                    ) : (
-                                        <div className="col-span-full text-center py-20">
-                                            <p className="text-muted-foreground font-light text-lg">
-                                                {activeTab === 'Drafts' ? 'No drafts yet.' : 'No letters published yet.'}
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </div>
+        <section className="rounded-[28px] border border-border bg-card p-4 shadow-sm sm:p-6">
+            <div className="flex flex-col justify-between gap-4 border-b border-border pb-5 sm:flex-row sm:items-center">
+                <div><p className="text-xs font-bold uppercase tracking-[.18em] text-[hsl(var(--accent))]">Your private library</p><h2 className="mt-1 font-editorial text-3xl">My collection</h2></div>
+                <button type="button" onClick={() => openComposer()} className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-xs font-bold text-primary-foreground hover:opacity-90"><PenLine size={16} /> Write a letter <ArrowRight size={15} /></button>
+            </div>
+            <nav aria-label="My letter sections" className="mt-5 flex flex-wrap gap-1.5">
+                {sections.map(({ id, title, icon: Icon }) => <button key={id} type="button" aria-current={active === id ? 'page' : undefined} onClick={() => { setActive(id); setQuery(''); }} className={`inline-flex items-center gap-2 rounded-full px-3.5 py-2.5 text-xs font-semibold transition-colors ${active === id ? 'bg-primary text-primary-foreground' : 'bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground'}`}><Icon size={15} /> {title}</button>)}
+            </nav>
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+                <div><h3 className="font-editorial text-xl">{sections.find(s => s.id === active)?.title}</h3><p className="mt-1 text-xs text-muted-foreground">{tabDescription[active]}</p></div>
+                {active !== 'about' && <label className="relative block w-full max-w-[260px]"><Search size={16} className="absolute left-3 top-3 text-muted-foreground" /><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Find a letter…" className="h-10 w-full rounded-full border border-border bg-background pl-9 pr-3 text-xs outline-none focus:border-primary" /></label>}
             </div>
 
-            <EditProfileModal
-                isOpen={isEditProfileOpen}
-                onClose={() => setIsEditProfileOpen(false)}
-            />
+            {active === 'about' ? <div className="mt-6 rounded-[22px] bg-background px-6 py-9"><Sparkles size={23} className="text-[hsl(var(--accent))]" /><h4 className="mt-4 font-editorial text-2xl">A little about me</h4><p className="mt-3 max-w-2xl whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{user?.bio || 'Your story is yours to tell. Click Edit profile to add a bio.'}</p><button type="button" onClick={() => setEditProfileOpen(true)} className="mt-5 rounded-full border border-border px-5 py-2.5 text-xs font-bold hover:bg-muted">Edit my story</button></div> : filtered.length ? (
+                <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {filtered.map(note => (active === 'drafts' || active === 'scheduled' ?
+                        <button type="button" key={note.id} onClick={() => openComposer(note)} className="group flex h-[270px] flex-col rounded-[25px] border border-border bg-background p-6 text-left transition-all hover:-translate-y-1 hover:shadow-lg">
+                            <span className="inline-flex items-center justify-between text-xs font-bold uppercase tracking-[.13em] text-muted-foreground">{active === 'drafts' ? 'Saved draft' : 'Scheduled letter'}<PenLine size={17} /></span>
+                            <h4 className="mt-6 line-clamp-2 font-editorial text-2xl">{note.title || 'Untitled letter'}</h4><p className="mt-3 line-clamp-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{note.content}</p>
+                            <span className="mt-auto inline-flex items-center gap-2 border-t border-border pt-4 text-xs font-bold text-primary">{active === 'drafts' ? 'Continue writing' : 'Review letter'} <ArrowRight size={15} /></span>
+                        </button> :
+                        <Notecard key={note.id} note={note.authorId ? note : { ...note, authorId: user?.id || 0, authorName: user?.username }} onClick={item => { setSelected(item); setViewOpen(true); }} />
+                    ))}
+                </div>
+            ) : <div className="mt-7 flex flex-col items-center rounded-[24px] border border-dashed border-border bg-background/60 px-5 py-14 text-center"><BookHeart size={37} className="text-[hsl(var(--accent))]" /><h4 className="mt-4 font-editorial text-2xl">{query ? 'No matching letters' : 'A quiet shelf for now'}</h4><p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">{query ? 'Try another search term.' : active === 'public' ? 'Your public letters will appear here. You can discover everyone else’s letters in the Community section.' : active === 'private' ? `You have ${privateCount} private letters. Begin a new private story whenever you like.` : 'Your letters will show here when you save, publish or archive them.'}</p><button type="button" onClick={() => openComposer()} className="mt-5 rounded-full bg-primary px-5 py-2.5 text-xs font-bold text-primary-foreground">Start writing</button></div>}
+            {active === 'public' && <Link to="/dashboard/notes" className="mt-6 inline-flex items-center gap-2 text-xs font-bold text-primary hover:underline">Explore Community letters <ArrowRight size={15} /></Link>}
+        </section>
 
-            <LetterEditorModal
-                isOpen={isEditorOpen}
-                onClose={() => {
-                    setIsEditorOpen(false);
-                    setNoteToEdit(null);
-                }}
-                onSubmit={handleLetterSubmit}
-                initialData={noteToEdit}
-            />
-
-            <LetterViewModal
-                isOpen={isViewModalOpen}
-                onClose={() => setIsViewModalOpen(false)}
-                note={selectedNote}
-                onEdit={handleLetterEdit}
-            />
-        </div>
-    );
-};
-
-export default Profile;
+        <EditProfileModal isOpen={editProfileOpen} onClose={() => setEditProfileOpen(false)} />
+        <LetterEditorModal
+            isOpen={editorOpen}
+            onClose={() => { setEditorOpen(false); setEditing(null); }}
+            initialData={editing || undefined}
+            onSubmit={createLetter}
+            onDraftSaved={fetchDrafts}
+            onPublished={async (status, publicLetter) => { await refresh(); setActive(status === 'scheduled' ? 'scheduled' : publicLetter ? 'public' : 'private'); }}
+        />
+        <LetterViewModal isOpen={viewOpen} onClose={() => setViewOpen(false)} note={selected} onEdit={note => { setViewOpen(false); openComposer(note); }} />
+    </div>;
+}
