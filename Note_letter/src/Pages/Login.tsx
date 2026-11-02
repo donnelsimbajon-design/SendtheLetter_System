@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { ArrowLeft, ArrowRight, BookHeart, LockKeyhole, Mail } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -7,6 +7,10 @@ import { Input } from '../components/ui/input';
 
 const Login = () => {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const sessionNotice = useAuthStore(state => state.sessionNotice);
+  const requested = params.get('returnTo') || '/dashboard';
+  const returnTo = /^\/dashboard(?:\/[^?#]*)?(?:\?[^#]*)?$/.test(requested) && !requested.startsWith('//') ? requested : '/dashboard';
   const login = useAuthStore((state) => state.login);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,7 +23,7 @@ const Login = () => {
     setLoading(true);
     try {
       await login({ email, password });
-      navigate('/dashboard');
+      navigate(returnTo, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'We could not sign you in. Please try again.');
     } finally {
@@ -43,6 +47,7 @@ const Login = () => {
           <p className="text-xs font-bold uppercase tracking-[.2em] text-[hsl(var(--accent))]">Welcome back</p>
           <h2 className="mt-3 font-editorial text-4xl">Your space is waiting.</h2>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">Sign in to pick up where your words left off.</p>
+          {!error && sessionNotice && <div role="status" className="mt-6 rounded-2xl border border-border bg-muted/80 p-3 text-sm text-muted-foreground">{sessionNotice}</div>}
           {error && <div role="alert" className="mt-6 rounded-2xl border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
             <div className="space-y-2"><label htmlFor="email" className="text-sm font-semibold">Email address</label><div className="relative"><Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"/><Input id="email" type="email" autoComplete="email" required value={email} onChange={(event)=>setEmail(event.target.value)} placeholder="you@example.com" className="h-12 rounded-xl bg-card pl-11"/></div></div>
