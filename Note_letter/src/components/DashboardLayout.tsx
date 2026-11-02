@@ -40,6 +40,7 @@ const DashboardLayout = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-primary focus:px-5 focus:py-3 focus:text-sm focus:font-bold focus:text-primary-foreground">Skip to main content</a>
       <header className="fixed inset-x-0 top-0 z-40 h-[72px] border-b border-border/80 bg-card/95 backdrop-blur-xl">
         <div className="mx-auto flex h-full max-w-[1600px] items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/dashboard" className="flex min-w-0 items-center gap-2 sm:gap-3">
@@ -98,7 +99,7 @@ const DashboardLayout = () => {
           </div>
         </aside>
 
-        <main className="min-w-0 w-full flex-1 px-3 pb-32 pt-5 sm:px-6 sm:pt-7 lg:px-10 lg:py-10">
+        <main id="main-content" tabIndex={-1} className="min-w-0 w-full flex-1 px-3 pb-32 pt-5 sm:px-6 sm:pt-7 lg:px-10 lg:py-10">
           <div className="mb-6 flex min-w-0 flex-wrap items-center justify-between gap-3 lg:hidden">
             <div><p className="text-xs font-semibold uppercase tracking-[.16em] text-muted-foreground">Workspace</p><p className="font-editorial text-2xl">{pageTitle}</p></div>
             <Link to="/dashboard/settings" className="rounded-full border border-border px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-muted" aria-label="Open settings">Settings</Link>
@@ -110,7 +111,7 @@ const DashboardLayout = () => {
       <nav aria-label="Mobile workspace navigation" className={'fixed inset-x-0 bottom-0 z-40 grid ' + (user?.role === 'admin' ? 'grid-cols-6' : 'grid-cols-5') + ' border-t border-border bg-card/95 px-1 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur-xl lg:hidden sm:px-3'}>
         {navigation.slice(0, 2).map(({ to, label, mascot, end }) => (
           <NavLink key={to} to={to} end={end} className={({ isActive }) => 'flex min-w-0 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[10px] font-semibold sm:text-xs ' + (isActive ? 'text-primary' : 'text-muted-foreground')}>
-            <CharacterBadge name={mascot} tone="paper" size="sm" /><span className="max-w-full truncate text-center">{label}</span>
+            <CharacterBadge name={mascot} tone="paper" size="sm" /><span className="max-w-full truncate text-center">{label === "My library" ? "Library" : label}</span>
           </NavLink>
         ))}
         <Link to="/dashboard/notes?compose=1" aria-label="Write a new letter" className="relative -mt-3 flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl bg-primary px-1 py-2 text-[10px] font-bold text-primary-foreground shadow-md sm:text-xs">
@@ -119,7 +120,7 @@ const DashboardLayout = () => {
         </Link>
         {navigation.slice(2, 4).map(({ to, label, mascot, end }) => (
           <NavLink key={to} to={to} end={end} className={({ isActive }) => 'flex min-w-0 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[10px] font-semibold sm:text-xs ' + (isActive ? 'text-primary' : 'text-muted-foreground')}>
-            <CharacterBadge name={mascot} tone="paper" size="sm" /><span className="max-w-full truncate text-center">{label}</span>
+            <CharacterBadge name={mascot} tone="paper" size="sm" /><span className="max-w-full truncate text-center">{label === "My profile" ? "Profile" : label}</span>
           </NavLink>
         ))}
         {user?.role === 'admin' && <NavLink to="/admin" className={({ isActive }) => 'flex min-w-0 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[10px] font-semibold ' + (isActive ? 'text-primary' : 'text-muted-foreground')}><CharacterBadge name="susi" tone="sage" size="sm" /><span>Admin</span></NavLink>}
