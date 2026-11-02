@@ -83,9 +83,10 @@ export const getUserReposts = async (req: AuthRequest, res: Response) => {
 
         const letters = reposts.map((repost: any) => {
             const letter = repost.letter.toJSON() as any;
-            const { user: _user, userId: _userId, ...safeLetter } = letter;
+            const { user: _user, userId: _userId, recipientAddress: _privateAddress, ...safeLetter } = letter;
             void _user;
             void _userId;
+            void _privateAddress;
             return {
                 ...safeLetter,
                 repostedAt: repost.createdAt,
