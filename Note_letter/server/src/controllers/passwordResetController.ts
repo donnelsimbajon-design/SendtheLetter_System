@@ -19,7 +19,7 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
     }
     const key = process.env.RESEND_API_KEY;
     const from = process.env.EMAIL_FROM;
-    const base = process.env.APP_BASE_URL || process.env.CLIENT_ORIGIN || '';
+    const base = process.env.APP_BASE_URL || (process.env.CLIENT_ORIGIN || '').split(',')[0].trim();
     let origin: string;
     try {
         const url = new URL(base);
