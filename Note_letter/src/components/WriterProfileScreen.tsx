@@ -305,8 +305,12 @@ export default function WriterProfileScreen({
                                 <div className="min-w-0 flex-1"><p className="text-sm font-bold">{name} {isRepost && <span className="ml-1 text-xs font-normal text-muted-foreground">shared a letter</span>}</p><p className="mt-1 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">{relativeDate(date)} <span className="h-1 w-1 rounded-full bg-muted-foreground/50" /><CharacterBadge name="tala" tone="paper" size="xs" /> Public</p></div>
                                 <span className="rounded-full bg-[hsl(var(--surface-gold))] px-3 py-1.5 text-[10px] font-bold text-[#5a4b38]">{note.category || note.type || 'Letter'}</span>
                             </div>
+                            {isRepost && <p className="mb-2 px-5 text-xs text-muted-foreground sm:px-6">
+                                Originally written by {note.isAnonymous || !note.authorName || note.authorName === 'A Writer'
+                                    ? 'Anonymous Writer'
+                                    : <Link to={`/writers/${encodeURIComponent(note.authorName)}`} className="font-bold text-primary hover:underline">{note.authorName}</Link>}
+                            </p>}
                             <button type="button" onClick={() => onOpenLetter(note)} aria-label={`Read ${note.title || 'letter'}`} className="block w-full px-5 pb-4 text-left sm:px-6">
-                                {isRepost && <p className="mb-3 text-xs text-muted-foreground">Originally written by {note.isAnonymous ? 'Anonymous Writer' : (note.authorName || 'another writer')}</p>}
                                 <h3 className="break-words font-editorial text-2xl font-semibold leading-tight text-foreground sm:text-[29px]">{note.title || 'A letter without a title'}</h3>
                                 <p className="mt-3 line-clamp-4 whitespace-pre-wrap break-words font-serif text-[15px] leading-7 text-muted-foreground">{note.content || 'Open this story to read the letter.'}</p>
                                 {cover && <div className="mt-4 max-h-[320px] overflow-hidden rounded-2xl border border-border bg-muted"><img src={getImageUrl(cover)} loading="lazy" alt={`Illustration for ${note.title || 'this letter'}`} className="max-h-[320px] w-full object-cover" /></div>}
