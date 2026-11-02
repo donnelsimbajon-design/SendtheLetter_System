@@ -54,9 +54,9 @@ const relativeDate = (value?: string | Date) => validDate(value) ? formatDistanc
 
 const topTabs: { id: ProfileTab; text: string; mascot: MascotName }[] = [
     { id: 'posts', text: 'Posts', mascot: 'lumi' },
-    { id: 'letters', text: 'Letters', mascot: 'sely' },
+    { id: 'letters', text: 'Letters', mascot: 'basa' },
     { id: 'about', text: 'About', mascot: 'tala' },
-    { id: 'connections', text: 'Connections', mascot: 'piko' },
+    { id: 'connections', text: 'Connections', mascot: 'chika' },
 ];
 
 export default function WriterProfileScreen({
@@ -220,7 +220,7 @@ export default function WriterProfileScreen({
                             {signedIn ? <button type="button" onClick={onFollow} disabled={followBusy} className={`inline-flex min-h-10 items-center gap-2 rounded-full px-4 py-2.5 text-xs font-bold disabled:opacity-50 ${profile.isFollowing ? 'border border-border bg-background hover:bg-muted' : 'bg-primary text-primary-foreground hover:opacity-90'}`}>{profile.isFollowing ? <><CharacterBadge name="sely" tone="rose" size="xs" /> Following</> : <><CharacterBadge name="piko" tone="sage" size="xs" /> Follow</>}</button> : <Link to={`/login?returnTo=${encodeURIComponent(profileUrl)}`} className="inline-flex min-h-10 items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground"><CharacterBadge name="piko" tone="sage" size="xs" /> Follow</Link>}
                             {friendAction && signedIn && <button type="button" onClick={friendAction.onClick} disabled={friendAction.disabled || !friendAction.onClick} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-xs font-bold hover:bg-muted disabled:opacity-50"><CharacterBadge name="sely" tone="sage" size="xs" /> {friendAction.label}</button>}
                             {friendAction?.secondaryLabel && friendAction.secondaryClick && signedIn && <button type="button" onClick={friendAction.secondaryClick} disabled={friendAction.disabled} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-xs font-bold text-muted-foreground hover:bg-muted disabled:opacity-50">{friendAction.secondaryLabel}</button>}
-                            {signedIn ? <button type="button" onClick={onMessage} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-xs font-bold hover:bg-muted"><CharacterBadge name="piko" tone="sage" size="xs" /> Message</button> : <Link to={`/login?returnTo=${encodeURIComponent(profileUrl)}`} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-xs font-bold"><CharacterBadge name="piko" tone="sage" size="xs" /> Message</Link>}
+                            {signedIn ? <button type="button" onClick={onMessage} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-xs font-bold hover:bg-muted"><CharacterBadge name="chika" tone="sage" size="xs" /> Message</button> : <Link to={`/login?returnTo=${encodeURIComponent(profileUrl)}`} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-xs font-bold"><CharacterBadge name="chika" tone="sage" size="xs" /> Message</Link>}
                         </>}
                         <button type="button" onClick={() => void shareProfile()} aria-label="Copy public profile link" title="Copy public profile link" className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background hover:bg-muted"><CharacterBadge name="piko" tone="paper" size="sm" /></button>
                     </div>
@@ -246,12 +246,12 @@ export default function WriterProfileScreen({
                     <div className="mt-5 space-y-3 border-t border-border pt-4 text-xs text-muted-foreground">
                         {profile.location && <p className="flex items-center gap-2"><MapPin size={15} /> From {profile.location}</p>}
                         {friendlyDate(profile.createdAt) && <p className="flex items-center gap-2"><CalendarDays size={15} /> Joined {friendlyDate(profile.createdAt)}</p>}
-                        <p className="flex items-center gap-2"><CharacterBadge name="lumi" tone="paper" size="xs" /> {publishedLetters.length} letters on public shelf</p>
+                        <p className="flex items-center gap-2"><CharacterBadge name="basa" tone="paper" size="xs" /> {publishedLetters.length} letters on public shelf</p>
                     </div>
                     {ownProfile ? <button type="button" onClick={onEditProfile} className="mt-5 w-full rounded-xl bg-muted px-4 py-3 text-xs font-bold hover:bg-muted/70">Edit my intro</button> : <button type="button" onClick={() => setTab('about')} className="mt-5 w-full rounded-xl bg-muted px-4 py-3 text-xs font-bold hover:bg-muted/70">Read more about {name}</button>}
                 </div>
                 <div className="rounded-[25px] border border-border bg-card p-5 shadow-sm sm:p-6">
-                    <h2 className="flex items-center gap-2 font-editorial text-xl"><CharacterBadge name="piko" tone="sage" size="sm" /> Connections</h2>
+                    <h2 className="flex items-center gap-2 font-editorial text-xl"><CharacterBadge name="chika" tone="sage" size="sm" /> Connections</h2>
                     <p className="mt-2 text-sm text-muted-foreground">A little community built around thoughtful words.</p>
                     <div className="mt-4 grid grid-cols-2 gap-2">
                         <button type="button" onClick={() => setTab('connections')} className="rounded-xl bg-muted/70 px-3 py-4 text-left hover:bg-muted"><strong className="block font-editorial text-2xl">{profile.followerCount || 0}</strong><span className="text-[11px] text-muted-foreground">Followers</span></button>
@@ -262,7 +262,7 @@ export default function WriterProfileScreen({
                     <p className="text-[10px] font-extrabold uppercase tracking-[.17em] text-[#6f8067]">Only you can see these tools</p>
                     <h2 className="mt-2 font-editorial text-xl">Your writing studio</h2>
                     <p className="mt-2 text-xs leading-6 text-[#6d7b6c]">Private letters, drafts, and scheduled notes are managed in My Library—not on your public profile.</p>
-                    <Link to="/dashboard/notes" className="mt-4 flex items-center justify-between rounded-xl bg-white/75 px-4 py-3 text-xs font-bold hover:bg-white"><span className="flex items-center gap-2"><CharacterBadge name="sely" tone="paper" size="xs" /> Open my private library</span><ArrowRight size={15} /></Link>
+                    <Link to="/dashboard/notes" className="mt-4 flex items-center justify-between rounded-xl bg-white/75 px-4 py-3 text-xs font-bold hover:bg-white"><span className="flex items-center gap-2"><CharacterBadge name="susi" tone="paper" size="xs" /> Open my private library</span><ArrowRight size={15} /></Link>
                     <Link to="/dashboard/settings" className="mt-2 flex items-center justify-between rounded-xl border border-[#cad4c0] px-4 py-3 text-xs font-bold hover:bg-white/40"><span className="flex items-center gap-2"><CharacterBadge name="tala" tone="paper" size="xs" /> Profile settings</span><ArrowRight size={15} /></Link>
                     <Link to={profileUrl} className="mt-3 inline-flex items-center gap-2 text-xs font-semibold underline underline-offset-4"><CharacterBadge name="tala" tone="gold" size="xs" /> View as a visitor</Link>
                 </div> : <Link to={signedIn ? "/dashboard/community" : "/"} className="block rounded-[25px] bg-[#344a3c] p-5 text-[#fff7ea] sm:p-6">
@@ -308,12 +308,12 @@ export default function WriterProfileScreen({
                             <div className="flex items-center justify-between gap-3 border-t border-border px-5 py-3 text-[11px] text-muted-foreground sm:px-6"><span>{likes} {likes === 1 ? 'love' : 'loves'}</span><span>{Number(note.commentCount) || 0} comments</span></div>
                             <div className="grid grid-cols-3 border-t border-border p-2">
                                 {signedIn ? <button type="button" onClick={() => void toggleLike(note)} disabled={likingId === String(note.id)} aria-pressed={liked} className={`inline-flex items-center justify-center gap-2 rounded-xl px-2 py-3 text-xs font-bold transition-colors hover:bg-muted disabled:opacity-50 ${liked ? 'text-rose-600' : 'text-muted-foreground'}`}><CharacterBadge name="sely" tone={liked ? "rose" : "paper"} size="xs" /> {liked ? 'Loved' : 'Love'}</button> : <Link to={`/login?returnTo=${encodeURIComponent(profileUrl)}`} className="inline-flex items-center justify-center gap-2 rounded-xl px-2 py-3 text-xs font-bold text-muted-foreground hover:bg-muted"><CharacterBadge name="sely" tone="paper" size="xs" /> Love</Link>}
-                                <button type="button" onClick={() => onOpenLetter(note)} className="inline-flex items-center justify-center gap-2 rounded-xl px-2 py-3 text-xs font-bold text-muted-foreground hover:bg-muted"><CharacterBadge name="piko" tone="sage" size="xs" /> Comment</button>
+                                <button type="button" onClick={() => onOpenLetter(note)} className="inline-flex items-center justify-center gap-2 rounded-xl px-2 py-3 text-xs font-bold text-muted-foreground hover:bg-muted"><CharacterBadge name="chika" tone="sage" size="xs" /> Comment</button>
                                 <button type="button" onClick={() => void shareLetter(note)} className="inline-flex items-center justify-center gap-2 rounded-xl px-2 py-3 text-xs font-bold text-muted-foreground hover:bg-muted"><CharacterBadge name="piko" tone="paper" size="xs" /> Share</button>
                             </div>
                         </article>;
                     }) : <div className="flex flex-col items-center rounded-[25px] border border-dashed border-border bg-card px-6 py-14 text-center">
-                        <CharacterBadge name="lumi" tone="sage" size="xl" /><h3 className="mt-4 font-editorial text-2xl">{query || category !== 'All' ? 'No matching stories' : 'The first chapter is still waiting'}</h3>
+                        <CharacterBadge name="basa" tone="sage" size="xl" /><h3 className="mt-4 font-editorial text-2xl">{query || category !== 'All' ? 'No matching stories' : 'The first chapter is still waiting'}</h3>
                         <p className="mt-2 max-w-sm text-sm leading-7 text-muted-foreground">{query || category !== 'All' ? 'Try another search or filter.' : ownProfile ? 'Publish a letter under your name and it will appear here for visitors to discover.' : 'This writer has no public letters under their name yet. Private and anonymous letters are not shown here.'}</p>
                         {ownProfile && onWriteLetter && <button type="button" onClick={onWriteLetter} className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-xs font-bold text-primary-foreground"><CharacterBadge name="lumi" tone="paper" size="xs" /> Write your first post</button>}
                     </div>}
@@ -324,8 +324,8 @@ export default function WriterProfileScreen({
                     <h2 className="mt-3 font-editorial text-3xl">Beyond the letters.</h2>
                     <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-8 text-muted-foreground">{hasBio ? profile.bio : ownProfile ? 'Your bio is your introduction to other writers. Add a few sentences about yourself and the stories you love.' : 'This writer has not added a public introduction yet.'}</p>
                     <div className="mt-6 grid gap-3 border-t border-border pt-6 sm:grid-cols-2">
-                        <div className="rounded-2xl bg-muted/70 p-5"><CharacterBadge name="tala" tone="sage" size="lg" /><p className="mt-3 text-xs font-bold">Public writing</p><p className="mt-1 text-xs leading-6 text-muted-foreground">{publishedLetters.length} letters open to the community</p></div>
-                        <div className="rounded-2xl bg-muted/70 p-5"><CharacterBadge name="piko" tone="rose" size="lg" /><p className="mt-3 text-xs font-bold">Community</p><p className="mt-1 text-xs leading-6 text-muted-foreground">{profile.followerCount || 0} people following this writer</p></div>
+                        <div className="rounded-2xl bg-muted/70 p-5"><CharacterBadge name="basa" tone="sage" size="lg" /><p className="mt-3 text-xs font-bold">Public writing</p><p className="mt-1 text-xs leading-6 text-muted-foreground">{publishedLetters.length} letters open to the community</p></div>
+                        <div className="rounded-2xl bg-muted/70 p-5"><CharacterBadge name="chika" tone="rose" size="lg" /><p className="mt-3 text-xs font-bold">Community</p><p className="mt-1 text-xs leading-6 text-muted-foreground">{profile.followerCount || 0} people following this writer</p></div>
                     </div>
                     {ownProfile && <button type="button" onClick={onEditProfile} className="mt-6 rounded-full bg-primary px-5 py-3 text-xs font-bold text-primary-foreground">Edit introduction</button>}
                 </section>}
