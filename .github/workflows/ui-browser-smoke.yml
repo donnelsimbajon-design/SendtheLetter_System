@@ -1,0 +1,44 @@
+name: UI browser smoke checks
+
+on:
+  pull_request:
+    paths:
+      - "Note_letter/**"
+      - ".github/workflows/ui-browser-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    name: Verify writing onboarding in desktop and mobile Chrome
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Note_letter
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: Note_letter/package-lock.json
+      - name: Install application dependencies
+        run: npm ci
+      - name: Install browser test runner without changing application dependencies
+        run: npm install --no-save --package-lock=false @playwright/test@1.56.1
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Test desktop and compact mobile flows
+        run: npx playwright test
+        env:
+          CI: "true"
+      - name: Upload failing test traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-smoke-traces
+          path: |
+            Note_letter/test-results/
+          retention-days: 7
