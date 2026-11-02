@@ -1,20 +1,10 @@
 import multer from 'multer';
 import path from 'path';
-import { Request } from 'express';
 
-// Configure storage
-const storage = multer.diskStorage({
-    destination: (req: Request, file: Express.Multer.File, cb) => {
-        cb(null, 'uploads/');
-    },
-    filename: (req: Request, file: Express.Multer.File, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-    }
-});
+// Keep uploads in memory so image signatures are verified before any write.\nconst storage = multer.memoryStorage();
 
 // File filter to accept only images
-const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (_req: import('express').Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
     const extension = path.extname(file.originalname).toLowerCase();
     const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
     const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
