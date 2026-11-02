@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNoteStore } from '../../store/noteStore';
 import Notecard from '../../components/Notecard';
-import { Search, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import LetterEditorModal from '../../components/LetterEditorModal';
@@ -82,7 +82,7 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
             {/* Header Section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <p className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.16em] text-[hsl(var(--accent))]"><CharacterBadge name="tala" tone="gold" size="xs" /> The letter collection</p>
+                    <p className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.16em] text-[hsl(var(--accent))]"><CharacterBadge name="basa" tone="gold" size="xs" /> The letter collection</p>
                     <h2 className="font-editorial text-4xl tracking-tight text-foreground">{activeTab === 'public' ? 'Community letters' : activeTab === 'personal' ? 'My letters' : activeTab === 'drafts' ? 'Saved drafts' : 'Letters for later'}</h2>
                     <p className="mt-2 text-sm text-muted-foreground">{activeTab === 'public' ? 'Discover words worth sharing.' : activeTab === 'personal' ? 'Your finished letters, just as you wrote them.' : activeTab === 'drafts' ? 'Pick up where your thoughts left off.' : 'Letters waiting for their special moment.'}</p>
                 </div>
