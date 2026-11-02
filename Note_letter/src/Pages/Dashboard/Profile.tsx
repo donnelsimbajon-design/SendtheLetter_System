@@ -185,7 +185,7 @@ export default function Profile() {
                     ))}
                 </div>
             ) : <div className="mt-7 flex flex-col items-center rounded-[24px] border border-dashed border-border bg-background/60 px-5 py-14 text-center"><BookHeart size={37} className="text-[hsl(var(--accent))]" /><h4 className="mt-4 font-editorial text-2xl">{query ? 'No matching letters' : 'A quiet shelf for now'}</h4><p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">{query ? 'Try another search term.' : active === 'public' ? 'Your public letters will appear here. You can discover everyone else’s letters in the Community section.' : active === 'private' ? `You have ${privateCount} private letters. Begin a new private story whenever you like.` : 'Your letters will show here when you save, publish or archive them.'}</p><button type="button" onClick={() => openComposer()} className="mt-5 rounded-full bg-primary px-5 py-2.5 text-xs font-bold text-primary-foreground">Start writing</button></div>}
-            {active === 'public' && <Link to="/dashboard/notes" className="mt-6 inline-flex items-center gap-2 text-xs font-bold text-primary hover:underline">Explore Community letters <ArrowRight size={15} /></Link>}
+            {active === 'public' && <Link to="/dashboard/community" className="mt-6 inline-flex items-center gap-2 text-xs font-bold text-primary hover:underline">Explore Community letters <ArrowRight size={15} /></Link>}
         </section>
 
         <EditProfileModal isOpen={editProfileOpen} onClose={() => setEditProfileOpen(false)} />
