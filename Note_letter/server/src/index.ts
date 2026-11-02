@@ -113,7 +113,11 @@ io.on('connection', (socket) => {
             const letter = await Letter.findByPk(Number(letterId));
             if (!letter) return;
             const isOwner = Number(letter.userId) === userId;
-            const isPublicPublished = letter.isPublic && letter.status === 'published' && !letter.isArchived;
+            const now = Date.now();
+            const releaseReached =
+                (!letter.openDate || new Date(letter.openDate).getTime() <= now) &&
+                (!letter.scheduledDate || new Date(letter.scheduledDate).getTime() <= now);
+            const isPublicPublished = letter.isPublic && letter.status === 'published' && !letter.isArchived && releaseReached;
             if (isOwner || isPublicPublished) socket.join(`letter_${letter.id}`);
         } catch (error) {
             console.error('Unable to authorize letter room access:', error);
