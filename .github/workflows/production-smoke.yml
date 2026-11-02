@@ -5,11 +5,13 @@ on:
   pull_request:
     paths:
       - '.github/workflows/production-smoke.yml'
+      - 'Note_letter/server/scripts/production-smoke.mjs'
       - 'Note_letter/server/src/index.ts'
   push:
     branches: [main]
     paths:
       - '.github/workflows/production-smoke.yml'
+      - 'Note_letter/server/scripts/production-smoke.mjs'
   schedule:
     - cron: '27 3 * * *'
   workflow_dispatch:
@@ -20,7 +22,7 @@ permissions:
 jobs:
   public-health:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 12
     steps:
       - name: Verify production API health JSON
         shell: bash
@@ -35,3 +37,15 @@ jobs:
           set -euo pipefail
           curl --fail --silent --show-error --location --retry 5 --retry-all-errors --retry-delay 8 --connect-timeout 15 --max-time 70 --output site.html 'https://sendtheletter-web-phzx.onrender.com/'
           grep --ignore-case --extended-regexp '<!doctype html|<html' site.html >/dev/null
+
+      - name: Checkout production contract checks
+        uses: actions/checkout@v4
+
+      - name: Setup Node for privacy and writer smoke tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check public-letter safety, writer profiles, private routes, and SPA paths
+        shell: bash
+        run: node Note_letter/server/scripts/production-smoke.mjs
