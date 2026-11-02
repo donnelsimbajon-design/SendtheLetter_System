@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { ArrowRight } from 'lucide-react';
 import CharacterBadge from '../components/CharacterBadge';
 
 const About = () => {
@@ -21,7 +20,7 @@ const About = () => {
           { mascot: 'chika', tone: 'rose', title: 'Keep the conversation going', body: 'Connect through messages, comments, and reactions when you want to say a little more.' },
         ] as const).map(({ mascot, tone, title, body }) => <article key={title} className="rounded-3xl border border-border bg-card p-7"><CharacterBadge name={mascot} tone={tone} size="lg" /><h2 className="mt-6 font-editorial text-2xl">{title}</h2><p className="mt-3 text-sm leading-7 text-muted-foreground">{body}</p></article>)}
       </div>
-      <div className="mt-16 rounded-[2rem] bg-primary px-7 py-10 text-primary-foreground sm:px-12 sm:py-14"><h2 className="max-w-2xl font-editorial text-4xl leading-tight sm:text-5xl">The internet is loud. Your words don't have to be.</h2><p className="mt-4 max-w-xl leading-7 opacity-75">Make a little room for meaningful communication, one letter at a time.</p><Link to={isAuthenticated ? '/dashboard/notes' : '/signup'} className="mt-7 inline-flex items-center gap-2 rounded-full bg-[hsl(var(--surface-gold))] px-5 py-3 text-sm font-bold text-[#493D2A]">{isAuthenticated ? 'Continue writing' : 'Start writing'} <ArrowRight size={16}/></Link></div>
+      <div className="mt-16 rounded-[2rem] bg-primary px-7 py-10 text-primary-foreground sm:px-12 sm:py-14"><h2 className="max-w-2xl font-editorial text-4xl leading-tight sm:text-5xl">The internet is loud. Your words don't have to be.</h2><p className="mt-4 max-w-xl leading-7 opacity-75">Make a little room for meaningful communication, one letter at a time.</p><Link to={isAuthenticated ? '/dashboard/notes' : '/signup'} className="mt-7 inline-flex items-center gap-2 rounded-full bg-[hsl(var(--surface-gold))] px-5 py-3 text-sm font-bold text-[#493D2A]">{isAuthenticated ? 'Continue writing' : 'Start writing'} <CharacterBadge name="piko" tone="paper" size="xs" /></Link></div>
     </main>
   </div>
   );

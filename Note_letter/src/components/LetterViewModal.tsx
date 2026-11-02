@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dialog';
 // VisuallyHidden removed
 import { Button } from './ui/button';
-import { Music, Repeat, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import CharacterBadge from './CharacterBadge';
 import CommentsPanel from './CommentsPanel';
 import LetterBookReader from './LetterBookReader';
@@ -155,7 +154,7 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                                         className="flex items-center gap-2 text-stone-600 hover:text-[#1DB954] transition-colors"
                                         title="Open in Spotify"
                                     >
-                                        <Music size={18} />
+                                        <CharacterBadge name="tala" tone="paper" size="xs" />
                                     </a>
                                 )}
                             </div>
@@ -168,7 +167,7 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                                     className="flex text-stone-500 hover:text-stone-800"
                                     title={isSidebarOpen ? "Hide Comments" : "Show Comments"}
                                 >
-                                    {isSidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
+                                    {isSidebarOpen ? 'Hide comments' : 'Comments'}
                                 </Button>
 
                                 {/* Edit Button for Author */}
@@ -239,7 +238,7 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                             {note.spotifyLink && (
                                 <div className="mt-8 pt-6 border-t border-stone-200">
                                     <div className="flex items-center gap-2 mb-4">
-                                        <Music size={18} className="text-stone-600" />
+                                        <CharacterBadge name="tala" tone="paper" size="xs" />
                                         <span className="text-sm font-medium text-stone-700">Letter Soundtrack</span>
                                     </div>
                                     <div className="flex items-center gap-4">
@@ -283,7 +282,7 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                             onCollapse={() => setIsSidebarOpen(false)}
                             onCommentCountChange={setCommentCount}
                             actions={<>
-                                <button type="button" onClick={handleRepost} disabled={!user} className={cn("inline-flex items-center gap-1 text-xs hover:text-green-600 disabled:opacity-40", isReposted && "text-green-600")} title="Repost"><Repeat size={17} /><span>{repostCount}</span></button>
+                                <button type="button" onClick={handleRepost} disabled={!user} className={cn("inline-flex items-center gap-1 text-xs hover:text-green-600 disabled:opacity-40", isReposted && "text-green-600")} title="Repost"><CharacterBadge name="piko" tone="paper" size="xs" /><span>{repostCount}</span></button>
                                 <button type="button" onClick={() => setIsShareModalOpen(true)} disabled={!user} className="text-stone-600 hover:text-blue-500 disabled:opacity-40" title="Share"><CharacterBadge name="piko" tone="paper" size="sm" /></button>
                                 <button type="button" onClick={handleLike} disabled={!user} className={cn("inline-flex items-center gap-1 text-xs hover:text-rose-500 disabled:opacity-40", isLiked && "text-rose-500")} title="Like"><CharacterBadge name="sely" tone={isLiked ? "rose" : "paper"} size="sm" /><span>{likeCount}</span></button>
                                 <span className="sr-only">{commentCount} comments</span>

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Check, CheckCheck, Search } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useAuthStore } from '../../store/authStore';
 import socketService from '../../services/socketService';
@@ -179,14 +178,14 @@ export default function Messages() {
     return <div className="mx-auto max-w-[1380px] space-y-5 pb-0">
         <header className="flex flex-wrap items-end justify-between gap-3">
             <div><p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.19em] text-[hsl(var(--accent))]"><CharacterBadge name="chika" tone="gold" size="xs" /> Your connections</p><h1 className="mt-2 font-editorial text-4xl">Messages</h1><p className="mt-2 text-sm text-muted-foreground">A quieter way to connect, one thoughtful note at a time.</p></div>
-            <Link to="/dashboard/community" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-xs font-bold hover:bg-muted"><CharacterBadge name="lumi" tone="sage" size="xs" /> Explore writers <ArrowRight size={15} /></Link>
+            <Link to="/dashboard/community" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-xs font-bold hover:bg-muted"><CharacterBadge name="lumi" tone="sage" size="xs" /> Explore writers</Link>
         </header>
 
         <div className="flex h-[min(74dvh,760px)] min-h-[530px] overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_14px_45px_rgba(46,50,39,.07)]">
             <aside className={`flex w-full shrink-0 flex-col border-r border-border bg-background/50 md:w-[325px] lg:w-[360px] ${activeMobile ? 'hidden md:flex' : 'flex'}`} aria-label="Conversations">
                 <div className="border-b border-border p-5">
                     <div className="flex items-center justify-between"><h2 className="font-editorial text-2xl">Inbox</h2><CharacterBadge name="chika" tone="gold" size="sm" /></div>
-                    <div className="relative mt-4"><Search size={17} className="absolute left-3.5 top-3 text-muted-foreground" /><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search conversations…" aria-label="Search conversations" className="h-11 w-full rounded-2xl border border-border bg-card pl-10 pr-4 text-sm outline-none focus:border-primary" /></div>
+                    <div className="relative mt-4"><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search conversations…" aria-label="Search conversations" className="h-11 w-full rounded-2xl border border-border bg-card px-4 text-sm outline-none focus:border-primary" /></div>
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto p-2">
                     {listLoading ? <p className="p-5 text-sm text-muted-foreground">Loading conversations…</p> :
@@ -203,7 +202,7 @@ export default function Messages() {
             <section className={`min-w-0 flex-1 flex-col bg-card ${!activeMobile ? 'hidden md:flex' : 'flex'}`} aria-label="Conversation thread">
                 {selected ? <>
                     <header className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-4 sm:px-6">
-                        <button type="button" onClick={() => setActiveMobile(false)} aria-label="Back to conversations" className="rounded-full p-2 text-muted-foreground hover:bg-muted md:hidden"><ArrowLeft size={19} /></button>
+                        <button type="button" onClick={() => setActiveMobile(false)} aria-label="Back to conversations" className="min-h-10 rounded-full px-3 py-2 text-xs font-bold text-muted-foreground hover:bg-muted md:hidden">Back</button>
                         <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[16px] bg-[hsl(var(--surface-rose))] font-semibold">{selected.avatar ? <img src={getImageUrl(selected.avatar)} alt="" className="h-full w-full object-cover" /> : selected.username[0]?.toUpperCase()}</span>
                         <div className="min-w-0 flex-1"><h2 className="truncate text-sm font-bold">{selected.username}</h2><p className="mt-1 text-xs text-muted-foreground">Your private conversation</p></div>
                         <Link to={`/dashboard/profile/${encodeURIComponent(selected.username)}`} className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"><CharacterBadge name="lumi" tone="sage" size="xs" /><span className="hidden sm:inline">Profile</span></Link>
@@ -220,7 +219,7 @@ export default function Messages() {
                                     <div className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
                                         <div className={`max-w-[84%] rounded-[22px] px-4 py-3 text-sm shadow-sm sm:max-w-[72%] ${mine ? 'rounded-br-[6px] bg-primary text-primary-foreground' : 'rounded-bl-[6px] border border-border bg-card text-foreground'}`}>
                                             <p className="whitespace-pre-wrap break-words leading-6">{message.content}</p>
-                                            <div className={`mt-2 flex items-center justify-end gap-1.5 text-[10px] ${mine ? 'text-primary-foreground/75' : 'text-muted-foreground'}`}><span>{format(new Date(message.createdAt), 'h:mm a')}</span>{mine && (message.isRead ? <CheckCheck size={13} /> : <Check size={13} />)}</div>
+                                            <div className={`mt-2 flex items-center justify-end gap-1.5 text-[10px] ${mine ? 'text-primary-foreground/75' : 'text-muted-foreground'}`}><span>{format(new Date(message.createdAt), 'h:mm a')}</span>{mine && <span aria-label={message.isRead ? "Read" : "Sent"}>{message.isRead ? "Read" : "Sent"}</span>}</div>
                                         </div>
                                     </div>
                                 </div>;
@@ -237,7 +236,7 @@ export default function Messages() {
                         <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground"><span>Enter to send • Shift+Enter for a new line</span><span>{draft.length} / 5,000</span></div>
                     </form>
                 </> : <div className="flex h-full flex-col items-center justify-center px-7 text-center">
-                    <Mascot name="chika" className="h-36 w-36" /><p className="mt-5 text-xs font-bold uppercase tracking-[.2em] text-[hsl(var(--accent))]">A letter in a conversation</p><h2 className="mt-3 font-editorial text-3xl">Every connection starts somewhere.</h2><p className="mt-3 max-w-md text-sm leading-7 text-muted-foreground">Choose someone from your inbox, or visit a writer's profile to start a new conversation.</p><Link to="/dashboard/community" className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-xs font-bold text-primary-foreground">Find a writer <ArrowRight size={15} /></Link>
+                    <Mascot name="chika" className="h-36 w-36" /><p className="mt-5 text-xs font-bold uppercase tracking-[.2em] text-[hsl(var(--accent))]">A letter in a conversation</p><h2 className="mt-3 font-editorial text-3xl">Every connection starts somewhere.</h2><p className="mt-3 max-w-md text-sm leading-7 text-muted-foreground">Choose someone from your inbox, or visit a writer's profile to start a new conversation.</p><Link to="/dashboard/community" className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-xs font-bold text-primary-foreground">Find a writer </Link>
                     {initialUserId && error && <p className="mt-4 text-xs text-red-600">{error}</p>}
                     {!activeConversation && <span className="sr-only">No conversation selected</span>}
                 </div>}

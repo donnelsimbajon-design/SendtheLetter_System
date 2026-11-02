@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useNoteStore } from '../../store/noteStore';
 import Notecard from '../../components/Notecard';
-import { ArrowRight } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import LetterEditorModal from '../../components/LetterEditorModal';
@@ -29,11 +28,32 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
     };
     const [activeTab, setActiveTab] = useState<'public' | 'personal' | 'drafts' | 'scheduled' | 'archived'>(initialTab);
     useEffect(() => { setActiveTab(initialTab); }, [initialTab]);
+    useEffect(() => {
+        if (isCommunity) return;
+        const requested = params.get('tab');
+        if (requested === 'drafts' || requested === 'personal' || requested === 'scheduled' || requested === 'archived') {
+            setActiveTab(requested);
+        }
+    }, [isCommunity, params]);
     const [scheduledNotes, setScheduledNotes] = useState<Note[]>([]);
     const [restoringId, setRestoringId] = useState<string | null>(null);
     const [restoreError, setRestoreError] = useState('');
     const [editingNote, setEditingNote] = useState<Note | null>(null);
     const [isEditorOpen, setIsEditorOpen] = useState(false);
+    const [starterTemplate, setStarterTemplate] = useState('');
+
+    // A safe, shareable compose link opens an existing editor template.
+    useEffect(() => {
+        if (isCommunity || params.get('compose') !== '1') return;
+        const template = params.get('template') || '';
+        setStarterTemplate(['gratitude', 'future-self', 'apology', 'hello'].includes(template) ? template : '');
+        setEditingNote(null);
+        setIsEditorOpen(true);
+        const next = new URLSearchParams(params);
+        next.delete('compose');
+        next.delete('template');
+        setParams(next, { replace: true });
+    }, [isCommunity, params, setParams]);
 
     // View Modal State
     const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -51,7 +71,6 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
     };
 
     useEffect(() => {
-        // Public discovery should never need the user's private Library endpoints.
         if (isCommunity) {
             void fetchPublicLetters();
         } else {
@@ -169,9 +188,9 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
             {/* Header Section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <p className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.16em] text-[hsl(var(--accent))]"><CharacterBadge name="basa" tone="gold" size="xs" /> The letter collection</p>
-                    <h2 className="font-editorial text-4xl tracking-tight text-foreground">{isCommunity ? 'Community letters' : activeTab === 'personal' ? 'My letters' : activeTab === 'drafts' ? 'Saved drafts' : activeTab === 'archived' ? 'Archived letters' : 'Letters for later'}</h2>
-                    <p className="mt-2 text-sm text-muted-foreground">{isCommunity ? 'Only published public letters appear here. Private writing stays in My library.' : activeTab === 'personal' ? 'Your finished letters, just as you wrote them.' : activeTab === 'drafts' ? 'Pick up where your thoughts left off.' : activeTab === 'archived' ? 'Letters you have set aside. Restore them whenever you are ready.' : 'Letters waiting for their special moment.'}</p>
+                    <p className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.16em] text-[hsl(var(--accent))]"><CharacterBadge name={isCommunity ? "chika" : "basa"} tone="gold" size="xs" /> {isCommunity ? "Stories from the community" : "The letter collection"}</p>
+                    <h2 className="font-editorial text-4xl tracking-tight text-foreground">{isCommunity ? 'Discover words that matter' : activeTab === 'personal' ? 'My letters' : activeTab === 'drafts' ? 'Saved drafts' : activeTab === 'archived' ? 'Archived letters' : 'Letters for later'}</h2>
+                    <p className="mt-2 text-sm text-muted-foreground">{isCommunity ? 'Read published stories, find kindred voices, and share a little appreciation. Private writing stays in My library.' : activeTab === 'personal' ? 'Your finished letters, just as you wrote them.' : activeTab === 'drafts' ? 'Pick up where your thoughts left off.' : activeTab === 'archived' ? 'Letters you have set aside. Restore them whenever you are ready.' : 'Letters waiting for their special moment.'}</p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-border/70 bg-muted/60 p-1.5">
@@ -187,18 +206,40 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                     )) : <span className="px-3 py-2 text-xs font-semibold text-muted-foreground">Public letters only</span>)}
                 </div>
 
-                <Button onClick={() => { setEditingNote(null); setIsEditorOpen(true); }} className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 shadow-lg hover:shadow-xl transition-all">
+                <Button onClick={() => { setStarterTemplate(''); setEditingNote(null); setIsEditorOpen(true); }} className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 shadow-lg hover:shadow-xl transition-all">
                     <CharacterBadge name="lumi" tone="paper" size="sm" />
                     Write a Letter
                 </Button>
             </div>
+
+            {isCommunity && <section aria-label="Explore letter topics" className="rounded-[1.8rem] border border-border bg-[hsl(var(--surface-sage))]/45 p-5 sm:p-7">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <CharacterBadge name="basa" tone="paper" size="lg" />
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-[.15em] text-muted-foreground">Explore by feeling</p>
+                            <h3 className="mt-1 font-editorial text-2xl">There is a story for everyone.</h3>
+                        </div>
+                    </div>
+                    <p className="max-w-sm text-xs leading-6 text-muted-foreground">Choose a topic to discover public letters. Only categories represented in the current collection appear below.</p>
+                </div>
+                <div role="group" aria-label="Filter public letters by topic" className="mt-5 flex flex-wrap gap-2">
+                    {['all', ...categories].map(topic => (
+                        <button key={topic} type="button" onClick={() => setCategoryFilter(topic)} aria-pressed={categoryFilter === topic}
+                            className={clsx('min-h-11 rounded-full border px-4 py-2.5 text-xs font-bold transition-colors', categoryFilter === topic ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-foreground hover:bg-muted')}>
+                            {topic === 'all' ? 'All stories' : topic}
+                        </button>
+                    ))}
+                </div>
+            </section>}
 
             {/* Search and Filter Bar */}
             <div className="flex flex-col md:flex-row gap-4 items-center bg-card p-2 rounded-xl border border-border/50 shadow-sm">
                 <div className="relative flex-1 w-full">
                     <CharacterBadge name="suri" tone="paper" size="xs" className="absolute left-3 top-1/2 -translate-y-1/2" />
                     <Input
-                        placeholder="Search letters..."
+                        aria-label={isCommunity ? "Search public letters" : "Search your letters"}
+                        placeholder={isCommunity ? "Search a story, feeling, or writer…" : "Search your letters…"} 
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-10 bg-transparent border-none focus-visible:ring-0"
@@ -220,7 +261,10 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                     </select>
                 </label>
             </div>
-            <p aria-live="polite" className="text-xs text-muted-foreground">Showing {filteredNotes.length} of {visibleNotes.length} letters</p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <p aria-live="polite" className="text-xs font-medium text-muted-foreground">Showing {filteredNotes.length} of {visibleNotes.length} {isCommunity ? 'public' : ''} letters</p>
+                {(searchQuery || categoryFilter !== 'all' || sortOrder !== 'newest') && <button type="button" onClick={() => { setSearchQuery(''); setCategoryFilter('all'); setSortOrder('newest'); }} className="min-h-10 rounded-full border border-border bg-card px-4 text-xs font-bold text-primary hover:bg-muted">Clear filters</button>}
+            </div>
 
             {isCommunity && publicError && <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
                 <span>Community letters could not load: {publicError}</span>
@@ -242,8 +286,8 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                         </button>
                     </article>
                 ) : activeTab === 'drafts' || activeTab === 'scheduled' ? (
-                    <button type="button" key={note.id} onClick={() => { setEditingNote(note); setIsEditorOpen(true); }} className="group flex h-[265px] flex-col rounded-[26px] border border-border bg-card p-6 text-left shadow-sm transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg">
-                        <span className="flex items-center justify-between text-xs font-bold uppercase tracking-[.14em] text-muted-foreground"><span className="inline-flex items-center gap-2"><CharacterBadge name={activeTab === 'drafts' ? 'lumi' : 'araw'} tone="paper" size="xs" />{activeTab === 'drafts' ? 'Unfinished thought' : 'Coming soon'}</span><ArrowRight size={16} className="transition-transform group-hover:translate-x-1" /></span>
+                    <button type="button" key={note.id} onClick={() => { setStarterTemplate(''); setEditingNote(note); setIsEditorOpen(true); }} className="group flex h-[265px] flex-col rounded-[26px] border border-border bg-card p-6 text-left shadow-sm transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg">
+                        <span className="flex items-center justify-between text-xs font-bold uppercase tracking-[.14em] text-muted-foreground"><span className="inline-flex items-center gap-2"><CharacterBadge name={activeTab === 'drafts' ? 'lumi' : 'araw'} tone="paper" size="xs" />{activeTab === 'drafts' ? 'Unfinished thought' : 'Coming soon'}</span><span className="text-xs font-bold text-primary">Open</span></span>
                         <h3 className="mt-6 line-clamp-2 font-editorial text-2xl leading-tight">{note.title || 'Untitled letter'}</h3>
                         <p className="mt-3 line-clamp-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{note.content}</p>
                         <div className="mt-auto flex items-center justify-between border-t border-border/80 pt-4 text-xs font-semibold text-primary"><span>{activeTab === 'drafts' ? 'Continue writing' : 'Review scheduled letter'}</span><CharacterBadge name="lumi" tone="sage" size="xs" /></div>
@@ -256,9 +300,16 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                         <h3 className="text-xl font-semibold mb-2">{searchQuery || categoryFilter !== 'all' ? 'No matching letters' : 'No letters found'}</h3>
                         <p className="text-muted-foreground max-w-sm">
                             {searchQuery || categoryFilter !== 'all'
-                                ? 'Try a different search term or category.'
+                                ? 'Try a different search term, choose another topic, or clear the filters.'
                                 : activeTab === 'personal' ? 'No finished letters yet. Start by writing one.' : activeTab === 'drafts' ? 'No drafts yet. Save a letter draft and it will appear here.' : activeTab === 'scheduled' ? 'No scheduled letters. You can choose a future release date in the editor.' : activeTab === 'archived' ? 'Your archive is empty. Archived letters will appear here until you restore them.' : 'There are no public letters to display right now.'}
                         </p>
+                        {searchQuery || categoryFilter !== 'all' ? (
+                            <button type="button" onClick={() => { setSearchQuery(''); setCategoryFilter('all'); }} className="mt-5 min-h-11 rounded-full border border-border bg-card px-5 py-2.5 text-xs font-bold text-primary hover:bg-muted">Show all letters</button>
+                        ) : !isCommunity && activeTab === 'personal' ? (
+                            <button type="button" onClick={() => { setStarterTemplate(''); setEditingNote(null); setIsEditorOpen(true); }} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-bold text-primary-foreground">
+                                <CharacterBadge name="lumi" tone="paper" size="xs" /> Write your first letter
+                            </button>
+                        ) : null}
                     </div>
                 )}
             </div>
@@ -268,6 +319,7 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                 onClose={() => setIsEditorOpen(false)}
                 onSubmit={handleLetterCreate}
                 initialData={editingNote || undefined}
+                starterTemplate={starterTemplate}
                 onDraftSaved={fetchDrafts}
                 onPublished={async (status, publicLetter) => { await reloadLetters(); if (isCommunity) { if (!publicLetter || status === 'scheduled') navigate('/dashboard/notes'); } else { setActiveTab(status === 'scheduled' ? 'scheduled' : 'personal'); } }}
             />

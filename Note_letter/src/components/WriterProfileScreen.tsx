@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, CalendarDays, Camera, MapPin, Search, X } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import type { Note } from '../types/note';
 import { API_ENDPOINTS } from '../config/api';
@@ -196,7 +195,7 @@ export default function WriterProfileScreen({
                 </>}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/10" />
                 <span className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-black/15 px-3 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-white backdrop-blur sm:left-8"><CharacterBadge name="lumi" tone="paper" size="xs" /> A writer's little corner</span>
-                {ownProfile && onEditProfile && <button type="button" onClick={onEditProfile} className="absolute right-4 top-4 inline-flex items-center gap-2 rounded-full border border-white/30 bg-black/30 px-4 py-2.5 text-xs font-bold text-white backdrop-blur hover:bg-black/50"><Camera size={15} /> <span className="hidden sm:inline">Edit cover</span><span className="sm:hidden">Edit</span></button>}
+                {ownProfile && onEditProfile && <button type="button" onClick={onEditProfile} className="absolute right-4 top-4 inline-flex items-center gap-2 rounded-full border border-white/30 bg-black/30 px-4 py-2.5 text-xs font-bold text-white backdrop-blur hover:bg-black/50"><CharacterBadge name="tala" tone="paper" size="xs" /> Edit cover</button>}
             </div>
             <div className="relative px-5 pb-6 pt-14 sm:px-8 sm:pt-5">
                 <div className="absolute -top-12 left-5 flex h-24 w-24 items-center justify-center overflow-hidden rounded-[30px] border-[5px] border-card bg-[#e9d9b5] font-editorial text-3xl font-semibold text-[#465d4d] shadow-lg sm:-top-14 sm:left-8 sm:h-28 sm:w-28">
@@ -208,8 +207,8 @@ export default function WriterProfileScreen({
                         <h1 className="mt-2 break-words font-editorial text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{name}</h1>
                         <p className="mt-1 max-w-xl break-words text-sm leading-6 text-muted-foreground">{profile.bio?.trim() || (ownProfile ? 'Tell your community a little about the person behind the letters.' : 'Sharing stories one letter at a time.')}</p>
                         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
-                            {profile.location && <span className="inline-flex items-center gap-1.5"><MapPin size={14} /> {profile.location}</span>}
-                            {friendlyDate(profile.createdAt) && <span className="inline-flex items-center gap-1.5"><CalendarDays size={14} /> Joined {friendlyDate(profile.createdAt)}</span>}
+                            {profile.location && <span className="inline-flex items-center gap-1.5">{profile.location}</span>}
+                            {friendlyDate(profile.createdAt) && <span className="inline-flex items-center gap-1.5">Joined {friendlyDate(profile.createdAt)}</span>}
                             <span className="inline-flex items-center gap-1.5"><CharacterBadge name="tala" tone="sage" size="xs" /> Public profile</span>
                         </div>
                     </div>
@@ -244,15 +243,15 @@ export default function WriterProfileScreen({
             {topTabs.map(({ id, text, mascot }) => <button key={id} type="button" onClick={() => { setTab(id); setFeedback(''); setCategory('All'); }} aria-current={tab === id ? 'page' : undefined} className={`inline-flex min-w-fit flex-1 items-center justify-center gap-2 rounded-[15px] px-3 py-3 text-xs font-bold transition-colors sm:text-sm ${tab === id ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}><CharacterBadge name={mascot} tone="paper" size="sm" /> {text}</button>)}
         </nav>
 
-        {(feedback || actionError) && <div role="status" className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-xs font-semibold"><span>{actionError || feedback}</span><button type="button" aria-label="Dismiss message" onClick={() => { setFeedback(''); onDismissActionError?.(); }} className="rounded-full p-1 hover:bg-muted"><X size={15} /></button></div>}
+        {(feedback || actionError) && <div role="status" className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-xs font-semibold"><span>{actionError || feedback}</span><button type="button" aria-label="Dismiss message" onClick={() => { setFeedback(''); onDismissActionError?.(); }} className="rounded-full p-1 hover:bg-muted">Dismiss</button></div>}
         <div className="grid items-start gap-5 lg:grid-cols-[315px_minmax(0,1fr)]">
             <aside className="space-y-4 lg:sticky lg:top-[155px]">
                 <div className="rounded-[25px] border border-border bg-card p-5 shadow-sm sm:p-6">
                     <h2 className="flex items-center gap-2 font-editorial text-xl"><CharacterBadge name="tala" tone="gold" size="sm" /> Intro</h2>
                     <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-7 text-muted-foreground">{hasBio ? profile.bio : 'A writer with a story to tell. The best letters are still ahead.'}</p>
                     <div className="mt-5 space-y-3 border-t border-border pt-4 text-xs text-muted-foreground">
-                        {profile.location && <p className="flex items-center gap-2"><MapPin size={15} /> From {profile.location}</p>}
-                        {friendlyDate(profile.createdAt) && <p className="flex items-center gap-2"><CalendarDays size={15} /> Joined {friendlyDate(profile.createdAt)}</p>}
+                        {profile.location && <p className="flex items-center gap-2">From {profile.location}</p>}
+                        {friendlyDate(profile.createdAt) && <p className="flex items-center gap-2">Joined {friendlyDate(profile.createdAt)}</p>}
                         <p className="flex items-center gap-2"><CharacterBadge name="basa" tone="paper" size="xs" /> {publishedLetters.length} letters on public shelf</p>
                     </div>
                     {ownProfile ? <button type="button" onClick={onEditProfile} className="mt-5 w-full rounded-xl bg-muted px-4 py-3 text-xs font-bold hover:bg-muted/70">Edit my intro</button> : <button type="button" onClick={() => setTab('about')} className="mt-5 w-full rounded-xl bg-muted px-4 py-3 text-xs font-bold hover:bg-muted/70">Read more about {name}</button>}
@@ -269,11 +268,11 @@ export default function WriterProfileScreen({
                     <p className="text-[10px] font-extrabold uppercase tracking-[.17em] text-[#6f8067]">Only you can see these tools</p>
                     <h2 className="mt-2 font-editorial text-xl">Your writing studio</h2>
                     <p className="mt-2 text-xs leading-6 text-[#6d7b6c]">Private letters, drafts, and scheduled notes are managed in My Library—not on your public profile.</p>
-                    <Link to="/dashboard/notes" className="mt-4 flex items-center justify-between rounded-xl bg-white/75 px-4 py-3 text-xs font-bold hover:bg-white"><span className="flex items-center gap-2"><CharacterBadge name="susi" tone="paper" size="xs" /> Open my private library</span><ArrowRight size={15} /></Link>
-                    <Link to="/dashboard/settings" className="mt-2 flex items-center justify-between rounded-xl border border-[#cad4c0] px-4 py-3 text-xs font-bold hover:bg-white/40"><span className="flex items-center gap-2"><CharacterBadge name="tala" tone="paper" size="xs" /> Profile settings</span><ArrowRight size={15} /></Link>
+                    <Link to="/dashboard/notes" className="mt-4 flex items-center justify-between rounded-xl bg-white/75 px-4 py-3 text-xs font-bold hover:bg-white"><span className="flex items-center gap-2"><CharacterBadge name="susi" tone="paper" size="xs" /> Open my private library</span></Link>
+                    <Link to="/dashboard/settings" className="mt-2 flex items-center justify-between rounded-xl border border-[#cad4c0] px-4 py-3 text-xs font-bold hover:bg-white/40"><span className="flex items-center gap-2"><CharacterBadge name="tala" tone="paper" size="xs" /> Profile settings</span></Link>
                     <Link to={profileUrl} className="mt-3 inline-flex items-center gap-2 text-xs font-semibold underline underline-offset-4"><CharacterBadge name="tala" tone="gold" size="xs" /> View as a visitor</Link>
                 </div> : <Link to={signedIn ? "/dashboard/community" : "/"} className="block rounded-[25px] bg-[#344a3c] p-5 text-[#fff7ea] sm:p-6">
-                    <p className="text-xs font-semibold uppercase tracking-[.16em] text-[#d1e0ca]">From one writer to another</p><h2 className="mt-2 font-editorial text-xl">More letters await.</h2><p className="mt-2 text-xs leading-6 text-[#e7e7d8]">Find other voices and discover stories worth keeping.</p><span className="mt-4 inline-flex items-center gap-2 text-xs font-bold">Explore community <ArrowRight size={15} /></span>
+                    <p className="text-xs font-semibold uppercase tracking-[.16em] text-[#d1e0ca]">From one writer to another</p><h2 className="mt-2 font-editorial text-xl">More letters await.</h2><p className="mt-2 text-xs leading-6 text-[#e7e7d8]">Find other voices and discover stories worth keeping.</p><span className="mt-4 inline-flex items-center gap-2 text-xs font-bold">Explore community </span>
                 </Link>}
             </aside>
 
@@ -289,7 +288,7 @@ export default function WriterProfileScreen({
                             <div><p className="text-[10px] font-bold uppercase tracking-[.15em] text-[hsl(var(--accent))]">{tab === 'posts' ? 'Timeline' : 'Published writing'}</p><h2 className="mt-1 font-editorial text-2xl">{tab === 'posts' ? 'Latest from the desk' : 'Public letter collection'}</h2></div>
                             {onRefresh && <button type="button" onClick={onRefresh} className="text-xs font-semibold text-muted-foreground underline-offset-4 hover:underline">Refresh</button>}
                         </div>
-                        <div className="relative mt-4"><Search size={17} className="absolute left-4 top-3.5 text-muted-foreground" /><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search this writer's letters…" aria-label="Search profile posts" className="h-11 w-full rounded-2xl border border-border bg-background pl-11 pr-4 text-sm outline-none focus:border-primary" /></div>
+                        <div className="relative mt-4"><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search this writer's letters…" aria-label="Search profile posts" className="h-11 w-full rounded-2xl border border-border bg-background px-4 text-sm outline-none focus:border-primary" /></div>
                         {categoryOptions.length > 2 && <div aria-label="Filter by letter category" className="mt-4 flex gap-2 overflow-x-auto pb-1">
                             {categoryOptions.map(item => <button type="button" key={item} onClick={() => setCategory(item)} aria-pressed={category === item} className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-bold ${category === item ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}>{item}</button>)}
                         </div>}
@@ -314,7 +313,7 @@ export default function WriterProfileScreen({
                                 <h3 className="break-words font-editorial text-2xl font-semibold leading-tight text-foreground sm:text-[29px]">{note.title || 'A letter without a title'}</h3>
                                 <p className="mt-3 line-clamp-4 whitespace-pre-wrap break-words font-serif text-[15px] leading-7 text-muted-foreground">{note.content || 'Open this story to read the letter.'}</p>
                                 {cover && <div className="mt-4 max-h-[320px] overflow-hidden rounded-2xl border border-border bg-muted"><img src={getImageUrl(cover)} loading="lazy" alt={`Illustration for ${note.title || 'this letter'}`} className="max-h-[320px] w-full object-cover" /></div>}
-                                <span className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-primary">Open letter <ArrowRight size={15} /></span>
+                                <span className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-primary">Open letter </span>
                             </button>
                             <div className="flex items-center justify-between gap-3 border-t border-border px-5 py-3 text-[11px] text-muted-foreground sm:px-6"><span>{likes} {likes === 1 ? 'love' : 'loves'}</span><span>{Number(note.commentCount) || 0} comments</span></div>
                             <div className="grid grid-cols-3 border-t border-border p-2">
@@ -349,7 +348,7 @@ export default function WriterProfileScreen({
                         {(['followers','following'] as const).map(kind => <div key={kind} className="rounded-[20px] border border-border p-4">
                             <h3 className="font-editorial text-xl capitalize">{kind}</h3><p className="mb-4 mt-1 text-xs text-muted-foreground">{people[kind].length} {kind === 'followers' ? 'following this writer' : 'writers followed'}</p>
                             {people[kind].length ? <div className="space-y-2">{people[kind].slice(0, 25).map(person => <Link key={person.id} to={`/writers/${encodeURIComponent(person.username)}`} className="flex items-center gap-3 rounded-xl p-2 hover:bg-muted">
-                                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--surface-gold))] font-semibold">{person.avatar ? <img src={getImageUrl(person.avatar)} alt="" className="h-full w-full rounded-full object-cover" /> : shortName(person.username)[0]?.toUpperCase()}</span><span className="min-w-0 flex-1 truncate text-xs font-bold">{shortName(person.username)}</span><ArrowRight size={14} className="text-muted-foreground" />
+                                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--surface-gold))] font-semibold">{person.avatar ? <img src={getImageUrl(person.avatar)} alt="" className="h-full w-full rounded-full object-cover" /> : shortName(person.username)[0]?.toUpperCase()}</span><span className="min-w-0 flex-1 truncate text-xs font-bold">{shortName(person.username)}</span>
                             </Link>)}</div> : <p className="text-xs text-muted-foreground">No connections yet.</p>}
                         </div>)}
                     </div>}
