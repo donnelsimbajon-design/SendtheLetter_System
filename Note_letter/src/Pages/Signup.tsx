@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { ArrowLeft, ArrowRight, LockKeyhole, Mail, UserRound } from 'lucide-react';
 import CharacterBadge from '../components/CharacterBadge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -45,20 +44,20 @@ const Signup = () => {
       </section>
       <section className="flex items-center justify-center px-5 py-12 sm:px-10">
         <div className="w-full max-w-md">
-          <Link to="/" className="mb-12 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"><ArrowLeft size={16}/> Back to home</Link>
+          <Link to="/" className="mb-9 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground">Back to home</Link>
           <div className="mb-8 lg:hidden"><CharacterBadge name="lumi" tone="forest" size="md" /><p className="mt-4 font-editorial text-2xl">SendTheLetter</p></div>
           <p className="text-xs font-bold uppercase tracking-[.2em] text-[hsl(var(--accent))]">Start here</p>
           <h2 className="mt-3 font-editorial text-4xl">Create your space.</h2>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">A few details, then the page is yours.</p>
           {error && <div role="alert" className="mt-6 rounded-2xl border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-            <div className="space-y-2"><label htmlFor="username" className="text-sm font-semibold">Username</label><div className="relative"><UserRound size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"/><Input id="username" autoComplete="username" required value={username} onChange={(event)=>setUsername(event.target.value)} placeholder="Choose a username" className="h-12 rounded-xl bg-card pl-11"/></div></div>
-            <div className="space-y-2"><label htmlFor="email" className="text-sm font-semibold">Email address</label><div className="relative"><Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"/><Input id="email" type="email" autoComplete="email" required value={email} onChange={(event)=>setEmail(event.target.value)} placeholder="you@example.com" className="h-12 rounded-xl bg-card pl-11"/></div></div>
-            <div className="space-y-2"><label htmlFor="password" className="text-sm font-semibold">Password</label><div className="relative"><LockKeyhole size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"/><Input id="password" type="password" autoComplete="new-password" minLength={8} required value={password} onChange={(event)=>setPassword(event.target.value)} placeholder="At least 8 characters" className="h-12 rounded-xl bg-card pl-11"/></div></div>
+            <div className="space-y-2"><label htmlFor="username" className="text-sm font-semibold">Username</label><div className="relative"><Input id="username" autoComplete="username" required value={username} onChange={(event)=>setUsername(event.target.value)} placeholder="Choose a username" className="h-12 rounded-xl bg-card px-4"/></div></div>
+            <div className="space-y-2"><label htmlFor="email" className="text-sm font-semibold">Email address</label><div className="relative"><Input id="email" type="email" autoComplete="email" required value={email} onChange={(event)=>setEmail(event.target.value)} placeholder="you@example.com" className="h-12 rounded-xl bg-card px-4"/></div></div>
+            <div className="space-y-2"><label htmlFor="password" className="text-sm font-semibold">Password</label><div className="relative"><Input id="password" type="password" autoComplete="new-password" minLength={8} required value={password} onChange={(event)=>setPassword(event.target.value)} placeholder="At least 8 characters" className="h-12 rounded-xl bg-card px-4"/></div></div>
             <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
               <AvatarPicker value={avatarPreset} onChange={setAvatarPreset} />
             </div>
-            <Button type="submit" disabled={isLoading} className="h-12 w-full rounded-xl text-sm font-semibold">{isLoading?'Creating your space...':'Create account'} {!isLoading&&<ArrowRight size={17} className="ml-2"/>}</Button>
+            <Button type="submit" disabled={isLoading} className="h-12 w-full rounded-xl text-sm font-semibold">{isLoading?'Creating your space...':'Create account'}</Button>
           </form>
           <p className="mt-7 text-center text-sm text-muted-foreground">Already have an account? <Link to={loginLink} className="font-semibold text-primary hover:underline">Sign in</Link></p>
         </div>
