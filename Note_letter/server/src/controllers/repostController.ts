@@ -81,12 +81,19 @@ export const getUserReposts = async (req: AuthRequest, res: Response) => {
             order: [['createdAt', 'DESC']]
         });
 
-        const letters = reposts.map((repost: any) => ({
-            ...repost.letter.toJSON(),
-            repostedAt: repost.createdAt,
-            authorName: repost.letter.user?.username,
-            authorId: repost.letter.user?.id
-        }));
+        const letters = reposts.map((repost: any) => {
+            const letter = repost.letter.toJSON() as any;
+            const { user: _user, userId: _userId, ...safeLetter } = letter;
+            void _user;
+            void _userId;
+            return {
+                ...safeLetter,
+                repostedAt: repost.createdAt,
+                authorName: letter.isAnonymous ? 'Anonymous Writer' : (letter.user?.username || 'A Writer'),
+                authorAvatar: letter.isAnonymous ? null : (letter.user?.avatar || null),
+                authorId: letter.isAnonymous ? null : (letter.user?.id || null)
+            };
+        });
 
         res.json(letters);
     } catch (error) {
@@ -112,7 +119,7 @@ export const getPublicUserReposts = async (req: AuthRequest, res: Response) => {
             include: [{
                 model: Letter,
                 as: 'letter',
-                where: { isPublic: true, status: 'published', isArchived: false }, // Only show public letters
+                where: { isPublic: true, status: 'published', isArchived: false, [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }] },
                 include: [{
                     model: User,
                     as: 'user',
