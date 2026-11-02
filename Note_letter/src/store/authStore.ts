@@ -21,6 +21,7 @@ interface AuthState {
     isVerifying: boolean;
     sessionNotice: string | null;
     verifySession: () => Promise<void>;
+    setUserFromProfile: (user: User) => void;
     login: (credentials: any) => Promise<void>;
     register: (credentials: any) => Promise<void>;
     updateProfile: (data: any) => Promise<void>;
@@ -83,6 +84,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             window.clearTimeout(timeout);
         }
     },
+
+    setUserFromProfile: (user) => { localStorage.setItem('user', JSON.stringify(user)); set({ user }); },
 
     login: async (credentials) => {
         try {
