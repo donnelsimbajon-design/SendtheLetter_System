@@ -28,6 +28,8 @@ const backgroundGradients = [
 const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
     const { deleteNote, toggleLike, archiveNote } = useNoteStore();
     const user = useAuthStore((state) => state.user);
+    const authenticated = useAuthStore((state) => state.isAuthenticated);
+    const [liking, setLiking] = useState(false);
     const navigate = useNavigate();
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -36,10 +38,18 @@ const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
 
     const handleLike = async (e: React.MouseEvent) => {
         e.stopPropagation();
+        if (!authenticated) {
+            navigate('/login?returnTo=%2Fdashboard%2Fcommunity');
+            return;
+        }
+        if (liking) return;
+        setLiking(true);
         try {
             await toggleLike(String(note.id));
         } catch (error) {
             console.error('Error toggling like:', error);
+        } finally {
+            setLiking(false);
         }
     };
 
@@ -156,6 +166,7 @@ const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
                     {/* Like Button */}
                     <button
                         onClick={handleLike}
+                        disabled={liking}
                         aria-label={note.isLikedByUser ? "Unlike this letter" : "Like this letter"}
                         className={clsx(
                             "flex items-center gap-1.5 text-xs transition-colors px-2 py-1 rounded-full cursor-pointer",
