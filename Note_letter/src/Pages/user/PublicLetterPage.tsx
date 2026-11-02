@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import CommentsPanel from '../../components/CommentsPanel';
+import LetterBookReader from '../../components/LetterBookReader';
 import axios from 'axios';
-import { ArrowLeft, Feather, Lock, Loader2, Printer, Download, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Lock, Loader2, Printer, Download, MessageCircle } from 'lucide-react';
 import { API_ENDPOINTS } from '../../config/api';
-import { getImageUrl } from '../../lib/utils';
 import { Note } from '../../types/note';
 
 const PublicLetterPage = () => {
@@ -162,16 +162,19 @@ const PublicLetterPage = () => {
                     </div>
                 </div>
                 {imageStatus && <p role="status" className="no-print mt-2 text-right text-xs text-[#52645d]">{imageStatus}</p>}
-                <article className="public-letter-sheet mt-8 overflow-hidden rounded-[2rem] border border-[#ded6c9] bg-[#fffdf8] shadow-xl">
-                    {letter.imageUrl && <img src={getImageUrl(letter.imageUrl)} alt="" className="max-h-[420px] w-full object-cover" />}
-                    <div className="p-7 sm:p-12">
-                        <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[#a06c56]"><Feather size={14} /> {letter.type || 'A shared letter'}</div>
-                        <h1 className="mt-5 font-serif text-3xl leading-tight sm:text-5xl">{letter.title || 'A letter for you'}</h1>
-                        <p className="mt-4 text-sm text-[#7c8179]">By {letter.isAnonymous ? 'Anonymous' : (letter.authorName || 'A SendTheLetter writer')}</p>
-                        <div className="my-8 h-px bg-[#e9e2d8]" />
-                        <div className="whitespace-pre-wrap break-words font-serif text-lg leading-8 text-[#394840]">{letter.content}</div>
-                        <div className="mt-10 border-t border-[#e9e2d8] pt-6 text-xs text-[#8a8d84]">Shared with care on SendTheLetter.</div>
-                    </div>
+                <article className="public-letter-sheet mt-7">
+                    <LetterBookReader
+                        title={letter.title}
+                        content={letter.content}
+                        letterPages={letter.letterPages}
+                        category={letter.type || letter.category}
+                        authorName={letter.authorName}
+                        isAnonymous={letter.isAnonymous}
+                        recipientName={letter.recipientName}
+                        font={letter.font}
+                        backgroundImage={letter.backgroundImage}
+                        coverImage={letter.imageUrl}
+                    />
                 </article>
                 </div>
             </div>
