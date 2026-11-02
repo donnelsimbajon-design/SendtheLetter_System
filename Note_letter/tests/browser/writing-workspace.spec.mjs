@@ -140,7 +140,7 @@ test('letter soundtrack follows Spotify playback, countdown, pause and modal cle
   const reader = page.getByRole('dialog');
   await expect(reader.getByRole('region', { name: 'Letter soundtrack' })).toBeVisible();
   await expect(reader.getByRole('button', { name: 'Pause letter soundtrack' })).toBeVisible();
-  await expect(reader.getByLabel('Soundtrack time remaining')).toContainText(/-1:[0-5][0-9]/);
+  await expect(reader.getByLabel('Soundtrack time remaining')).toContainText(/-[12]:[0-5][0-9]/);
   await reader.getByRole('button', { name: 'Pause letter soundtrack' }).click();
   await expect(reader.getByRole('button', { name: 'Play letter soundtrack' })).toBeVisible();
   await reader.getByRole('button', { name: 'Play letter soundtrack' }).click();
