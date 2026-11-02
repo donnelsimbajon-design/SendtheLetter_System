@@ -11,13 +11,14 @@ interface UserAttributes {
     password_hash: string;
     role: UserRole;
     isActive: boolean;
+    tokenVersion: number;
     bio?: string;
     avatar?: string;
     coverImage?: string;
     location?: string;
 }
 
-interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'role' | 'isActive'> { }
+interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'role' | 'isActive' | 'tokenVersion'> { }
 
 class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
     public id!: number;
@@ -26,6 +27,7 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
     public password_hash!: string;
     public role!: UserRole;
     public isActive!: boolean;
+    public tokenVersion!: number;
     public bio?: string;
     public avatar?: string;
     public coverImage?: string;
@@ -72,6 +74,7 @@ User.init(
             allowNull: false,
             defaultValue: true,
         },
+        tokenVersion: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
         bio: { type: DataTypes.TEXT, allowNull: true },
         avatar: { type: DataTypes.STRING(255), allowNull: true },
         coverImage: { type: DataTypes.STRING(255), allowNull: true },
