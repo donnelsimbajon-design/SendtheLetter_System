@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookHeart, BookOpen, CalendarDays, Camera, Check, Copy, Feather, Globe2, Heart, LockKeyhole, MapPin, MessageCircle, PenLine, Search, Settings2, Share2, Sparkles, UserCheck, UserPlus, Users, X } from 'lucide-react';
+import { ArrowRight, BookHeart, BookOpen, CalendarDays, Camera, Feather, Globe2, Heart, LockKeyhole, MapPin, MessageCircle, PenLine, Search, Settings2, Share2, Sparkles, UserCheck, UserPlus, Users, X } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import type { Note } from '../types/note';
 import { API_ENDPOINTS } from '../config/api';
@@ -62,6 +62,8 @@ export default function WriterProfileScreen({
     actionError = '', onRefresh,
 }: Props) {
     const signedIn = useAuthStore(state => state.isAuthenticated);
+    const currentUserId = useAuthStore(state => state.user?.id);
+    const isSelfVisitor = !ownProfile && Number(currentUserId) === Number(profile.id);
     const [tab, setTab] = useState<ProfileTab>('posts');
     const [query, setQuery] = useState('');
     const [category, setCategory] = useState('All');
@@ -211,7 +213,7 @@ export default function WriterProfileScreen({
                         {ownProfile ? <>
                             <button type="button" onClick={onEditProfile} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-xs font-bold hover:bg-muted"><PenLine size={15} /> Edit profile</button>
                             <button type="button" onClick={onWriteLetter} className="inline-flex min-h-10 items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground hover:opacity-90"><Feather size={15} /> Write a letter</button>
-                        </> : <>
+                        </> : isSelfVisitor ? <Link to="/dashboard/profile" className="inline-flex min-h-10 items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground"><PenLine size={15} /> Manage my profile</Link> : <>
                             {signedIn ? <button type="button" onClick={onFollow} disabled={followBusy} className={`inline-flex min-h-10 items-center gap-2 rounded-full px-4 py-2.5 text-xs font-bold disabled:opacity-50 ${profile.isFollowing ? 'border border-border bg-background hover:bg-muted' : 'bg-primary text-primary-foreground hover:opacity-90'}`}>{profile.isFollowing ? <><UserCheck size={15} /> Following</> : <><UserPlus size={15} /> Follow</>}</button> : <Link to={`/login?returnTo=${encodeURIComponent(profileUrl)}`} className="inline-flex min-h-10 items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground"><UserPlus size={15} /> Follow</Link>}
                             {friendAction && signedIn && <button type="button" onClick={friendAction.onClick} disabled={friendAction.disabled || !friendAction.onClick} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-xs font-bold hover:bg-muted disabled:opacity-50"><Users size={15} /> {friendAction.label}</button>}
                             {signedIn ? <button type="button" onClick={onMessage} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-xs font-bold hover:bg-muted"><MessageCircle size={15} /> Message</button> : <Link to={`/login?returnTo=${encodeURIComponent(profileUrl)}`} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-xs font-bold"><MessageCircle size={15} /> Message</Link>}
