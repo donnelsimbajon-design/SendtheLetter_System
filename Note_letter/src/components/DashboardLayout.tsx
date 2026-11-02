@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
-import { ChevronDown } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { getImageUrl } from '../lib/utils';
 import NotificationsMenu from './NotificationsMenu';
@@ -55,6 +54,7 @@ const DashboardLayout = () => {
             ))}
           </nav>
           <div className="ml-2 flex shrink-0 items-center gap-1 sm:gap-4">
+            <Link to="/dashboard/notes?compose=1" className="hidden min-h-11 items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-foreground transition-opacity hover:opacity-90 2xl:inline-flex"><CharacterBadge name="lumi" tone="paper" size="xs" /> Write a letter</Link>
             <NotificationsMenu />
             <div className="relative">
               <button
@@ -72,7 +72,7 @@ const DashboardLayout = () => {
                   <span className="block truncate text-sm font-semibold leading-tight">{user?.username || 'Writer'}</span>
                   <span className="block text-[11px] text-muted-foreground">My account</span>
                 </span>
-                <ChevronDown size={16} className={`text-muted-foreground transition-transform ${showAccountMenu ? 'rotate-180' : ''}`} />
+                <span aria-hidden="true" className={`ml-1 h-2 w-2 border-b-2 border-r-2 border-muted-foreground transition-transform ${showAccountMenu ? 'rotate-[225deg]' : 'rotate-45'}`} />
               </button>
               <ProfileDropdown isOpen={showAccountMenu} onClose={() => setShowAccountMenu(false)} />
             </div>
@@ -107,13 +107,22 @@ const DashboardLayout = () => {
         </main>
       </div>
 
-      <nav className={`fixed inset-x-0 bottom-0 z-40 grid ${user?.role === "admin" ? "grid-cols-6" : "grid-cols-5"} border-t border-border bg-card/95 px-1 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur-xl lg:hidden sm:px-3`}>
-        {navigation.map(({ to, label, mascot, end }) => (
-          <NavLink key={to} to={to} end={end} className={({ isActive }) => `flex min-w-0 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[9px] font-medium sm:text-[11px] ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
+      <nav aria-label="Mobile workspace navigation" className={'fixed inset-x-0 bottom-0 z-40 grid ' + (user?.role === 'admin' ? 'grid-cols-6' : 'grid-cols-5') + ' border-t border-border bg-card/95 px-1 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur-xl lg:hidden sm:px-3'}>
+        {navigation.slice(0, 2).map(({ to, label, mascot, end }) => (
+          <NavLink key={to} to={to} end={end} className={({ isActive }) => 'flex min-w-0 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[10px] font-semibold sm:text-xs ' + (isActive ? 'text-primary' : 'text-muted-foreground')}>
             <CharacterBadge name={mascot} tone="paper" size="sm" /><span className="max-w-full truncate text-center">{label}</span>
           </NavLink>
         ))}
-        {user?.role === 'admin' && <NavLink to="/admin" className={({ isActive }) => `flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-medium ${isActive ? 'text-primary' : 'text-muted-foreground'}`}><CharacterBadge name="susi" tone="sage" size="sm" /><span>Admin</span></NavLink>}
+        <Link to="/dashboard/notes?compose=1" aria-label="Write a new letter" className="relative -mt-3 flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl bg-primary px-1 py-2 text-[10px] font-bold text-primary-foreground shadow-md sm:text-xs">
+          <CharacterBadge name="lumi" tone="paper" size="md" />
+          <span>Write</span>
+        </Link>
+        {navigation.slice(2, 4).map(({ to, label, mascot, end }) => (
+          <NavLink key={to} to={to} end={end} className={({ isActive }) => 'flex min-w-0 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[10px] font-semibold sm:text-xs ' + (isActive ? 'text-primary' : 'text-muted-foreground')}>
+            <CharacterBadge name={mascot} tone="paper" size="sm" /><span className="max-w-full truncate text-center">{label}</span>
+          </NavLink>
+        ))}
+        {user?.role === 'admin' && <NavLink to="/admin" className={({ isActive }) => 'flex min-w-0 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-[10px] font-semibold ' + (isActive ? 'text-primary' : 'text-muted-foreground')}><CharacterBadge name="susi" tone="sage" size="sm" /><span>Admin</span></NavLink>}
       </nav>
     </div>
   );
