@@ -14,6 +14,7 @@ import { formatDistanceToNow } from 'date-fns';
 import socketService from '../services/socketService';
 import ShareModal from './ShareModal';
 import { API_ENDPOINTS } from '../config/api';
+import { useNavigate } from 'react-router-dom';
 
 interface LetterViewModalProps {
     isOpen: boolean;
@@ -25,6 +26,7 @@ interface LetterViewModalProps {
 
 const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note, onAuthorClick, onEdit }) => {
     const user = useAuthStore((state) => state.user);
+    const navigate = useNavigate();
     const { toggleLike } = useNoteStore();
     const [commentCount, setCommentCount] = useState(0);
     const [isLiked, setIsLiked] = useState(false);
@@ -120,10 +122,10 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
     };
 
     const handleAuthorClick = () => {
-        if (note && !note.isAnonymous && note.authorName && onAuthorClick) {
-            onClose();
-            onAuthorClick(note.authorName);
-        }
+        if (!note || note.isAnonymous || !note.authorName || note.authorName === 'A Writer' || note.authorName === 'Unknown') return;
+        onClose();
+        if (onAuthorClick) onAuthorClick(note.authorName);
+        else navigate(`/writers/${encodeURIComponent(note.authorName)}`);
     };
 
     if (!note) return null;
@@ -202,7 +204,7 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                                 <div>
                                     <button
                                         onClick={handleAuthorClick}
-                                        disabled={note.isAnonymous}
+                                        disabled={note.isAnonymous || !note.authorName || note.authorName === 'A Writer' || note.authorName === 'Unknown'}
                                         className={cn("font-bold text-stone-900 text-left block", !note.isAnonymous && "hover:underline cursor-pointer")}
                                     >
                                         {note.isAnonymous ? 'Anonymous Writer' : note.authorName || 'A Writer'}
