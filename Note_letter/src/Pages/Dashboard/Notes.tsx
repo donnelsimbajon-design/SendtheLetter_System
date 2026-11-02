@@ -52,6 +52,7 @@ const Notes = () => {
         await addNote({
             title: data.title || 'Untitled Letter',
             content: data.content,
+            letterPages: data.letterPages,
             category: data.category || 'Other',
             isPublic: Boolean(data.isPublic),
             reactions: {},
