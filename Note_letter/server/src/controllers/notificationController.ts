@@ -46,3 +46,17 @@ export const markAsRead = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+/** Update only a notification belonging to the signed-in recipient. */
+export const markOneAsRead = async (req: AuthRequest, res: Response) => {
+    const id = Number(req.params.id);
+    if (!Number.isSafeInteger(id) || id < 1) return res.status(400).json({ message: 'Invalid notification ID.' });
+    try {
+        const [updated] = await Notification.update({ isRead: true }, { where: { id, userId: req.user.id } });
+        if (!updated) return res.status(404).json({ message: 'Notification not found.' });
+        return res.json({ message: 'Notification marked as read.' });
+    } catch (error) {
+        console.error('Failed to mark notification read:', error);
+        return res.status(500).json({ message: 'Unable to update notification.' });
+    }
+};
