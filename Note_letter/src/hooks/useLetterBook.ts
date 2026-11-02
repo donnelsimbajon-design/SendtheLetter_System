@@ -14,6 +14,12 @@ export function useLetterBook() {
     }, []);
 
     const updateText = (value: string) => {
+        // If an image has been pasted as base64, do not turn it into dozens of book pages.
+        // Images belong in page.imageData, not page.text.
+        if (/data:image\/(?:png|jpeg|webp);base64,/i.test(value) || /[A-Za-z0-9+/]{256,}={0,2}/.test(value)) {
+            setBookError('This looks like encoded photo data. Use "Insert image in page" or paste the photo itself.');
+            return false;
+        }
         const updated = pages.map(page => ({ ...page }));
         updated[pageIndex].text = value;
         const balanced = balanceBookPages(updated, pageIndex);
