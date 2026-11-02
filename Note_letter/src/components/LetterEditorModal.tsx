@@ -1,543 +1,371 @@
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Button } from './ui/button';
-import Mascot from './Mascot';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Textarea } from './ui/textarea';
-import { X, Type, Image as ImageIcon, Music, Send, Globe, EyeOff, Lock } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog';
+import { BookHeart, Check, ChevronDown, Clock3, EyeOff, Feather, FileCheck2, Globe2, ImagePlus, LockKeyhole, Music2, Palette, PenLine, Save, Send, Settings2, ShieldCheck, Sparkles, Type, WandSparkles } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
+import { useWriterPreferences } from '../store/writerPreferences';
 import { cn } from '../lib/utils';
 import { API_ENDPOINTS } from '../config/api';
 
 interface LetterEditorModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: any) => void;
+    onSubmit: (data: any) => Promise<void> | void;
     initialData?: any;
+    onDraftSaved?: () => Promise<void> | void;
+    onPublished?: () => Promise<void> | void;
 }
 
 const fonts = [
-    { name: 'Serif (Formal)', value: 'font-serif' },
-    { name: 'Sans (Modern)', value: 'font-sans' },
-    { name: 'Mono (Typewriter)', value: 'font-mono' },
-    { name: 'Cursive (Handwritten)', value: 'font-[cursive]' },
+    { name: 'Classic serif', value: 'font-serif', short: 'Classic' },
+    { name: 'Modern sans', value: 'font-sans', short: 'Modern' },
+    { name: 'Typewriter', value: 'font-mono', short: 'Typed' },
+    { name: 'Handwritten', value: 'font-[cursive]', short: 'Handwritten' },
 ];
 
-const categories = [
-    'Love',
-    'Friendship',
-    'Gratitude',
-    'Apology',
-    'Reflection',
-    'Celebration',
-    'Other'
+const categories = ['Love', 'Friendship', 'Gratitude', 'Apology', 'Reflection', 'Celebration', 'Other'];
+const templates = [
+    { value: 'gratitude', name: 'A heartfelt thank you', category: 'Gratitude', title: 'Thank you for being you', content: 'I wanted to take a moment to say thank you for…\n\nOne thing I appreciate about you is…\n\nIt means more than you know.' },
+    { value: 'apology', name: 'An honest apology', category: 'Apology', title: 'I owe you an apology', content: 'I have been thinking about what happened, and I want to acknowledge…\n\nI am sorry for…\n\nI hope we can find a way forward when you are ready.' },
+    { value: 'future-self', name: 'A note to future me', category: 'Reflection', title: 'Dear future me', content: 'Right now, life looks like…\n\nI hope you remember…\n\nPlease keep making time for the things that matter.\n\nI am proud of how far you have come.' },
+    { value: 'hello', name: 'A little hello', category: 'Friendship', title: 'Just wanted to say hello', content: 'You crossed my mind today, and I wanted to reach out.\n\nI hope you have been…\n\nHere is something I wanted you to know…' },
 ];
 
-const letterTemplates = [
-    { value: 'gratitude', label: 'A note of gratitude', category: 'Gratitude', title: 'Thank you for being you', content: 'Dear you,\n\nI wanted to take a moment to say thank you for...\n\nOne thing I appreciate about you is...\n\nIt means more than you know.\n\nWith gratitude,' },
-    { value: 'apology', label: 'A gentle apology', category: 'Apology', title: 'I owe you an apology', content: 'Dear you,\n\nI have been thinking about what happened, and I want to acknowledge...\n\nI am sorry for...\n\nI hope we can find a way forward when you are ready.\n\nWith sincerity,' },
-    { value: 'future-self', label: 'A note to my future self', category: 'Reflection', title: 'A note to my future self', content: 'Dear future me,\n\nRight now, life looks like...\n\nI hope you remember...\n\nPlease keep making time for...\n\nWhatever happens, I hope you are proud of how far we have come.\n\nWith care,' },
-    { value: 'hello', label: 'A little hello', category: 'Friendship', title: 'Just wanted to say hello', content: 'Dear you,\n\nYou crossed my mind today, and I wanted to reach out.\n\nI hope you have been...\n\nHere is something I wanted you to know...\n\nTalk soon,' },
+const papers = [
+    { name: 'Ivory', value: '#fdfbf7', className: 'bg-[#fdfbf7]' },
+    { name: 'Peach', value: 'linear-gradient(135deg, #fff5e6 0%, #ffe4cc 100%)', className: 'bg-gradient-to-br from-[#fff5e6] to-[#ffe4cc]' },
+    { name: 'Blue', value: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)', className: 'bg-gradient-to-br from-[#e3f2fd] to-[#bbdefb]' },
+    { name: 'Lilac', value: 'linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%)', className: 'bg-gradient-to-br from-[#f3e5f5] to-[#e1bee7]' },
+    { name: 'Sage', value: 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)', className: 'bg-gradient-to-br from-[#e8f5e9] to-[#c8e6c9]' },
+    { name: 'Rose', value: 'linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%)', className: 'bg-gradient-to-br from-[#fce4ec] to-[#f8bbd0]' },
 ];
 
-const API_URL = API_ENDPOINTS.letters;
-
-const backgroundGradients = [
-    { name: 'Classic Paper', value: '#fdfbf7', gradient: 'bg-[#fdfbf7]' },
-    { name: 'Warm Sunset', value: 'linear-gradient(135deg, #fff5e6 0%, #ffe4cc 100%)', gradient: 'bg-gradient-to-br from-[#fff5e6] to-[#ffe4cc]' },
-    { name: 'Ocean Breeze', value: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)', gradient: 'bg-gradient-to-br from-[#e3f2fd] to-[#bbdefb]' },
-    { name: 'Lavender Dream', value: 'linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%)', gradient: 'bg-gradient-to-br from-[#f3e5f5] to-[#e1bee7]' },
-    { name: 'Mint Fresh', value: 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)', gradient: 'bg-gradient-to-br from-[#e8f5e9] to-[#c8e6c9]' },
-    { name: 'Rose Gold', value: 'linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%)', gradient: 'bg-gradient-to-br from-[#fce4ec] to-[#f8bbd0]' },
-];
-
-const toLocalDateTimeInput = (value?: string | Date | null) => {
+const localDateInput = (value?: string | Date | null) => {
     if (!value) return '';
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '';
-    return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+    return Number.isFinite(date.getTime()) ? new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
 };
+const utcDate = (value: string) => value && Number.isFinite(new Date(value).getTime()) ? new Date(value).toISOString() : null;
 
-const toUtcDateTime = (value: string) => value ? new Date(value).toISOString() : null;
+const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, onSubmit, initialData, onDraftSaved, onPublished }) => {
+    const user = useAuthStore(s => s.user);
+    const preferences = useWriterPreferences(s => s.preferences);
 
-const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, onSubmit, initialData }) => {
-    const user = useAuthStore((state) => state.user);
-    const [font, setFont] = useState('font-serif');
+    const [title, setTitle] = useState('');
+    const [content, setContent] = useState('');
+    const [recipientName, setRecipientName] = useState('');
+    const [recipientAddress, setRecipientAddress] = useState('');
     const [category, setCategory] = useState('Other');
+    const [font, setFont] = useState('font-serif');
     const [selectedTemplate, setSelectedTemplate] = useState('');
     const [isAnonymous, setIsAnonymous] = useState(false);
     const [isPublic, setIsPublic] = useState(false);
-    const [backgroundImage, setBackgroundImage] = useState(backgroundGradients[0].value);
+    const [backgroundImage, setBackgroundImage] = useState(papers[0].value);
     const [imageUrl, setImageUrl] = useState('');
-    const [imageUploadError, setImageUploadError] = useState('');
-
-    // Form State
-    const [title, setTitle] = useState('');
-    const [recipientName, setRecipientName] = useState('');
-    const [recipientAddress, setRecipientAddress] = useState('');
     const [spotifyLink, setSpotifyLink] = useState('');
-    const [content, setContent] = useState('');
-
-    // Enhanced features state
-    const [scheduledDate, setScheduledDate] = useState<string>('');
+    const [scheduledDate, setScheduledDate] = useState('');
     const [isTimeCapsule, setIsTimeCapsule] = useState(false);
-    const [openDate, setOpenDate] = useState<string>('');
-    const [draftId, setDraftId] = useState<string | null>(null);
-    const [lastSaved, setLastSaved] = useState<string>('');
+    const [openDate, setOpenDate] = useState('');
+    const [controlsOpen, setControlsOpen] = useState(false);
+    const [confirming, setConfirming] = useState(false);
+    const [busy, setBusy] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [lastSaved, setLastSaved] = useState('');
+    const [notice, setNotice] = useState('');
+    const [isDirty, setIsDirty] = useState(false);
 
-    // Populate form if initialData is provided
+    const draftIdRef = useRef<string | null>(null);
+    const pendingSave = useRef<Promise<boolean> | null>(null);
+    const publishing = useRef(false);
+    const revision = useRef(0);
+
+    const editingPublished = Boolean(initialData?.id && initialData.status !== 'draft');
+    const markDirty = () => { revision.current += 1; setIsDirty(true); setConfirming(false); };
+
     useEffect(() => {
-        if (isOpen && initialData) {
-            setTitle(initialData.title || '');
-            setContent(initialData.content || '');
-            setCategory(initialData.type || 'Other');
-            setFont(initialData.font || 'font-serif');
-            setIsPublic(initialData.isPublic || false);
-            setIsAnonymous(initialData.isAnonymous || false);
-            setBackgroundImage(initialData.backgroundImage || backgroundGradients[0].value);
-            setImageUrl(initialData.imageUrl || '');
-            setSpotifyLink(initialData.spotifyLink || '');
-            setRecipientName(initialData.recipientName || '');
-            setRecipientAddress(initialData.recipientAddress || '');
-            setScheduledDate(toLocalDateTimeInput(initialData.scheduledDate));
-            setIsTimeCapsule(initialData.isTimeCapsule || false);
-            setOpenDate(toLocalDateTimeInput(initialData.openDate));
-            // Stop draft auto-save if we are editing an existing letter
-            if (initialData.status === 'published') {
-                setDraftId('stop-autosave');
-            } else if (initialData.id) {
-                setDraftId(initialData.id);
-            }
-        } else if (isOpen && !initialData) {
-            // Reset fields for new letter
-            setTitle('');
-            setContent('');
-            setSelectedTemplate('');
-            setCategory('Other');
-            setFont('font-serif');
-            setIsPublic(false);
-            setIsAnonymous(false);
-            setBackgroundImage(backgroundGradients[0].value);
-            setImageUrl('');
-            setImageUploadError('');
-            setSpotifyLink('');
-            setRecipientName('');
-            setRecipientAddress('');
-            setScheduledDate('');
-            setIsTimeCapsule(false);
-            setOpenDate('');
-            setDraftId(null);
-            setLastSaved('');
-        }
-    }, [isOpen, initialData]);
+        if (!isOpen) return;
+        publishing.current = false;
+        draftIdRef.current = initialData?.status === 'draft' && initialData.id ? String(initialData.id) : null;
+        setTitle(initialData?.title || '');
+        setContent(initialData?.content || '');
+        setRecipientName(initialData?.recipientName || '');
+        setRecipientAddress(initialData?.recipientAddress || '');
+        setCategory(initialData?.type || initialData?.category || 'Other');
+        setFont(initialData?.font || 'font-serif');
+        setIsAnonymous(initialData?.isAnonymous ?? preferences.defaultAnonymous);
+        setIsPublic(initialData?.isPublic ?? preferences.defaultPublic);
+        setBackgroundImage(initialData?.backgroundImage || papers[0].value);
+        setImageUrl(initialData?.imageUrl || '');
+        setSpotifyLink(initialData?.spotifyLink || '');
+        setScheduledDate(localDateInput(initialData?.scheduledDate));
+        setIsTimeCapsule(initialData?.isTimeCapsule || false);
+        setOpenDate(localDateInput(initialData?.openDate));
+        setSelectedTemplate('');
+        setLastSaved('');
+        setNotice('');
+        setIsDirty(false);
+        setConfirming(false);
+        setControlsOpen(false);
+        revision.current = 0;
+    }, [isOpen, initialData, preferences.defaultPublic, preferences.defaultAnonymous]);
 
-    // Auto-save effect - saves draft every 10 seconds
-    useEffect(() => {
-        if (!isOpen || !title || !content || draftId === 'stop-autosave') return;
+    const payload = () => ({
+        title: title.trim(),
+        recipientName: recipientName.trim(),
+        recipientAddress: recipientAddress.trim(),
+        content: content.trim(),
+        type: category,
+        category,
+        font,
+        spotifyLink: spotifyLink.trim(),
+        isAnonymous,
+        isPublic,
+        backgroundImage,
+        imageUrl,
+        scheduledDate: utcDate(scheduledDate),
+        openDate: isTimeCapsule ? utcDate(openDate) : null,
+        isTimeCapsule,
+    });
 
-        const saveDraft = async () => {
+    const canSave = title.trim().length > 0 && content.trim().length > 0;
+
+    const saveDraft = async (): Promise<boolean> => {
+        if (editingPublished) { setNotice('Existing published letters are updated using the main action.'); return false; }
+        if (!canSave) { setNotice('Add a title and a few words before saving a draft.'); return false; }
+        if (pendingSave.current) return pendingSave.current;
+        const currentRevision = revision.current;
+        const data = payload();
+        const task = (async () => {
             setIsSaving(true);
+            setNotice('');
             try {
                 const token = localStorage.getItem('token');
-                const draftData = {
-                    title, recipientName, recipientAddress, content, font, category,
-                    spotifyLink, isAnonymous, isPublic, backgroundImage,
-                    imageUrl, scheduledDate, isTimeCapsule, openDate,
-                    status: 'draft', type: category
-                };
-
-                if (draftId) {
-                    const response = await fetch(`${API_URL}/drafts/${draftId}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify(draftData)
-                    });
-                    if (!response.ok) throw new Error('Could not update your draft.');
-                } else {
-                    const response = await fetch(API_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify(draftData)
-                    });
-                    if (!response.ok) throw new Error('Could not save your draft.');
-                    const data = await response.json();
-                    if (data.letter?.id) setDraftId(String(data.letter.id));
-                }
-
-                setLastSaved(new Date().toLocaleTimeString());
-            } catch (error) {
-                console.error('Error saving draft:', error);
+                if (!token) throw new Error('Please sign in to save your draft.');
+                const id = draftIdRef.current;
+                const response = await fetch(id ? `${API_ENDPOINTS.letters}/drafts/${encodeURIComponent(id)}` : API_ENDPOINTS.letters, {
+                    method: id ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ ...data, status: 'draft' }),
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(result.message || 'Draft could not be saved.');
+                if (!id && result.letter?.id) draftIdRef.current = String(result.letter.id);
+                if (revision.current === currentRevision) setIsDirty(false);
+                setLastSaved(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+                await onDraftSaved?.();
+                return true;
+            } catch (error: any) {
+                setNotice(error?.message || 'Could not save draft. Your words are still in the editor.');
+                return false;
             } finally {
                 setIsSaving(false);
             }
-        };
-
-        const timer = setTimeout(saveDraft, 10000);
-        return () => clearTimeout(timer);
-    }, [isOpen, title, content, recipientName, recipientAddress, font, category, spotifyLink, isAnonymous, isPublic, backgroundImage, imageUrl, scheduledDate, isTimeCapsule, openDate, draftId]);
-
-    const handleTemplateChange = (value: string) => {
-        setSelectedTemplate(value);
-        const template = letterTemplates.find((item) => item.value === value);
-        if (!template) return;
-        setTitle(template.title);
-        setCategory(template.category);
-        setContent(template.content);
+        })();
+        pendingSave.current = task;
+        try { return await task; } finally { if (pendingSave.current === task) pendingSave.current = null; }
     };
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            if (!file.type.startsWith('image/')) {
-                setImageUploadError('Please choose an image file.');
-                e.target.value = '';
-                return;
-            }
-            if (file.size > 7 * 1024 * 1024) {
-                setImageUploadError('Please choose an image smaller than 7 MB.');
-                e.target.value = '';
-                return;
-            }
-            setImageUploadError('');
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImageUrl(reader.result as string);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
+    useEffect(() => {
+        if (!isOpen || editingPublished || !canSave || !isDirty || publishing.current) return;
+        const timer = window.setTimeout(() => { if (!publishing.current) void saveDraft(); }, 10000);
+        return () => window.clearTimeout(timer);
+    }, [isOpen, editingPublished, title, content, recipientName, recipientAddress, category, font, isAnonymous, isPublic, backgroundImage, imageUrl, spotifyLink, scheduledDate, openDate, isTimeCapsule, isDirty]);
 
-    const handleSubmit = () => {
-        onSubmit({
-            title,
-            recipientName,
-            recipientAddress,
-            content,
-            font,
-            category,
-            spotifyLink,
-            isAnonymous,
-            isPublic,
-            backgroundImage,
-            imageUrl,
-            scheduledDate: toUtcDateTime(scheduledDate),
-            openDate: toUtcDateTime(openDate),
-            isTimeCapsule,
-            createdAt: new Date(),
-        });
+    const closeEditor = () => {
+        if (busy || isSaving) return;
+        if (isDirty && canSave && !window.confirm('You have unsaved changes. Close without saving?')) return;
         onClose();
     };
 
-    const backgroundClass = backgroundGradients.find(bg => bg.value === backgroundImage)?.gradient || 'bg-[#fdfbf7]';
+    const saveAndClose = async () => {
+        const saved = await saveDraft();
+        if (saved) onClose();
+    };
 
-    return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-screen-lg h-[95vh] p-0 border-none bg-transparent shadow-none overflow-hidden flex flex-col items-center justify-center">
-                <DialogTitle className="sr-only">Write a Letter</DialogTitle>
-                <DialogDescription className="sr-only">Create or edit the content and settings of your letter.</DialogDescription>
+    const publish = async () => {
+        if (publishing.current) return;
+        if (!canSave) { setNotice('A title and letter content are required.'); return; }
+        if (title.trim().length > 255 || content.length > 100000) { setNotice('Please shorten your title or letter.'); return; }
+        if (isTimeCapsule && !openDate) { setNotice('Choose an opening date for your time capsule.'); setControlsOpen(true); return; }
+        if ((scheduledDate && !utcDate(scheduledDate)) || (isTimeCapsule && !utcDate(openDate))) { setNotice('Choose a valid date and time.'); return; }
+        if (preferences.confirmBeforePublishing && !confirming) { setConfirming(true); setNotice(''); return; }
+        publishing.current = true;
+        setBusy(true);
+        setNotice('');
+        try {
+            if (pendingSave.current) await pendingSave.current;
+            const data = payload();
+            const existingId = editingPublished ? String(initialData.id) : draftIdRef.current;
+            if (existingId) {
+                const token = localStorage.getItem('token');
+                if (!token) throw new Error('Please sign in again.');
+                const url = editingPublished ? `${API_ENDPOINTS.letters}/${encodeURIComponent(existingId)}` : `${API_ENDPOINTS.letters}/drafts/${encodeURIComponent(existingId)}/publish`;
+                const response = await fetch(url, {
+                    method: editingPublished ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify(data),
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(result.message || 'Could not finish your letter.');
+            } else {
+                await onSubmit({ ...data, status: 'published' });
+            }
+            await onPublished?.();
+            setIsDirty(false);
+            onClose();
+        } catch (error: any) {
+            setNotice(error?.message || 'Unable to publish. Your letter is still here.');
+            setConfirming(false);
+        } finally {
+            publishing.current = false;
+            setBusy(false);
+        }
+    };
 
-                {/* Draft Saved Indicator */}
-                {lastSaved && (
-                    <div className="absolute top-16 right-4 z-50 bg-card/95 backdrop-blur-sm px-3 py-1 rounded-full text-xs text-muted-foreground shadow-sm">
-                        {isSaving ? '💾 Saving...' : `✓ Saved ${lastSaved}`}
-                    </div>
-                )}
+    const selectPrompt = (value: string) => {
+        const template = templates.find(t => t.value === value);
+        if (!template) return;
+        if ((title.trim() || content.trim()) && !window.confirm('Replace the current title and message with this starting point?')) return;
+        setSelectedTemplate(value);
+        setTitle(template.title);
+        setContent(template.content);
+        setCategory(template.category);
+        markDirty();
+    };
 
-                {/* Floating Close Button */}
-                <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 z-50 p-2 bg-black/10 hover:bg-black/20 text-white rounded-full backdrop-blur-sm transition-all"
-                >
-                    <X size={20} />
-                </button>
+    const imageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+            setNotice('Choose a JPG, PNG or WebP image under 5 MB.');
+            event.target.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+            const data = String(reader.result || '');
+            if (data.length > 7500000) { setNotice('The image is too large after encoding.'); return; }
+            setImageUrl(data);
+            setNotice('');
+            markDirty();
+        };
+        reader.onerror = () => setNotice('Could not read this image. Try another one.');
+        reader.readAsDataURL(file);
+    };
 
-                {/* Main Card Container */}
-                <div className={cn(
-                    "w-full h-full md:h-auto md:max-h-[85vh] overflow-hidden rounded-3xl shadow-2xl flex flex-col md:flex-row bg-card",
-                )}>
+    const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+    const paper = papers.find(p => p.value === backgroundImage) || papers[0];
+    const scheduled = (isTimeCapsule ? openDate : scheduledDate) && (utcDate(isTimeCapsule ? openDate : scheduledDate) || '') > new Date().toISOString();
+    const actionLabel = editingPublished ? 'Save changes' : scheduled ? 'Schedule letter' : isPublic ? 'Publish letter' : 'Finish private letter';
+    const labelClass = 'block text-[11px] font-bold uppercase tracking-[.16em] text-muted-foreground';
+    const fieldClass = 'mt-2 h-11 w-full rounded-xl border border-border bg-card px-3 text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/10';
+    const panelClass = 'rounded-[20px] border border-border bg-card p-4';
 
-                    {/* Sidebar / Toolbar (Left Side on Desktop) */}
-                    <div className="w-full md:w-80 bg-background border-r border-border p-6 flex flex-col gap-6 overflow-y-auto custom-scrollbar">
-                        <div className="space-y-1">
-                            <h2 className="text-xl font-serif font-medium text-foreground">Write a Letter</h2>
-                            <p className="text-xs text-muted-foreground">Craft your thoughts with care.</p>
-                        </div>
+    return <Dialog open={isOpen} onOpenChange={(open) => { if (!open) closeEditor(); }}>
+        <DialogContent className="flex h-[min(94dvh,950px)] w-[calc(100vw-16px)] max-w-[1220px] flex-col gap-0 overflow-hidden rounded-[24px] border border-border bg-card p-0 shadow-[0_30px_90px_rgba(0,0,0,.3)] sm:w-[calc(100vw-40px)] sm:rounded-[30px]">
+            <DialogTitle className="sr-only">{editingPublished ? 'Edit your letter' : 'Write a letter'}</DialogTitle>
+            <DialogDescription className="sr-only">Write a thoughtful letter, customize the paper, save as draft or finish publishing.</DialogDescription>
 
-                        {/* Writing prompts */}
-                        <div className="space-y-2">
-                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Start with a prompt</Label>
-                            <Select value={selectedTemplate} onValueChange={handleTemplateChange}>
-                                <SelectTrigger className="bg-card border-border text-foreground">
-                                    <SelectValue placeholder="Choose a starting point" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {letterTemplates.map((template) => (
-                                        <SelectItem key={template.value} value={template.value}>{template.label}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        {/* Settings */}
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Style</Label>
-                                <Select value={font} onValueChange={setFont}>
-                                    <SelectTrigger className="bg-card border-border text-foreground">
-                                        <div className="flex items-center gap-2">
-                                            <Type size={14} className="text-muted-foreground" />
-                                            <SelectValue placeholder="Select Font" />
-                                        </div>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {fonts.map((f) => (
-                                            <SelectItem key={f.value} value={f.value} className={f.value}>
-                                                {f.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Category</Label>
-                                <Select value={category} onValueChange={setCategory}>
-                                    <SelectTrigger className="bg-card border-border text-foreground">
-                                        <SelectValue placeholder="Category" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {categories.map((c) => (
-                                            <SelectItem key={c} value={c}>
-                                                {c}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Paper</Label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {backgroundGradients.map((bg) => (
-                                        <button
-                                            key={bg.name}
-                                            type="button"
-                                            onClick={() => setBackgroundImage(bg.value)}
-                                            className={cn(
-                                                "h-10 rounded-lg border-2 transition-all",
-                                                bg.gradient,
-                                                backgroundImage === bg.value ? "border-primary ring-1 ring-primary" : "border-border hover:border-stone-400"
-                                            )}
-                                            title={bg.name}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="space-y-3 pt-2">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <Globe size={14} className="text-muted-foreground" />
-                                        <Label htmlFor="public" className="text-sm text-muted-foreground cursor-pointer">Public Post</Label>
-                                    </div>
-                                    <input
-                                        type="checkbox"
-                                        id="public"
-                                        checked={isPublic}
-                                        onChange={(e) => setIsPublic(e.target.checked)}
-                                        className="rounded border-border text-foreground focus:ring-stone-900"
-                                    />
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <EyeOff size={14} className="text-muted-foreground" />
-                                        <Label htmlFor="anonymous" className="text-sm text-muted-foreground cursor-pointer">Anonymous</Label>
-                                    </div>
-                                    <input
-                                        type="checkbox"
-                                        id="anonymous"
-                                        checked={isAnonymous}
-                                        onChange={(e) => setIsAnonymous(e.target.checked)}
-                                        className="rounded border-border text-foreground focus:ring-stone-900"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Attachments */}
-                        <div className="space-y-4 pt-4 border-t border-border">
-                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Attachments</Label>
-
-                            <div className="space-y-3">
-                                <div className="relative">
-                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                                        <Music size={14} />
-                                    </div>
-                                    <Input
-                                        placeholder="Spotify Link..."
-                                        value={spotifyLink}
-                                        onChange={(e) => setSpotifyLink(e.target.value)}
-                                        className="pl-9 bg-card border-border text-foreground placeholder:text-muted-foreground"
-                                    />
-                                </div>
-
-                                <div className="relative">
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleImageUpload}
-                                        className="hidden"
-                                        id="image-upload"
-                                    />
-                                    <label
-                                        htmlFor="image-upload"
-                                        className="flex items-center justify-center gap-2 w-full h-10 rounded-md border border-border bg-card text-muted-foreground hover:bg-background cursor-pointer transition-colors text-sm font-medium"
-                                    >
-                                        <ImageIcon size={16} />
-                                        {imageUrl ? 'Change Image' : 'Add Image'}
-                                    </label>
-                                    {imageUploadError && <p role="alert" className="mt-1 text-xs text-destructive">{imageUploadError}</p>}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Enhanced Features */}
-                        <div className="space-y-4 pt-4 border-t border-border">
-                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                Special Features
-                            </Label>
-
-                            {/* Schedule Letter */}
-                            <div className="space-y-2">
-                                <Label htmlFor="schedule-date" className="text-xs flex items-center gap-2 text-muted-foreground">
-                                    <Mascot name="tala" className="h-7 w-7" />
-                                    Schedule for Later
-                                </Label>
-                                <Input
-                                    id="schedule-date"
-                                    type="datetime-local"
-                                    value={scheduledDate}
-                                    onChange={(e) => setScheduledDate(e.target.value)}
-                                    className="bg-card border-border text-foreground text-sm"
-                                />
-                            </div>
-
-                            {/* Time Capsule */}
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <Label htmlFor="time-capsule" className="text-xs flex items-center gap-2 text-muted-foreground cursor-pointer">
-                                        <Lock size={12} />
-                                        Time Capsule
-                                    </Label>
-                                    <input
-                                        id="time-capsule"
-                                        type="checkbox"
-                                        checked={isTimeCapsule}
-                                        onChange={(e) => setIsTimeCapsule(e.target.checked)}
-                                        className="rounded border-border text-foreground focus:ring-stone-900"
-                                    />
-                                </div>
-                                {isTimeCapsule && (
-                                    <Input
-                                        type="datetime-local"
-                                        value={openDate}
-                                        onChange={(e) => setOpenDate(e.target.value)}
-                                        placeholder="Open Date"
-                                        className="bg-card border-border text-foreground text-sm"
-                                    />
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Editor Area (Right Side) */}
-                    <div className={cn(
-                        "flex-1 relative flex flex-col",
-                        backgroundClass,
-                        imageUrl ? "bg-cover bg-center" : ""
-                    )}
-                        style={imageUrl ? { backgroundImage: `url(${imageUrl})` } : {}}
-                    >
-                        {/* Overlay for readability if image is set */}
-                        {imageUrl && <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" />}
-
-                        <div className="relative z-10 flex-1 flex flex-col p-8 md:p-12 overflow-y-auto custom-scrollbar">
-                            {/* Header Inputs */}
-                            <div className="space-y-6 mb-8">
-                                <div className="border-b border-border pb-2">
-                                    <Input
-                                        placeholder="Title of your letter..."
-                                        value={title}
-                                        onChange={(e) => setTitle(e.target.value)}
-                                        className={cn(
-                                            "border-none bg-transparent text-3xl md:text-4xl font-bold placeholder:text-muted-foreground/40 focus-visible:ring-0 px-0 mb-4",
-                                            font,
-                                            imageUrl ? "text-white placeholder:text-white/40" : "text-foreground"
-                                        )}
-                                    />
-                                    <Input
-                                        placeholder="Dear..."
-                                        value={recipientName}
-                                        onChange={(e) => setRecipientName(e.target.value)}
-                                        className={cn(
-                                            "border-none bg-transparent text-2xl md:text-3xl font-bold placeholder:text-muted-foreground/40 focus-visible:ring-0 px-0",
-                                            font,
-                                            imageUrl ? "text-white placeholder:text-white/40" : "text-foreground"
-                                        )}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Main Content */}
-                            <Textarea
-                                placeholder="Start writing your letter..."
-                                value={content}
-                                onChange={(e) => setContent(e.target.value)}
-                                className={cn(
-                                    "flex-1 min-h-[300px] border-none bg-transparent resize-none focus-visible:ring-0 px-0 text-lg leading-relaxed",
-                                    font,
-                                    imageUrl ? "text-white placeholder:text-white/40" : "text-foreground placeholder:text-muted-foreground"
-                                )}
-                            />
-
-                            {/* Footer / Signature */}
-                            <div className="mt-8 pt-8 border-t border-border flex justify-end">
-                                <div className={cn(
-                                    "text-right",
-                                    imageUrl ? "text-white/80" : "text-muted-foreground"
-                                )}>
-                                    <p className={cn("text-sm italic", font)}>
-                                        {isAnonymous ? "— Anonymous" : `— ${user?.username || 'Me'}`}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Send Button (Floating) */}
-                        <div className="absolute bottom-6 right-6 z-20">
-                            <Button
-                                onClick={handleSubmit}
-                                disabled={!content.trim() || !title.trim()}
-                                className="h-14 px-8 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
-                            >
-                                <span className="text-lg font-medium">Send Letter</span>
-                                <Send size={18} />
-                            </Button>
-                        </div>
-                    </div>
+            <header className="relative flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border bg-card px-5 py-4 pr-14 sm:px-7 sm:pr-16">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[hsl(var(--surface-gold))] text-[#564932]"><BookHeart size={22} /></div>
+                    <div><p className="text-[10px] font-bold uppercase tracking-[.19em] text-[hsl(var(--accent))]">Your writing desk</p><h2 className="font-editorial text-xl font-semibold sm:text-2xl">{editingPublished ? 'Edit your letter' : 'A letter starts here'}</h2></div>
                 </div>
-            </DialogContent>
-        </Dialog>
-    );
+                <div className="flex items-center gap-2">
+                    <span className="hidden rounded-full bg-muted px-3 py-1.5 text-[11px] font-medium text-muted-foreground sm:inline-flex"><ShieldCheck size={13} className="mr-1" /> {isPublic ? 'Public' : 'Private'} draft</span>
+                    <button type="button" onClick={() => setControlsOpen(value => !value)} aria-expanded={controlsOpen} className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-2 text-xs font-semibold hover:bg-muted lg:hidden"><Settings2 size={16} /> Customize <ChevronDown size={14} className={controlsOpen ? 'rotate-180' : ''} /></button>
+                </div>
+            </header>
+
+            <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+                <aside className={cn('shrink-0 overflow-y-auto border-b border-border bg-muted/30 px-4 py-5 sm:px-6 lg:w-[318px] lg:border-b-0 lg:border-r', controlsOpen ? 'max-h-[44dvh] lg:max-h-none' : 'hidden lg:block')} aria-label="Letter customization">
+                    <div className="mb-5 hidden lg:block"><p className="font-editorial text-xl">Make it yours</p><p className="mt-1 text-xs leading-5 text-muted-foreground">A few thoughtful details, only if you want them.</p></div>
+                    <div className="space-y-4 pb-3">
+                        <div className={panelClass}>
+                            <label className={labelClass} htmlFor="letter-starting-point"><WandSparkles size={13} className="mr-1 inline" /> Need inspiration?</label>
+                            <select id="letter-starting-point" value={selectedTemplate} onChange={e => selectPrompt(e.target.value)} className={fieldClass}><option value="">Choose a starting point</option>{templates.map(t => <option key={t.value} value={t.value}>{t.name}</option>)}</select>
+                            <p className="mt-2 text-[11px] leading-5 text-muted-foreground">Templates are optional. Your words are what matter.</p>
+                        </div>
+                        <div className={panelClass}>
+                            <p className={labelClass}><Palette size={13} className="mr-1 inline" /> Personalize</p>
+                            <label className="mt-4 block text-xs font-semibold" htmlFor="letter-font">Writing style</label>
+                            <select id="letter-font" value={font} onChange={e => { setFont(e.target.value); markDirty(); }} className={fieldClass}>{fonts.map(t => <option key={t.value} value={t.value}>{t.name}</option>)}</select>
+                            <label className="mt-4 block text-xs font-semibold" htmlFor="letter-category">Category</label>
+                            <select id="letter-category" value={category} onChange={e => { setCategory(e.target.value); markDirty(); }} className={fieldClass}>{categories.map(c => <option key={c}>{c}</option>)}</select>
+                            <p className="mt-4 text-xs font-semibold">Paper color</p>
+                            <div className="mt-2 grid grid-cols-6 gap-2">{papers.map(p => <button type="button" key={p.name} title={p.name} aria-label={`Use ${p.name} paper`} aria-pressed={backgroundImage === p.value} onClick={() => { setBackgroundImage(p.value); markDirty(); }} className={cn('relative h-9 min-w-0 rounded-xl border-2 transition-transform hover:scale-105', p.className, backgroundImage === p.value ? 'border-primary ring-2 ring-primary/20' : 'border-border')}>{backgroundImage === p.value && <Check size={14} className="mx-auto text-[#294335]" />}</button>)}</div>
+                        </div>
+                        <div className={panelClass}>
+                            <p className={labelClass}><Globe2 size={13} className="mr-1 inline" /> Visibility</p>
+                            <div className="mt-3 grid grid-cols-2 gap-2">
+                                <button type="button" onClick={() => { setIsPublic(false); markDirty(); }} aria-pressed={!isPublic} className={cn('flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-xs font-semibold', !isPublic ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background text-foreground')}><LockKeyhole size={15} /> Private</button>
+                                <button type="button" onClick={() => { setIsPublic(true); markDirty(); }} aria-pressed={isPublic} className={cn('flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-xs font-semibold', isPublic ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background text-foreground')}><Globe2 size={15} /> Public</button>
+                            </div>
+                            <p className="mt-2 text-[11px] leading-5 text-muted-foreground">{isPublic ? 'Public letters can be discovered and shared. Guests can react after publishing.' : 'Private letters stay out of the public feed. You decide when to share.'}</p>
+                            <label className="mt-4 flex cursor-pointer items-center justify-between gap-3 rounded-xl bg-background px-3 py-3 text-xs font-semibold"><span className="inline-flex items-center gap-2"><EyeOff size={15} /> Post anonymously</span><input type="checkbox" checked={isAnonymous} onChange={e => { setIsAnonymous(e.target.checked); markDirty(); }} className="h-4 w-4 accent-[#344d40]" /></label>
+                        </div>
+                        <details className={panelClass}>
+                            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-bold uppercase tracking-[.14em]"><span className="inline-flex items-center gap-2"><Music2 size={16} /> Attachments</span><ChevronDown size={15} /></summary>
+                            <div className="mt-4 space-y-3">
+                                <label className="block text-xs font-semibold" htmlFor="letter-spotify">Spotify link (optional)</label>
+                                <input id="letter-spotify" type="url" value={spotifyLink} onChange={e => { setSpotifyLink(e.target.value); markDirty(); }} placeholder="https://open.spotify.com/..." className={fieldClass} />
+                                <label htmlFor="letter-image" className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-background p-3 text-xs font-semibold hover:border-primary"><ImagePlus size={17} /> {imageUrl ? 'Change cover image' : 'Add cover image'}<input id="letter-image" className="sr-only" type="file" accept="image/png,image/jpeg,image/webp" onChange={imageUpload} /></label>
+                                {imageUrl && <button type="button" onClick={() => { setImageUrl(''); markDirty(); }} className="text-xs font-semibold text-muted-foreground underline">Remove image</button>}
+                            </div>
+                        </details>
+                        <details className={panelClass}>
+                            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-bold uppercase tracking-[.14em]"><span className="inline-flex items-center gap-2"><Clock3 size={16} /> Deliver later</span><ChevronDown size={15} /></summary>
+                            <div className="mt-4 space-y-3">
+                                <label className="block text-xs font-semibold" htmlFor="letter-schedule">Schedule release</label>
+                                <input id="letter-schedule" type="datetime-local" value={scheduledDate} disabled={isTimeCapsule} onChange={e => { setScheduledDate(e.target.value); markDirty(); }} className={fieldClass} />
+                                <label className="flex items-center justify-between gap-2 text-xs font-semibold"><span>Time capsule</span><input type="checkbox" checked={isTimeCapsule} onChange={e => { setIsTimeCapsule(e.target.checked); markDirty(); }} className="h-4 w-4 accent-[#344d40]" /></label>
+                                {isTimeCapsule && <><p className="text-[11px] text-muted-foreground">The letter stays sealed until the date you choose.</p><label className="block text-xs font-semibold" htmlFor="letter-open-date">Open date</label><input id="letter-open-date" type="datetime-local" value={openDate} onChange={e => { setOpenDate(e.target.value); markDirty(); }} className={fieldClass} /></>}
+                                <label className="block text-xs font-semibold" htmlFor="letter-address">Recipient's address (optional)</label>
+                                <input id="letter-address" value={recipientAddress} maxLength={255} onChange={e => { setRecipientAddress(e.target.value); markDirty(); }} placeholder="For your own reference" className={fieldClass} />
+                                <p className="text-[11px] leading-5 text-muted-foreground">Finishing a letter saves it to SendTheLetter. Email delivery is a separate sharing action.</p>
+                            </div>
+                        </details>
+                    </div>
+                </aside>
+
+                <div className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-[hsl(var(--background))] p-3 sm:p-5 lg:p-7">
+                    <div className={cn('relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[19px] border border-[#e9dfd1] shadow-[0_12px_40px_rgba(64,48,31,.09)] sm:rounded-[24px]', paper.className)} style={imageUrl ? { backgroundImage: `linear-gradient(rgba(14,19,14,.6),rgba(14,19,14,.56)),url("${imageUrl}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}>
+                        <div className={cn('relative flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-7 sm:px-10 sm:py-9 lg:px-12', imageUrl ? 'text-white' : 'text-[#35483d]')}>
+                            <div className={cn('mb-7 flex items-center justify-between gap-2 border-b pb-4 text-[10px] font-bold uppercase tracking-[.20em]', imageUrl ? 'border-white/40 text-white/80' : 'border-[#dcd6c8] text-[#9a796b]')}>
+                                <span className="inline-flex items-center gap-2"><Feather size={14} /> A letter from the heart</span>
+                                <span className="hidden sm:inline">{category}</span>
+                            </div>
+                            <label className="sr-only" htmlFor="letter-title">Letter title</label>
+                            <input id="letter-title" maxLength={255} value={title} onChange={e => { setTitle(e.target.value); markDirty(); }} placeholder="Give your letter a title…" className={cn('w-full border-none bg-transparent p-0 font-editorial text-[clamp(1.55rem,3.5vw,2.6rem)] font-semibold leading-tight tracking-tight outline-none placeholder:opacity-40', imageUrl ? 'text-white placeholder:text-white' : 'text-[#35483d] placeholder:text-[#988d83]')} />
+                            <div className={cn('mt-6 flex items-center border-b pb-3', imageUrl ? 'border-white/35' : 'border-[#dcd6c8]')}>
+                                <span className={cn('shrink-0 font-serif text-lg italic', imageUrl ? 'text-white/80' : 'text-[#7d786c]')}>Dear</span>
+                                <label className="sr-only" htmlFor="letter-recipient">Recipient</label>
+                                <input id="letter-recipient" maxLength={255} value={recipientName} onChange={e => { setRecipientName(e.target.value); markDirty(); }} placeholder="someone special…" className={cn('ml-2 min-w-0 flex-1 bg-transparent text-lg font-semibold outline-none placeholder:opacity-40', imageUrl ? 'text-white placeholder:text-white' : 'text-[#35483d] placeholder:text-[#9c958c]')} />
+                                <span className="font-serif text-lg">,</span>
+                            </div>
+                            <label className="sr-only" htmlFor="letter-content">Your letter</label>
+                            <textarea id="letter-content" value={content} maxLength={100000} onChange={e => { setContent(e.target.value); markDirty(); }} placeholder="Tell them what you've been meaning to say…\n\nStart with a memory, a feeling, or just a simple hello." className={cn('mt-7 min-h-[230px] w-full flex-1 resize-none border-0 bg-transparent p-0 text-base leading-[1.9] outline-none placeholder:opacity-50 sm:text-lg', font, imageUrl ? 'text-white placeholder:text-white' : 'text-[#35483d] placeholder:text-[#8b9188]')} />
+                            <div className={cn('mt-8 flex justify-end gap-2 border-t pt-5 font-serif italic', imageUrl ? 'border-white/35 text-white/80' : 'border-[#dcd6c8] text-[#817e72]')}><span>With care,</span><span className="font-semibold">{isAnonymous ? 'Anonymous' : user?.username || 'Me'}</span></div>
+                        </div>
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-muted-foreground"><span className="inline-flex items-center gap-2"><PenLine size={14} /> {wordCount} {wordCount === 1 ? 'word' : 'words'} written</span><span className="inline-flex items-center gap-1.5">{isSaving ? <><Save size={14} className="animate-pulse" /> Saving draft…</> : lastSaved ? <><Check size={14} /> Saved at {lastSaved}</> : <><Sparkles size={14} /> Every word matters</>}</span></div>
+                </div>
+            </div>
+
+            {notice && <div role="alert" className="mx-5 mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-semibold text-amber-900 sm:mx-7">{notice}</div>}
+            {confirming && <div className="mx-5 mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-muted/80 px-4 py-3 sm:mx-7">
+                <div className="min-w-0"><p className="flex items-center gap-2 text-sm font-bold"><FileCheck2 size={17} /> Ready to finish this letter?</p><p className="mt-1 text-xs text-muted-foreground">{isPublic ? 'Public: other people can read and share it.' : 'Private: only you can access it.'} {scheduled ? 'It will be released at your selected date.' : 'It will be saved immediately.'}</p></div>
+                <div className="flex items-center gap-2"><button type="button" onClick={() => setConfirming(false)} className="rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold">Review again</button><button type="button" disabled={busy} onClick={() => void publish()} className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Yes, continue</button></div>
+            </div>}
+
+            <footer className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-border bg-card px-4 py-3 sm:px-7 sm:py-4">
+                <div className="hidden items-center gap-2 text-xs text-muted-foreground sm:flex">{isPublic ? <Globe2 size={16} /> : <LockKeyhole size={16} />}<span>{isPublic ? 'Visible to the community when released' : 'Just for you, unless you share it'}</span></div>
+                <div className="ml-auto flex w-full items-center gap-2 sm:w-auto">
+                    <button type="button" onClick={() => void saveAndClose()} disabled={busy || isSaving || editingPublished || !canSave} className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-border bg-background px-4 text-xs font-bold hover:bg-muted disabled:opacity-40 sm:flex-none sm:px-5"><Save size={16} /> Save draft</button>
+                    <button type="button" onClick={() => void publish()} disabled={busy || isSaving || !canSave} className="inline-flex h-11 flex-[1.3] items-center justify-center gap-2 rounded-full bg-primary px-4 text-xs font-bold text-primary-foreground shadow-md transition-transform hover:-translate-y-0.5 disabled:opacity-40 sm:flex-none sm:px-6">{busy ? 'Working…' : actionLabel} <Send size={16} /></button>
+                </div>
+            </footer>
+        </DialogContent>
+    </Dialog>;
 };
 
 export default LetterEditorModal;
