@@ -332,10 +332,10 @@ export const getTimeCapsules = async (req: AuthRequest, res: Response) => {
         const letters = await Letter.findAll({
             where: {
                 userId,
-                type: 'Time Capsule',
+                isTimeCapsule: true,
                 status: 'scheduled'
             },
-            order: [['scheduledDate', 'ASC']],
+            order: [['openDate', 'ASC']],
         });
         res.json(letters);
     } catch (error) {
