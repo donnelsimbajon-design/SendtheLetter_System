@@ -72,7 +72,10 @@ export const getUserProfile = async (req: Request, res: Response) => {
             attributes: ['id', 'username', 'createdAt', 'bio', 'location', 'avatar', 'coverImage'],
         });
 
-        if (!user || !user.isActive) {
+        // The query already requires isActive: true. isActive is intentionally
+        // omitted from the public attributes, so checking user.isActive here
+        // would incorrectly return 404 for every valid writer profile.
+        if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
