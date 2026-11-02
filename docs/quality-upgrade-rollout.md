@@ -27,3 +27,11 @@ This PR upgrades profile uploads, notification UX, scheduling validation, and co
 - Design private object storage for attachments with app-authenticated authorization checks, not public links.
 - Add browser end-to-end coverage of real signup/login and notifications in an isolated staging environment.
 - Configure centralized incident alerts and a reviewed restore drill. Avoid live destructive testing.
+
+## Supabase security review (read-only)
+
+The current security advisor reports RLS enabled without Data API policies on twelve tables. Some sensitive tables (`password_reset_tokens`, `user_blocks`) still have SQL grants to the `anon` and `authenticated` roles. RLS with no permissive policy currently denies direct row access, but grants should be reviewed and reduced via a separately approved migration. **Do not disable RLS to make a table accessible.** This PR intentionally does not change production grants or read any private table contents.
+
+Advisor guidance: https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy
+
+Performance advisor flags unused indexes; preserve them until representative production traffic and query plans are reviewed rather than deleting them on an early-life database.
