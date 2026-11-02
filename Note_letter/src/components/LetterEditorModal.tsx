@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog';
 import { Check, ChevronDown, ArrowLeft, ArrowRight, Trash2, Globe2, ImagePlus, LockKeyhole, Music2, Palette, Save, Settings2, Sparkles } from 'lucide-react';
 import CharacterBadge from './CharacterBadge';
+import LetterPagePhoto from './LetterPagePhoto';
 import { useAuthStore } from '../store/authStore';
 import { useWriterPreferences } from '../store/writerPreferences';
 import { cn } from '../lib/utils';
@@ -53,7 +54,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
     const preferences = useWriterPreferences(s => s.preferences);
 
     const [title, setTitle] = useState('');
-    const { pages, pageIndex, setPageIndex, resetBook, updateText, addPage, removeBlank, addPhoto, setCaption, removeImage, bookError, setBookError, content, wordCount } = useLetterBook();
+    const { pages, pageIndex, setPageIndex, resetBook, updateText, addPage, removeBlank, addPhoto, setCaption, removeImage, updateImageLayout, bookError, setBookError, content, wordCount } = useLetterBook();
     const [recipientName, setRecipientName] = useState('');
     const [recipientAddress, setRecipientAddress] = useState('');
     const [category, setCategory] = useState('Other');
@@ -269,6 +270,32 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
 
     const page = pages[Math.min(pageIndex, pages.length - 1)];
     const paper = papers.find(p => p.value === backgroundImage) || papers[0];
+    const photoEditor = page.imageData ? <div className="mt-4 rounded-[18px] border border-[#dbcbb7]/70 bg-white/35 p-3 text-[#39483c]">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xs font-bold">Arrange this photo</p>
+            <label className="flex items-center gap-2 text-xs font-semibold">Placement
+                <select aria-label="Photo placement relative to letter text" value={page.imagePlacement || 'after'}
+                    onChange={event => { updateImageLayout({ imagePlacement: event.target.value as 'before' | 'after' }); markDirty(); }}
+                    className="rounded-lg border border-[#c7b9a7] bg-white px-2 py-2 text-[#39483c]">
+                    <option value="before">Above the words</option><option value="after">Below the words</option>
+                </select>
+            </label>
+        </div>
+        <LetterPagePhoto page={page} editable onChange={updateImageLayout} onCommit={markDirty} />
+        <label className="flex items-center gap-3 text-xs font-semibold">
+            <span className="shrink-0">Photo size</span>
+            <input type="range" min="30" max="90" step="5" value={page.imageWidth ?? 70}
+                onChange={event => { updateImageLayout({ imageWidth: Number(event.target.value) }); markDirty(); }}
+                aria-label="Photo width as percentage of page" className="min-w-0 flex-1 accent-[#344a3c]" />
+            <output className="w-9 text-right">{page.imageWidth ?? 70}%</output>
+        </label>
+        <label htmlFor="letter-image-caption" className="sr-only">Caption for this photo</label>
+        <input id="letter-image-caption" maxLength={140} value={page.caption || ''}
+            onChange={event => { setCaption(event.target.value); markDirty(); }} placeholder="Add a little caption…"
+            className="mt-3 h-9 w-full border-b border-[#c7b9a7] bg-transparent text-center font-serif text-sm italic text-[#39483c] outline-none placeholder:text-[#8a7a6d]" />
+        <button type="button" onClick={() => { removeImage(); markDirty(); }} className="mx-auto mt-2 flex items-center gap-1.5 text-xs font-semibold text-[#785c4f] underline"><Trash2 size={13} /> Remove this photo</button>
+    </div> : null;
+
     const scheduled = (isTimeCapsule ? openDate : scheduledDate) && (utcDate(isTimeCapsule ? openDate : scheduledDate) || '') > new Date().toISOString();
     const actionLabel = editingPublished ? 'Save changes' : scheduled ? 'Schedule letter' : isPublic ? 'Publish letter' : 'Finish private letter';
     const earliestLocalDate = localDateInput(new Date(Date.now() + 60_000));
@@ -347,7 +374,15 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
 
                 <div className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-[hsl(var(--background))] p-3 sm:p-5 lg:p-7">
                     <div className={cn('relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[19px] border border-[#e9dfd1] shadow-[0_12px_40px_rgba(64,48,31,.09)] sm:rounded-[24px]', paper.className)} style={imageUrl ? { backgroundImage: `linear-gradient(rgba(14,19,14,.6),rgba(14,19,14,.56)),url("${imageUrl}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}>
-                        <div className={cn('relative flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-7 sm:px-10 sm:py-9 lg:px-12', imageUrl ? 'text-white' : 'text-[#35483d]')}>
+                        <div className={cn('relative flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-7 sm:px-10 sm:py-9 lg:px-12', imageUrl ? 'text-white' : 'text-[#35483d]')}
+                            onDragOver={event => { if (Array.from(event.dataTransfer.types).includes('Files')) event.preventDefault(); }}
+                            onDrop={event => {
+                                const file = Array.from(event.dataTransfer.files).find(item => item.type.startsWith('image/'));
+                                if (!file) return;
+                                event.preventDefault();
+                                void addPhoto(file).then(() => { markDirty(); setNotice('Photo added. Drag it to place it anywhere inside the photo area.'); })
+                                    .catch(error => setBookError(error instanceof Error ? error.message : 'Could not add photo.'));
+                            }}>
                             <div className={cn('mb-7 flex items-center justify-between gap-2 border-b pb-4 text-[10px] font-bold uppercase tracking-[.20em]', imageUrl ? 'border-white/40 text-white/80' : 'border-[#dcd6c8] text-[#9a796b]')}>
                                 <span className="inline-flex items-center gap-2"><CharacterBadge name="lumi" tone="rose" size="xs" /> A letter from the heart</span>
                                 <span className="hidden sm:inline">{category}</span>
@@ -367,8 +402,9 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                             </div>}
                             <div className={cn('mb-1 flex flex-wrap items-center justify-between gap-2', imageUrl ? 'text-white/85' : 'text-[#8b7361]')}>
                                 <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.16em]"><CharacterBadge name="basa" tone="gold" size="xs" /> Page {pageIndex + 1} of {pages.length}</span>
-                                <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-current/30 px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-white/15"><ImagePlus size={15} /> Insert image in page <input type="file" className="sr-only" accept="image/png,image/jpeg,image/webp" onChange={async (event) => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; try { await addPhoto(file); markDirty(); setNotice('Photo added inside your book page.'); } catch (error: any) { setBookError(error?.message || 'Could not insert photo.'); } }} /></label>
+                                <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-current/30 px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-white/15"><ImagePlus size={15} /> Insert image in page <input type="file" className="sr-only" accept="image/png,image/jpeg,image/webp" onChange={async (event) => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; try { await addPhoto(file); markDirty(); setNotice('Photo added. Drag it to place it in the page.'); } catch (error: any) { setBookError(error?.message || 'Could not insert photo.'); } }} /></label>
                             </div>
+                            {page.imageData && <p className="mt-2 text-xs text-[#9a796b]">Drag the photo within its frame, adjust the size slider, or move it above/below your writing.</p>}
                             <label className="sr-only" htmlFor="letter-content">Your letter</label>
                             <textarea id="letter-content" value={page.text} onChange={e => { if (updateText(e.target.value)) markDirty(); }} onPaste={event => {
                                 const image = Array.from(event.clipboardData.items).find(item => item.kind === 'file' && item.type.startsWith('image/'));
@@ -388,12 +424,8 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                                     setBookError('You pasted encoded photo data. Click "Insert image in page" instead.');
                                 }
                             }} placeholder={"Tell them what you've been meaning to say…\n\nStart with a memory, a feeling, or just a simple hello."} className={cn('mt-7 min-h-[230px] w-full flex-1 resize-none border-0 bg-transparent p-0 text-base leading-[1.9] outline-none placeholder:opacity-50 sm:text-lg', font, imageUrl ? 'text-white placeholder:text-white' : 'text-[#35483d] placeholder:text-[#8b9188]')} />
-                            {page.imageData && <div className="mt-4 rounded-[18px] border border-[#dbcbb7]/70 bg-white/35 p-3">
-                                <img src={page.imageData} alt={page.caption || 'Photo inside this letter'} className="mx-auto max-h-48 w-full rounded-xl object-contain sm:max-h-56" />
-                                <label htmlFor="letter-image-caption" className="sr-only">Caption for this photo</label>
-                                <input id="letter-image-caption" maxLength={140} value={page.caption || ''} onChange={(e) => { setCaption(e.target.value); markDirty(); }} placeholder="Add a little caption…" className="mt-3 h-9 w-full border-b border-[#c7b9a7] bg-transparent text-center font-serif text-sm italic text-[#39483c] outline-none placeholder:text-[#8a7a6d]" />
-                                <button type="button" onClick={() => { removeImage(); markDirty(); }} className="mx-auto mt-2 flex items-center gap-1.5 text-xs font-semibold text-[#785c4f] underline"><Trash2 size={13} /> Remove this photo</button>
-                            </div>}
+                            {page.imagePlacement === 'before' && photoEditor}
+                            {page.imagePlacement !== 'before' && photoEditor}
                             <div className={cn('mt-8 flex justify-end gap-2 border-t pt-5 font-serif italic', imageUrl ? 'border-white/35 text-white/80' : 'border-[#dcd6c8] text-[#817e72]')}><span>With care,</span><span className="font-semibold">{isAnonymous ? 'Anonymous' : (user?.username?.includes('@') ? user.username.split('@')[0] : user?.username) || 'Me'}</span></div>
                         </div>
                     </div>
