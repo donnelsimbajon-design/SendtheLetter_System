@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { ArrowLeft, ArrowRight, BookHeart, LockKeyhole, Mail, UserRound } from 'lucide-react';
+import { ArrowLeft, ArrowRight, LockKeyhole, Mail, UserRound } from 'lucide-react';
+import CharacterBadge from '../components/CharacterBadge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import AvatarPicker from '../components/AvatarPicker';
@@ -33,7 +34,7 @@ const Signup = () => {
   return (
     <main className="grid min-h-screen bg-background lg:grid-cols-[.9fr_1fr]">
       <section className="relative hidden overflow-hidden bg-[hsl(var(--surface-rose))] p-12 text-[#49363B] lg:flex lg:flex-col lg:justify-between xl:p-16">
-        <Link to="/" className="relative z-10 flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/60"><BookHeart size={22}/></span><span className="font-editorial text-2xl">SendTheLetter</span></Link>
+        <Link to="/" className="relative z-10 flex items-center gap-3"><CharacterBadge name="lumi" tone="paper" size="md" className="!h-11 !w-11" /><span className="font-editorial text-2xl">SendTheLetter</span></Link>
         <div className="relative z-10 max-w-xl"><p className="text-xs font-bold uppercase tracking-[.22em] opacity-65">A fresh page</p><h1 className="mt-5 font-editorial text-6xl leading-[1.08] xl:text-7xl">Make room for what matters.</h1><p className="mt-6 max-w-md leading-7 opacity-75">Create a little corner of the internet for thoughtful words, quiet moments, and meaningful connection.</p></div>
         <p className="relative z-10 text-sm opacity-60">Your story can start with one sentence.</p>
         <div className="absolute -bottom-20 -right-24 h-96 w-96 rounded-full border border-[#49363B]/15"/><div className="absolute -bottom-10 -right-14 h-72 w-72 rounded-full border border-[#49363B]/15"/>
@@ -41,7 +42,7 @@ const Signup = () => {
       <section className="flex items-center justify-center px-5 py-12 sm:px-10">
         <div className="w-full max-w-md">
           <Link to="/" className="mb-12 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"><ArrowLeft size={16}/> Back to home</Link>
-          <div className="mb-8 lg:hidden"><span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground"><BookHeart size={23}/></span><p className="mt-4 font-editorial text-2xl">SendTheLetter</p></div>
+          <div className="mb-8 lg:hidden"><CharacterBadge name="lumi" tone="forest" size="md" /><p className="mt-4 font-editorial text-2xl">SendTheLetter</p></div>
           <p className="text-xs font-bold uppercase tracking-[.2em] text-[hsl(var(--accent))]">Start here</p>
           <h2 className="mt-3 font-editorial text-4xl">Create your space.</h2>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">A few details, then the page is yours.</p>
