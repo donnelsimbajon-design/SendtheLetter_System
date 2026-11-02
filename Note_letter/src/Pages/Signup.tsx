@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { ArrowLeft, ArrowRight, LockKeyhole, Mail, UserRound } from 'lucide-react';
 import CharacterBadge from '../components/CharacterBadge';
@@ -9,6 +9,10 @@ import AvatarPicker from '../components/AvatarPicker';
 
 const Signup = () => {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const requested = params.get('returnTo') || '';
+  const returnTo = /^\/dashboard\/notes\?compose=1(?:&template=(?:gratitude|future-self|apology|hello))?$/.test(requested) ? requested : '/dashboard';
+  const loginLink = returnTo === '/dashboard' ? '/login' : '/login?returnTo=' + encodeURIComponent(returnTo);
   const register = useAuthStore((state) => state.register);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -23,7 +27,7 @@ const Signup = () => {
     setError('');
     try {
       await register({ username, email, password, avatarPreset });
-      navigate('/dashboard');
+      navigate(returnTo, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'We could not create your account. Please try again.');
     } finally {
@@ -56,7 +60,7 @@ const Signup = () => {
             </div>
             <Button type="submit" disabled={isLoading} className="h-12 w-full rounded-xl text-sm font-semibold">{isLoading?'Creating your space...':'Create account'} {!isLoading&&<ArrowRight size={17} className="ml-2"/>}</Button>
           </form>
-          <p className="mt-7 text-center text-sm text-muted-foreground">Already have an account? <Link to="/login" className="font-semibold text-primary hover:underline">Sign in</Link></p>
+          <p className="mt-7 text-center text-sm text-muted-foreground">Already have an account? <Link to={loginLink} className="font-semibold text-primary hover:underline">Sign in</Link></p>
         </div>
       </section>
     </main>
