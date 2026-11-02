@@ -3,6 +3,7 @@ import { Op } from 'sequelize';
 import Letter from '../models/Letter';
 import User from '../models/User';
 import Repost from '../models/Repost';
+import { publicLetterDTO } from '../services/publicLetterDTO';
 
 interface AuthRequest extends Request {
     user?: any;
@@ -14,7 +15,7 @@ export const toggleRepost = async (req: AuthRequest, res: Response) => {
         const letterId = Number(req.params.id);
         if (!Number.isInteger(letterId) || letterId < 1) return res.status(400).json({ message: 'Invalid letter ID.' });
         const letter = await Letter.findByPk(letterId);
-        if (!letter || !letter.isPublic || letter.status !== 'published' || letter.isArchived) return res.status(404).json({ message: 'Public letter not found.' });
+        if (!letter || !letter.isPublic || letter.status !== 'published' || letter.isArchived || (letter.openDate && letter.openDate.getTime() > Date.now()) || (letter.scheduledDate && letter.scheduledDate.getTime() > Date.now())) return res.status(404).json({ message: 'Public letter not found.' });
         const author = await User.findByPk(letter.userId);
         if (!author || !author.isActive) return res.status(404).json({ message: 'Public letter not found.' });
 
@@ -41,7 +42,7 @@ export const checkRepostStatus = async (req: AuthRequest, res: Response) => {
         const letterId = Number(req.params.id);
         if (!Number.isInteger(letterId) || letterId < 1) return res.status(400).json({ message: 'Invalid letter ID.' });
         const letter = await Letter.findByPk(letterId);
-        if (!letter || !letter.isPublic || letter.status !== 'published' || letter.isArchived) return res.status(404).json({ message: 'Public letter not found.' });
+        if (!letter || !letter.isPublic || letter.status !== 'published' || letter.isArchived || (letter.openDate && letter.openDate.getTime() > Date.now()) || (letter.scheduledDate && letter.scheduledDate.getTime() > Date.now())) return res.status(404).json({ message: 'Public letter not found.' });
 
         const repost = await Repost.findOne({
             where: { userId, letterId }
@@ -70,7 +71,10 @@ export const getUserReposts = async (req: AuthRequest, res: Response) => {
             include: [{
                 model: Letter,
                 as: 'letter',
-                where: { isPublic: true, status: 'published', isArchived: false },
+                where: { isPublic: true, status: 'published', isArchived: false, [Op.and]: [
+                    { [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }] },
+                    { [Op.or]: [{ scheduledDate: null }, { scheduledDate: { [Op.lte]: new Date() } }] },
+                ] },
                 include: [{
                     model: User,
                     as: 'user',
@@ -81,20 +85,10 @@ export const getUserReposts = async (req: AuthRequest, res: Response) => {
             order: [['createdAt', 'DESC']]
         });
 
-        const letters = reposts.map((repost: any) => {
-            const letter = repost.letter.toJSON() as any;
-            const { user: _user, userId: _userId, recipientAddress: _privateAddress, ...safeLetter } = letter;
-            void _user;
-            void _userId;
-            void _privateAddress;
-            return {
-                ...safeLetter,
-                repostedAt: repost.createdAt,
-                authorName: letter.isAnonymous ? 'Anonymous Writer' : (letter.user?.username || 'A Writer'),
-                authorAvatar: letter.isAnonymous ? null : (letter.user?.avatar || null),
-                authorId: letter.isAnonymous ? null : (letter.user?.id || null)
-            };
-        });
+        const letters = reposts.map((repost: any) => ({
+            ...publicLetterDTO(repost.letter.toJSON()),
+            repostedAt: repost.createdAt,
+        }));
 
         res.json(letters);
     } catch (error) {
@@ -120,7 +114,10 @@ export const getPublicUserReposts = async (req: AuthRequest, res: Response) => {
             include: [{
                 model: Letter,
                 as: 'letter',
-                where: { isPublic: true, status: 'published', isArchived: false, [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }] },
+                where: { isPublic: true, status: 'published', isArchived: false, [Op.and]: [
+                    { [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }] },
+                    { [Op.or]: [{ scheduledDate: null }, { scheduledDate: { [Op.lte]: new Date() } }] },
+                ] },
                 include: [{
                     model: User,
                     as: 'user',
@@ -132,10 +129,8 @@ export const getPublicUserReposts = async (req: AuthRequest, res: Response) => {
         });
 
         const letters = reposts.map((repost: any) => ({
-            ...repost.letter.toJSON(),
+            ...publicLetterDTO(repost.letter.toJSON()),
             repostedAt: repost.createdAt,
-            authorName: repost.letter.user?.username,
-            authorId: repost.letter.user?.id
         }));
 
         res.json(letters);
