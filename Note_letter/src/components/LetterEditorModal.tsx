@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog';
-import { BookHeart, Check, ChevronDown, Clock3, EyeOff, Feather, FileCheck2, Globe2, ImagePlus, LockKeyhole, Music2, Palette, PenLine, Save, Send, Settings2, ShieldCheck, Sparkles } from 'lucide-react';
+import { BookHeart, Check, ChevronDown, Clock3, EyeOff, ArrowLeft, ArrowRight, Trash2, Feather, FileCheck2, Globe2, ImagePlus, LockKeyhole, Music2, Palette, PenLine, Save, Send, Settings2, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useWriterPreferences } from '../store/writerPreferences';
 import { cn } from '../lib/utils';
@@ -346,15 +346,35 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                                 <input id="letter-recipient" maxLength={255} value={recipientName} onChange={e => { setRecipientName(e.target.value); markDirty(); }} placeholder="someone special…" className={cn('ml-2 min-w-0 flex-1 bg-transparent text-lg font-semibold outline-none placeholder:opacity-40', imageUrl ? 'text-white placeholder:text-white' : 'text-[#35483d] placeholder:text-[#9c958c]')} />
                                 <span className="font-serif text-lg">,</span>
                             </div>
+                            <div className={cn('mb-1 flex flex-wrap items-center justify-between gap-2', imageUrl ? 'text-white/85' : 'text-[#8b7361]')}>
+                                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.16em]"><BookHeart size={15} /> Page {pageIndex + 1} of {pages.length}</span>
+                                <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-current/30 px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-white/15"><ImagePlus size={15} /> Insert image in page <input type="file" className="sr-only" accept="image/png,image/jpeg,image/webp" onChange={async (event) => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; try { await addPhoto(file); markDirty(); setNotice('Photo added inside your book page.'); } catch (error: any) { setBookError(error?.message || 'Could not insert photo.'); } }} /></label>
+                            </div>
                             <label className="sr-only" htmlFor="letter-content">Your letter</label>
                             <textarea id="letter-content" value={page.text} maxLength={2400} onChange={e => { if (updateText(e.target.value)) markDirty(); }} placeholder={"Tell them what you've been meaning to say…\n\nStart with a memory, a feeling, or just a simple hello."} className={cn('mt-7 min-h-[230px] w-full flex-1 resize-none border-0 bg-transparent p-0 text-base leading-[1.9] outline-none placeholder:opacity-50 sm:text-lg', font, imageUrl ? 'text-white placeholder:text-white' : 'text-[#35483d] placeholder:text-[#8b9188]')} />
+                            {page.imageData && <div className="mt-4 rounded-[18px] border border-[#dbcbb7]/70 bg-white/35 p-3">
+                                <img src={page.imageData} alt={page.caption || 'Photo inside this letter'} className="mx-auto max-h-48 w-full rounded-xl object-contain sm:max-h-56" />
+                                <label htmlFor="letter-image-caption" className="sr-only">Caption for this photo</label>
+                                <input id="letter-image-caption" maxLength={140} value={page.caption || ''} onChange={(e) => { setCaption(e.target.value); markDirty(); }} placeholder="Add a little caption…" className="mt-3 h-9 w-full border-b border-[#c7b9a7] bg-transparent text-center font-serif text-sm italic text-[#39483c] outline-none placeholder:text-[#8a7a6d]" />
+                                <button type="button" onClick={() => { removeImage(); markDirty(); }} className="mx-auto mt-2 flex items-center gap-1.5 text-xs font-semibold text-[#785c4f] underline"><Trash2 size={13} /> Remove this photo</button>
+                            </div>}
                             <div className={cn('mt-8 flex justify-end gap-2 border-t pt-5 font-serif italic', imageUrl ? 'border-white/35 text-white/80' : 'border-[#dcd6c8] text-[#817e72]')}><span>With care,</span><span className="font-semibold">{isAnonymous ? 'Anonymous' : user?.username || 'Me'}</span></div>
                         </div>
                     </div>
+                    <nav aria-label="Book page controls" className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card/80 p-2">
+                        <button type="button" disabled={pageIndex === 0} onClick={() => setPageIndex(Math.max(0, pageIndex - 1))} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-2 text-xs font-bold hover:bg-muted disabled:opacity-35"><ArrowLeft size={14} /> Previous</button>
+                        <div className="flex items-center gap-2">
+                            <span className="hidden text-[11px] font-semibold text-muted-foreground sm:inline">{pageIndex + 1} / {pages.length}</span>
+                            <button type="button" onClick={() => { if (addPage()) markDirty(); }} disabled={pages.length >= 80} className="rounded-full border border-border bg-background px-3 py-2 text-xs font-bold hover:bg-muted disabled:opacity-35">+ Add page</button>
+                            {pages.length > 1 && !page.text && !page.imageData && <button type="button" onClick={() => { if (removeBlank()) markDirty(); }} className="rounded-full border border-border bg-background p-2 text-muted-foreground hover:text-red-700" title="Remove blank page" aria-label="Remove blank page"><Trash2 size={14} /></button>}
+                        </div>
+                        <button type="button" disabled={pageIndex >= pages.length - 1} onClick={() => setPageIndex(Math.min(pages.length - 1, pageIndex + 1))} className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground disabled:opacity-35">Next <ArrowRight size={14} /></button>
+                    </nav>
                     <div className="mt-3 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-muted-foreground"><span className="inline-flex items-center gap-2"><PenLine size={14} /> {wordCount} {wordCount === 1 ? 'word' : 'words'} written</span><span className="inline-flex items-center gap-1.5">{isSaving ? <><Save size={14} className="animate-pulse" /> Saving draft…</> : lastSaved ? <><Check size={14} /> Saved at {lastSaved}</> : <><Sparkles size={14} /> Every word matters</>}</span></div>
                 </div>
             </div>
 
+            {bookError && <div role="alert" className="mx-5 mt-2 rounded-xl bg-red-50 px-4 py-2 text-xs text-red-800">{bookError}</div>}
             {notice && <div role="alert" className="mx-5 mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-semibold text-amber-900 sm:mx-7">{notice}</div>}
             {confirming && <div className="mx-5 mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-muted/80 px-4 py-3 sm:mx-7">
                 <div className="min-w-0"><p className="flex items-center gap-2 text-sm font-bold"><FileCheck2 size={17} /> Ready to finish this letter?</p><p className="mt-1 text-xs text-muted-foreground">{isPublic ? 'Public: other people can read and share it.' : 'Private: only you can access it.'} {scheduled ? 'It will be released at your selected date.' : 'It will be saved immediately.'}</p></div>
