@@ -134,7 +134,7 @@ const startServer = async () => {
         Notification.belongsTo(User, { foreignKey: 'userId', as: 'user' });
         User.hasMany(Notification, { foreignKey: 'actorId', as: 'triggeredNotifications' });
         Notification.belongsTo(User, { foreignKey: 'actorId', as: 'actor' });
-        Notification.belongsTo(Letter, { foreignKey: 'entityId', as: 'letter' });
+        Notification.belongsTo(Letter, { foreignKey: 'letterId', as: 'letter' });
 
         // Model modules register the remaining associations.
         void Message;

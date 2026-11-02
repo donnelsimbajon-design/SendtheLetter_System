@@ -64,6 +64,7 @@ export const createComment = async (req: AuthRequest, res: Response) => {
                 actorId: userId,
                 type: 'comment',
                 entityId: letter.id,
+                letterId: letter.id,
             });
 
             // Emit real-time notification

@@ -9,7 +9,7 @@
     "build": "npm install --include=dev && tsc",
     "start:prod": "node dist/index.js",
     "admin:promote": "node dist/scripts/promoteAdmin.js",
-    "test:associations": "node --test test/followAssociations.test.cjs"
+    "test:associations": "node --test test/*.test.cjs"
   },
   "keywords": [],
   "author": "",

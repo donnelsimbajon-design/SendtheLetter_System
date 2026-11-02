@@ -6,11 +6,12 @@ interface NotificationAttributes {
     userId: number; // Recipient
     actorId: number; // Who triggered it
     type: string;
-    entityId: number; // ID of the letter
+    entityId: number; // Identifier within notification type (letter, follow or friend request)
+    letterId?: number | null; // Only populated for letter-related notifications
     isRead: boolean;
 }
 
-interface NotificationCreationAttributes extends Omit<NotificationAttributes, 'id' | 'isRead'> { }
+interface NotificationCreationAttributes extends Omit<NotificationAttributes, 'id' | 'isRead' | 'letterId'> { letterId?: number | null }
 
 class Notification extends Model<NotificationAttributes, NotificationCreationAttributes> implements NotificationAttributes {
     public id!: number;
@@ -18,6 +19,7 @@ class Notification extends Model<NotificationAttributes, NotificationCreationAtt
     public actorId!: number;
     public type!: string;
     public entityId!: number;
+    public letterId?: number | null;
     public isRead!: boolean;
 
     public readonly createdAt!: Date;
@@ -56,6 +58,12 @@ Notification.init(
         entityId: {
             type: DataTypes.INTEGER.UNSIGNED,
             allowNull: false,
+        },
+        letterId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: { model: 'letters', key: 'id' },
+            onDelete: 'SET NULL',
         },
         isRead: {
             type: DataTypes.BOOLEAN,

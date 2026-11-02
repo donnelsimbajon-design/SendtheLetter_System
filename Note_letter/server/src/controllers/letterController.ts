@@ -5,6 +5,7 @@ import User from '../models/User';
 import sequelize from '../config/database';
 import { Op } from 'sequelize';
 import { parseStoryPages } from '../services/storyPageValidation';
+import { publicLetterDTO } from '../services/publicLetterDTO';
 
 interface AuthRequest extends Request {
     user?: any;
@@ -118,7 +119,10 @@ export const getPublicLetters = async (req: Request, res: Response) => {
         const { default: Comment } = await import('../models/Comment');
 
         const letters = await Letter.findAll({
-            where: { isPublic: true, status: 'published', isArchived: false, [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }] },
+            where: { isPublic: true, status: 'published', isArchived: false, [Op.and]: [
+                { [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }] },
+                { [Op.or]: [{ scheduledDate: null }, { scheduledDate: { [Op.lte]: new Date() } }] },
+            ] },
             include: [
                 {
                     model: User,
@@ -143,22 +147,7 @@ export const getPublicLetters = async (req: Request, res: Response) => {
                     isLikedByUser = !!like;
                 }
 
-                const letterData = letter.toJSON() as any;
-                const anonymous = Boolean(letterData.isAnonymous);
-                // Never reveal the author ID, user object, or avatar for anonymous public letters.
-                const { user: _author, userId: _ownerId, recipientAddress: _privateAddress, ...safeLetter } = letterData;
-                void _author;
-                void _ownerId;
-                void _privateAddress;
-                return {
-                    ...safeLetter,
-                    authorName: anonymous ? 'Anonymous Writer' : (letterData.user?.username || 'Unknown'),
-                    authorAvatar: anonymous ? null : (letterData.user?.avatar || null),
-                    authorId: anonymous ? null : (letterData.user?.id || null),
-                    likeCount,
-                    commentCount,
-                    isLikedByUser,
-                };
+                return { ...publicLetterDTO(letter.toJSON() as any), likeCount, commentCount, isLikedByUser };
             })
         );
 
@@ -194,7 +183,10 @@ export const getUserPublicLetters = async (req: Request, res: Response) => {
                 isArchived: false,
                 userId: user.id,
                 isAnonymous: false, // Don't show anonymous letters on profile
-                [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }]
+                [Op.and]: [
+                    { [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }] },
+                    { [Op.or]: [{ scheduledDate: null }, { scheduledDate: { [Op.lte]: new Date() } }] },
+                ]
             },
             include: [
                 {
@@ -220,20 +212,7 @@ export const getUserPublicLetters = async (req: Request, res: Response) => {
                     isLikedByUser = !!like;
                 }
 
-                const letterData = letter.toJSON() as any;
-                const { user: _author, userId: _userId, recipientAddress: _privateAddress, ...safeLetter } = letterData;
-                void _author;
-                void _userId;
-                void _privateAddress;
-                return {
-                    ...safeLetter,
-                    authorName: letterData.user?.username || 'Unknown',
-                    authorAvatar: letterData.user?.avatar || null,
-                    authorId: letterData.user?.id || null,
-                    likeCount,
-                    commentCount,
-                    isLikedByUser,
-                };
+                return { ...publicLetterDTO(letter.toJSON() as any), likeCount, commentCount, isLikedByUser };
             })
         );
 
@@ -353,10 +332,10 @@ export const getTimeCapsules = async (req: AuthRequest, res: Response) => {
         const letters = await Letter.findAll({
             where: {
                 userId,
-                type: 'Time Capsule',
+                isTimeCapsule: true,
                 status: 'scheduled'
             },
-            order: [['scheduledDate', 'ASC']],
+            order: [['openDate', 'ASC']],
         });
         res.json(letters);
     } catch (error) {
@@ -417,7 +396,10 @@ export const getPublicLetterById = async (req: Request, res: Response) => {
                 isPublic: true,
                 status: 'published',
                 isArchived: false,
-                [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }],
+                [Op.and]: [
+                    { [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }] },
+                    { [Op.or]: [{ scheduledDate: null }, { scheduledDate: { [Op.lte]: new Date() } }] },
+                ],
             },
             include: [{
                 model: User,
@@ -551,7 +533,10 @@ export const getPublicLetterSharePreview = async (req: Request, res: Response) =
                 isPublic: true,
                 status: 'published',
                 isArchived: false,
-                [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }],
+                [Op.and]: [
+                    { [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }] },
+                    { [Op.or]: [{ scheduledDate: null }, { scheduledDate: { [Op.lte]: new Date() } }] },
+                ],
             },
         });
 
