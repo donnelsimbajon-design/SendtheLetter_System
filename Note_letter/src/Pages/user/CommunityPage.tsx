@@ -235,7 +235,7 @@ export default function CommunityPage() {
                     </section>
                 </aside>
 
-                <main aria-label="Community letter feed" className="order-1 min-w-0 space-y-4 md:col-span-2 xl:order-2 xl:col-span-1">
+                <section aria-label="Community letter feed" className="order-1 min-w-0 space-y-4 md:col-span-2 xl:order-2 xl:col-span-1">
                     <section className="rounded-[1.65rem] border border-border bg-card p-4 shadow-sm sm:p-5">
                         <div className="flex items-center gap-3">
                             <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[hsl(var(--surface-gold))] font-editorial text-lg font-bold text-[#493D2A]">
@@ -387,7 +387,7 @@ export default function CommunityPage() {
                             Show more letters
                         </button>
                     )}
-                </main>
+                </section>
 
                 <aside aria-label="Community topics and spotlights" className="order-3 min-w-0 space-y-4 xl:sticky xl:top-[92px]">
                     <section className="rounded-[1.5rem] border border-border bg-card p-5 shadow-sm">
