@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Gift, ImagePlus, MessageCircle, Send, Share2 } from 'lucide-react';
+import { ImagePlus } from 'lucide-react';
+import CharacterBadge from './CharacterBadge';
 import { API_ENDPOINTS } from '../config/api';
 
 type Entry = { id: number; displayName: string; kind: 'comment' | 'gift'; content: string | null; imageData: string | null; reaction: string | null; createdAt: string };
@@ -101,13 +102,13 @@ export default function Guestbook({ token }: { token: string }) {
     };
 
     return <section className="no-print mt-8 rounded-[2rem] border border-[#e3d8cd] bg-[#fffdf9] p-6 shadow-lg sm:p-9">
-        <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#a06c56]"><Gift size={16} /> A little love goes a long way</span>
+        <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#a06c56]"><CharacterBadge name="sely" tone="rose" size="sm" /> A little love goes a long way</span>
         <h2 className="mt-3 font-serif text-3xl text-[#263b35]">Leave a little love 💌</h2>
         <p className="mt-2 text-sm leading-6 text-[#6f756b]">No login needed. Comment, share a photo review, or send a sweet reaction gift.</p>
 
         <div className="mt-6 flex gap-2 border-b border-[#e9e2d8] pb-4">
-            <button type="button" onClick={() => setTab('comments')} className={tab === 'comments' ? 'rounded-full bg-[#263b35] px-4 py-2 text-sm text-white' : 'rounded-full bg-[#f3ede5] px-4 py-2 text-sm text-[#52645d]'}><MessageCircle size={15} className="mr-2 inline" />Comments</button>
-            <button type="button" onClick={() => setTab('gifts')} className={tab === 'gifts' ? 'rounded-full bg-[#263b35] px-4 py-2 text-sm text-white' : 'rounded-full bg-[#f3ede5] px-4 py-2 text-sm text-[#52645d]'}><Gift size={15} className="mr-2 inline" />Gift reactions</button>
+            <button type="button" onClick={() => setTab('comments')} className={tab === 'comments' ? 'rounded-full bg-[#263b35] px-4 py-2 text-sm text-white' : 'rounded-full bg-[#f3ede5] px-4 py-2 text-sm text-[#52645d]'}><CharacterBadge name="chika" tone="paper" size="xs" className="mr-2 inline-flex align-middle" />Comments</button>
+            <button type="button" onClick={() => setTab('gifts')} className={tab === 'gifts' ? 'rounded-full bg-[#263b35] px-4 py-2 text-sm text-white' : 'rounded-full bg-[#f3ede5] px-4 py-2 text-sm text-[#52645d]'}><CharacterBadge name="sely" tone="rose" size="xs" className="mr-2 inline-flex align-middle" />Gift reactions</button>
         </div>
         <label htmlFor="guest-nickname" className="mt-5 mb-2 block text-sm font-medium">Your nickname</label>
         <input id="guest-nickname" value={nickname} maxLength={40} onChange={e => setNickname(e.target.value)} placeholder="What should we call you?" className="w-full rounded-xl border border-[#ddd3c8] bg-white px-4 py-3 text-sm outline-none focus:border-[#a06c56]" />
@@ -116,7 +117,7 @@ export default function Guestbook({ token }: { token: string }) {
             <textarea id="guest-message" value={comment} maxLength={1200} rows={3} onChange={e => setComment(e.target.value)} placeholder="This letter made me feel…" className="w-full resize-y rounded-xl border border-[#ddd3c8] bg-white px-4 py-3 text-sm outline-none focus:border-[#a06c56]" />
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                 <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#ddd3c8] bg-white px-4 py-2 text-sm"><ImagePlus size={17} />{image ? 'Change photo' : 'Add photo'}<input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={e => selectPhoto(e.target.files?.[0])} /></label>
-                <button type="button" disabled={busy} onClick={() => void post('comment')} className="inline-flex items-center gap-2 rounded-full bg-[#263b35] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><Send size={16} />{busy ? 'Posting…' : 'Post comment'}</button>
+                <button type="button" disabled={busy} onClick={() => void post('comment')} className="inline-flex items-center gap-2 rounded-full bg-[#263b35] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><CharacterBadge name="piko" tone="paper" size="sm" />{busy ? 'Posting…' : 'Post comment'}</button>
             </div>
             {image && <div className="mt-3"><img src={image} alt="Photo preview" className="max-h-48 rounded-xl object-cover" /><button type="button" onClick={() => setImage(null)} className="mt-2 block text-xs underline">Remove photo</button></div>}
         </div> : <div className="mt-6">
@@ -139,6 +140,6 @@ export default function Guestbook({ token }: { token: string }) {
                     }
                 </article>
             )}</div>}
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-[#f6f0e8] p-4 text-sm"><span>Know someone who'd love this letter?</span><button type="button" onClick={() => void copyLink()} className="inline-flex items-center gap-2 font-semibold text-[#a06c56]"><Share2 size={16} />Copy share link</button></div>
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-[#f6f0e8] p-4 text-sm"><span>Know someone who'd love this letter?</span><button type="button" onClick={() => void copyLink()} className="inline-flex items-center gap-2 font-semibold text-[#a06c56]"><CharacterBadge name="piko" tone="sage" size="sm" />Copy share link</button></div>
     </section>;
 }
