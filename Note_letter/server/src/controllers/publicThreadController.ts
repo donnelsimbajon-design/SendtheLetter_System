@@ -181,6 +181,7 @@ export const postPublicThread = async (req: AuthedRequest, res: Response) => {
                     actorId: userId,
                     type: 'comment',
                     entityId: letter.id,
+                    letterId: letter.id,
                 });
                 const io = req.app.get('io');
                 if (io) {
