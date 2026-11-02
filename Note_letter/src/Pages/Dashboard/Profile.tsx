@@ -29,7 +29,7 @@ export default function Profile() {
         setLoading(true);
         setError('');
         const token = localStorage.getItem('token');
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
         const username = encodeURIComponent(user.username);
         try {
             const [profileResponse, lettersResponse, repostResponse] = await Promise.all([
