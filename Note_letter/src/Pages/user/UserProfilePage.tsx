@@ -43,18 +43,30 @@ export default function UserProfilePage() {
             const headers = token ? authHeader() : {};
             const name = encodeURIComponent(username);
             try {
-                const [profileRes, letterRes, repostRes] = await Promise.all([
-                    fetch(`${API_ENDPOINTS.users}/profile/${name}`, { headers }),
+                const profileRes = await fetch(`${API_ENDPOINTS.users}/profile/${name}`, { headers });
+                if (profileRes.status === 404) throw new Error('This writer profile was not found.');
+                if (!profileRes.ok) throw new Error('This profile is temporarily unavailable. Please try again.');
+                const profileInfo = await profileRes.json();
+                if (!active) return;
+                setProfile(profileInfo);
+                // A failure in the repost/feed endpoints must not hide a valid writer profile.
+                const [letterResult, repostResult] = await Promise.allSettled([
                     fetch(`${API_ENDPOINTS.letters}/user/${name}`, { headers }),
                     fetch(`${API_ENDPOINTS.letters}/user/${name}/reposts`, { headers }),
                 ]);
-                if (profileRes.status === 404) throw new Error('This writer profile was not found.');
-                if (!profileRes.ok || !letterRes.ok || !repostRes.ok) throw new Error('This profile is temporarily unavailable. Please try again.');
-                const [profileInfo, publicPosts, sharedPosts] = await Promise.all([profileRes.json(), letterRes.json(), repostRes.json()]);
+                const readList = async (result: PromiseSettledResult<Response>): Promise<Note[]> => {
+                    if (result.status !== 'fulfilled' || !result.value.ok) return [];
+                    const data = await result.value.json().catch(() => []);
+                    return Array.isArray(data) ? data : [];
+                };
+                const [publicPosts, sharedPosts] = await Promise.all([readList(letterResult), readList(repostResult)]);
                 if (!active) return;
-                setProfile(profileInfo);
-                setPosts(Array.isArray(publicPosts) ? publicPosts : []);
-                setReposts(Array.isArray(sharedPosts) ? sharedPosts : []);
+                setPosts(publicPosts);
+                setReposts(sharedPosts as WriterFeedNote[]);
+                if (letterResult.status !== 'fulfilled' || !letterResult.value.ok ||
+                    repostResult.status !== 'fulfilled' || !repostResult.value.ok) {
+                    setError('Some published letters or reposts could not load. You can still view this writer’s profile.');
+                }
             } catch (err: any) {
                 if (active) setError(err?.message || 'This profile is not available.');
             } finally {

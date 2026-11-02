@@ -6,6 +6,10 @@ export interface StoryPage {
     text: string;
     imageData?: string;
     caption?: string;
+    imageX?: number;
+    imageY?: number;
+    imageWidth?: number;
+    imagePlacement?: 'before' | 'after';
 }
 
 /** Validate compact in-letter images and enforce bounds before JSONB persistence. */
@@ -50,6 +54,22 @@ export function parseStoryPages(value: unknown): { pages: StoryPage[] | null; er
             totalBytes += bytes.length;
             if (totalBytes > 2 * 1024 * 1024) return { pages: null, error: 'Total book photo size must be under 2 MB.' };
             safePage.imageData = imageData;
+        }
+        // Preserve only bounded numeric layout metadata, never arbitrary CSS or HTML.
+        const placement = (item as any).imagePlacement;
+        if (placement != null && placement !== 'before' && placement !== 'after') {
+            return { pages: null, error: 'Invalid photo placement.' };
+        }
+        if (placement && safePage.imageData) safePage.imagePlacement = placement;
+        for (const key of ['imageX', 'imageY', 'imageWidth'] as const) {
+            const value = (item as any)[key];
+            if (value == null) continue;
+            const min = key === 'imageWidth' ? 30 : 0;
+            const max = key === 'imageWidth' ? 90 : 100;
+            if (typeof value !== 'number' || !Number.isFinite(value) || value < min || value > max) {
+                return { pages: null, error: 'Photo position and size must be within page bounds.' };
+            }
+            if (safePage.imageData) safePage[key] = Math.round(value);
         }
         if (caption) safePage.caption = caption.trim();
         pages.push(safePage);

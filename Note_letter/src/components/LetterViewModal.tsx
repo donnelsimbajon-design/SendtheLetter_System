@@ -123,9 +123,11 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
 
     const handleAuthorClick = () => {
         if (!note || note.isAnonymous || !note.authorName || note.authorName === 'A Writer' || note.authorName === 'Unknown') return;
+        const username = note.authorName.trim();
+        if (!username) return;
+        if (onAuthorClick) onAuthorClick(username);
+        else navigate(user ? `/dashboard/profile/${encodeURIComponent(username)}` : `/writers/${encodeURIComponent(username)}`);
         onClose();
-        if (onAuthorClick) onAuthorClick(note.authorName);
-        else navigate(`/writers/${encodeURIComponent(note.authorName)}`);
     };
 
     if (!note) return null;
@@ -191,15 +193,18 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                             {/* Header: Sender & Date */}
                             <div className="flex items-center gap-3 text-stone-600 text-sm">
                                 {!note.isAnonymous && note.authorAvatar ? (
-                                    <div className="w-10 h-10 rounded-full overflow-hidden bg-stone-200 flex-shrink-0 cursor-pointer" onClick={handleAuthorClick}>
-                                        <img src={getImageUrl(note.authorAvatar)} alt={note.authorName} className="w-full h-full object-cover" />
-                                    </div>
+                                    <button type="button" className="w-10 h-10 rounded-full overflow-hidden bg-stone-200 flex-shrink-0 focus-visible:outline-2 focus-visible:outline-primary" onClick={handleAuthorClick} aria-label={`View ${note.authorName} profile`}>
+                                        <img src={getImageUrl(note.authorAvatar)} alt="" className="w-full h-full object-cover" />
+                                    </button>
                                 ) : (
-                                    <div className="w-10 h-10 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0">
+                                    <button type="button" onClick={handleAuthorClick}
+                                        disabled={note.isAnonymous || !note.authorName || note.authorName === 'A Writer' || note.authorName === 'Unknown'}
+                                        aria-label={note.isAnonymous ? 'Anonymous writer' : `View ${note.authorName || 'writer'} profile`}
+                                        className="w-10 h-10 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0 disabled:cursor-default enabled:hover:ring-2 enabled:hover:ring-[#a98570] focus-visible:outline-2 focus-visible:outline-primary">
                                         <span className="text-stone-500 font-bold text-lg">
                                             {note.isAnonymous ? '?' : (note.authorName?.[0]?.toUpperCase() || 'U')}
                                         </span>
-                                    </div>
+                                    </button>
                                 )}
                                 <div>
                                     <button
