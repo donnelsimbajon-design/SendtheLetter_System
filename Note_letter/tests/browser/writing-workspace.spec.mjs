@@ -248,3 +248,46 @@ test('YouTube link is an external music reference, not a hidden video player', a
   await expect(modal.getByRole('region', { name: 'Letter soundtrack' })).toHaveCount(0);
   await expect(modal.locator('iframe[src*="youtube"]')).toHaveCount(0);
 });
+
+test('a tall photo stays inside the letter page and the photo can move to top or end', async ({ page }, testInfo) => {
+  await fakeAuthenticatedApi(page);
+  await page.goto('/dashboard/notes?compose=1&template=gratitude');
+  const modal = page.getByRole('dialog');
+  if (testInfo.project.name === 'mobile-chromium') {
+    await modal.getByRole('button', { name: 'Customize' }).click();
+  }
+  await modal.locator('#letter-page-image').setInputFiles({
+    name: 'portrait.png', mimeType: 'image/png',
+    buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7N2u8AAAAASUVORK5CYII=', 'base64'),
+  });
+  const writing = modal.getByTestId('letter-flow-editor');
+  const figure = writing.locator('[data-editable-letter-photo]');
+  await expect(figure).toHaveCount(1);
+  const position = modal.getByRole('group', { name: 'Move photo within letter' });
+  await position.getByRole('button', { name: 'End' }).click();
+  await expect.poll(() => figure.evaluate(node => (node.previousSibling?.textContent || '').includes('It means more than you know.'))).toBe(true);
+
+  // Mimic a tall portrait. The floated figure must increase the editor's
+  // own height so it can NEVER overlap the letter's signature/footer.
+  await figure.locator('img').evaluate(image => {
+    image.style.height = '270px';
+    image.style.objectFit = 'cover';
+  });
+  const footer = modal.getByText('With care,', { exact: true }).locator('..');
+  const rects = await Promise.all([
+    figure.boundingBox(), writing.boundingBox(), footer.boundingBox(),
+  ]);
+  const [imageRect, writingRect, footerRect] = rects;
+  expect(imageRect).not.toBeNull();
+  expect(writingRect).not.toBeNull();
+  expect(footerRect).not.toBeNull();
+  expect(imageRect.y + imageRect.height).toBeLessThanOrEqual(writingRect.y + writingRect.height + 2);
+  expect(imageRect.y + imageRect.height).toBeLessThanOrEqual(footerRect.y + 2);
+
+  await position.getByRole('button', { name: 'Top' }).click();
+  await expect.poll(() => figure.evaluate(node => node.previousSibling?.textContent || '')).toBe('');
+  expect((await writing.innerText()).match(/I wanted to take a moment to say thank you/g)).toHaveLength(1);
+  await position.getByRole('button', { name: 'Middle' }).click();
+  await expect.poll(() => figure.evaluate(node => (node.previousSibling?.textContent || '').length)).toBeGreaterThan(0);
+  await expect.poll(() => figure.evaluate(node => (node.nextSibling?.textContent || '').length)).toBeGreaterThan(0);
+});

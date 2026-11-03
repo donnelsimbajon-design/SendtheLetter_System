@@ -296,12 +296,32 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                 </select>
             </label>
         </div>
-        <p className="mt-2 text-[11px] text-[#806e5d]">Write naturally around the photo. Drag it into another paragraph or place it at your cursor.</p>
+        <p className="mt-2 text-[11px] text-[#806e5d]">Move your photo within the letter. The page expands to keep the image inside its borders.</p>
+        <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Move photo within letter">
+            {([
+                { label: 'Top', anchor: 0 },
+                { label: 'Middle', anchor: Math.max(0, Math.floor(page.text.length / 2)) },
+                { label: 'End', anchor: page.text.length },
+            ] as const).map(position => <button type="button" key={position.label}
+                onClick={() => {
+                    updateImageLayout({
+                        imagePlacement: page.imagePlacement === 'left' ? 'left' : 'right',
+                        imageAnchor: position.anchor,
+                        imageWidth: Math.min(page.imageWidth ?? 42, 65),
+                    });
+                    markDirty();
+                    window.requestAnimationFrame(() => document.querySelector('[data-editable-letter-photo]')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+                }}
+                className="min-h-9 rounded-full border border-[#c7b9a7] bg-white px-3 text-xs font-semibold text-[#33483c] hover:bg-[#f4eadc] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#33483c]">
+                {position.label}
+            </button>)}
+        </div>
         <div className="mt-3 flex flex-wrap items-center gap-3">
             <button type="button" onClick={() => {
-                updateImageLayout({ imageAnchor: caretAnchor.current, imagePlacement: 'right',
+                updateImageLayout({ imageAnchor: caretAnchor.current, imagePlacement: page.imagePlacement === 'left' ? 'left' : 'right',
                     imageWidth: Math.min(page.imageWidth ?? 42, 65) });
                 markDirty();
+                window.requestAnimationFrame(() => document.querySelector('[data-editable-letter-photo]')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
             }} className="min-h-10 rounded-full border border-[#c7b9a7] bg-white px-3 text-xs font-semibold hover:bg-[#f4eadc]">Place photo at cursor</button>
             <label className="flex min-w-[160px] flex-1 items-center gap-3 text-xs font-semibold">
                 Photo width
@@ -470,7 +490,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                                 ? <LetterFlowEditor key={pageIndex} page={page} font={font}
                                     onChange={(text, anchor) => { if (updateComposedText(text, anchor)) markDirty(); }}
                                     onCursor={anchor => { caretAnchor.current = anchor; }}
-                                    onMovePhoto={anchor => { updateImageLayout({ imageAnchor: anchor, imagePlacement: 'right', imageWidth: Math.min(page.imageWidth ?? 42, 65) }); markDirty(); }}
+                                    onMovePhoto={anchor => { updateImageLayout({ imageAnchor: anchor, imagePlacement: page.imagePlacement === 'left' ? 'left' : 'right', imageWidth: Math.min(page.imageWidth ?? 42, 65) }); markDirty(); }}
                                     onPhotoFile={(file, anchor) => {
                                         void addPhoto(file, anchor).then(() => { markDirty(); setNotice('Photo inserted on the next page.'); })
                                             .catch(error => setBookError(error instanceof Error ? error.message : 'Could not add photo.'));
