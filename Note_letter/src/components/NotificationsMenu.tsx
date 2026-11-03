@@ -41,7 +41,7 @@ export default function NotificationsMenu({ placement = 'header' }: { placement?
       <CharacterBadge name="nori" tone="gold" size="sm" />
       {unread > 0 && <span aria-hidden="true" className="absolute right-0 top-0 min-w-4 rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">{unread > 99 ? '99+' : unread}</span>}
     </button>
-    {open && <section role="dialog" aria-label="Notifications" className={placement === 'rail' ? "absolute bottom-0 left-[calc(100%+14px)] z-50 w-[min(22rem,calc(100vw-7rem))] overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-xl" : "absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-card shadow-xl"}>
+    {open && <section role="dialog" aria-label="Notifications" className={placement === 'rail' ? "absolute bottom-0 left-[calc(100%+24px)] z-50 w-[min(22rem,calc(100vw-7rem))] overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-xl" : "absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-card shadow-xl"}>
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div><h2 className="text-sm font-semibold">Notifications</h2><p className="text-xs text-muted-foreground">{unread ? `${unread} unread` : 'All caught up'}</p></div>
         {unread > 0 && <button type="button" className="rounded-lg px-2 py-2 text-xs font-semibold hover:bg-muted" onClick={() => void markNotificationsRead().catch(() => setError('Unable to mark all read.'))}>Mark all read</button>}
