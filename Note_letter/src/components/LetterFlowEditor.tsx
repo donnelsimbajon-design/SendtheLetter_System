@@ -20,6 +20,26 @@ export default function LetterFlowEditor({ page, font, onChange, onCursor, onMov
     const editorRef = useRef<HTMLDivElement>(null);
     const sourceRef = useRef<string | null>(null);
 
+    // An inline <figure> can introduce layout-only line breaks into
+    // innerText. Never count those as part of the saved letter or anchor.
+    const extractLetterText = (node: Node): string => {
+        if (node.nodeType === Node.TEXT_NODE) return node.textContent || '';
+        if (node.nodeType !== Node.ELEMENT_NODE && node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) return '';
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            const element = node as HTMLElement;
+            if (element.hasAttribute('data-editable-letter-photo')) return '';
+            if (element.tagName === 'BR') return '\n';
+        }
+        let text = '';
+        for (const child of Array.from(node.childNodes)) {
+            // Browsers often wrap new contenteditable lines in div/p nodes.
+            const block = child.nodeType === Node.ELEMENT_NODE && /^(DIV|P)$/.test((child as HTMLElement).tagName);
+            if (block && text && !text.endsWith('\n')) text += '\n';
+            text += extractLetterText(child);
+        }
+        return text;
+    };
+
     const selectionOffset = (): number => {
         const root = editorRef.current;
         const selection = window.getSelection();
@@ -29,7 +49,7 @@ export default function LetterFlowEditor({ page, font, onChange, onCursor, onMov
         const prefix = document.createRange();
         prefix.selectNodeContents(root);
         prefix.setEnd(range.startContainer, range.startOffset);
-        return Math.max(0, Math.min(root.innerText.length, prefix.toString().length));
+        return Math.max(0, Math.min(extractLetterText(root).length, extractLetterText(prefix.cloneContents()).length));
     };
 
     const photoOffset = (root: HTMLDivElement): number => {
@@ -38,7 +58,7 @@ export default function LetterFlowEditor({ page, font, onChange, onCursor, onMov
         const range = document.createRange();
         range.selectNodeContents(root);
         range.setEndBefore(figure);
-        return range.toString().length;
+        return extractLetterText(range.cloneContents()).length;
     };
 
     useLayoutEffect(() => {
@@ -47,7 +67,7 @@ export default function LetterFlowEditor({ page, font, onChange, onCursor, onMov
         const currentFigure = root.querySelector<HTMLElement>('[data-editable-letter-photo]');
         const hasCorrectImage = !!currentFigure && !!page.imageData &&
             currentFigure.querySelector('img')?.getAttribute('src') === page.imageData;
-        const matchingText = sourceRef.current === page.text && root.innerText.replace(/\r/g, '') === page.text;
+        const matchingText = sourceRef.current === page.text && extractLetterText(root).replace(/\r/g, '') === page.text;
         const matchingAnchor = !page.imageData || photoOffset(root) === clampImageAnchor(page);
 
         if (!matchingText || !hasCorrectImage || !matchingAnchor) {
@@ -87,7 +107,7 @@ export default function LetterFlowEditor({ page, font, onChange, onCursor, onMov
     const updateText = () => {
         const root = editorRef.current;
         if (!root) return;
-        const text = root.innerText.replace(/\r/g, '');
+        const text = extractLetterText(root).replace(/\r/g, '');
         const anchor = Math.min(text.length, photoOffset(root));
         sourceRef.current = text;
         onCursor(selectionOffset());
@@ -109,7 +129,7 @@ export default function LetterFlowEditor({ page, font, onChange, onCursor, onMov
         if (range && root.contains(range.startContainer)) prefix.setEnd(range.startContainer, range.startOffset);
         else if (position && root.contains(position.offsetNode)) prefix.setEnd(position.offsetNode, position.offset);
         else return selectionOffset();
-        return Math.min(root.innerText.length, prefix.toString().length);
+        return Math.min(extractLetterText(root).length, extractLetterText(prefix.cloneContents()).length);
     };
 
     const paste = (event: ClipboardEvent<HTMLDivElement>) => {
@@ -156,7 +176,7 @@ export default function LetterFlowEditor({ page, font, onChange, onCursor, onMov
             if (moving) onMovePhoto(anchor);
             else onPhotoFile(file!, anchor);
         }}
-        className={`mt-5 min-h-[280px] w-full min-w-0 flex-1 break-words whitespace-pre-wrap text-base leading-[1.9] outline-none sm:text-lg ${font}`}
+        className={`mt-5 flow-root min-h-[300px] w-full min-w-0 flex-[1_0_auto] break-words whitespace-pre-wrap text-base leading-[1.9] outline-none sm:text-lg ${font}`}
         data-testid="letter-flow-editor"
     />;
 }
