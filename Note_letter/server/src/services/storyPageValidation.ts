@@ -9,7 +9,8 @@ export interface StoryPage {
     imageX?: number;
     imageY?: number;
     imageWidth?: number;
-    imagePlacement?: 'before' | 'after';
+    imagePlacement?: 'before' | 'after' | 'left' | 'right';
+    imageAnchor?: number;
 }
 
 /** Validate compact in-letter images and enforce bounds before JSONB persistence. */
@@ -57,10 +58,17 @@ export function parseStoryPages(value: unknown): { pages: StoryPage[] | null; er
         }
         // Preserve only bounded numeric layout metadata, never arbitrary CSS or HTML.
         const placement = (item as any).imagePlacement;
-        if (placement != null && placement !== 'before' && placement !== 'after') {
+        if (placement != null && !['before', 'after', 'left', 'right'].includes(placement)) {
             return { pages: null, error: 'Invalid photo placement.' };
         }
         if (placement && safePage.imageData) safePage.imagePlacement = placement;
+        const rawAnchor = (item as any).imageAnchor;
+        if (rawAnchor != null) {
+            if (typeof rawAnchor !== 'number' || !Number.isSafeInteger(rawAnchor) || rawAnchor < 0 || rawAnchor > text.length) {
+                return { pages: null, error: 'Photo anchor must be inside the page text.' };
+            }
+            if (safePage.imageData) safePage.imageAnchor = rawAnchor;
+        }
         for (const key of ['imageX', 'imageY', 'imageWidth'] as const) {
             const value = (item as any)[key];
             if (value == null) continue;

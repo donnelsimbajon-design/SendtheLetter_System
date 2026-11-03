@@ -33,6 +33,30 @@ export function useLetterBook() {
         return true;
     };
 
+    const updateComposedText = (value: string, anchor: number) => {
+        if (/data:image\/(?:png|jpeg|webp);base64,/i.test(value) || /[A-Za-z0-9+/]{256,}={0,2}/.test(value)) {
+            setBookError('Encoded photo data cannot be letter text. Insert the image instead.');
+            return false;
+        }
+        const updated = pages.map(page => ({ ...page }));
+        updated[pageIndex].text = value;
+        if (updated[pageIndex].imageData) {
+            updated[pageIndex].imageAnchor = Math.max(0, Math.min(value.length, Math.round(anchor)));
+        }
+        const balanced = balanceBookPages(updated, pageIndex);
+        if (balanced.length > MAX_BOOK_PAGES || balanced[balanced.length - 1].text.length > 2400) {
+            setBookError('The letter has reached the 80-page limit.');
+            return false;
+        }
+        if (balanced[pageIndex].imageData) {
+            balanced[pageIndex].imageAnchor = Math.min(balanced[pageIndex].text.length, balanced[pageIndex].imageAnchor ?? 0);
+        }
+        setPages(balanced);
+        setBookError('');
+        if (balanced.length > updated.length && balanced[pageIndex].text.length < value.length) setPageIndex(pageIndex + 1);
+        return true;
+    };
+
     const addPage = () => {
         if (pages.length >= MAX_BOOK_PAGES) { setBookError('Maximum of 80 pages reached.'); return false; }
         const next = [...pages];
@@ -59,7 +83,7 @@ export function useLetterBook() {
         setPages(prev => prev.map((page, index) => index === pageIndex ? { ...page, caption } : page));
     };
 
-    const updateImageLayout = (changes: Partial<Pick<StoryPage, 'imageX' | 'imageY' | 'imageWidth' | 'imagePlacement'>>) => {
+    const updateImageLayout = (changes: Partial<Pick<StoryPage, 'imageX' | 'imageY' | 'imageWidth' | 'imagePlacement' | 'imageAnchor'>>) => {
         setPages(prev => prev.map((page, index) => index === pageIndex && page.imageData ? { ...page, ...changes } : page));
     };
 
@@ -67,7 +91,7 @@ export function useLetterBook() {
         setPages(prev => prev.map((page, index) => index === pageIndex ? { text: page.text } : page));
     };
 
-    const addPhoto = async (file: File) => {
+    const addPhoto = async (file: File, anchor?: number) => {
         if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 7 * 1024 * 1024) {
             throw new Error('Choose a JPG, PNG or WebP photo under 7 MB.');
         }
@@ -99,7 +123,14 @@ export function useLetterBook() {
             if (target === next.length) next.push({ text: '' });
             if (next[target].imageData) next.splice(target, 0, { text: '' });
             if (next.length > MAX_BOOK_PAGES) throw new Error('No room for another page.');
-            next[target] = { ...next[target], imageData: data };
+            next[target] = {
+                ...next[target], imageData: data,
+                imagePlacement: 'right',
+                imageWidth: 42,
+                imageAnchor: target === pageIndex && Number.isFinite(anchor)
+                    ? Math.max(0, Math.min(next[target].text.length, Math.round(anchor!)))
+                    : 0,
+            };
             const balanced = balanceBookPages(next, target);
             setPages(balanced);
             setPageIndex(target);
@@ -111,7 +142,7 @@ export function useLetterBook() {
 
     return {
         pages, pageIndex, setPageIndex, bookError, setBookError, resetBook,
-        updateText, addPage, removeBlank, addPhoto, setCaption, removeImage, updateImageLayout,
+        updateText, updateComposedText, addPage, removeBlank, addPhoto, setCaption, removeImage, updateImageLayout,
         content: bookPlainText(pages), wordCount: bookWordCount(pages),
     };
 }

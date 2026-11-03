@@ -160,3 +160,47 @@ test('untrusted Spotify-looking links never become an embedded media player', as
   await page.getByRole('button', { name: 'Read letter: Thank you for showing up' }).click();
   await expect(page.getByRole('region', { name: 'Letter soundtrack' })).toHaveCount(0);
 });
+
+test('letter reader wraps text around anchored photos with no duplicated paragraph', async ({ page }, testInfo) => {
+  const photo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7N2u8AAAAASUVORK5CYII=';
+  const paragraph = 'Thank you for joining our special celebration. Your presence made the day brighter and brought so much joy.';
+  await fakeAuthenticatedApi(page, [{
+    ...sampleLetters[0],
+    content: paragraph,
+    letterPages: [{ text: paragraph, imageData: photo, imagePlacement: 'right', imageAnchor: 0, imageWidth: 42 }],
+  }]);
+  await page.goto('/dashboard/community');
+  await page.getByRole('button', { name: 'Read letter: Thank you for showing up' }).click();
+  const flow = page.getByTestId('letter-reader-flow');
+  await expect(flow).toBeVisible();
+  await expect(flow.locator('figure[data-letter-photo]')).toHaveCount(1);
+  await expect(flow.locator('img')).toHaveCount(1);
+  const rendered = await flow.innerText();
+  expect(rendered.match(/Your presence made the day brighter/g)).toHaveLength(1);
+  const float = await flow.locator('figure').evaluate(node => getComputedStyle(node).float);
+  expect(float).toBe(testInfo.project.name === 'mobile-chromium' ? 'none' : 'right');
+});
+
+test('letter editor inserts a single inline photo and lets text wrap beside it', async ({ page }, testInfo) => {
+  await fakeAuthenticatedApi(page);
+  await page.goto('/dashboard/notes?compose=1');
+  const editor = page.getByRole('dialog');
+  const words = 'Thank you for sharing this special moment. We will remember the joy and kindness from this day.';
+  await editor.getByLabel('Your letter').fill(words);
+  const input = editor.locator('input[type="file"][accept="image/png,image/jpeg,image/webp"]').last();
+  await input.setInputFiles({
+    name: 'memory.png', mimeType: 'image/png',
+    buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7N2u8AAAAASUVORK5CYII=', 'base64'),
+  });
+  const textbox = editor.getByTestId('letter-flow-editor');
+  await expect(textbox).toBeVisible();
+  await expect(textbox.locator('[data-editable-letter-photo]')).toHaveCount(1);
+  await expect(textbox).toContainText('Thank you for sharing this special moment.');
+  await editor.getByLabel('Photo position').selectOption('left');
+  const float = await textbox.locator('figure').evaluate(node => getComputedStyle(node).float);
+  expect(float).toBe(testInfo.project.name === 'mobile-chromium' ? 'none' : 'left');
+  await editor.getByLabel('Photo width as percentage of page').fill('55');
+  await expect(editor.getByRole('region', { name: 'Photo layout controls' })).toContainText('55%');
+  const text = await textbox.innerText();
+  expect(text.match(/Thank you for sharing this special moment/g)).toHaveLength(1);
+});

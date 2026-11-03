@@ -57,7 +57,9 @@ export function bookPagesFromContent(content = '', stored?: StoryPage[] | null):
             ...(typeof page.imageX === 'number' && Number.isFinite(page.imageX) ? { imageX: page.imageX } : {}),
             ...(typeof page.imageY === 'number' && Number.isFinite(page.imageY) ? { imageY: page.imageY } : {}),
             ...(typeof page.imageWidth === 'number' && Number.isFinite(page.imageWidth) ? { imageWidth: page.imageWidth } : {}),
-            ...(page.imagePlacement === 'before' || page.imagePlacement === 'after' ? { imagePlacement: page.imagePlacement } : {}),
+            ...(['before', 'after', 'left', 'right'].includes(page.imagePlacement || '') ? { imagePlacement: page.imagePlacement } : {}),
+            ...(typeof page.imageAnchor === 'number' && Number.isFinite(page.imageAnchor)
+                ? { imageAnchor: Math.max(0, Math.min(page.text.length, Math.round(page.imageAnchor))) } : {}),
         }));
         return clean.length ? clean : [{ text: '' }];
     }

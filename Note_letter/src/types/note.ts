@@ -7,7 +7,7 @@ export interface Comment {
     createdAt: Date | string;
 }
 
-export interface StoryPage { text: string; imageData?: string; caption?: string; imageX?: number; imageY?: number; imageWidth?: number; imagePlacement?: 'before' | 'after'; }
+export interface StoryPage { text: string; imageData?: string; caption?: string; imageX?: number; imageY?: number; imageWidth?: number; imagePlacement?: 'before' | 'after' | 'left' | 'right'; imageAnchor?: number; }
 
 export interface Note {
     id: string;
