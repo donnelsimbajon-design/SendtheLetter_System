@@ -187,7 +187,7 @@ test('letter editor inserts a single inline photo and lets text wrap beside it',
   const editor = page.getByRole('dialog');
   const words = 'Thank you for sharing this special moment. We will remember the joy and kindness from this day.';
   await editor.getByLabel('Your letter').fill(words);
-  const input = editor.getByLabel('Insert image in page').locator('input[type=file]');
+  const input = editor.locator('input[type="file"][accept="image/png,image/jpeg,image/webp"]').last();
   await input.setInputFiles({
     name: 'memory.png', mimeType: 'image/png',
     buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7N2u8AAAAASUVORK5CYII=', 'base64'),
