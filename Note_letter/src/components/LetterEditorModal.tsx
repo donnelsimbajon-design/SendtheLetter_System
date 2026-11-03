@@ -136,7 +136,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
     });
 
     const canSave = title.trim().length > 0 && content.trim().length > 0;
-    const canSaveDraft = canSave || Boolean(title.trim() || content.trim()) || pages.some(page => Boolean(page.imageData));
+    const canSaveDraft = Boolean(content.trim()) || pages.some(page => Boolean(page.imageData));
 
     const saveDraft = async (): Promise<boolean> => {
         if (editingPublished) { setNotice('Existing published letters are updated using the main action.'); return false; }
