@@ -56,12 +56,22 @@ async function mockWorkspace(page, letters = fixedLetters) {
   });
 }
 
-test('community uses original header icons and a three-column desktop feed', async ({ page }, testInfo) => {
+test('community uses original mascots in a dark Instagram-style side rail and three-column feed', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop-chromium', 'Desktop layout only');
   await page.setViewportSize({ width: 1540, height: 950 });
   await mockWorkspace(page);
   await page.goto('/dashboard/community');
   await expect(page.getByRole('navigation', { name: 'Workspace navigation' })).toBeVisible();
+  const rail = page.getByRole('complementary', { name: 'SendTheLetter sidebar' });
+  await expect(rail).toBeVisible();
+  await expect(page.getByRole('banner')).toBeHidden();
+  const railLayout = await rail.evaluate(element => ({
+    width: Math.round(element.getBoundingClientRect().width),
+    left: Math.round(element.getBoundingClientRect().left),
+    position: getComputedStyle(element).position,
+    background: getComputedStyle(element).backgroundColor,
+  }));
+  expect(railLayout).toMatchObject({ width: 84, left: 0, position: 'fixed', background: 'rgb(16, 23, 19)' });
   await expect(page.getByRole('heading', { name: 'Discover words that matter' })).toBeVisible();
   await expect(page.getByRole('complementary', { name: 'Writer recommendations and community links' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Community letter feed' })).toBeVisible();
@@ -70,7 +80,7 @@ test('community uses original header icons and a three-column desktop feed', asy
     .evaluate(el => getComputedStyle(el.parentElement).gridTemplateColumns.split(' ').length);
   expect(count).toBe(3);
   const navigation = page.getByRole('navigation', { name: 'Workspace navigation' });
-  await expect(navigation.getByRole('link')).toHaveCount(5);
+  await expect(navigation.getByRole('link')).toHaveCount(7);
   const expectedLabels = ['Overview', 'My library', 'Community', 'Messages', 'My profile'];
   for (const label of expectedLabels) {
     const link = navigation.getByRole('link', { name: label });
@@ -82,6 +92,24 @@ test('community uses original header icons and a three-column desktop feed', asy
   }
   const current = navigation.getByRole('link', { name: 'Community' });
   await expect(current).toHaveAttribute('aria-current', 'page');
+  await expect(navigation.getByRole('link', { name: 'Write a new letter' })).toBeVisible();
+  const main = page.locator('main#main-content');
+  const mainBox = await main.boundingBox();
+  expect(mainBox.x).toBeGreaterThanOrEqual(84);
+  // The rail's account and notification popovers must open on its right.
+  const accountButton = rail.getByRole('button', { name: 'Account, settings and appearance' });
+  await accountButton.click();
+  const accountMenu = page.getByRole('menu', { name: 'Account menu' });
+  await expect(accountMenu).toBeVisible();
+  const menuBox = await accountMenu.boundingBox();
+  expect(menuBox.x).toBeGreaterThanOrEqual(84);
+  await page.keyboard.press('Escape');
+  await expect(accountMenu).toHaveCount(0);
+  await rail.getByRole('button', { name: /Notifications/ }).click();
+  await expect(page.getByRole('dialog', { name: 'Notifications' })).toBeVisible();
+  const notifBox = await page.getByRole('dialog', { name: 'Notifications' }).boundingBox();
+  expect(notifBox.x).toBeGreaterThanOrEqual(84);
+  await page.getByRole('button', { name: 'Close notifications' }).click();
   await current.hover();
   await expect(current.locator('span[aria-hidden="true"]').last()).toBeVisible();
   const dimensions = await current.evaluate(el => {
@@ -89,6 +117,11 @@ test('community uses original header icons and a three-column desktop feed', asy
     return { width: Math.round(box.width), height: Math.round(box.height) };
   });
   expect(dimensions).toEqual({ width: 48, height: 48 });
+  const searchShortcut = navigation.getByRole('link', { name: 'Search public letters' });
+  await expect(searchShortcut.locator('img[src="/mascots/suri.svg"]')).toBeVisible();
+  await searchShortcut.click();
+  await expect(page).toHaveURL(/\/dashboard\/community\?focus=search$/);
+  await expect(page.getByRole('textbox', { name: 'Search public letters' })).toBeFocused();
 });
 
 test('recommendations and popular topics use public data and preserve anonymity', async ({ page }) => {
@@ -161,6 +194,13 @@ test('mobile presents composer, topics, feed and then discovery sidebars without
   await mockWorkspace(page);
   await page.goto('/dashboard/community');
   await expect(page.getByRole('heading', { name: 'Discover words that matter' })).toBeVisible();
+  await expect(page.getByRole('complementary', { name: 'SendTheLetter sidebar' })).toBeHidden();
+  const mobileNav = page.getByRole('navigation', { name: 'Mobile workspace navigation' });
+  await expect(mobileNav).toBeVisible();
+  await expect(mobileNav.getByRole('link')).toHaveCount(6);
+  for (const label of ['Overview', 'My library', 'Community', 'Write a new letter', 'Messages', 'My profile']) {
+    await expect(mobileNav.getByRole('link', { name: label })).toBeVisible();
+  }
   await expect(page.getByRole('link', { name: /What would you like to write today/ })).toBeVisible();
   await expect(page.getByRole('group', { name: 'Filter public letters by topic' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Read letter: Thank you for showing up' })).toBeVisible();
