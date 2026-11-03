@@ -187,7 +187,8 @@ test('letter editor inserts a single inline photo and lets text wrap beside it',
   const editor = page.getByRole('dialog');
   const words = 'Thank you for sharing this special moment. We will remember the joy and kindness from this day.';
   await editor.getByLabel('Your letter').fill(words);
-  const input = editor.locator('input[type="file"][accept="image/png,image/jpeg,image/webp"]').last();
+  if (testInfo.project.name === 'mobile-chromium') await editor.getByRole('button', { name: 'Customize' }).click();
+  const input = editor.locator('#letter-page-image');
   await input.setInputFiles({
     name: 'memory.png', mimeType: 'image/png',
     buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7N2u8AAAAASUVORK5CYII=', 'base64'),
@@ -203,4 +204,47 @@ test('letter editor inserts a single inline photo and lets text wrap beside it',
   await expect(editor.getByRole('region', { name: 'Photo layout controls' })).toContainText('55%');
   const text = await textbox.innerText();
   expect(text.match(/Thank you for sharing this special moment/g)).toHaveLength(1);
+});
+
+test('photo import in left sidebar autosaves image-only draft without requiring title or text', async ({ page }, testInfo) => {
+  await fakeAuthenticatedApi(page);
+  let saved = null;
+  await page.route('**/api/letters', async route => {
+    if (route.request().method() !== 'POST') return route.fallback();
+    saved = route.request().postDataJSON();
+    await route.fulfill({
+      status: 201, contentType: 'application/json',
+      headers: { 'access-control-allow-origin': '*' },
+      body: JSON.stringify({ letter: { id: 452, status: 'draft' } }),
+    });
+  });
+  await page.goto('/dashboard/notes?compose=1');
+  const editor = page.getByRole('dialog');
+  if (testInfo.project.name === 'mobile-chromium') await editor.getByRole('button', { name: 'Customize' }).click();
+  await expect(editor.getByRole('region', { name: 'Add images to letter' })).toBeVisible();
+  await editor.locator('#letter-page-image').setInputFiles({
+    name: 'memory.png', mimeType: 'image/png',
+    buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7N2u8AAAAASUVORK5CYII=', 'base64'),
+  });
+  await expect(editor.getByTestId('letter-flow-editor')).toBeVisible();
+  await expect.poll(() => saved, { timeout: 10000 }).not.toBeNull();
+  expect(saved.status).toBe('draft');
+  expect(saved.title).toBe('Untitled letter');
+  expect(saved.letterPages[0].imageData).toMatch(/^data:image\/jpeg;base64,/);
+  expect(saved.letterPages[0].imagePlacement).toBe('right');
+  await expect(editor.getByRole('status').filter({ hasText: 'Saved at' })).toBeVisible();
+});
+
+test('YouTube link is an external music reference, not a hidden video player', async ({ page }) => {
+  await fakeAuthenticatedApi(page, [{
+    ...sampleLetters[0], spotifyLink: 'https://youtu.be/M7lc1UVf-VE',
+  }]);
+  await page.goto('/dashboard/community');
+  await page.getByRole('button', { name: 'Read letter: Thank you for showing up' }).click();
+  const modal = page.getByRole('dialog');
+  await expect(modal.getByRole('link', { name: 'Open YouTube' })).toHaveAttribute(
+    'href', 'https://www.youtube.com/watch?v=M7lc1UVf-VE');
+  await expect(modal.getByText(/YouTube soundtrack reference/)).toBeVisible();
+  await expect(modal.getByRole('region', { name: 'Letter soundtrack' })).toHaveCount(0);
+  await expect(modal.locator('iframe[src*="youtube"]')).toHaveCount(0);
 });
