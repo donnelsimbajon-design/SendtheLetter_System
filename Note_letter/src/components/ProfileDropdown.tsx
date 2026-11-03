@@ -44,7 +44,7 @@ const ProfileDropdown = ({ isOpen, onClose, placement = 'header' }: ProfileDropd
 
     return <>
         <button aria-label="Close account menu" type="button" className="fixed inset-0 z-40 cursor-default bg-transparent" onClick={onClose} />
-        <div role="menu" aria-label="Account menu" className={(placement === 'rail' ? "absolute bottom-0 left-[calc(100%+16px)]" : "absolute right-0 top-[calc(100%+12px)]") + " z-50 w-[min(360px,calc(100vw-110px))] max-h-[calc(100vh-32px)] overflow-y-auto rounded-[26px] border border-border bg-card p-3 text-foreground shadow-[0_20px_70px_rgba(0,0,0,.22)]"}>
+        <div role="menu" aria-label="Account menu" className={(placement === 'rail' ? "absolute bottom-0 left-[calc(100%+16px)] w-[min(360px,calc(100vw-110px))]" : "absolute right-0 top-[calc(100%+12px)] w-[min(360px,calc(100vw-24px))]") + " z-50 max-h-[calc(100vh-32px)] overflow-y-auto rounded-[26px] border border-border bg-card p-3 text-foreground shadow-[0_20px_70px_rgba(0,0,0,.22)]"}>
             <div className="rounded-[20px] border border-border/80 bg-background/70 p-3">
                 <Link to="/dashboard/profile" onClick={onClose} className="flex items-center gap-3 rounded-xl p-1 hover:bg-muted/50">
                     <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[hsl(var(--surface-gold))] font-editorial text-lg font-semibold">
