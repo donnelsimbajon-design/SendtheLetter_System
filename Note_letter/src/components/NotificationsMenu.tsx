@@ -24,7 +24,7 @@ function detail(n: Notification): string {
   }
 }
 
-export default function NotificationsMenu() {
+export default function NotificationsMenu({ placement = 'header' }: { placement?: 'header' | 'rail' }) {
   const { notifications, fetchNotifications, markNotificationsRead, markNotificationRead } = useNoteStore();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState('');
@@ -37,11 +37,11 @@ export default function NotificationsMenu() {
   return <div className="relative">
     <button type="button" onClick={() => { setOpen(!open); setError(''); }}
       aria-label={`Notifications, ${unread} unread`} aria-expanded={open} aria-haspopup="dialog"
-      className="relative flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary">
+      className={placement === 'rail' ? "relative flex h-12 w-12 items-center justify-center rounded-2xl border border-transparent hover:border-white/15 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-[#F1D49C]" : "relative flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"}>
       <CharacterBadge name="nori" tone="gold" size="sm" />
       {unread > 0 && <span aria-hidden="true" className="absolute right-0 top-0 min-w-4 rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">{unread > 99 ? '99+' : unread}</span>}
     </button>
-    {open && <section role="dialog" aria-label="Notifications" className="absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-card shadow-xl">
+    {open && <section role="dialog" aria-label="Notifications" className={placement === 'rail' ? "absolute bottom-0 left-[calc(100%+14px)] z-50 w-[min(22rem,calc(100vw-7rem))] overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-xl" : "absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-card shadow-xl"}>
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div><h2 className="text-sm font-semibold">Notifications</h2><p className="text-xs text-muted-foreground">{unread ? `${unread} unread` : 'All caught up'}</p></div>
         {unread > 0 && <button type="button" className="rounded-lg px-2 py-2 text-xs font-semibold hover:bg-muted" onClick={() => void markNotificationsRead().catch(() => setError('Unable to mark all read.'))}>Mark all read</button>}
