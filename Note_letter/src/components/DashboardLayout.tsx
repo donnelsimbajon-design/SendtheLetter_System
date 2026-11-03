@@ -106,6 +106,13 @@ export default function DashboardLayout() {
             </NavLink>
           ))}
 
+          <Link to="/dashboard/community?focus=search" aria-label="Search public letters" title="Search public letters"
+            className="group relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-transparent transition-colors hover:border-[#44594e] hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2D49D]">
+            <CharacterBadge name="suri" tone="paper" size="sm" />
+            <span className="sr-only">Search public letters</span>
+            <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">Search public letters</span>
+          </Link>
+
           <Link to="/dashboard/notes?compose=1" aria-label="Write a new letter" title="Write a letter"
             className="group relative mt-2 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#8F7955]/50 bg-[#E1C998] transition-colors hover:bg-[#F2DAA9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2D49D]">
             <CharacterBadge name="tala" tone="paper" size="sm" />
