@@ -73,7 +73,7 @@ test('community filters published letters by their actual categories', async ({ 
   await expect(page.getByText('Showing 2 of 2 public letters')).toBeVisible();
   await page.getByRole('button', { name: 'Gratitude', exact: true }).click();
   await expect(page.getByText('Showing 1 of 2 public letters')).toBeVisible();
-  await expect(page.getByText('Thank you for showing up')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Community letter feed' }).getByRole('heading', { name: 'Thank you for showing up' })).toBeVisible();
   await expect(page.getByText('A hello from afar')).toHaveCount(0);
   await page.getByRole('button', { name: 'Clear filters' }).click();
   await expect(page.getByText('Showing 2 of 2 public letters')).toBeVisible();
