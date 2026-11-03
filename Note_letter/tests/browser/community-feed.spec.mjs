@@ -80,7 +80,7 @@ test('community uses original mascots in a dark Instagram-style side rail and th
     .evaluate(el => getComputedStyle(el.parentElement).gridTemplateColumns.split(' ').length);
   expect(count).toBe(3);
   const navigation = page.getByRole('navigation', { name: 'Workspace navigation' });
-  await expect(navigation.getByRole('link')).toHaveCount(6);
+  await expect(navigation.getByRole('link')).toHaveCount(7);
   const expectedLabels = ['Overview', 'My library', 'Community', 'Messages', 'My profile'];
   for (const label of expectedLabels) {
     const link = navigation.getByRole('link', { name: label });
@@ -117,6 +117,11 @@ test('community uses original mascots in a dark Instagram-style side rail and th
     return { width: Math.round(box.width), height: Math.round(box.height) };
   });
   expect(dimensions).toEqual({ width: 48, height: 48 });
+  const searchShortcut = navigation.getByRole('link', { name: 'Search public letters' });
+  await expect(searchShortcut.locator('img[src="/mascots/suri.svg"]')).toBeVisible();
+  await searchShortcut.click();
+  await expect(page).toHaveURL(/\/dashboard\/community\?focus=search$/);
+  await expect(page.getByRole('textbox', { name: 'Search public letters' })).toBeFocused();
 });
 
 test('recommendations and popular topics use public data and preserve anonymity', async ({ page }) => {
