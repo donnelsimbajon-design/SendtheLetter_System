@@ -151,6 +151,7 @@ export default function LetterFlowEditor({ page, font, onChange, onCursor, onMov
             const moving = Array.from(event.dataTransfer.types).includes('application/x-sendtheletter-photo');
             if (!file && !moving) return;
             event.preventDefault();
+            event.stopPropagation(); // outer editor must not upload the same file twice
             const anchor = dropAnchor(event);
             if (moving) onMovePhoto(anchor);
             else onPhotoFile(file!, anchor);
