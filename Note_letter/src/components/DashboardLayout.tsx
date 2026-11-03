@@ -46,11 +46,17 @@ const DashboardLayout = () => {
           <Link to="/dashboard" className="flex min-w-0 items-center gap-2 sm:gap-3">
             <img src="/sendtheletter-logo.svg" alt="SendTheLetter" className="h-10 w-[154px] object-contain object-left sm:h-12 sm:w-[218px]" />
           </Link>
-          <nav aria-label="Workspace navigation" className="hidden min-w-0 flex-1 items-center justify-center gap-1 xl:flex">
+          <nav aria-label="Workspace navigation" className="hidden min-w-0 flex-1 items-center justify-center gap-2 xl:flex">
             {navigation.map(({ to, label, mascot, end }) => (
               <NavLink key={to} to={to} end={end}
-                className={({ isActive }) => `inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition-colors 2xl:gap-2 2xl:px-4 ${isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}>
-                <CharacterBadge name={mascot} tone="paper" size="xs" /><span>{label}</span>
+                aria-label={label}
+                title={label}
+                className={({ isActive }) => `group relative inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${isActive ? 'border-primary bg-primary shadow-sm' : 'border-transparent bg-transparent hover:border-border hover:bg-muted'}`}>
+                <CharacterBadge name={mascot} tone="paper" size="sm" />
+                <span className="sr-only">{label}</span>
+                <span aria-hidden="true" className="pointer-events-none absolute left-1/2 top-full z-50 mt-2 hidden -translate-x-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-[11px] font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">
+                  {label}
+                </span>
               </NavLink>
             ))}
           </nav>
