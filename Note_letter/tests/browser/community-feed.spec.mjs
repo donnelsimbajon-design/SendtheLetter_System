@@ -69,7 +69,26 @@ test('community uses original header icons and a three-column desktop feed', asy
   const count = await page.getByRole('complementary', { name: 'Community topics and spotlights' })
     .evaluate(el => getComputedStyle(el.parentElement).gridTemplateColumns.split(' ').length);
   expect(count).toBe(3);
-  await expect(page.locator('nav[aria-label="Workspace navigation"] img[src^="/mascots/"]').first()).toBeVisible();
+  const navigation = page.getByRole('navigation', { name: 'Workspace navigation' });
+  await expect(navigation.getByRole('link')).toHaveCount(5);
+  const expectedLabels = ['Overview', 'My library', 'Community', 'Messages', 'My profile'];
+  for (const label of expectedLabels) {
+    const link = navigation.getByRole('link', { name: label });
+    await expect(link).toBeVisible();
+    await expect(link.locator('img[src^="/mascots/"]')).toBeVisible();
+    // Labels are available to assistive technology but do not occupy header space.
+    await expect(link.locator('.sr-only')).toHaveText(label);
+    await expect(link).toHaveAttribute('title', label);
+  }
+  const current = navigation.getByRole('link', { name: 'Community' });
+  await expect(current).toHaveAttribute('aria-current', 'page');
+  await current.hover();
+  await expect(current.locator('span[aria-hidden="true"]').last()).toBeVisible();
+  const dimensions = await current.evaluate(el => {
+    const box = el.getBoundingClientRect();
+    return { width: Math.round(box.width), height: Math.round(box.height) };
+  });
+  expect(dimensions).toEqual({ width: 48, height: 48 });
 });
 
 test('recommendations and popular topics use public data and preserve anonymity', async ({ page }) => {
