@@ -47,8 +47,12 @@ export const createLetter = async (req: AuthRequest, res: Response) => {
         const parsedPages = parseStoryPages(rawLetterPages);
         if (parsedPages.error) return res.status(400).json({ message: parsedPages.error });
 
-        if (!title || title.length > 255 || typeof content !== 'string' || !content.trim() || content.length > 100000) {
-            return res.status(400).json({ message: 'A title (max 255 characters) and letter content are required.' });
+        // Photo-first drafts may be saved before the writer has added text.
+        // Publishing still requires a title and written message.
+        const photoDraft = status === 'draft' && !!parsedPages.pages?.some(page => page.imageData);
+        if (!title || title.length > 255 || typeof content !== 'string' || content.length > 100000 ||
+            (!content.trim() && !photoDraft)) {
+            return res.status(400).json({ message: 'A title and letter content (or a photo for a draft) are required.' });
         }
         if (typeof imageUrl === 'string' && imageUrl.length > 7500000) {
             return res.status(400).json({ message: 'Letter image must be 5 MB or smaller.' });

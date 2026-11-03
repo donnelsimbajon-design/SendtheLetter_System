@@ -7,6 +7,7 @@ import CommentsPanel from './CommentsPanel';
 import LetterBookReader from './LetterBookReader';
 import SpotifyReadingPlayer from './SpotifyReadingPlayer';
 import { parseSpotifyMedia } from '../lib/spotify';
+import { parseLetterMusicLink } from '../lib/letterMusicLink';
 import { Note } from '../types/note';
 import { cn, getImageUrl } from '../lib/utils';
 import { useAuthStore } from '../store/authStore';
@@ -132,7 +133,8 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
     };
 
     if (!note) return null;
-    const spotifyMedia = parseSpotifyMedia(note.spotifyLink);
+    const music = parseLetterMusicLink(note.spotifyLink);
+    const spotifyMedia = music?.platform === 'spotify' ? parseSpotifyMedia(note.spotifyLink) : null;
 
     return (
         <>
@@ -149,15 +151,16 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                                 <div className="px-3 py-1 rounded-full bg-stone-100 border border-stone-200 text-stone-600 text-sm font-medium">
                                     {note.category || 'Letter'}
                                 </div>
-                                {spotifyMedia && (
+                                {music && (
                                     <a
-                                        href={spotifyMedia.url}
+                                        href={music.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex items-center gap-2 text-stone-600 hover:text-[#1DB954] transition-colors"
-                                        title="Open in Spotify"
+                                        className="flex items-center gap-2 text-stone-600 hover:text-[#304c40] transition-colors"
+                                        title={music.platform === 'spotify' ? 'Open in Spotify' : 'Open in YouTube'}
                                     >
                                         <CharacterBadge name="tala" tone="paper" size="xs" />
+                                        <span className="text-xs font-semibold">{music.platform === 'spotify' ? 'Spotify' : 'Open YouTube'}</span>
                                     </a>
                                 )}
                             </div>
@@ -191,6 +194,7 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                             </div>
                         </div>
 
+                        {music?.platform === 'youtube' && <p className="border-b border-[#e4d9c9] bg-[#fff9ef] px-5 py-2.5 text-xs leading-5 text-[#786451]">YouTube soundtrack reference: open the link above to listen on YouTube. In-letter audio-only playback is available with Spotify links.</p>}
                         {isOpen && spotifyMedia && <div className="sticky top-[69px] z-10">
                             <SpotifyReadingPlayer key={`${note.id}:${spotifyMedia.uri}`} spotifyLink={spotifyMedia.url} title={note.title} />
                         </div>}

@@ -7,7 +7,7 @@ import { useWriterPreferences } from '../store/writerPreferences';
 import { cn } from '../lib/utils';
 import { API_ENDPOINTS } from '../config/api';
 import { useLetterBook } from '../hooks/useLetterBook';
-import { parseSpotifyMedia } from '../lib/spotify';
+import { parseLetterMusicLink } from '../lib/letterMusicLink';
 
 interface LetterEditorModalProps {
     isOpen: boolean;
@@ -136,13 +136,14 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
     });
 
     const canSave = title.trim().length > 0 && content.trim().length > 0;
+    const canSaveDraft = Boolean(content.trim()) || pages.some(page => Boolean(page.imageData));
 
     const saveDraft = async (): Promise<boolean> => {
         if (editingPublished) { setNotice('Existing published letters are updated using the main action.'); return false; }
-        if (!canSave) { setNotice('Add a title and a few words before saving a draft.'); return false; }
+        if (!canSaveDraft) { setNotice('Start writing or import a photo before saving a draft.'); return false; }
         if (pendingSave.current) return pendingSave.current;
         const currentRevision = revision.current;
-        const data = payload();
+        const data = { ...payload(), title: title.trim() || 'Untitled letter' };
         const task = (async () => {
             setIsSaving(true);
             setNotice('');
@@ -174,14 +175,15 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
     };
 
     useEffect(() => {
-        if (!isOpen || editingPublished || !canSave || !isDirty || publishing.current) return;
-        const timer = window.setTimeout(() => { if (!publishing.current) void saveDraft(); }, 10000);
+        if (!isOpen || editingPublished || !canSaveDraft || !isDirty || isSaving || publishing.current) return;
+        const delay = pages.some(page => Boolean(page.imageData)) ? 900 : 10000;
+        const timer = window.setTimeout(() => { if (!publishing.current) void saveDraft(); }, delay);
         return () => window.clearTimeout(timer);
-    }, [isOpen, editingPublished, title, pages, recipientName, recipientAddress, category, font, isAnonymous, isPublic, backgroundImage, imageUrl, spotifyLink, scheduledDate, openDate, isTimeCapsule, isDirty]);
+    }, [isOpen, editingPublished, title, pages, recipientName, recipientAddress, category, font, isAnonymous, isPublic, backgroundImage, imageUrl, spotifyLink, scheduledDate, openDate, isTimeCapsule, isDirty, isSaving]);
 
     const closeEditor = () => {
         if (busy || isSaving) return;
-        if (isDirty && canSave && !window.confirm('You have unsaved changes. Close without saving?')) return;
+        if (isDirty && canSaveDraft && !window.confirm('You have unsaved changes. Close without saving?')) return;
         onClose();
     };
 
@@ -351,6 +353,31 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                 <aside id="letter-customization" className={cn('shrink-0 overflow-y-auto border-b border-border bg-muted/30 px-4 py-5 sm:px-6 lg:w-[318px] lg:border-b-0 lg:border-r', focusMode ? 'hidden' : controlsOpen ? 'max-h-[44dvh] lg:max-h-none' : 'hidden lg:block')} aria-label="Letter customization">
                     <div className="mb-5 hidden lg:block"><p className="font-editorial text-xl">Make it yours</p><p className="mt-1 text-xs leading-5 text-muted-foreground">A few thoughtful details, only if you want them.</p></div>
                     <div className="space-y-4 pb-3">
+                        <section aria-label="Add images to letter" className={panelClass}>
+                            <p className={labelClass}><CharacterBadge name="basa" tone="paper" size="xs" className="mr-2 inline-flex" /> Photos & memories</p>
+                            <label htmlFor="letter-page-image" className="mt-3 flex min-h-[100px] cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-[#bba98f] bg-[#fffbf5] px-3 py-3 text-center hover:border-[#304c40] hover:bg-white">
+                                <CharacterBadge name="piko" tone="paper" size="sm" />
+                                <span className="text-sm font-semibold text-[#304c40]">Insert image</span>
+                                <span className="text-[11px] text-[#806f61]">Automatically place a photo in your letter</span>
+                            </label>
+                            <input id="letter-page-image" aria-label="Insert image in page" type="file" className="sr-only" accept="image/png,image/jpeg,image/webp"
+                                onChange={async event => {
+                                    const file = event.currentTarget.files?.[0];
+                                    event.currentTarget.value = '';
+                                    if (!file) return;
+                                    try {
+                                        await addPhoto(file, caretAnchor.current);
+                                        markDirty();
+                                        setNotice('Photo inserted. Auto-saving to My Library drafts…');
+                                    } catch (error: any) { setBookError(error?.message || 'Could not insert this photo.'); }
+                                }} />
+                            <p className="mt-2 text-[11px] leading-5 text-[#806f61]">JPG, PNG or WebP · up to 7 MB. Imported photos and layout save with your draft.</p>
+                            {page.imageData && <div className="mt-3 flex items-center gap-2 rounded-xl border border-[#e4d8c8] bg-white p-2">
+                                <img src={page.imageData} alt="Current page photo preview" className="h-12 w-12 shrink-0 rounded-lg object-cover" />
+                                <div className="min-w-0"><p className="text-xs font-semibold">Photo on page {pageIndex + 1}</p><p className="text-[11px] text-muted-foreground">Adjust placement below</p></div>
+                            </div>}
+                            {photoControls}
+                        </section>
                         <div className={panelClass}>
                             <label className={labelClass} htmlFor="letter-starting-point"><CharacterBadge name="tala" tone="gold" size="xs" className="mr-1 inline-flex" /> Need inspiration?</label>
                             <select id="letter-starting-point" value={selectedTemplate} onChange={e => selectPrompt(e.target.value)} className={fieldClass}><option value="">Choose a starting point</option>{templates.map(t => <option key={t.value} value={t.value}>{t.name}</option>)}</select>
@@ -377,15 +404,15 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                         <details className={panelClass}>
                             <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-bold uppercase tracking-[.14em]"><span className="inline-flex items-center gap-2"><CharacterBadge name="piko" tone="paper" size="xs" /> Attachments</span></summary>
                             <div className="mt-4 space-y-3">
-                                <label className="block text-xs font-semibold" htmlFor="letter-spotify">Music to read with (Spotify, optional)</label>
+                                <label className="block text-xs font-semibold" htmlFor="letter-spotify">Music link (Spotify or YouTube)</label>
                                 <input id="letter-spotify" type="url" value={spotifyLink} onChange={e => { setSpotifyLink(e.target.value); markDirty(); }}
-                                    placeholder="https://open.spotify.com/track/..." aria-describedby="letter-spotify-help"
-                                    aria-invalid={Boolean(spotifyLink.trim() && !parseSpotifyMedia(spotifyLink))}
+                                    placeholder="Paste a Spotify or YouTube link" aria-describedby="letter-spotify-help"
+                                    aria-invalid={Boolean(spotifyLink.trim() && !parseLetterMusicLink(spotifyLink))}
                                     className={fieldClass} />
-                                <p id="letter-spotify-help" className={`text-[11px] leading-5 ${spotifyLink.trim() && !parseSpotifyMedia(spotifyLink) ? 'text-rose-700' : 'text-muted-foreground'}`}>
-                                    {spotifyLink.trim() && !parseSpotifyMedia(spotifyLink)
-                                        ? 'Paste a valid open.spotify.com track, playlist, album, show, or episode link. Other links will not play in the reader.'
-                                        : 'Your readers get a mini player with Play/Pause and a remaining-time countdown. Some browsers require tapping Play.'}
+                                <p id="letter-spotify-help" className={`text-[11px] leading-5 ${spotifyLink.trim() && !parseLetterMusicLink(spotifyLink) ? 'text-rose-700' : 'text-muted-foreground'}`}>
+                                    {spotifyLink.trim() && !parseLetterMusicLink(spotifyLink)
+                                        ? 'Paste a valid official Spotify or YouTube watch link.'
+                                        : 'Spotify plays in the letter with audio controls. YouTube links open on YouTube; hidden audio-only playback is unavailable.'}
                                 </p>
                                 <label htmlFor="letter-image" className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-background p-3 text-xs font-semibold hover:border-primary"><CharacterBadge name="basa" tone="paper" size="xs" /> {imageUrl ? 'Change cover image' : 'Add cover image'}<input id="letter-image" className="sr-only" type="file" accept="image/png,image/jpeg,image/webp" onChange={imageUpload} /></label>
                                 {imageUrl && <button type="button" onClick={() => { setImageUrl(''); markDirty(); }} className="text-xs font-semibold text-muted-foreground underline">Remove image</button>}
@@ -437,9 +464,8 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                             </div>}
                             <div className={cn('mb-1 flex flex-wrap items-center justify-between gap-2', 'text-[#8b7361]')}>
                                 <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.16em]"><CharacterBadge name="basa" tone="gold" size="xs" /> Page {pageIndex + 1} of {pages.length}</span>
-                                <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-current/30 px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-white/15"><CharacterBadge name="piko" tone="paper" size="xs" /> Insert image in page <input type="file" className="sr-only" accept="image/png,image/jpeg,image/webp" onChange={async (event) => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; try { await addPhoto(file, caretAnchor.current); markDirty(); setNotice('Photo inserted at your cursor. Text now flows around it.'); } catch (error: any) { setBookError(error?.message || 'Could not insert photo.'); } }} /></label>
+                                <span className="text-[11px] italic text-[#8b7361]">Insert images from Make it yours</span>
                             </div>
-                            {photoControls}
                             {page.imageData
                                 ? <LetterFlowEditor key={pageIndex} page={page} font={font}
                                     onChange={(text, anchor) => { if (updateComposedText(text, anchor)) markDirty(); }}
@@ -484,7 +510,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                         </div>
                         <button type="button" disabled={pageIndex >= pages.length - 1} onClick={() => setPageIndex(Math.min(pages.length - 1, pageIndex + 1))} className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground disabled:opacity-35">Next</button>
                     </nav>
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-muted-foreground"><span className="inline-flex items-center gap-2"><CharacterBadge name="lumi" tone="paper" size="xs" /> {wordCount} {wordCount === 1 ? 'word' : 'words'} written</span><span role="status" aria-live="polite" className="inline-flex items-center gap-1.5">{isSaving ? 'Saving draft…' : isDirty ? 'Unsaved changes · autosave after 10 seconds' : lastSaved ? 'Saved at ' + lastSaved : 'Every word matters'}</span></div>
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-muted-foreground"><span className="inline-flex items-center gap-2"><CharacterBadge name="lumi" tone="paper" size="xs" /> {wordCount} {wordCount === 1 ? 'word' : 'words'} written</span><span role="status" aria-live="polite" className="inline-flex items-center gap-1.5">{isSaving ? 'Saving draft…' : isDirty ? pages.some(p => p.imageData) && !editingPublished ? 'Unsaved changes · photos autosave shortly' : 'Unsaved changes · autosave after 10 seconds' : lastSaved ? 'Saved at ' + lastSaved : 'Every word matters'}</span></div>
                 </div>
             </div>
 
@@ -498,7 +524,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
             <footer className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-border bg-card px-4 py-3 sm:px-7 sm:py-4">
                 <div className="hidden items-center gap-2 text-xs text-muted-foreground sm:flex"><CharacterBadge name={isPublic ? 'piko' : 'susi'} tone="paper" size="xs" /><span>{isPublic ? 'Visible to the community when released' : 'Just for you, unless you share it'}</span></div>
                 <div className="ml-auto flex w-full items-center gap-2 sm:w-auto">
-                    <button type="button" onClick={() => void saveAndClose()} disabled={busy || isSaving || editingPublished || !canSave} className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-border bg-background px-4 text-xs font-bold hover:bg-muted disabled:opacity-40 sm:flex-none sm:px-5"><CharacterBadge name="basa" tone="paper" size="xs" /> Save draft</button>
+                    <button type="button" onClick={() => void saveAndClose()} disabled={busy || isSaving || editingPublished || !canSaveDraft} className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-border bg-background px-4 text-xs font-bold hover:bg-muted disabled:opacity-40 sm:flex-none sm:px-5"><CharacterBadge name="basa" tone="paper" size="xs" /> Save draft</button>
                     <button type="button" onClick={() => void publish()} disabled={busy || isSaving || !canSave} className="inline-flex h-11 flex-[1.3] items-center justify-center gap-2 rounded-full bg-primary px-4 text-xs font-bold text-primary-foreground shadow-md transition-transform hover:-translate-y-0.5 disabled:opacity-40 sm:flex-none sm:px-6">{busy ? 'Working…' : actionLabel} <CharacterBadge name="piko" tone="paper" size="xs" /></button>
                 </div>
             </footer>
