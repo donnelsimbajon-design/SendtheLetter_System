@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import CharacterBadge from '../../components/CharacterBadge';
 import Mascot from '../../components/Mascot';
@@ -54,6 +54,8 @@ const popularity = (note: Note) => (note.likeCount || 0) + (note.commentCount ||
 
 export default function CommunityPage() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const searchInput = useRef<HTMLInputElement>(null);
     const user = useAuthStore(state => state.user);
     const { publicLetters, isLoadingPublic, publicError, fetchPublicLetters, toggleLike } = useNoteStore();
 
@@ -66,6 +68,14 @@ export default function CommunityPage() {
     const [interactionError, setInteractionError] = useState('');
 
     useEffect(() => { void fetchPublicLetters(); }, [fetchPublicLetters]);
+
+    // Give the native Suri sidebar shortcut a real destination, including when
+    // already on the Community page. No change to public data or search privacy.
+    useEffect(() => {
+        if (new URLSearchParams(location.search).get('focus') === 'search') {
+            searchInput.current?.focus();
+        }
+    }, [location.search]);
 
     // All discovery sections derive from the same released, public API response.
     // Anonymous authors are intentionally excluded from writer recommendations.
@@ -271,7 +281,7 @@ export default function CommunityPage() {
                             <label className="relative min-w-0 flex-1">
                                 <span className="sr-only">Search public letters</span>
                                 <CharacterBadge name="suri" tone="paper" size="xs" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2" />
-                                <input value={searchQuery} onChange={event => { setSearchQuery(event.target.value); setVisibleCount(PAGE_SIZE); }}
+                                <input ref={searchInput} value={searchQuery} onChange={event => { setSearchQuery(event.target.value); setVisibleCount(PAGE_SIZE); }}
                                     aria-label="Search public letters" placeholder="Search a story, feeling, or writer..."
                                     className="h-11 w-full min-w-0 rounded-xl border border-border bg-background pl-12 pr-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
                             </label>
