@@ -37,9 +37,6 @@ export default function LetterOpeningEnvelope({ opened, className = '' }: Props)
         <div className="stl-real-envelope-edge" />
         <div className="stl-real-envelope-seal"><Heart size={17} strokeWidth={1.8} /></div>
       </div>
-      <span className="stl-real-envelope-caption" aria-hidden="true">
-        {opened ? 'Unfolded with care' : 'A little something, just for you'}
-      </span>
     </div>
   );
 }
