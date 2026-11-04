@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/authStore';
 import { getImageUrl } from '../lib/utils';
 import NotificationsMenu from './NotificationsMenu';
 import CharacterBadge from './CharacterBadge';
+import WorkspaceRailIcon, { type RailSymbol } from './WorkspaceRailIcon';
 import ProfileDropdown from './ProfileDropdown';
 import { useWriterPreferences } from '../store/writerPreferences';
 
@@ -15,9 +16,16 @@ const navigation = [
   { to: '/dashboard/profile', label: 'My profile', mascot: 'sely', end: false },
 ] as const;
 
+const railNavigation: { to: string; label: string; symbol: RailSymbol; end: boolean }[] = [
+  { to: '/dashboard', label: 'Overview', symbol: 'home', end: true },
+  { to: '/dashboard/notes', label: 'My library', symbol: 'library', end: false },
+  { to: '/dashboard/community', label: 'Community', symbol: 'community', end: false },
+  { to: '/dashboard/messages', label: 'Messages', symbol: 'messages', end: false },
+];
+
 const railLink = (active: boolean) =>
-  'group relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2D49D] xl:w-full xl:justify-start xl:gap-3 xl:px-3 ' +
-  (active ? 'border-[#d7dacc] bg-[#f3f2e9] text-[#2d4d3c]' : 'border-transparent hover:border-white/20 hover:bg-white/10');
+  'relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ' +
+  (active ? 'bg-white/10 text-white' : 'text-[#e7e7e9] hover:bg-white/10 hover:text-white');
 
 const MobileNavLink = ({ to, label, mascot, end, avatar }: {
   to: string;
@@ -88,61 +96,45 @@ export default function DashboardLayout() {
         </div>
       </header>
 
-      {/* On desktop, replace the top navigation with one slim, fixed dark rail. */}
-      <aside aria-label="SendTheLetter sidebar" className="fixed inset-y-0 left-0 z-40 hidden w-[84px] flex-col items-center border-r border-[#405e4b] bg-[#2b4839] px-3 pb-5 pt-5 text-[#F7F2E9] lg:flex xl:w-[204px] xl:items-stretch xl:px-4">
+      {/* The screenshot-inspired desktop layout: a thin dark column, generously spaced
+          original line art, and persistent account tools at the bottom. */}
+      <aside aria-label="SendTheLetter sidebar"
+        className="fixed inset-y-0 left-0 z-40 hidden w-[72px] flex-col items-center border-r border-[#24292e] bg-[#0b0f12] px-3 pb-4 pt-4 text-white lg:flex">
         <Link to="/dashboard" aria-label="SendTheLetter home" title="SendTheLetter"
-          className="group relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl transition-colors xl:w-full xl:justify-start xl:gap-3 xl:px-2 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2D49D]">
-          <CharacterBadge name="sely" tone="paper" size="md" />
-          <span className="hidden font-editorial text-sm font-semibold tracking-tight xl:inline">SendTheLetter</span>
-          <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+14px)] top-1/2 z-50 hidden xl:!hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-xl group-hover:block group-focus-visible:block">SendTheLetter</span>
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+          <WorkspaceRailIcon name="brand" size={29} />
         </Link>
 
-        <nav aria-label="Workspace navigation" className="mt-7 flex min-h-0 w-full flex-1 flex-col items-center gap-2 xl:items-stretch">
-          {navigation.slice(0, 4).map(({ to, label, mascot, end }) => (
+        <nav aria-label="Workspace navigation"
+          className="workspace-rail-primary mt-[clamp(40px,16vh,150px)] flex min-h-0 w-full flex-1 flex-col items-center gap-2 overflow-y-auto overflow-x-hidden pb-3 scrollbar-hide">
+          {railNavigation.map(({ to, label, symbol, end }) => (
             <NavLink key={to} to={to} end={end} aria-label={label} title={label}
               className={({ isActive }) => railLink(isActive)}>
-              <CharacterBadge name={mascot} tone="paper" size="sm" />
-              <span className="hidden text-[13px] font-semibold xl:inline">{label}</span>
-              <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden xl:!hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">{label}</span>
+              {({ isActive }) => <WorkspaceRailIcon name={symbol} active={isActive} />}
             </NavLink>
           ))}
 
           <Link to="/dashboard/community?focus=search" aria-label="Search public letters" title="Search public letters"
-            className="group relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-transparent transition-colors xl:w-full xl:justify-start xl:gap-3 xl:px-3 hover:border-white/20 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2D49D]">
-            <CharacterBadge name="suri" tone="paper" size="sm" />
-            <span className="hidden text-[13px] font-semibold xl:inline">Search letters</span>
-            <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden xl:!hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">Search public letters</span>
+            className={railLink(false)}>
+            <WorkspaceRailIcon name="search" />
           </Link>
+
+          <NotificationsMenu placement="rail" />
 
           <Link to="/dashboard/notes?compose=1" aria-label="Write a new letter" title="Write a letter"
-            className="group relative mt-2 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border xl:w-full xl:justify-start xl:gap-3 xl:px-3 text-[#304736] border-[#8F7955]/50 bg-[#E1C998] transition-colors hover:bg-[#F2DAA9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2D49D]">
-            <CharacterBadge name="tala" tone="paper" size="sm" />
-            <span className="hidden text-[13px] font-bold xl:inline">Write a letter</span>
-            <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden xl:!hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">Write a letter</span>
+            className={railLink(false)}>
+            <WorkspaceRailIcon name="write" size={29} />
           </Link>
 
-          <NavLink to={navigation[4].to} end={navigation[4].end} aria-label={navigation[4].label} title={navigation[4].label}
-            className={({ isActive }) => railLink(isActive) + ' mt-auto'}>
-            {user?.avatar
-              ? <img src={getImageUrl(user.avatar)} alt="" className="h-9 w-9 rounded-full border-2 border-[#F2D49D] object-cover" />
-              : <CharacterBadge name="sely" tone="paper" size="sm" />}
-            <span className="hidden text-[13px] font-semibold xl:inline">{navigation[4].label}</span>
-            <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden xl:!hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">{navigation[4].label}</span>
+          <NavLink to="/dashboard/profile" aria-label="My profile" title="My profile"
+            className={({ isActive }) => railLink(isActive)}>
+            {({ isActive }) => user?.avatar
+              ? <img src={getImageUrl(user.avatar)} alt="" className={'h-8 w-8 rounded-full object-cover ' + (isActive ? 'ring-2 ring-white' : 'ring-1 ring-white/60')} />
+              : <WorkspaceRailIcon name="profile" active={isActive} />}
           </NavLink>
         </nav>
 
-        <div className="mt-3 flex w-full shrink-0 flex-col items-center gap-2 border-t border-white/15 pt-3 xl:items-stretch">
-          <NotificationsMenu placement="rail" />
-
-          {user?.role === 'admin' && (
-            <Link to="/admin" aria-label="Admin panel" title="Admin panel"
-              className="group relative flex h-12 w-12 items-center justify-center rounded-xl transition-colors xl:w-full xl:justify-start xl:gap-3 xl:px-3 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-[#F2D49D]">
-              <CharacterBadge name="susi" tone="paper" size="sm" />
-              <span className="hidden text-[13px] font-semibold xl:inline">Admin panel</span>
-              <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden xl:!hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">Admin panel</span>
-            </Link>
-          )}
-
+        <div className="flex w-full shrink-0 flex-col items-center gap-2 border-t border-white/10 pt-3">
           <div className="relative">
             <button type="button"
               onClick={() => setShowAccountMenu(value => !value)}
@@ -150,17 +142,25 @@ export default function DashboardLayout() {
               title="More options"
               aria-haspopup="menu"
               aria-expanded={showAccountMenu}
-              className="group relative flex h-12 w-12 items-center justify-center rounded-xl transition-colors xl:w-full xl:justify-start xl:gap-3 xl:px-3 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-[#F2D49D]">
-              <CharacterBadge name="susi" tone="paper" size="sm" />
-              <span className="hidden text-[13px] font-semibold xl:inline">More options</span>
-              <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden xl:!hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">More options</span>
+              className={railLink(showAccountMenu)}>
+              <WorkspaceRailIcon name="menu" />
             </button>
             <ProfileDropdown isOpen={showAccountMenu} onClose={() => setShowAccountMenu(false)} placement="rail" />
           </div>
+
+          {user?.role === 'admin' ? (
+            <Link to="/admin" aria-label="Admin panel" title="Admin panel" className={railLink(false)}>
+              <WorkspaceRailIcon name="admin" />
+            </Link>
+          ) : (
+            <Link to="/dashboard/settings" aria-label="Settings and privacy" title="Settings and privacy" className={railLink(false)}>
+              <WorkspaceRailIcon name="admin" />
+            </Link>
+          )}
         </div>
       </aside>
 
-      <div className="min-h-screen min-w-0 pt-16 lg:pl-[84px] lg:pt-0 xl:pl-[204px]">
+      <div className="min-h-screen min-w-0 pt-16 lg:pl-[72px] lg:pt-0">
         <main id="main-content" tabIndex={-1}
           className="mx-auto min-w-0 w-full max-w-[1800px] px-3 pb-28 pt-5 sm:px-6 sm:pt-7 lg:px-8 lg:pb-10 lg:pt-8 xl:px-10">
           <Outlet />
