@@ -9,9 +9,14 @@ test('first-time visitor can choose a writing prompt and carry it into signup', 
   await expect(page.getByRole('heading', { name: 'Thank you for being you' })).toBeVisible();
   await page.getByRole('link', { name: /Open this writing template/i }).click();
 
+  await expect(page).toHaveURL(/\/try\?template=gratitude/);
+  await expect(page.getByRole('heading', { name: 'Write before you sign up.' })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Letter title' })).toHaveValue('Thank you for being you');
+  await page.getByRole('textbox', { name: 'Your letter' }).fill('Thank you for all the little things.');
+  await page.getByRole('button', { name: 'Continue to save or send' }).click();
   await expect(page).toHaveURL(/\/signup\?returnTo=/);
   const returnTo = new URL(page.url()).searchParams.get('returnTo');
-  expect(returnTo).toBe('/dashboard/notes?compose=1&template=gratitude');
+  expect(returnTo).toBe('/dashboard/notes?compose=1&guest=1');
   await expect(page.getByRole('heading', { name: /Create your space/i })).toBeVisible();
 
   const password = page.locator('#password');
@@ -28,7 +33,8 @@ test('public features page shows implemented writing choices', async ({ page }) 
   await expect(page.getByRole('heading', { name: 'Choose what you share' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Keep a letter for later' })).toBeVisible();
   await page.getByRole('link', { name: /Start a letter/ }).click();
-  await expect(page).toHaveURL(/\/signup\?returnTo=/);
+  await expect(page).toHaveURL(/\/try$/);
+  await expect(page.getByRole('heading', { name: 'Write before you sign up.' })).toBeVisible();
 });
 
 test('keyboard users can skip to the main landing content', async ({ page }) => {
@@ -44,7 +50,7 @@ test('keyboard users can skip to the main landing content', async ({ page }) => 
 test('no horizontal page overflow on a compact mobile viewport', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile-chromium', 'Mobile project only');
   await page.setViewportSize({ width: 320, height: 700 });
-  for (const path of ['/', '/services', '/signup', '/login']) {
+  for (const path of ['/', '/services', '/try', '/signup', '/login']) {
     await page.goto(path);
     await expect(page.locator('main')).toBeVisible();
     const sizes = await page.evaluate(() => ({
