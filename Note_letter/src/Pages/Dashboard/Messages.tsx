@@ -61,12 +61,20 @@ export default function Messages() {
             const current = selectedRef.current;
             if (current && (incoming.senderId === current.id || incoming.receiverId === current.id)) {
                 setMessages(previous => previous.some(item => item.id === incoming.id) ? previous : [...previous, incoming]);
+                if (incoming.senderId === current.id && incoming.receiverId === user?.id) {
+                    void fetch(`${API_ENDPOINTS.messages}/read`, {
+                        method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ senderId: current.id }),
+                    }).then(result => {
+                        if (result.ok) { markInboxRead(current.id); void refreshInbox(); void loadConversations(); }
+                    }).catch(() => { /* A later inbox refresh can retry the unread state. */ });
+                }
             }
         };
         socketService.onNewMessage(handleIncoming);
         const refreshTimer = window.setInterval(() => { if (!document.hidden) void loadConversations(); }, 30000);
         return () => { socketService.offNewMessage(handleIncoming); window.clearInterval(refreshTimer); };
-    }, [loadConversations]);
+    }, [loadConversations, markInboxRead, refreshInbox, user?.id]);
 
     useEffect(() => {
         if (!initialUserId || !/^\d+$/.test(initialUserId) || listLoading) return;
