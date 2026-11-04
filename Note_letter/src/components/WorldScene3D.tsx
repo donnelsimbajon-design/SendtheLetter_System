@@ -216,6 +216,11 @@ function tryStart(
     || canvas.getContext('experimental-webgl') as WebGLRenderingContext | null;
   if (!gl) { onFail(); return () => {}; }
   let disposed = false;
+  let visible = true;
+  const observer = typeof IntersectionObserver !== 'undefined'
+    ? new IntersectionObserver(entries => { visible = Boolean(entries[0]?.isIntersecting); })
+    : null;
+  observer?.observe(canvas);
   let raf = 0;
   let program: WebGLProgram | null = null;
   let shapes: Shape[] = [];
@@ -342,7 +347,7 @@ function tryStart(
   canvas.addEventListener('webglcontextlost', onContextLost);
   const tick = (stamp: number) => {
     if (disposed) return;
-    if (document.visibilityState === 'visible' && stamp - lastFrame > 32) {
+    if (visible && document.visibilityState === 'visible' && stamp - lastFrame > 32) {
       lastFrame = stamp;
       paint(stamp);
     }
@@ -352,6 +357,7 @@ function tryStart(
   else paint(0);
   return () => {
     disposed = true;
+    observer?.disconnect();
     cancelAnimationFrame(raf);
     canvas.removeEventListener('webglcontextlost', onContextLost);
     images.forEach(asset => { asset.onload = null; asset.onerror = null; });
