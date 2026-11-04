@@ -34,7 +34,7 @@ async function request(base, path, expected = [200]) {
 
 async function json(base, path, status = [200]) {
     const response = await request(base, path, status);
-    assert.match(response.headers.get('content-type') || '', /application\/json/i,
+    assert.ok((response.headers.get('content-type') || '').toLowerCase().includes('application/json'), `${path}: expected JSON response`);
         `${path}: expected JSON response`);
     return response.json();
 }
