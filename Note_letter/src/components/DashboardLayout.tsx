@@ -16,8 +16,8 @@ const navigation = [
 ] as const;
 
 const railLink = (active: boolean) =>
-  'group relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2D49D] ' +
-  (active ? 'border-[#6d8a78] bg-[#2c463b]' : 'border-transparent hover:border-[#44594e] hover:bg-white/10');
+  'group relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2D49D] xl:w-full xl:justify-start xl:gap-3 xl:px-3 ' +
+  (active ? 'border-[#d7dacc] bg-[#f3f2e9] text-[#2d4d3c]' : 'border-transparent hover:border-white/20 hover:bg-white/10');
 
 const MobileNavLink = ({ to, label, mascot, end, avatar }: {
   to: string;
@@ -34,7 +34,7 @@ const MobileNavLink = ({ to, label, mascot, end, avatar }: {
     {avatar
       ? <img src={getImageUrl(avatar)} alt="" className="h-8 w-8 rounded-full border-2 border-primary object-cover" />
       : <CharacterBadge name={mascot} tone="paper" size="sm" />}
-    <span className="sr-only">{label}</span>
+    <span className="max-w-full truncate text-[9px] font-semibold leading-tight sm:text-[10px]">{label}</span>
   </NavLink>
 );
 
@@ -89,34 +89,35 @@ export default function DashboardLayout() {
       </header>
 
       {/* On desktop, replace the top navigation with one slim, fixed dark rail. */}
-      <aside aria-label="SendTheLetter sidebar" className="fixed inset-y-0 left-0 z-40 hidden w-[84px] flex-col items-center border-r border-[#304239] bg-[#101713] px-3 pb-5 pt-5 text-[#F7F2E9] lg:flex">
+      <aside aria-label="SendTheLetter sidebar" className="fixed inset-y-0 left-0 z-40 hidden w-[84px] flex-col items-center border-r border-[#405e4b] bg-[#2b4839] px-3 pb-5 pt-5 text-[#F7F2E9] lg:flex xl:w-[204px] xl:items-stretch xl:px-4">
         <Link to="/dashboard" aria-label="SendTheLetter home" title="SendTheLetter"
-          className="group relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2D49D]">
+          className="group relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl transition-colors xl:w-full xl:justify-start xl:gap-3 xl:px-2 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2D49D]">
           <CharacterBadge name="sely" tone="paper" size="md" />
+          <span className="hidden font-editorial text-lg font-semibold tracking-tight xl:inline">SendTheLetter</span>
           <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+14px)] top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-xl group-hover:block group-focus-visible:block">SendTheLetter</span>
         </Link>
 
-        <nav aria-label="Workspace navigation" className="mt-12 flex min-h-0 w-full flex-1 flex-col items-center gap-3">
+        <nav aria-label="Workspace navigation" className="mt-7 flex min-h-0 w-full flex-1 flex-col items-center gap-2 xl:items-stretch">
           {navigation.slice(0, 4).map(({ to, label, mascot, end }) => (
             <NavLink key={to} to={to} end={end} aria-label={label} title={label}
               className={({ isActive }) => railLink(isActive)}>
               <CharacterBadge name={mascot} tone="paper" size="sm" />
-              <span className="sr-only">{label}</span>
+              <span className="hidden text-[13px] font-semibold xl:inline">{label}</span>
               <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">{label}</span>
             </NavLink>
           ))}
 
           <Link to="/dashboard/community?focus=search" aria-label="Search public letters" title="Search public letters"
-            className="group relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-transparent transition-colors hover:border-[#44594e] hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2D49D]">
+            className="group relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-transparent transition-colors xl:w-full xl:justify-start xl:gap-3 xl:px-3 hover:border-white/20 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2D49D]">
             <CharacterBadge name="suri" tone="paper" size="sm" />
-            <span className="sr-only">Search public letters</span>
+            <span className="hidden text-[13px] font-semibold xl:inline">Search letters</span>
             <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">Search public letters</span>
           </Link>
 
           <Link to="/dashboard/notes?compose=1" aria-label="Write a new letter" title="Write a letter"
-            className="group relative mt-2 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#8F7955]/50 bg-[#E1C998] transition-colors hover:bg-[#F2DAA9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2D49D]">
+            className="group relative mt-2 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border xl:w-full xl:justify-start xl:gap-3 xl:px-3 text-[#304736] border-[#8F7955]/50 bg-[#E1C998] transition-colors hover:bg-[#F2DAA9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2D49D]">
             <CharacterBadge name="tala" tone="paper" size="sm" />
-            <span className="sr-only">Write a new letter</span>
+            <span className="hidden text-[13px] font-bold xl:inline">Write a letter</span>
             <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">Write a letter</span>
           </Link>
 
@@ -125,17 +126,17 @@ export default function DashboardLayout() {
             {user?.avatar
               ? <img src={getImageUrl(user.avatar)} alt="" className="h-9 w-9 rounded-full border-2 border-[#F2D49D] object-cover" />
               : <CharacterBadge name="sely" tone="paper" size="sm" />}
-            <span className="sr-only">{navigation[4].label}</span>
+            <span className="hidden text-[13px] font-semibold xl:inline">{navigation[4].label}</span>
             <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">{navigation[4].label}</span>
           </NavLink>
         </nav>
 
-        <div className="mt-3 flex w-full shrink-0 flex-col items-center gap-2 border-t border-white/15 pt-3">
+        <div className="mt-3 flex w-full shrink-0 flex-col items-center gap-2 border-t border-white/15 pt-3 xl:items-stretch">
           <NotificationsMenu placement="rail" />
 
           {user?.role === 'admin' && (
             <Link to="/admin" aria-label="Admin panel" title="Admin panel"
-              className="group relative flex h-12 w-12 items-center justify-center rounded-2xl transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-[#F2D49D]">
+              className="group relative flex h-12 w-12 items-center justify-center rounded-xl transition-colors xl:w-full xl:justify-start xl:gap-3 xl:px-3 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-[#F2D49D]">
               <CharacterBadge name="susi" tone="paper" size="sm" />
               <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">Admin panel</span>
             </Link>
@@ -148,7 +149,7 @@ export default function DashboardLayout() {
               title="More options"
               aria-haspopup="menu"
               aria-expanded={showAccountMenu}
-              className="group relative flex h-12 w-12 items-center justify-center rounded-2xl transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-[#F2D49D]">
+              className="group relative flex h-12 w-12 items-center justify-center rounded-xl transition-colors xl:w-full xl:justify-start xl:gap-3 xl:px-3 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-[#F2D49D]">
               <CharacterBadge name="susi" tone="paper" size="sm" />
               <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">More options</span>
             </button>
@@ -157,7 +158,7 @@ export default function DashboardLayout() {
         </div>
       </aside>
 
-      <div className="min-h-screen min-w-0 pt-16 lg:pl-[84px] lg:pt-0">
+      <div className="min-h-screen min-w-0 pt-16 lg:pl-[84px] lg:pt-0 xl:pl-[204px]">
         <main id="main-content" tabIndex={-1}
           className="mx-auto min-w-0 w-full max-w-[1800px] px-3 pb-28 pt-5 sm:px-6 sm:pt-7 lg:px-8 lg:pb-10 lg:pt-8 xl:px-10">
           <Outlet />
@@ -170,9 +171,9 @@ export default function DashboardLayout() {
           ' items-center gap-0.5 border-t border-border bg-card/95 px-1 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-4px_24px_rgba(0,0,0,.04)] backdrop-blur-xl lg:hidden sm:px-3'}>
         {navigation.slice(0, 3).map(item => <MobileNavLink key={item.to} {...item} />)}
         <Link to="/dashboard/notes?compose=1" aria-label="Write a new letter" title="Write a letter"
-          className="relative -mt-3 flex min-h-14 min-w-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-md focus-visible:outline-2 focus-visible:outline-primary">
+          className="relative -mt-3 flex min-h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl bg-primary text-primary-foreground shadow-md focus-visible:outline-2 focus-visible:outline-primary">
           <CharacterBadge name="tala" tone="paper" size="sm" />
-          <span className="sr-only">Write a new letter</span>
+          <span className="text-[9px] font-bold leading-tight sm:text-[10px]">Write</span>
         </Link>
         {navigation.slice(3).map(item => <MobileNavLink key={item.to} {...item} avatar={item.to === '/dashboard/profile' ? user?.avatar : undefined} />)}
         {user?.role === 'admin' && <Link to="/admin" aria-label="Admin panel" title="Admin panel" className="flex min-h-12 min-w-0 items-center justify-center rounded-xl hover:bg-muted"><CharacterBadge name="susi" tone="paper" size="sm" /></Link>}
