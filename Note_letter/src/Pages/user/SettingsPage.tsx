@@ -108,21 +108,21 @@ const SettingsPage = () => {
         }
     };
 
-    return <div className="mx-auto max-w-6xl space-y-7 pb-12">
+    return <div className="mx-auto min-w-0 max-w-6xl space-y-7 pb-12">
         <div className="flex items-center justify-between gap-4">
             <div><Link to="/dashboard" className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground">Back to workspace</Link><p className="mt-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.19em] text-[hsl(var(--accent))]"><CharacterBadge name="tala" tone="gold" size="xs" /> Make your space yours</p><h1 className="mt-2 font-editorial text-4xl sm:text-5xl">Settings & privacy</h1><p className="mt-3 max-w-xl text-sm leading-7 text-muted-foreground">A calmer, more personal space for your stories. Changes to your preferences save instantly on this device.</p></div>
         </div>
-        <div className="grid gap-5 lg:grid-cols-[270px_minmax(0,1fr)] lg:items-start">
-            <aside className="stl-depth-card stl-depth-static rounded-[27px] border border-border bg-card p-3 shadow-sm lg:sticky lg:top-24">
-                <div className="mb-3 flex items-center gap-3 rounded-2xl bg-background p-3">
+        <div className="grid min-w-0 gap-5 lg:grid-cols-[270px_minmax(0,1fr)] lg:items-start">
+            <aside className="stl-depth-card stl-depth-static min-w-0 max-w-full overflow-hidden rounded-[27px] border border-border bg-card p-3 shadow-sm lg:sticky lg:top-24">
+                <div className="mb-3 flex min-w-0 items-center gap-3 overflow-hidden rounded-2xl bg-background p-3">
                     <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[hsl(var(--surface-gold))] font-semibold">{user?.avatar ? <img src={getImageUrl(user.avatar)} alt="" className="h-full w-full object-cover" /> : user?.username?.[0]?.toUpperCase() || 'W'}</span>
-                    <span className="min-w-0"><strong className="block truncate text-sm">{user?.username || 'Writer'}</strong><span className="block truncate text-xs text-muted-foreground">Your settings</span></span>
+                    <span className="min-w-0 flex-1 overflow-hidden"><strong className="block max-w-full truncate text-sm">{user?.username || 'Writer'}</strong><span className="block truncate text-xs text-muted-foreground">Your settings</span></span>
                 </div>
-                <nav aria-label="Settings categories" className="grid grid-cols-2 gap-1 lg:grid-cols-1">
-                    {tabs.map(({ value, label, mascot }) => <button type="button" key={value} onClick={() => selectTab(value)} aria-current={tab === value ? 'page' : undefined} className={`flex items-center gap-2 rounded-2xl px-3 py-3 text-left text-xs font-semibold transition-colors sm:text-sm ${tab === value ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}><CharacterBadge name={mascot} tone="paper" size="sm" />{label}</button>)}
+                <nav aria-label="Settings categories" className="grid min-w-0 grid-cols-2 gap-1 lg:grid-cols-1">
+                    {tabs.map(({ value, label, mascot }) => <button type="button" key={value} onClick={() => selectTab(value)} aria-current={tab === value ? 'page' : undefined} className={`flex min-w-0 items-center gap-1.5 rounded-2xl px-2 py-3 text-left text-[11px] font-semibold leading-tight transition-colors sm:gap-2 sm:px-3 sm:text-sm ${tab === value ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}><CharacterBadge name={mascot} tone="paper" size="xs" /><span className="min-w-0 break-words">{label}</span></button>)}
                 </nav>
             </aside>
-            <div className="space-y-5">
+            <div className="min-w-0 space-y-5">
                 {tab === 'account' && <>
                     <section className="stl-depth-card stl-depth-static overflow-hidden rounded-[28px] border border-border bg-card shadow-sm">
                         <div className="border-b border-border px-6 py-5 sm:px-8"><p className="text-xs font-bold uppercase tracking-[.16em] text-muted-foreground">Account</p><h2 className="mt-2 font-editorial text-2xl">Your identity</h2></div>
