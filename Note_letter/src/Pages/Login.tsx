@@ -48,7 +48,7 @@ const Login = () => {
         <div className="absolute -bottom-20 -right-24 h-96 w-96 rounded-full border border-white/15"/><div className="absolute -bottom-10 -right-14 h-72 w-72 rounded-full border border-white/15"/>
       </section>
       <section className="flex items-center justify-center px-5 py-12 sm:px-10">
-        <div className="w-full max-w-md">
+        <div className="stl-depth-paper stl-depth-static w-full max-w-md rounded-[1.8rem] border border-border bg-card/70 p-6 sm:p-9">
           <Link to="/" className="mb-9 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground">Back to home</Link>
           <div className="mb-8 lg:hidden"><CharacterBadge name="lumi" tone="forest" size="md" /><p className="mt-4 font-editorial text-2xl">SendTheLetter</p></div>
           <p className="text-xs font-bold uppercase tracking-[.2em] text-[hsl(var(--accent))]">Welcome back</p>
