@@ -93,8 +93,8 @@ export default function DashboardLayout() {
         <Link to="/dashboard" aria-label="SendTheLetter home" title="SendTheLetter"
           className="group relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl transition-colors xl:w-full xl:justify-start xl:gap-3 xl:px-2 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2D49D]">
           <CharacterBadge name="sely" tone="paper" size="md" />
-          <span className="hidden font-editorial text-lg font-semibold tracking-tight xl:inline">SendTheLetter</span>
-          <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+14px)] top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-xl group-hover:block group-focus-visible:block">SendTheLetter</span>
+          <span className="hidden font-editorial text-sm font-semibold tracking-tight xl:inline">SendTheLetter</span>
+          <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+14px)] top-1/2 z-50 hidden xl:!hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-xl group-hover:block group-focus-visible:block">SendTheLetter</span>
         </Link>
 
         <nav aria-label="Workspace navigation" className="mt-7 flex min-h-0 w-full flex-1 flex-col items-center gap-2 xl:items-stretch">
@@ -103,7 +103,7 @@ export default function DashboardLayout() {
               className={({ isActive }) => railLink(isActive)}>
               <CharacterBadge name={mascot} tone="paper" size="sm" />
               <span className="hidden text-[13px] font-semibold xl:inline">{label}</span>
-              <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">{label}</span>
+              <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden xl:!hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">{label}</span>
             </NavLink>
           ))}
 
@@ -111,14 +111,14 @@ export default function DashboardLayout() {
             className="group relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-transparent transition-colors xl:w-full xl:justify-start xl:gap-3 xl:px-3 hover:border-white/20 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2D49D]">
             <CharacterBadge name="suri" tone="paper" size="sm" />
             <span className="hidden text-[13px] font-semibold xl:inline">Search letters</span>
-            <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">Search public letters</span>
+            <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden xl:!hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">Search public letters</span>
           </Link>
 
           <Link to="/dashboard/notes?compose=1" aria-label="Write a new letter" title="Write a letter"
             className="group relative mt-2 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border xl:w-full xl:justify-start xl:gap-3 xl:px-3 text-[#304736] border-[#8F7955]/50 bg-[#E1C998] transition-colors hover:bg-[#F2DAA9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F2D49D]">
             <CharacterBadge name="tala" tone="paper" size="sm" />
             <span className="hidden text-[13px] font-bold xl:inline">Write a letter</span>
-            <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">Write a letter</span>
+            <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden xl:!hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">Write a letter</span>
           </Link>
 
           <NavLink to={navigation[4].to} end={navigation[4].end} aria-label={navigation[4].label} title={navigation[4].label}
@@ -127,7 +127,7 @@ export default function DashboardLayout() {
               ? <img src={getImageUrl(user.avatar)} alt="" className="h-9 w-9 rounded-full border-2 border-[#F2D49D] object-cover" />
               : <CharacterBadge name="sely" tone="paper" size="sm" />}
             <span className="hidden text-[13px] font-semibold xl:inline">{navigation[4].label}</span>
-            <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">{navigation[4].label}</span>
+            <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden xl:!hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">{navigation[4].label}</span>
           </NavLink>
         </nav>
 
@@ -138,7 +138,8 @@ export default function DashboardLayout() {
             <Link to="/admin" aria-label="Admin panel" title="Admin panel"
               className="group relative flex h-12 w-12 items-center justify-center rounded-xl transition-colors xl:w-full xl:justify-start xl:gap-3 xl:px-3 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-[#F2D49D]">
               <CharacterBadge name="susi" tone="paper" size="sm" />
-              <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">Admin panel</span>
+              <span className="hidden text-[13px] font-semibold xl:inline">Admin panel</span>
+              <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden xl:!hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">Admin panel</span>
             </Link>
           )}
 
@@ -151,7 +152,8 @@ export default function DashboardLayout() {
               aria-expanded={showAccountMenu}
               className="group relative flex h-12 w-12 items-center justify-center rounded-xl transition-colors xl:w-full xl:justify-start xl:gap-3 xl:px-3 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-[#F2D49D]">
               <CharacterBadge name="susi" tone="paper" size="sm" />
-              <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">More options</span>
+              <span className="hidden text-[13px] font-semibold xl:inline">More options</span>
+              <span aria-hidden="true" className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 z-50 hidden xl:!hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground shadow-lg group-hover:block group-focus-visible:block">More options</span>
             </button>
             <ProfileDropdown isOpen={showAccountMenu} onClose={() => setShowAccountMenu(false)} placement="rail" />
           </div>
