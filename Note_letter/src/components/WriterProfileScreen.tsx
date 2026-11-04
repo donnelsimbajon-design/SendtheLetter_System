@@ -242,10 +242,11 @@ export default function WriterProfileScreen({
             </div>
         </section>
 
-        <nav aria-label="Writer profile sections" className="sticky top-16 z-20 flex gap-1 overflow-x-auto rounded-2xl border border-[#dfd9ce] bg-card/95 px-2 py-1.5 shadow-[0_2px_12px_rgba(36,54,43,.035)] backdrop-blur-lg lg:top-3">
+        <nav aria-label="Writer profile sections" className="sticky top-16 z-20 flex gap-1 overflow-x-auto rounded-2xl border border-border/60 bg-background/70 px-2 py-1.5 backdrop-blur-lg lg:top-3">
             {topTabs.map(({ id, text }) => <button key={id} type="button" onClick={() => { setTab(id); setFeedback(''); setCategory('All'); }}
                 aria-current={tab === id ? 'page' : undefined}
-                className={`min-w-[76px] flex-1 whitespace-nowrap rounded-xl border-b-[3px] px-3 py-3 text-[13px] font-semibold transition-colors sm:text-sm ${tab === id ? 'border-[#355d49] bg-[#edf1e9] text-[#294638]' : 'border-transparent text-[#718076] hover:bg-[#f5f2eb] hover:text-[#2e493b]'}`}>
+                aria-pressed={tab === id}
+                className={`min-w-[76px] flex-1 whitespace-nowrap rounded-xl border border-transparent bg-transparent px-3 py-3 text-[13px] font-semibold transition-[transform,opacity] duration-200 ease-out hover:-translate-y-0.5 hover:opacity-80 active:scale-[.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transform-none sm:text-sm ${tab === id ? 'text-foreground opacity-100' : 'text-muted-foreground opacity-75'}`}>
                 {text}
             </button>)}
         </nav>
