@@ -1,3 +1,4 @@
+import WorldScene3D from '../components/WorldScene3D';
 import { useCallback, useEffect, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 import CharacterBadge from '../components/CharacterBadge';
@@ -62,6 +63,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="mx-auto max-w-7xl space-y-8">
+      <WorldScene3D kind="settings" title="3D SendTheLetter administration world" controls={false} className="h-[180px]" />
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div><p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[.18em] text-muted-foreground"><CharacterBadge name="susi" tone="sage" size="sm" /> Administration</p><h1 className="mt-2 font-editorial text-4xl">Admin panel</h1><p className="mt-2 text-sm text-muted-foreground">Manage accounts and moderate public letters.</p></div>
         <button onClick={() => void load(search)} disabled={loading} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-sm font-semibold hover:bg-muted disabled:opacity-50"><RefreshCw size={16} className={loading ? 'animate-spin' : ''} /> Refresh</button>
