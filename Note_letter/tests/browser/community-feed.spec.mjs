@@ -56,7 +56,7 @@ async function mockWorkspace(page, letters = fixedLetters) {
   });
 }
 
-test('community uses screenshot-style 72px near-black rail and three-column public feed', async ({ page }, testInfo) => {
+test('community uses transparent original-mascot rail and three-column public feed', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop-chromium', 'Desktop layout only');
   await page.setViewportSize({ width: 1540, height: 950 });
   await mockWorkspace(page);
@@ -70,8 +70,13 @@ test('community uses screenshot-style 72px near-black rail and three-column publ
     left: Math.round(element.getBoundingClientRect().left),
     position: getComputedStyle(element).position,
     background: getComputedStyle(element).backgroundColor,
+    className: element.className,
   }));
-  expect(railLayout).toMatchObject({ width: 72, left: 0, position: 'fixed', background: 'rgba(11, 15, 18, 0.95)' });
+  expect(railLayout).toMatchObject({ width: 72, left: 0, position: 'fixed' });
+  expect(railLayout.className).toContain('bg-background/40');
+  expect(railLayout.className).toContain('backdrop-blur-xl');
+  expect(railLayout.background).toMatch(/^rgba\(/);
+  expect(Number(railLayout.background.split(',').pop().replace(')', ''))).toBeLessThan(1);
   await expect(page.getByRole('heading', { name: 'Discover words that matter' })).toBeVisible();
   await expect(page.getByRole('complementary', { name: 'Writer recommendations and community links' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Community letter feed' })).toBeVisible();
@@ -81,16 +86,25 @@ test('community uses screenshot-style 72px near-black rail and three-column publ
   expect(count).toBe(3);
   const navigation = page.getByRole('navigation', { name: 'Workspace navigation' });
   await expect(navigation.getByRole('link')).toHaveCount(7);
-  const expectedLabels = ['Overview', 'My library', 'Community', 'Messages', 'My profile'];
-  for (const label of expectedLabels) {
+  const originalMascots = {
+    'Overview': 'lumi', 'My library': 'basa', 'Community': 'piko',
+    'Messages': 'chika', 'Search public letters': 'suri',
+    'Write a new letter': 'tala', 'My profile': 'sely',
+  };
+  for (const [label, mascot] of Object.entries(originalMascots)) {
     const link = navigation.getByRole('link', { name: label });
     await expect(link).toBeVisible();
-    await expect(link.locator('svg[role="presentation"]')).toBeVisible();
-    // Visually icon-only, while the destination name remains accessible.
+    await expect(link.locator(`img[src="/mascots/${mascot}.svg"]`)).toBeVisible();
     await expect(link).toHaveAttribute('aria-label', label);
-    await expect(link).toHaveAttribute('title', label);
+    // Visually icon-only, while the destination name remains accessible.
     expect((await link.innerText()).trim()).toBe('');
   }
+  await expect(rail.getByRole('link', { name: 'SendTheLetter home' })
+    .locator('img[src="/mascots/sely.svg"]')).toBeVisible();
+  await expect(rail.getByRole('button', { name: /Notifications/ })
+    .locator('img[src="/mascots/nori.svg"]')).toBeVisible();
+  await expect(rail.getByRole('button', { name: 'Account, settings and appearance' })
+    .locator('img[src="/mascots/susi.svg"]')).toBeVisible();
   const current = navigation.getByRole('link', { name: 'Community' });
   await expect(current).toHaveAttribute('aria-current', 'page');
   await expect(navigation.getByRole('link', { name: 'Write a new letter' })).toBeVisible();
@@ -132,7 +146,7 @@ test('community uses screenshot-style 72px near-black rail and three-column publ
   // Visual grow-on-hover is intentional; the accessible hit target stays stable.
   expect(dimensions.animatedWidth).toBeGreaterThanOrEqual(48);
   const searchShortcut = navigation.getByRole('link', { name: 'Search public letters' });
-  await expect(searchShortcut.locator('svg[role="presentation"]')).toBeVisible();
+  await expect(searchShortcut.locator('img[src="/mascots/suri.svg"]')).toBeVisible();
   await searchShortcut.click();
   await expect(page).toHaveURL(/\/dashboard\/community\?focus=search$/);
   await expect(page.getByRole('textbox', { name: 'Search public letters' })).toBeFocused();
