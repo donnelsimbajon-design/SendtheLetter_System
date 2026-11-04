@@ -154,3 +154,20 @@
     margin: 16px auto !important;
   }
 }
+
+
+/* The screenshot-inspired navigation is a fixed, narrow desktop rail.
+   Compact its vertical rhythm on short laptop windows, keeping the bottom
+   menu reachable and popovers unclipped outside the navigation. */
+@media (min-width: 1024px) and (max-height: 820px) {
+  .workspace-rail-primary {
+    margin-top: min(3vh, 24px) !important;
+    row-gap: 2px !important;
+  }
+}
+@media (min-width: 1024px) and (max-height: 650px) {
+  .workspace-rail-primary {
+    margin-top: 0 !important;
+    row-gap: 0 !important;
+  }
+}
