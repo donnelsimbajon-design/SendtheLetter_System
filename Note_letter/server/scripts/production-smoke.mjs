@@ -35,7 +35,6 @@ async function request(base, path, expected = [200]) {
 async function json(base, path, status = [200]) {
     const response = await request(base, path, status);
     assert.ok((response.headers.get('content-type') || '').toLowerCase().includes('application/json'), `${path}: expected JSON response`);
-        `${path}: expected JSON response`);
     return response.json();
 }
 
@@ -89,7 +88,7 @@ for (const path of ['/api/letters/recipient/open', '/api/letters/recipient/reply
         signal: AbortSignal.timeout(timeoutMs),
     });
     assert.equal(response.status, 404, `${path}: invalid invitation must return 404`);
-    assert.match(response.headers.get('content-type') || '', /application\\/json/i);
+    assert.ok((response.headers.get('content-type') || '').toLowerCase().includes('application/json'), `${path}: expected JSON response`);
     assert.match(response.headers.get('cache-control') || '', /no-store/i, `${path}: private content must not be cached`);
     assert.match(response.headers.get('x-robots-tag') || '', /noindex/i, `${path}: missing no-index policy`);
     assert.equal(response.headers.get('referrer-policy'), 'no-referrer', `${path}: missing referrer suppression`);
