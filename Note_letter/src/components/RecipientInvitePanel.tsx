@@ -40,7 +40,7 @@ export default function RecipientInvitePanel({ letterId, title }: Props) {
         try {
             const result = await request('POST', '/recipient-link', { expiresInDays: days });
             const base = import.meta.env.VITE_APP_URL || window.location.origin;
-            const url = new URL(`/open/${result.token}`, base).toString();
+            const url = new URL(`/open#${result.token}`, base).toString();
             setLink(url); setExists(true); setReplies(null); setExpiresAt(result.expiresAt);
             setFeedback('Invitation ready. Copy the link or save its QR code before closing this window.');
         } catch (error) {
@@ -80,7 +80,7 @@ export default function RecipientInvitePanel({ letterId, title }: Props) {
     const share = async () => {
         if (!navigator.share) { setFeedback('Choose Copy link, then paste it into Messenger, TikTok, or your preferred app.'); return; }
         try {
-            await navigator.share({ title: `A private letter: ${title}`, text: 'I made a special letter for you. Open it whenever you are ready.', url: link });
+            await navigator.share({ title: 'A private SendTheLetter invitation', text: 'I made a special letter for you. Open it whenever you are ready.', url: link });
             setFeedback('Share sheet opened. Choose a trusted recipient.');
         } catch (error) {
             if ((error as Error).name !== 'AbortError') setFeedback('Your browser could not share the link. Try Copy link instead.');
