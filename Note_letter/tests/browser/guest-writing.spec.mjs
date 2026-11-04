@@ -42,8 +42,8 @@ test('guest writing moves into the authenticated editor and clears after a succe
   });
   await page.goto('/dashboard/notes?compose=1&guest=1');
   await expect(page.getByRole('dialog', { name: 'Write a letter' })).toBeVisible();
-  await expect(page.getByDisplayValue('A guest letter')).toBeVisible();
-  await expect(page.getByText('A real sentence from the guest.')).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Letter title' })).toHaveValue('A guest letter');
+  await expect(page.getByRole('textbox', { name: 'Your letter' })).toHaveValue('A real sentence from the guest.');
   await page.getByRole('button', { name: 'Save draft' }).click();
   await expect.poll(() => saved.length).toBe(1);
   expect(saved[0].isPublic).toBe(false);
