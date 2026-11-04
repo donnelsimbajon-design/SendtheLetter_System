@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import type { Request, Response } from 'express';
-import { QueryTypes } from 'sequelize';
+import { Op, QueryTypes } from 'sequelize';
 import sequelize from '../config/database';
 import Letter from '../models/Letter';
 import User from '../models/User';
@@ -42,7 +42,10 @@ async function activeLink(token: unknown) {
 }
 async function readableLetter(link: LinkRow) {
     const letter = await Letter.findOne({
-        where: { id: link.letterId, status: 'published', isPublic: false, isArchived: false },
+        where: {
+            id: link.letterId, status: 'published', isPublic: false,
+            [Op.or]: [{ isArchived: false }, { isArchived: null }],
+        },
         include: [{ model: User, as: 'user', attributes: ['id', 'username', 'avatar'] }],
     });
     return isVisibleRecipientLetter(letter) ? letter : null;
