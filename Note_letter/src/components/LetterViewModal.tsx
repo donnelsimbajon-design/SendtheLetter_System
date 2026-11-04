@@ -45,6 +45,7 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
 
     useEffect(() => {
         if (note && isOpen) {
+            setCommentCount(Number(note.commentCount) || 0);
             setIsLiked(note.isLikedByUser || false);
             setLikeCount(note.likeCount || 0);
             // 3D envelope first, full-width reading second; comments only on demand.
