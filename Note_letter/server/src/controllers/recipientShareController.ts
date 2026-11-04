@@ -132,8 +132,9 @@ export const readRecipientLetter = async (req: Request, res: Response) => {
         if (!link) return unavailable(res);
         const letter = await readableLetter(link);
         if (!letter) return unavailable(res);
-        const dto = publicLetterDTO(letter.toJSON() as Record<string, any>);
-        const { shareToken: _publicShareToken, authorId: _authorId, ...safe } = dto;
+        const safe: Record<string, unknown> = { ...publicLetterDTO(letter.toJSON() as Record<string, any>) };
+        delete safe.shareToken;
+        delete safe.authorId;
         return res.json({ letter: safe, expiresAt: link.expiresAt });
     } catch (error) { return fail(error, res); }
 };
