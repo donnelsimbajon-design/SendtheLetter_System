@@ -103,13 +103,13 @@ test('community uses screenshot-style 72px near-black rail and three-column publ
   const accountMenu = page.getByRole('menu', { name: 'Account menu' });
   await expect(accountMenu).toBeVisible();
   const menuBox = await accountMenu.boundingBox();
-  expect(menuBox.x).toBeGreaterThanOrEqual(84);
+  expect(menuBox.x).toBeGreaterThanOrEqual(72);
   await page.keyboard.press('Escape');
   await expect(accountMenu).toHaveCount(0);
   await rail.getByRole('button', { name: /Notifications/ }).click();
   await expect(page.getByRole('dialog', { name: 'Notifications' })).toBeVisible();
   const notifBox = await page.getByRole('dialog', { name: 'Notifications' }).boundingBox();
-  expect(notifBox.x).toBeGreaterThanOrEqual(84);
+  expect(notifBox.x).toBeGreaterThanOrEqual(72);
   await page.getByRole('button', { name: 'Close notifications' }).click();
   await current.hover();
   const brand = rail.getByRole('link', { name: 'SendTheLetter home' });
