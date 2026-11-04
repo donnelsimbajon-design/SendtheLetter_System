@@ -360,7 +360,7 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
 
             <LetterEditorModal
                 isOpen={isEditorOpen}
-                onClose={() => setIsEditorOpen(false)}
+                onClose={() => { setIsEditorOpen(false); setGuestImportPending(false); }}
                 onSubmit={handleLetterCreate}
                 initialData={editingNote || undefined}
                 starterTemplate={starterTemplate}
