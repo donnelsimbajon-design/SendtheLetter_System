@@ -327,8 +327,8 @@ test('writer profile is compact, readable and navigable on desktop and mobile', 
     expect(rect).not.toBeNull();
     expect(rect.height).toBeLessThan(420);
     const workspace = page.getByRole('navigation', { name: 'Workspace navigation' });
-    await expect(workspace.getByText('My library')).toBeVisible();
-    await expect(workspace.getByText('My profile')).toBeVisible();
+    await expect(workspace.getByText('My library').first()).toBeVisible();
+    await expect(workspace.getByText('My profile').first()).toBeVisible();
   } else {
     const mobile = page.getByRole('navigation', { name: 'Mobile workspace navigation' });
     await expect(mobile.getByText('Community')).toBeVisible();
