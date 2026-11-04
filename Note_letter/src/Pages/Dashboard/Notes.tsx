@@ -25,6 +25,7 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
     const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'popular'>('newest');
     const [libraryView, setLibraryView] = useState<'grid' | 'shelf'>('grid');
     const [openingNote, setOpeningNote] = useState<Note | null>(null);
+    const [skipReaderOpening, setSkipReaderOpening] = useState(false);
     const [params, setParams] = useSearchParams();
     const navigate = useNavigate();
     const openWriterProfile = (username: string) => {
@@ -203,6 +204,7 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
     };
 
     const handleNoteClick = (note: Note) => {
+        setSkipReaderOpening(false);
         setSelectedNote(note);
         setIsViewModalOpen(true);
     };
@@ -356,7 +358,7 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                 )}
             </div>}
 
-            <LetterOpeningDialog note={openingNote} onClose={() => setOpeningNote(null)} onRead={note => { setOpeningNote(null); handleNoteClick(note); }} />
+            <LetterOpeningDialog note={openingNote} onClose={() => setOpeningNote(null)} onRead={note => { setOpeningNote(null); setSkipReaderOpening(true); setSelectedNote(note); setIsViewModalOpen(true); }} />
 
             <LetterEditorModal
                 isOpen={isEditorOpen}
@@ -372,6 +374,7 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                 isOpen={isViewModalOpen}
                 onClose={() => setIsViewModalOpen(false)}
                 note={selectedNote}
+                skipOpening={skipReaderOpening}
                 onAuthorClick={openWriterProfile}
             />
         </div>
