@@ -56,7 +56,7 @@ async function mockWorkspace(page, letters = fixedLetters) {
   });
 }
 
-test('community has readable forest navigation and three-column public feed', async ({ page }, testInfo) => {
+test('community uses screenshot-style 72px near-black rail and three-column public feed', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop-chromium', 'Desktop layout only');
   await page.setViewportSize({ width: 1540, height: 950 });
   await mockWorkspace(page);
@@ -71,7 +71,7 @@ test('community has readable forest navigation and three-column public feed', as
     position: getComputedStyle(element).position,
     background: getComputedStyle(element).backgroundColor,
   }));
-  expect(railLayout).toMatchObject({ width: 204, left: 0, position: 'fixed', background: 'rgb(43, 72, 57)' });
+  expect(railLayout).toMatchObject({ width: 72, left: 0, position: 'fixed', background: 'rgb(11, 15, 18)' });
   await expect(page.getByRole('heading', { name: 'Discover words that matter' })).toBeVisible();
   await expect(page.getByRole('complementary', { name: 'Writer recommendations and community links' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Community letter feed' })).toBeVisible();
@@ -85,17 +85,18 @@ test('community has readable forest navigation and three-column public feed', as
   for (const label of expectedLabels) {
     const link = navigation.getByRole('link', { name: label });
     await expect(link).toBeVisible();
-    await expect(link.locator('img[src^="/mascots/"]')).toBeVisible();
-    // Expanded desktop rail must show the destination label, not only a mascot.
-    await expect(link.locator('span:not([aria-hidden])').filter({ hasText: label }).first()).toBeVisible();
+    await expect(link.locator('svg[role="presentation"]')).toBeVisible();
+    // Visually icon-only, while the destination name remains accessible.
+    await expect(link).toHaveAttribute('aria-label', label);
     await expect(link).toHaveAttribute('title', label);
+    expect((await link.innerText()).trim()).toBe('');
   }
   const current = navigation.getByRole('link', { name: 'Community' });
   await expect(current).toHaveAttribute('aria-current', 'page');
   await expect(navigation.getByRole('link', { name: 'Write a new letter' })).toBeVisible();
   const main = page.locator('main#main-content');
   const mainBox = await main.boundingBox();
-  expect(mainBox.x).toBeGreaterThanOrEqual(204);
+  expect(mainBox.x).toBeGreaterThanOrEqual(72);
   // The rail's account and notification popovers must open on its right.
   const accountButton = rail.getByRole('button', { name: 'Account, settings and appearance' });
   await accountButton.click();
@@ -111,15 +112,21 @@ test('community has readable forest navigation and three-column public feed', as
   expect(notifBox.x).toBeGreaterThanOrEqual(84);
   await page.getByRole('button', { name: 'Close notifications' }).click();
   await current.hover();
-  await expect(current.locator('span[aria-hidden="true"]').last()).toBeHidden();
+  const brand = rail.getByRole('link', { name: 'SendTheLetter home' });
+  const first = navigation.getByRole('link', { name: 'Overview' });
+  const logoBox = await brand.boundingBox();
+  const firstBox = await first.boundingBox();
+  expect(firstBox.y - (logoBox.y + logoBox.height)).toBeGreaterThan(70);
+  const moreButton = rail.getByRole('button', { name: 'Account, settings and appearance' });
+  const moreBox = await moreButton.boundingBox();
+  expect(moreBox.y).toBeGreaterThan(firstBox.y + 300);
   const dimensions = await current.evaluate(el => {
     const box = el.getBoundingClientRect();
     return { width: Math.round(box.width), height: Math.round(box.height) };
   });
-  expect(dimensions.width).toBeGreaterThanOrEqual(150);
-  expect(dimensions.height).toBe(48);
+  expect(dimensions).toEqual({ width: 48, height: 48 });
   const searchShortcut = navigation.getByRole('link', { name: 'Search public letters' });
-  await expect(searchShortcut.locator('img[src="/mascots/suri.svg"]')).toBeVisible();
+  await expect(searchShortcut.locator('svg[role="presentation"]')).toBeVisible();
   await searchShortcut.click();
   await expect(page).toHaveURL(/\/dashboard\/community\?focus=search$/);
   await expect(page.getByRole('textbox', { name: 'Search public letters' })).toBeFocused();
