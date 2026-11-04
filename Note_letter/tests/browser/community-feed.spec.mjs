@@ -56,7 +56,7 @@ async function mockWorkspace(page, letters = fixedLetters) {
   });
 }
 
-test('community uses original mascots in a dark Instagram-style side rail and three-column feed', async ({ page }, testInfo) => {
+test('community has readable forest navigation and three-column public feed', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop-chromium', 'Desktop layout only');
   await page.setViewportSize({ width: 1540, height: 950 });
   await mockWorkspace(page);
@@ -71,7 +71,7 @@ test('community uses original mascots in a dark Instagram-style side rail and th
     position: getComputedStyle(element).position,
     background: getComputedStyle(element).backgroundColor,
   }));
-  expect(railLayout).toMatchObject({ width: 84, left: 0, position: 'fixed', background: 'rgb(16, 23, 19)' });
+  expect(railLayout).toMatchObject({ width: 204, left: 0, position: 'fixed', background: 'rgb(43, 72, 57)' });
   await expect(page.getByRole('heading', { name: 'Discover words that matter' })).toBeVisible();
   await expect(page.getByRole('complementary', { name: 'Writer recommendations and community links' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Community letter feed' })).toBeVisible();
@@ -86,8 +86,8 @@ test('community uses original mascots in a dark Instagram-style side rail and th
     const link = navigation.getByRole('link', { name: label });
     await expect(link).toBeVisible();
     await expect(link.locator('img[src^="/mascots/"]')).toBeVisible();
-    // Labels are available to assistive technology but do not occupy header space.
-    await expect(link.locator('.sr-only')).toHaveText(label);
+    // Expanded desktop rail must show the destination label, not only a mascot.
+    await expect(link.locator('span:not([aria-hidden])').filter({ hasText: label }).first()).toBeVisible();
     await expect(link).toHaveAttribute('title', label);
   }
   const current = navigation.getByRole('link', { name: 'Community' });
@@ -95,7 +95,7 @@ test('community uses original mascots in a dark Instagram-style side rail and th
   await expect(navigation.getByRole('link', { name: 'Write a new letter' })).toBeVisible();
   const main = page.locator('main#main-content');
   const mainBox = await main.boundingBox();
-  expect(mainBox.x).toBeGreaterThanOrEqual(84);
+  expect(mainBox.x).toBeGreaterThanOrEqual(204);
   // The rail's account and notification popovers must open on its right.
   const accountButton = rail.getByRole('button', { name: 'Account, settings and appearance' });
   await accountButton.click();
@@ -111,12 +111,13 @@ test('community uses original mascots in a dark Instagram-style side rail and th
   expect(notifBox.x).toBeGreaterThanOrEqual(84);
   await page.getByRole('button', { name: 'Close notifications' }).click();
   await current.hover();
-  await expect(current.locator('span[aria-hidden="true"]').last()).toBeVisible();
+  await expect(current.locator('span[aria-hidden="true"]').last()).toBeHidden();
   const dimensions = await current.evaluate(el => {
     const box = el.getBoundingClientRect();
     return { width: Math.round(box.width), height: Math.round(box.height) };
   });
-  expect(dimensions).toEqual({ width: 48, height: 48 });
+  expect(dimensions.width).toBeGreaterThanOrEqual(150);
+  expect(dimensions.height).toBe(48);
   const searchShortcut = navigation.getByRole('link', { name: 'Search public letters' });
   await expect(searchShortcut.locator('img[src="/mascots/suri.svg"]')).toBeVisible();
   await searchShortcut.click();

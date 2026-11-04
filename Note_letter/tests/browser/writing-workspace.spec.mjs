@@ -291,3 +291,47 @@ test('a tall photo stays inside the letter page and the photo can move to top or
   await expect.poll(() => figure.evaluate(node => (node.previousSibling?.textContent || '').length)).toBeGreaterThan(0);
   await expect.poll(() => figure.evaluate(node => (node.nextSibling?.textContent || '').length)).toBeGreaterThan(0);
 });
+
+test('writer profile is compact, readable and navigable on desktop and mobile', async ({ page }, testInfo) => {
+  await fakeAuthenticatedApi(page);
+  await page.route('**/api/users/profile/sample-writer', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({
+      id: sampleUser.id, username: sampleUser.username, avatar: null,
+      followerCount: 2, followingCount: 4, bio: 'Writing little notes for people I care about.',
+      createdAt: '2026-10-15T08:00:00.000Z',
+    }),
+  }));
+  if (testInfo.project.name !== 'mobile-chromium') {
+    await page.setViewportSize({ width: 1440, height: 900 });
+  }
+  await page.goto('/dashboard/profile');
+  const header = page.getByRole('region', { name: 'Writer profile header' });
+  await expect(header).toBeVisible();
+  await expect(header.getByRole('heading', { name: sampleUser.username })).toBeVisible();
+  await expect(header.getByRole('button', { name: 'Edit profile' })).toBeVisible();
+  await expect(header.getByRole('button', { name: 'Write a letter' })).toBeVisible();
+  const tabs = page.getByRole('navigation', { name: 'Writer profile sections' });
+  await expect(tabs).toBeVisible();
+  await expect(tabs.getByRole('button', { name: 'Posts' })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('heading', { name: 'Latest from the desk' })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Search profile posts' })).toHaveCount(0);
+  await tabs.getByRole('button', { name: 'About' }).click();
+  await expect(page.getByRole('heading', { name: 'Beyond the letters.' })).toBeVisible();
+  await expect(page.getByRole('complementary', { name: 'Writer shortcuts' })).toHaveCount(0);
+  await tabs.getByRole('button', { name: 'Posts' }).click();
+  await expect(page.getByRole('complementary', { name: 'Writer shortcuts' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1);
+  if (testInfo.project.name !== 'mobile-chromium') {
+    const rect = await header.boundingBox();
+    expect(rect).not.toBeNull();
+    expect(rect.height).toBeLessThan(420);
+    const workspace = page.getByRole('navigation', { name: 'Workspace navigation' });
+    await expect(workspace.getByText('My library').first()).toBeVisible();
+    await expect(workspace.getByText('My profile').first()).toBeVisible();
+  } else {
+    const mobile = page.getByRole('navigation', { name: 'Mobile workspace navigation' });
+    await expect(mobile.getByText('Community')).toBeVisible();
+    await expect(mobile.getByText('My profile')).toBeVisible();
+  }
+});
