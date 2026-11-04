@@ -18,9 +18,9 @@
 /* Layered paper/card relief: works with warm, cool and dark user themes. */
 :root[data-stl-depth="on"] .stl-depth-card {
   box-shadow: var(--stl-depth-shadow);
-  transform: perspective(1200px) translate3d(0, 0, 0) rotateX(0) rotateY(0);
+  transform: none; /* Depth at rest comes from layered shadows, not persistent GPU layers. */
   transition: transform 300ms cubic-bezier(.2,.75,.2,1), box-shadow 300ms ease, border-color 300ms ease;
-  backface-visibility: hidden;
+  /* Promote only the hovered card to 3D for low-end mobile performance. */
 }
 
 :root[data-stl-depth="on"] .stl-depth-hero {
@@ -36,7 +36,7 @@
   box-shadow: inset 0 1px 0 hsl(var(--card) / .8),
     0 4px 0 -2px hsl(var(--border) / .75),
     0 16px 28px -19px hsl(var(--foreground) / .26);
-  transform: perspective(1100px) translateZ(0);
+  transform: none;
   transition: transform 280ms ease, box-shadow 280ms ease;
 }
 
