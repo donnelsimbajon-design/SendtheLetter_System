@@ -259,10 +259,12 @@ export default function WriterProfileScreen({
                             <div><p className="text-[10px] font-bold uppercase tracking-[.15em] text-[hsl(var(--accent))]">{tab === 'posts' ? 'Timeline' : 'Published writing'}</p><h2 className="mt-1 font-editorial text-2xl">{tab === 'posts' ? 'Latest from the desk' : 'Public letter collection'}</h2></div>
                             {onRefresh && <button type="button" onClick={onRefresh} className="text-xs font-semibold text-muted-foreground underline-offset-4 hover:underline">Refresh</button>}
                         </div>
+                        {feed.length > 0 && <>
                         <div className="relative mt-3"><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search this writer's letters…" aria-label="Search profile posts" className="h-11 w-full rounded-2xl border border-border bg-background px-4 text-sm outline-none focus:border-primary" /></div>
                         {categoryOptions.length > 2 && <div aria-label="Filter by letter category" className="mt-4 flex gap-2 overflow-x-auto pb-1">
                             {categoryOptions.map(item => <button type="button" key={item} onClick={() => setCategory(item)} aria-pressed={category === item} className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-bold ${category === item ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}>{item}</button>)}
                         </div>}
+                        </>}
                     </div>
                     {loading ? <div className="rounded-[24px] border border-border bg-card p-12 text-center text-sm text-muted-foreground">Opening the writer's shelf…</div> : error ? <div role="alert" className="rounded-[24px] border border-border bg-card p-7 text-sm"><p>{error}</p><button type="button" onClick={onRetry} className="mt-4 rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground">Try again</button></div> : filtered.length ? filtered.map(({ note, isRepost, date }, index) => {
                         const state = likeStates[String(note.id)];
