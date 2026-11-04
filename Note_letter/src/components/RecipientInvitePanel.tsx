@@ -111,7 +111,7 @@ export default function RecipientInvitePanel({ letterId, title }: Props) {
             <h3 className="font-editorial text-xl font-semibold">Send to someone special</h3>
         </div>
         <p className="mt-1.5 text-xs leading-5 text-[#65746a]">
-            Your letter stays off the public Community. Only people with this invitation link can open it, without an account.
+            <strong>{title}</strong> stays off the public Community. Only people with this invitation link can open it, without an account.
             Anyone they forward it to can also read it. Do not share sensitive secrets.
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
