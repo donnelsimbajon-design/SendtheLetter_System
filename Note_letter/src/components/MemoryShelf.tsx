@@ -1,6 +1,7 @@
 import { BookOpenText, Unlock } from 'lucide-react';
 import type { Note } from '../types/note';
 import Mascot from './Mascot';
+import WorldScene3D from './WorldScene3D';
 
 type Props = {
   notes: Note[];
@@ -11,6 +12,7 @@ type Props = {
 export default function MemoryShelf({ notes, onOpen }: Props) {
   return (
     <section aria-label="3D memory library" className="stl-shelf">
+      <WorldScene3D kind="library" title="Interactive 3D bookshelf" className="mb-7 h-[230px] sm:h-[270px]" />
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 px-2">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[.14em] text-muted-foreground">Your memory shelf</p>
