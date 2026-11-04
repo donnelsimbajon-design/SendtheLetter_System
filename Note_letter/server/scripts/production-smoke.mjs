@@ -73,6 +73,34 @@ for (const route of ['/api/letters/mine', '/api/letters/drafts', '/api/letters/s
     console.log(`PASS: private library endpoint requires authentication (${route})`);
 }
 
+/** Read-only negative probes: the invalid bearer token cannot match any row.
+ * Although these use POST (to keep real tokens out of URLs), they cannot create
+ * a reply or read a real letter. Do not test production with valid user data.
+ */
+for (const path of ['/api/letters/recipient/open', '/api/letters/recipient/reply']) {
+    const response = await fetch(new URL(path, API), {
+        method: 'POST',
+        redirect: 'error',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            token: 'invalid-smoke-probe-not-a-valid-48-character-token',
+            ...(path.endsWith('/reply') ? { reaction: 'heart' } : {}),
+        }),
+        signal: AbortSignal.timeout(timeoutMs),
+    });
+    assert.equal(response.status, 404, `${path}: invalid invitation must return 404`);
+    assert.match(response.headers.get('content-type') || '', /application\\/json/i);
+    assert.match(response.headers.get('cache-control') || '', /no-store/i, `${path}: private content must not be cached`);
+    assert.match(response.headers.get('x-robots-tag') || '', /noindex/i, `${path}: missing no-index policy`);
+    assert.equal(response.headers.get('referrer-policy'), 'no-referrer', `${path}: missing referrer suppression`);
+    const body = await response.json();
+    assert.equal(typeof body.message, 'string');
+    for (const field of ['letter', 'content', 'title', 'authorName', 'recipientName', 'token', 'shareToken']) {
+        assert.ok(!(field in body), `${path}: unexpected private field in invalid invitation response: ${field}`);
+    }
+    console.log(`PASS: invalid recipient invitation is private and unavailable (${path})`);
+}
+
 const feed = await json(API, '/api/letters/public');
 assert.ok(Array.isArray(feed), 'Public feed did not return a list');
 feed.forEach(safeLetter);
@@ -103,7 +131,7 @@ if (writer) {
 // direct client-side route URLs. This rule lives in Render Settings, not in Vite.
 // Report this launch blocker explicitly without hiding successful privacy checks.
 const brokenRoutes = [];
-for (const route of ['/', '/dashboard/community', '/dashboard/notes', '/writers/__route_smoke__']) {
+for (const route of ['/', '/open', '/dashboard/community', '/dashboard/notes', '/writers/__route_smoke__']) {
     // A single missing catch-all rewrite breaks all deep links. Avoid repeated
     // slow CDN 404 lookups until this site-wide configuration is corrected.
     if (brokenRoutes.length) {
