@@ -17,7 +17,7 @@ import ShareModal from './ShareModal';
 import { API_ENDPOINTS } from '../config/api';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, BookOpenText, Heart, MailOpen, MessageCircle, Pencil, Repeat2, Share2 } from 'lucide-react';
-import WorldScene3D from './WorldScene3D';
+import LetterOpeningEnvelope from './LetterOpeningEnvelope';
 
 interface LetterViewModalProps {
     isOpen: boolean;
@@ -153,7 +153,7 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                     className="stl-full-letter-reader flex h-[min(94dvh,1000px)] w-[calc(100vw-1rem)] max-w-[1100px] min-w-0 flex-col gap-0 overflow-hidden rounded-[22px] border border-[#e7dbcc] bg-[#fcf9f4] p-0 shadow-2xl sm:h-[min(92dvh,1000px)] sm:rounded-[30px]"
                 >
                     <DialogTitle className="sr-only">Letter from {note.isAnonymous ? 'A Friend' : note.authorName || 'Unknown'}</DialogTitle>
-                    <DialogDescription className="sr-only">A 3D opening, followed by a full letter reader. Comments are separate and hidden until requested.</DialogDescription>
+                    <DialogDescription className="sr-only">A paper envelope opening, followed by a full letter reader. Comments are separate and hidden until requested.</DialogDescription>
 
                     {/* Actions live OUTSIDE the reading paper on every viewport. */}
                     <header className="z-20 flex shrink-0 flex-col items-stretch gap-2 border-b border-[#e7dbcc] bg-[#fffdf9] px-3 py-3 pr-11 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3 sm:px-6 sm:py-4 sm:pr-14">
@@ -179,8 +179,8 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                             <section aria-label="Open the 3D letter" className="flex h-full min-h-0 w-full flex-col items-center justify-start gap-3 overflow-y-auto overscroll-contain px-4 pb-7 pt-5 text-center sm:justify-center sm:gap-4 sm:px-7">
                                 <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#a16f54]">A letter is waiting for you</p>
                                 <h2 className="max-w-[680px] break-words font-editorial text-2xl leading-tight text-[#30443a] sm:text-4xl">{note.title || 'A note from the heart'}</h2>
-                                <p className="max-w-xl text-sm leading-6 text-[#7a7165]">Open the envelope in 3D, then read without distractions.</p>
-                                <WorldScene3D kind="letter" opened={envelopeOpened} controls={false} className="h-[210px] w-full max-w-[650px] shrink-0 sm:h-[310px]" title="Interactive 3D opening envelope" />
+                                <p className="max-w-xl text-sm leading-6 text-[#7a7165]">Unseal the envelope, then enjoy the letter without distractions.</p>
+                                <LetterOpeningEnvelope opened={envelopeOpened} className="w-full max-w-[650px] shrink-0" />
                                 <div className="flex w-full flex-wrap items-center justify-center gap-2">
                                     {!envelopeOpened && <button type="button" onClick={() => setEnvelopeOpened(true)} className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[#304b3e] px-6 py-3 text-sm font-bold text-white hover:bg-[#426550]"><MailOpen size={19} /> Open envelope</button>}
                                     {envelopeOpened && <button type="button" onClick={() => setShowEnvelope(false)} className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[#304b3e] px-6 py-3 text-sm font-bold text-white hover:bg-[#426550]"><BookOpenText size={19} /> Read full letter <ArrowRight size={17} /></button>}
