@@ -18,11 +18,11 @@ export default function PublicWriterPage() {
                 <nav aria-label="Writer profile navigation" className="flex items-center gap-2">
                     <Link to={loggedIn ? '/dashboard/community' : '/'} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-background px-3 py-2 text-xs font-bold hover:bg-muted sm:px-4">
                         <CharacterBadge name="basa" tone="paper" size="xs" />
-                        <span className="hidden sm:inline">{loggedIn ? 'Community' : 'Home'}</span><span className="sm:hidden">Back</span>
+                        <span className="hidden sm:inline">{loggedIn ? 'Community' : 'Home'}</span><span className="sr-only sm:hidden">Back</span>
                     </Link>
                     <Link to={loggedIn ? '/dashboard/profile' : '/login'} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:opacity-90 sm:px-4">
                         <CharacterBadge name="lumi" tone="paper" size="xs" />
-                        {loggedIn ? 'My space' : 'Sign in'}
+                        <span className="hidden sm:inline">{loggedIn ? 'My space' : 'Sign in'}</span>
                     </Link>
                 </nav>
             </div>
