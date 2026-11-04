@@ -167,7 +167,7 @@ export default function MessageDock() {
       {!inFullInbox && (
         <div className="fixed bottom-6 right-6 z-[55] hidden lg:block">
           {isOpen && (
-            <section aria-label={selected ? `Chat with ${selected.username}` : 'Recent messages'} className="mb-3 flex h-[min(550px,calc(100dvh-8rem))] w-[360px] flex-col overflow-hidden rounded-[1.6rem] border border-border bg-card shadow-2xl motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2">
+            <section aria-label={selected ? `Chat with ${selected.username}` : 'Recent messages'} className="mb-3 flex h-[min(550px,calc(100dvh-8rem))] w-[360px] flex-col overflow-hidden rounded-[1.6rem] border border-border bg-card shadow-2xl workspace-page-enter">
               <header className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-3">
                 {selected && <button type="button" onClick={() => { setSelected(null); setThreadError(''); }} aria-label="Back to inbox" className="rounded-full p-2 hover:bg-muted"><ArrowLeft size={18} /></button>}
                 <CharacterBadge name="chika" tone="paper" size="sm" />
