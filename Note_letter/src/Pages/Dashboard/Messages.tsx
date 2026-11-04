@@ -7,6 +7,7 @@ import { getImageUrl } from '../../lib/utils';
 import { API_ENDPOINTS } from '../../config/api';
 import Mascot from '../../components/Mascot';
 import CharacterBadge from '../../components/CharacterBadge';
+import WorldScene3D from '../../components/WorldScene3D';
 import { useInboxStore } from '../../store/inboxStore';
 
 type Contact = { id: number; username: string; avatar?: string; location?: string };
@@ -191,14 +192,17 @@ export default function Messages() {
     const filteredConversations = conversations.filter(convo => convo.user.username.toLowerCase().includes(query.toLowerCase()) || convo.lastMessage.toLowerCase().includes(query.toLowerCase()));
     const activeConversation = conversations.some(c => c.user.id === selected?.id);
 
-    return <div className="mx-auto max-w-[1380px] space-y-5 pb-0">
-        <header className="flex flex-wrap items-end justify-between gap-3">
-            <div><p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.19em] text-[hsl(var(--accent))]"><CharacterBadge name="chika" tone="gold" size="xs" /> Your connections</p><h1 className="mt-2 font-editorial text-4xl">Messages</h1><p className="mt-2 text-sm text-muted-foreground">A quieter way to connect, one thoughtful note at a time.</p></div>
-            <Link to="/dashboard/community" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-xs font-bold hover:bg-muted"><CharacterBadge name="lumi" tone="sage" size="xs" /> Explore writers</Link>
+    return <div className="mx-auto w-full min-w-0 max-w-[1380px] space-y-4 pb-0 sm:space-y-5">
+        <header className="flex min-w-0 flex-wrap items-center justify-between gap-3 sm:gap-5">
+            <div className="min-w-0 flex-1"><p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.19em] text-[hsl(var(--accent))]"><CharacterBadge name="chika" tone="gold" size="xs" /> Your connections</p><h1 className="mt-2 font-editorial text-4xl">Messages</h1><p className="mt-2 text-sm text-muted-foreground">A quieter way to connect, one thoughtful note at a time.</p></div>
+            <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-3 sm:w-auto sm:flex-nowrap">
+              <Link to="/dashboard/community" className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-xs font-bold hover:bg-muted"><CharacterBadge name="lumi" tone="sage" size="xs" /> Explore writers</Link>
+              <WorldScene3D kind="messages" title="Interactive 3D SendTheLetter workspace" controls={false} className="h-[126px] w-full max-w-[380px] shrink-0 sm:h-[144px] sm:w-[300px] xl:w-[360px]" />
+            </div>
         </header>
 
-        <div className="stl-depth-card stl-depth-static flex h-[min(74dvh,760px)] min-h-[360px] sm:min-h-[500px] overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_14px_45px_rgba(46,50,39,.07)]">
-            <aside className={`flex w-full shrink-0 flex-col border-r border-border bg-background/50 md:w-[325px] lg:w-[360px] ${activeMobile ? 'hidden md:flex' : 'flex'}`} aria-label="Conversations">
+        <div className="stl-depth-card stl-depth-static flex h-[min(76dvh,760px)] min-h-[380px] overflow-hidden sm:min-h-[500px] rounded-[28px] border border-border bg-card shadow-[0_14px_45px_rgba(46,50,39,.07)]">
+            <aside className={`flex w-full min-w-0 shrink-0 flex-col border-r border-border bg-background/50 md:w-[min(38%,325px)] lg:w-[min(33%,360px)] ${activeMobile ? 'hidden md:flex' : 'flex'}`} aria-label="Conversations">
                 <div className="border-b border-border p-5">
                     <div className="flex items-center justify-between"><h2 className="font-editorial text-2xl">Inbox</h2><CharacterBadge name="chika" tone="gold" size="sm" /></div>
                     <div className="relative mt-4"><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search conversations…" aria-label="Search conversations" className="h-11 w-full rounded-2xl border border-border bg-card px-4 text-sm outline-none focus:border-primary" /></div>
@@ -245,7 +249,7 @@ export default function Messages() {
                     {error && <p role="alert" className="border-t border-border bg-red-50 px-5 py-2 text-xs text-red-700">{error}</p>}
                     <form onSubmit={event => { event.preventDefault(); void send(); }} className="shrink-0 border-t border-border bg-card px-4 py-4 sm:px-6">
                         <div className="flex items-end gap-2 rounded-[22px] border border-border bg-background px-3 py-2 focus-within:border-primary">
-                            <textarea value={draft} onChange={event => setDraft(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); void send(); } }} rows={2} maxLength={5000} placeholder={`Write something kind to ${selected.username}…`} aria-label="Your message" className="max-h-28 min-h-[45px] flex-1 resize-y bg-transparent px-2 py-2 text-sm leading-6 outline-none placeholder:text-muted-foreground" />
+                            <textarea value={draft} onChange={event => setDraft(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); void send(); } }} rows={2} maxLength={5000} placeholder={`Write something kind to ${selected.username}…`} aria-label="Your message" className="max-h-28 min-h-[45px] min-w-0 flex-1 resize-y bg-transparent px-2 py-2 text-sm leading-6 outline-none placeholder:text-muted-foreground" />
                             <button type="button" title="Add a heart" aria-label="Add a heart emoji" onClick={() => setDraft(prev => prev + ' 💌')} className="mb-1 rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-primary"><CharacterBadge name="sely" tone="rose" size="sm" /></button>
                             <button type="submit" disabled={sending || !draft.trim()} aria-label="Send message" className="mb-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40"><CharacterBadge name="piko" tone="forest" size="sm" /></button>
                         </div>
