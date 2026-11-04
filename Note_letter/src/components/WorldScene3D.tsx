@@ -11,6 +11,7 @@ type Props = {
   title?: string;
   opened?: boolean;
   controls?: boolean;
+  compact?: boolean;
 };
 
 type Vec3 = [number, number, number];
@@ -367,7 +368,7 @@ function tryStart(
   };
 }
 
-export default function WorldScene3D({ kind, className='', title, opened, controls=true }: Props) {
+export default function WorldScene3D({ kind, className='', title, opened, controls=true, compact=false }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [expanded, setExpanded] = useState(false);
   const [poseVersion, setPoseVersion] = useState(0);
@@ -422,14 +423,14 @@ export default function WorldScene3D({ kind, className='', title, opened, contro
           ref={canvasRef}
           data-renderer="webgl"
           aria-hidden="true"
-          className="relative block h-full min-h-[140px] w-full cursor-grab touch-pan-y active:cursor-grabbing sm:min-h-[165px]"
+          className={`relative block h-full w-full cursor-grab touch-pan-y active:cursor-grabbing ${compact ? "min-h-0" : "min-h-[140px] sm:min-h-[165px]"}`}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
         />
       ) : (
-        <div className="relative flex h-full min-h-[165px] flex-col items-center justify-center gap-2 p-6">
+        <div className={`relative flex h-full flex-col items-center justify-center gap-2 p-4 ${compact ? "min-h-0" : "min-h-[165px]"}`}>
           <img src={'/mascots/'+portraitFor(kind)+'.svg'} alt="" className="h-20 w-20" />
           <span className="text-center text-xs text-muted-foreground">SendTheLetter story world</span>
         </div>

@@ -173,8 +173,8 @@ export default function DashboardLayout() {
       <div className="min-h-screen min-w-0 pt-16 lg:pl-[72px] lg:pt-0">
         <main id="main-content" tabIndex={-1}
           className="mx-auto min-w-0 w-full max-w-[1800px] px-3 pb-28 pt-5 sm:px-6 sm:pt-7 lg:px-8 lg:pb-10 lg:pt-8 xl:px-10">
-          {worldFor(location.pathname) !== 'messages' && (
-            <WorldScene3D key={worldFor(location.pathname)} kind={worldFor(location.pathname)} className="mx-auto mb-5 h-[132px] w-full max-w-[720px] min-w-0 sm:mb-6 sm:h-[166px]" title="Interactive 3D SendTheLetter workspace" />
+          {worldFor(location.pathname) !== "messages" && (
+            <WorldScene3D key={worldFor(location.pathname)} kind={worldFor(location.pathname)} compact className="mx-auto mb-5 h-[115px] w-full max-w-[720px] min-w-0 sm:mb-6 sm:h-[155px]" title="Interactive 3D SendTheLetter workspace" />
           )}
           <div key={location.pathname} className="workspace-page-enter min-w-0">
             <Outlet />

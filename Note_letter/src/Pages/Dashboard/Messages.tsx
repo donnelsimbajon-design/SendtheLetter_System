@@ -192,17 +192,19 @@ export default function Messages() {
     const filteredConversations = conversations.filter(convo => convo.user.username.toLowerCase().includes(query.toLowerCase()) || convo.lastMessage.toLowerCase().includes(query.toLowerCase()));
     const activeConversation = conversations.some(c => c.user.id === selected?.id);
 
-    return <div className="mx-auto w-full min-w-0 max-w-[1380px] space-y-4 pb-0 sm:space-y-5">
-        <header className="flex min-w-0 flex-wrap items-center justify-between gap-3 sm:gap-5">
-            <div className="min-w-0 flex-1"><p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.19em] text-[hsl(var(--accent))]"><CharacterBadge name="chika" tone="gold" size="xs" /> Your connections</p><h1 className="mt-2 font-editorial text-4xl">Messages</h1><p className="mt-2 text-sm text-muted-foreground">A quieter way to connect, one thoughtful note at a time.</p></div>
-            <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-3 sm:w-auto sm:flex-nowrap">
-              <Link to="/dashboard/community" className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-xs font-bold hover:bg-muted"><CharacterBadge name="lumi" tone="sage" size="xs" /> Explore writers</Link>
-              <WorldScene3D kind="messages" title="Interactive 3D SendTheLetter workspace" controls={false} className="hidden h-[144px] w-full max-w-[360px] shrink-0 sm:block sm:w-[300px] xl:w-[360px]" />
+    return <div className="mx-auto w-full min-w-0 max-w-[1380px] space-y-3 pb-0 sm:space-y-4">
+        <header className="grid min-w-0 grid-cols-[minmax(0,1fr)_110px] items-center gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(180px,280px)] lg:grid-cols-[minmax(0,1fr)_minmax(240px,340px)]">
+            <div className="min-w-0">
+                <p className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.15em] text-[hsl(var(--accent))] sm:text-xs"><CharacterBadge name="chika" tone="gold" size="xs" /> Your connections</p>
+                <h1 className="mt-1 font-editorial text-3xl leading-tight sm:text-4xl">Messages</h1>
+                <p className="mt-1 max-w-xl text-xs leading-5 text-muted-foreground sm:text-sm sm:leading-6">A quieter way to connect, one thoughtful note at a time.</p>
+                <Link to="/dashboard/community" className="mt-2 inline-flex min-h-10 max-w-full items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-bold hover:bg-muted sm:mt-3 sm:px-4"><CharacterBadge name="lumi" tone="sage" size="xs" /> Explore writers</Link>
             </div>
+            <WorldScene3D kind="messages" title="Interactive 3D SendTheLetter workspace" controls={false} compact className="h-[112px] w-full min-w-0 sm:h-[145px]" />
         </header>
 
-        <div className="stl-depth-card stl-depth-static flex h-[min(76dvh,760px)] min-h-[380px] overflow-hidden sm:min-h-[500px] rounded-[28px] border border-border bg-card shadow-[0_14px_45px_rgba(46,50,39,.07)]">
-            <aside className={`flex w-full min-w-0 shrink-0 flex-col border-r border-border bg-background/50 md:w-[min(38%,325px)] lg:w-[min(33%,360px)] ${activeMobile ? 'hidden md:flex' : 'flex'}`} aria-label="Conversations">
+        <div className="stl-depth-card stl-depth-static flex h-[min(76dvh,760px)] min-h-[360px] overflow-hidden sm:min-h-[500px] rounded-[28px] border border-border bg-card shadow-[0_14px_45px_rgba(46,50,39,.07)]">
+            <aside className={`flex w-full min-w-0 shrink-0 flex-col border-r border-border bg-background/50 md:w-[34%] md:max-w-[325px] lg:w-[32%] lg:max-w-[360px] ${activeMobile ? 'hidden md:flex' : 'flex'}`} aria-label="Conversations">
                 <div className="border-b border-border p-5">
                     <div className="flex items-center justify-between"><h2 className="font-editorial text-2xl">Inbox</h2><CharacterBadge name="chika" tone="gold" size="sm" /></div>
                     <div className="relative mt-4"><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search conversations…" aria-label="Search conversations" className="h-11 w-full rounded-2xl border border-border bg-card px-4 text-sm outline-none focus:border-primary" /></div>
@@ -262,7 +264,5 @@ export default function Messages() {
                 </div>}
             </section>
         </div>
-        {/* On phones the inbox comes first; the 3D scene remains available below it. */}
-        <WorldScene3D kind="messages" title="Interactive 3D SendTheLetter workspace" controls={false} className="mt-4 h-[145px] w-full sm:hidden" />
     </div>;
 }
