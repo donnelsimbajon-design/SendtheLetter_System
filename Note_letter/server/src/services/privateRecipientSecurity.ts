@@ -8,7 +8,7 @@ export function hashRecipientToken(token: string): string {
 export type PrivateLetterVisibility = {
     status: string;
     isPublic: boolean;
-    isArchived?: boolean;
+    isArchived?: boolean | null;
     openDate?: Date | string | null;
     scheduledDate?: Date | string | null;
 };
