@@ -20,6 +20,7 @@ import friendRoutes from './routes/friendRoutes';
 import Message from './models/Message';
 import Friend from './models/Friend';
 import { startScheduledLetterWorker } from './services/scheduledLetterWorker';
+import { parseLetterRoomId } from './services/letterRoomId';
 
 dotenv.config();
 
@@ -117,8 +118,9 @@ io.on('connection', (socket) => {
 
     socket.on('join_letter', async (letterId: string) => {
         try {
-            if (!/^\\d+$/.test(String(letterId))) return;
-            const letter = await Letter.findByPk(Number(letterId));
+            const parsedId = parseLetterRoomId(letterId);
+            if (parsedId === null) return;
+            const letter = await Letter.findByPk(parsedId);
             if (!letter) return;
             const isOwner = Number(letter.userId) === userId;
             const now = Date.now();
@@ -133,7 +135,8 @@ io.on('connection', (socket) => {
     });
 
     socket.on('leave_letter', (letterId: string) => {
-        if (/^\\d+$/.test(String(letterId))) socket.leave(`letter_${letterId}`);
+        const parsedId = parseLetterRoomId(letterId);
+        if (parsedId !== null) socket.leave(`letter_${parsedId}`);
     });
 });
 
