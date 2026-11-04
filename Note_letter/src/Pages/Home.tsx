@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import Mascot from '../components/Mascot';
 import CharacterBadge from '../components/CharacterBadge';
 import WorldScene3D from '../components/WorldScene3D';
 
