@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS public.letter_recipient_links (
   "revokedAt" TIMESTAMPTZ,
   "createdAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
   CONSTRAINT letter_recipient_links_expiry_after_create CHECK ("expiresAt" > "createdAt"),
-  CONSTRAINT letter_recipient_links_token_format CHECK ("tokenHash" ~ '^[0-9a-f]{64}
+  CONSTRAINT letter_recipient_links_token_format CHECK ("tokenHash" ~ '^[0-9a-f]{64}$')
 );
 CREATE INDEX IF NOT EXISTS recipient_links_letter_active_idx
   ON public.letter_recipient_links ("letterId", "expiresAt") WHERE "revokedAt" IS NULL;
