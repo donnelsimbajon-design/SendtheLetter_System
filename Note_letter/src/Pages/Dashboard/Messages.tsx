@@ -200,7 +200,7 @@ export default function Messages() {
                 <p className="mt-1 max-w-xl text-xs leading-5 text-muted-foreground sm:text-sm sm:leading-6">A quieter way to connect, one thoughtful note at a time.</p>
                 <Link to="/dashboard/community" className="mt-2 inline-flex min-h-10 max-w-full items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-bold hover:bg-muted sm:mt-3 sm:px-4"><CharacterBadge name="lumi" tone="sage" size="xs" /> Explore writers</Link>
             </div>
-            <WorldScene3D kind="messages" title="Interactive 3D SendTheLetter workspace" controls={false} className="h-[112px] w-full min-w-0 sm:h-[145px]" />
+            <WorldScene3D kind="messages" title="Interactive 3D SendTheLetter workspace" controls={false} compact className="h-[112px] w-full min-w-0 sm:h-[145px]" />
         </header>
 
         <div className="stl-depth-card stl-depth-static flex h-[min(76dvh,760px)] min-h-[360px] overflow-hidden sm:min-h-[500px] rounded-[28px] border border-border bg-card shadow-[0_14px_45px_rgba(46,50,39,.07)]">
