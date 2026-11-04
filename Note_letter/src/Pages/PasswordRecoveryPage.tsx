@@ -53,7 +53,7 @@ export default function PasswordRecoveryPage({ mode }: Props) {
 
   const badLink = mode === 'confirm' && !/^[a-f0-9]{64}$/.test(token);
   return <main className="flex min-h-screen items-center justify-center bg-background px-5 py-10">
-    <section className="w-full max-w-md rounded-[28px] border border-border bg-card p-7 shadow-sm sm:p-10">
+    <section className="stl-depth-paper stl-depth-static w-full max-w-md rounded-[28px] border border-border bg-card p-7 shadow-sm sm:p-10">
       <Link to="/login" className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft size={16} /> Back to sign in</Link>
       <CharacterBadge name="susi" tone="sage" size="lg" />
       <h1 className="mt-4 font-editorial text-3xl">{mode === 'request' ? 'Recover your account' : 'Choose a new password'}</h1>
