@@ -16,11 +16,11 @@ export default function PublicWriterPage() {
                     <img src="/sendtheletter-logo.svg" width="180" height="48" alt="SendTheLetter" className="h-11 w-[145px] object-contain object-left sm:w-[180px]" />
                 </Link>
                 <nav aria-label="Writer profile navigation" className="flex items-center gap-2">
-                    <Link to={loggedIn ? '/dashboard/community' : '/'} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-background px-3 py-2 text-xs font-bold hover:bg-muted sm:px-4">
+                    <Link to={loggedIn ? '/dashboard/community' : '/'} aria-label={loggedIn ? 'Back to community' : 'Back home'} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-background px-3 py-2 text-xs font-bold hover:bg-muted sm:px-4">
                         <CharacterBadge name="basa" tone="paper" size="xs" />
                         <span className="hidden sm:inline">{loggedIn ? 'Community' : 'Home'}</span><span className="sr-only sm:hidden">Back</span>
                     </Link>
-                    <Link to={loggedIn ? '/dashboard/profile' : '/login'} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:opacity-90 sm:px-4">
+                    <Link to={loggedIn ? '/dashboard/profile' : '/login'} aria-label={loggedIn ? 'My space' : 'Sign in'} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:opacity-90 sm:px-4">
                         <CharacterBadge name="lumi" tone="paper" size="xs" />
                         <span className="hidden sm:inline">{loggedIn ? 'My space' : 'Sign in'}</span>
                     </Link>
