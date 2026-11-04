@@ -1,3 +1,4 @@
+import WorldScene3D from '../../components/WorldScene3D';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import UserProfilePage from './UserProfilePage';
@@ -27,6 +28,7 @@ export default function PublicWriterPage() {
             </div>
         </header>
         <main id="main-content" tabIndex={-1} className="mx-auto max-w-[1250px] px-4 pb-12 pt-7 sm:px-6">
+            <WorldScene3D kind="profile" title="3D writer stories world" className="mb-6 h-[200px]" />
             <UserProfilePage />
             {!loggedIn && <aside className="mt-10 flex flex-col items-start justify-between gap-5 rounded-[1.8rem] bg-primary p-6 text-primary-foreground sm:flex-row sm:items-center sm:p-8">
                 <div className="flex items-start gap-4"><CharacterBadge name="lumi" tone="paper" size="lg" /><div><h2 className="font-editorial text-2xl sm:text-3xl">Every writer starts somewhere.</h2><p className="mt-2 max-w-lg text-sm leading-6 opacity-85">Read a story that moved you? There is room here for your own words, too.</p></div></div>
