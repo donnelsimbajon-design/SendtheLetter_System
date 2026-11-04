@@ -12,7 +12,7 @@ const router = express.Router();
 
 // Recipient bearer links are separate from discoverable/public letters.
 // POST body keeps the bearer token out of normal URL/access logs.
-router.post('/recipient/open', recipientShare.readRecipientLetter);
+router.post('/recipient/open', recipientShare.limitRecipientOpens, recipientShare.readRecipientLetter);
 router.post('/recipient/reply', recipientShare.limitRecipientReplies, recipientShare.replyToRecipientLetter);
 
 // Public reads allow anonymous visitors while optionally personalizing engagement state.
