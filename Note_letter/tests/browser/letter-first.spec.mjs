@@ -75,7 +75,7 @@ test('private invitation opens for a guest without signup and accepts one option
       }),
     });
   });
-  await page.goto('/open/' + token);
+  await page.goto('/open#' + token);
   await expect(page.getByRole('heading', { name: "You've received a letter." })).toBeVisible();
   await expect(page.getByText('No account or payment needed')).toBeVisible();
   await expect(page.locator('a[href*="/signup"]')).toHaveCount(0);
@@ -85,7 +85,7 @@ test('private invitation opens for a guest without signup and accepts one option
   await page.getByLabel('Your message (optional)').fill('Thanks for thinking of me!');
   await page.getByRole('button', { name: 'Send private reply' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Your reply has been delivered' })).toBeVisible();
-  expect(seen).toEqual([{ reaction: 'heart', displayName: 'A friend', message: 'Thanks for thinking of me!' }]);
+  expect(seen).toEqual([{ token, reaction: 'heart', displayName: 'A friend', message: 'Thanks for thinking of me!' }]);
 });
 
 test('expired private letter invitation does not reveal letter content or prompt for login', async ({ page }) => {
@@ -93,7 +93,7 @@ test('expired private letter invitation does not reveal letter content or prompt
     status: 404, contentType: 'application/json',
     body: JSON.stringify({ message: 'Invitation expired or revoked.' }),
   }));
-  await page.goto('/open/' + 'b'.repeat(48));
+  await page.goto('/open#' + 'b'.repeat(48));
   await expect(page.getByRole('heading', { name: 'This letter is unavailable.' })).toBeVisible();
   await expect(page.getByRole('alert')).toContainText('Invitation expired or revoked.');
   await expect(page.locator('input[type=password]')).toHaveCount(0);
