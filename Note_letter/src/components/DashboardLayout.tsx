@@ -106,7 +106,7 @@ export default function DashboardLayout() {
         </Link>
 
         <nav aria-label="Workspace navigation"
-          className="workspace-rail-primary mt-[clamp(40px,16vh,150px)] flex min-h-0 w-full flex-1 flex-col items-center gap-2 overflow-y-auto overflow-x-hidden pb-3 scrollbar-hide">
+          className="workspace-rail-primary mt-[clamp(40px,16vh,150px)] flex min-h-0 w-full flex-1 flex-col items-center gap-2 overflow-visible pb-3">
           {railNavigation.map(({ to, label, symbol, end }) => (
             <NavLink key={to} to={to} end={end} aria-label={label} title={label}
               className={({ isActive }) => railLink(isActive)}>
