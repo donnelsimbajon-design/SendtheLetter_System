@@ -233,7 +233,7 @@ export default function Messages() {
                                 return <div key={message.id}>
                                     {showDate && <p className="mb-5 text-center text-[11px] font-bold uppercase tracking-[.14em] text-muted-foreground">{format(new Date(message.createdAt), 'MMM d, yyyy')}</p>}
                                     <div className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`stl-depth-bubble max-w-[84%] rounded-[22px] px-4 py-3 text-sm shadow-sm sm:max-w-[72%] ${mine ? 'rounded-br-[6px] bg-primary text-primary-foreground' : 'rounded-bl-[6px] border border-border bg-card text-foreground'}`}>
+                                        <div data-sent={mine} className={`stl-depth-bubble max-w-[84%] rounded-[22px] px-4 py-3 text-sm shadow-sm sm:max-w-[72%] ${mine ? 'rounded-br-[6px] bg-primary text-primary-foreground' : 'rounded-bl-[6px] border border-border bg-card text-foreground'}`}>
                                             <p className="whitespace-pre-wrap break-words leading-6">{message.content}</p>
                                             <div className={`mt-2 flex items-center justify-end gap-1.5 text-[10px] ${mine ? 'text-primary-foreground/75' : 'text-muted-foreground'}`}><span>{format(new Date(message.createdAt), 'h:mm a')}</span>{mine && <span aria-label={message.isRead ? "Read" : "Sent"}>{message.isRead ? "Read" : "Sent"}</span>}</div>
                                         </div>
