@@ -22,6 +22,7 @@ import PasswordRecoveryPage from './Pages/PasswordRecoveryPage';
 import Creator from './Pages/Creator';
 import AdminDashboard from './Pages/AdminDashboard';
 import PublicLetterPage from './Pages/user/PublicLetterPage';
+import RecipientLetterPage from './Pages/user/RecipientLetterPage';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     const { pathname, search } = useLocation();
@@ -75,6 +76,7 @@ function App() {
                 <Route path="/creator" element={<Creator />} />
                 <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
                 <Route path="/letters/:id" element={<PublicLetterPage />} />
+                <Route path="/open/:token" element={<RecipientLetterPage />} />
                 <Route path="/writers/:username" element={<PublicWriterPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
                 <Route path="/dashboard" element={<PrivateRoute><DashboardLayout /></PrivateRoute>}>
