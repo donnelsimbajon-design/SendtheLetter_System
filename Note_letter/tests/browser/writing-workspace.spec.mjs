@@ -45,6 +45,67 @@ async function fakeAuthenticatedApi(page, letters = sampleLetters) {
   });
 }
 
+test('dashboard draft and discovery panels stay readable at desktop and tablet widths', async ({ page }) => {
+  await fakeAuthenticatedApi(page);
+  const longDraft = {
+    id: 4041, title: 'Thank you for being you',
+    content: 'I wanted to take a moment to say thank you for ' +
+      'a'.repeat(180) + ' and for everything else you made possible.',
+    isPublic: false, status: 'draft',
+    createdAt: '2026-11-02T08:00:00.000Z',
+  };
+  await page.route('**/api/letters/drafts', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    headers: { 'access-control-allow-origin': '*' },
+    body: JSON.stringify([longDraft]),
+  }));
+  await page.goto('/dashboard');
+  const dashboard = page.getByRole('region', { name: 'Your letters and community discovery' });
+  await expect(dashboard).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Something you started' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Every letter holds a little world.' })).toBeVisible();
+
+  for (const width of [1440, 1280, 1060, 768, 375]) {
+    await page.setViewportSize({ width, height: 820 });
+    const layout = await dashboard.evaluate(element => {
+      const left = element.children[0].getBoundingClientRect();
+      const right = element.children[1].getBoundingClientRect();
+      return {
+        left: { x: left.x, y: left.y, width: left.width },
+        right: { x: right.x, y: right.y, width: right.width },
+        page: document.documentElement.scrollWidth,
+        viewport: document.documentElement.clientWidth,
+      };
+    });
+    expect(layout.page, 'Document overflow at width ' + width).toBeLessThanOrEqual(layout.viewport + 2);
+    expect(layout.right.width, 'Discovery must not become a thin clipped strip at ' + width).toBeGreaterThan(240);
+    if (width >= 1280) {
+      expect(layout.right.x).toBeGreaterThanOrEqual(layout.left.x + layout.left.width - 1);
+    } else {
+      expect(layout.right.y).toBeGreaterThan(layout.left.y);
+    }
+  }
+});
+
+test('locally hosted navigation and brand artwork load without 404s', async ({ page }) => {
+  await fakeAuthenticatedApi(page);
+  const missing = [];
+  page.on('response', response => {
+    if (response.status() === 404 && response.url().startsWith('http://127.0.0.1:4173/')) {
+      missing.push(new URL(response.url()).pathname);
+    }
+  });
+  await page.goto('/dashboard');
+  await expect(page.getByRole('heading', { name: /Welcome back/ })).toBeVisible();
+  for (const path of ['/favicon.svg', '/sendtheletter-logo.svg', '/mascots/lumi.svg',
+    '/mascots/nori.svg', '/mascots/suri.svg', '/mascots/sely.svg']) {
+    const response = await page.request.get(path);
+    expect(response.status(), path + ' should be a real asset').toBe(200);
+    expect(response.headers()['content-type'] || '').toMatch(/image\/svg\+xml/);
+  }
+  expect(missing).toEqual([]);
+});
+
 test('signed-in writer can open the selected native template and focus mode', async ({ page }, testInfo) => {
   await fakeAuthenticatedApi(page);
   await page.goto('/dashboard/notes?compose=1&template=future-self');
@@ -314,6 +375,13 @@ test('writer profile is compact, readable and navigable on desktop and mobile', 
   const tabs = page.getByRole('navigation', { name: 'Writer profile sections' });
   await expect(tabs).toBeVisible();
   await expect(tabs.getByRole('button', { name: 'Posts' })).toHaveAttribute('aria-current', 'page');
+  const activePosts = tabs.getByRole('button', { name: 'Posts' });
+  const tabStyle = await activePosts.evaluate(el => {
+    const style = getComputedStyle(el);
+    return { backgroundColor: style.backgroundColor, borderBottomColor: style.borderBottomColor };
+  });
+  expect(tabStyle.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+  expect(tabStyle.borderBottomColor).toBe('rgba(0, 0, 0, 0)');
   await expect(page.getByRole('heading', { name: 'Latest from the desk' })).toBeVisible();
   await expect(page.getByRole('textbox', { name: 'Search profile posts' })).toHaveCount(0);
   await tabs.getByRole('button', { name: 'About' }).click();
