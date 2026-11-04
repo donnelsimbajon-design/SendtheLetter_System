@@ -33,12 +33,18 @@ ALTER TABLE public.letter_recipient_replies ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE public.letter_recipient_replies FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON SEQUENCE public.letter_recipient_replies_id_seq FROM PUBLIC, anon, authenticated;
 
+-- Invitations are created only for already-published, private letters.
+-- Revocation is automatic when a letter is public, archived, unpublished, or
+-- becomes time-locked again. NULL visibility must never preserve a link.
 -- Changing the visibility or archival status permanently revokes existing links;
 -- restored private letters must require a fresh author-controlled invitation.
 CREATE OR REPLACE FUNCTION public.revoke_letter_recipient_links_on_hide()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY INVOKER SET search_path = pg_catalog, public AS $$
 BEGIN
-  IF (NEW."isPublic" OR NEW."isArchived" OR NEW.status <> 'published') THEN
+  IF (NEW."isPublic" IS NOT FALSE OR NEW."isArchived" IS TRUE
+      OR NEW.status IS DISTINCT FROM 'published'
+      OR NEW."openDate" > now()
+      OR NEW."scheduledDate" > now()) THEN
     UPDATE public.letter_recipient_links SET "revokedAt" = now()
     WHERE "letterId" = NEW.id AND "revokedAt" IS NULL;
   END IF;
@@ -46,7 +52,7 @@ BEGIN
 END;
 $$;
 CREATE OR REPLACE TRIGGER revoke_letter_recipient_links_on_hide
-  AFTER UPDATE OF "isPublic", "isArchived", status ON public.letters
+  AFTER UPDATE OF "isPublic", "isArchived", status, "openDate", "scheduledDate" ON public.letters
   FOR EACH ROW EXECUTE FUNCTION public.revoke_letter_recipient_links_on_hide();
 REVOKE ALL ON FUNCTION public.revoke_letter_recipient_links_on_hide() FROM PUBLIC, anon, authenticated;
 COMMIT;
