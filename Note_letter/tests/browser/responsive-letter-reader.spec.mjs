@@ -158,17 +158,14 @@ test('public share shows full-width book first, comments only on demand, across 
   await expect(page.getByRole('dialog', { name: 'Comments drawer' })).toHaveCount(0);
 });
 
-test('Messages keeps compact 3D preview and an accessible inbox at six viewport sizes', async ({ page }) => {
+test('Messages keeps the inbox accessible without decorative 3D banners at six viewport sizes', async ({ page }) => {
   test.setTimeout(70_000);
   await mockLetters(page);
   await page.goto('/dashboard/messages');
   for (const vp of viewports) {
     await page.setViewportSize(vp);
     await checkHorizontalFit(page, 'Messages ' + vp.width);
-    const world = page.getByRole('region', { name: 'Interactive 3D SendTheLetter workspace' });
-    const rect = await world.boundingBox();
-    expect(rect).not.toBeNull();
-    expect.soft(rect.width, '3D tile width at ' + vp.width).toBeLessThanOrEqual(400);
+    await expect(page.getByRole('region', { name: 'Interactive 3D SendTheLetter workspace' })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible();
     const inbox = page.getByRole('complementary', { name: 'Conversations' });
     await expect(inbox).toBeVisible();

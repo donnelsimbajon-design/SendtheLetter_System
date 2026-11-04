@@ -1,4 +1,3 @@
-import WorldScene3D from '../../components/WorldScene3D';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import CommentsPanel from '../../components/CommentsPanel';
@@ -151,7 +150,6 @@ const PublicLetterPage = () => {
 
     return (
         <main className="min-h-screen bg-[#f6f1e9] px-4 py-10 text-[#263b35]">
-      <WorldScene3D kind="letter" title="3D SendTheLetter envelope" className="no-print mx-auto mb-6 h-[190px] w-full max-w-4xl sm:h-[230px]" />
 
             <div className="mx-auto w-full max-w-4xl min-w-0">
                 <div className="no-print flex flex-wrap items-center justify-between gap-2">

@@ -88,6 +88,7 @@ for (const width of phoneTabletDesktop) {
     for (const [name, route] of screens) {
       await page.goto(route);
       await expect(page.locator('#main-content')).toBeVisible();
+      await expect(page.getByRole('region', { name: 'Interactive 3D SendTheLetter workspace' })).toHaveCount(0);
       await geometry(page, name, width);
       if ((width === 320 || width === 390 || width === 768 || width === 1440) && ['overview','community','messages'].includes(name)) {
         await mkdir('layout-snapshots', { recursive: true });
@@ -108,10 +109,23 @@ for (const width of [320, 390, 768, 1024, 1440]) {
     const modal = page.getByRole('dialog', { name: 'Letter from a-friend' });
     await expect(modal).toBeVisible();
     await expect(modal.getByRole('region', { name: 'Open the 3D letter' })).toBeVisible();
-    await expect(modal.locator('canvas[data-renderer="webgl"]')).toBeVisible();
+    const envelope = modal.getByRole('img', { name: 'A sealed paper envelope waiting to be opened' });
+    await expect(envelope).toBeVisible();
+    await expect(envelope).toHaveAttribute('data-opened', 'false');
+    await expect(modal.locator('canvas[data-renderer="webgl"]')).toHaveCount(0);
+    const envelopeRect = await envelope.boundingBox();
+    expect(envelopeRect).not.toBeNull();
+    expect(envelopeRect.x).toBeGreaterThanOrEqual(-2);
+    expect(envelopeRect.x + envelopeRect.width).toBeLessThanOrEqual(width + 2);
+    await mkdir('layout-snapshots', { recursive: true });
+    await page.screenshot({ path: 'layout-snapshots/paper-envelope-closed-' + width + '.png', fullPage: false });
     await expect(modal.getByRole('complementary', { name: 'Letter comments drawer' })).toHaveCount(0);
 
     await modal.getByRole('button', { name: 'Open envelope' }).click();
+    await expect(modal.getByRole('img', { name: 'The envelope is open and a letter is emerging' })).toHaveAttribute('data-opened', 'true');
+    // Capture the settled paper movement rather than a mid-transition frame.
+    await page.waitForTimeout(1350);
+    await page.screenshot({ path: 'layout-snapshots/paper-envelope-open-' + width + '.png', fullPage: false });
     await modal.getByRole('button', { name: 'Read full letter' }).click();
     await expect(modal.getByTestId('full-letter-scroll')).toBeVisible();
     await expect(modal.getByText(/Opening a letter is a personal experience/)).toBeVisible();
