@@ -1,0 +1,67 @@
+# SendTheLetter production-readiness audit — 2026-11-04
+
+**Scope:** Read-only audit of GitHub `main` source, GitHub Actions, current Render deployment states and logs, and Supabase database metadata/advisors. No private user rows, message contents, letters, credentials, or files were read, exported, deleted, or modified. This is **not** a penetration test, load test, accessibility certification, or real-account browser E2E test.
+
+**Snapshot:** Repo `donnelsimbajon-design/Sendtheletter_System`, `main` `3425c585` when checked. Production Render website `058dc605` (live); production API `ea2184cb` (live). Supabase `Sendthe_letter` is ACTIVE_HEALTHY, PostgreSQL 17.6, 12 public application tables, ~13 MB database reported by the metadata query. Render logs returned no error-level entries for the queried window; absence of error logs is not proof of no user-facing issues. No HTTP latency measurements were returned by the Render metrics endpoint.
+
+## Executive summary
+
+**Recommendation: internal/pilot use, not broad public launch yet.** Core product works and has meaningful security hardening, but public repository hygiene, historical credential rotation, unverified production routing and media persistence, weak dependency-audit governance, scalability issues, and real-account acceptance tests must be resolved before launch. No currently exploitable database row leak was established.
+
+| Priority | Finding and source | Risk | Action / verification |
+|---|---|---|---|
+| **P0** | Public repository contains ~13,843 tracked frontend dependency files, ~5,897 backend dependency files, generated `dist` bundles, and many `Note_letter/server/uploads/` image files, even though `.gitignore` correctly ignores new ones. | Public Git history can contain image assets and needlessly exposes build artifacts, creates a huge checkout and review burden. Uploaded images require sensitivity classification; do not assume they were all intended for publication. | Privately inventory/classify already-tracked images; establish backup and user-privacy implications. Remove generated artifacts **from Git index**, not from production storage; consider history purging only with coordinated backup, owner approval, collaborator coordination and force-push plan. Private images should not be publicly accessible through historical commits. |
+| **P0** | `docs/security/current-state-and-gaps.md` explicitly reports previously committed environment credentials. Current `.gitignore` cannot erase historical access. | Previously disclosed keys may still be valid, including DB password or JWT secret. Actual active exposure not proven by this audit. | Verify rotation of all historically disclosed DB/JWT/service/email/API keys; invalidate old secrets; verify deployed connections and old JWTs; use a secret scanner on all Git history. Never copy secrets into audit logs. |
+| **P1** | `Note_letter/server/src/config/database.ts` allows `rejectUnauthorized:false` if `DB_SSL_CA_PEM` is missing unless strict mode is explicitly set. | Database TLS certificate verification may be bypassed in production. Current Render secret values were not inspected, so live use of fallback is **unconfirmed**. | Configure trusted Supabase CA and `DB_SSL_STRICT=true` on Render API; verify a successful restart and correct TLS chain, then remove insecure production fallback in a separate guarded release. |
+| **P1** | `Note_letter/server/src/index.ts` incorrectly used double-escaped regex `/^\\d+$/` in both `join_letter` and `leave_letter` events. | Numeric room IDs never pass the validation; letter-specific realtime updates may fail silently. | **Patched in this PR** using one strict `parseLetterRoomId` helper with regression tests; test a real 2-account Socket.IO join and block access to unpublished/private rooms. |
+| **P1** | `.github/workflows/dependency-audit.yml` used `npm audit --json ... || true` and `npm audit fix || true`; a job with `contents:write` could commit changes directly to `main`. | High vulnerabilities may not fail CI, while unattended dependency changes bypass normal PR review. | **Patched in this PR** to read-only permissions, weekly and PR checks, explicit high/critical failures, retained audit artifacts and no unattended push. Remediate audit findings via reviewed lockfile PRs. |
+| **P1** | `docs/production-qa-checklist.md` recorded Render static-site direct SPA routes returning 404; `production-smoke.mjs` catches deep-link failures and only fails if `STRICT_DEEP_LINKS=true`. | Pasting/refreshing profile and library URLs may fail despite normal in-app navigation. **Not reverified** in this audit (web probe was blocked). | In the existing Render static site configure `/*` -> `/index.html` **Rewrite**; verify root, /dashboard/notes, /dashboard/community and /writers/test; then enable strict deep-link checks as launch gate. |
+| **P1** | `getPublicLetters` in `letterController.ts` executes two counts per letter and one optional per-user like query; no server-side pagination. `getConversations` similarly issues queries per conversation. | Database query amplification, delayed mobile feeds as the community grows. | Implement database-side aggregate counts and pagination (cursor or limit), response envelopes and indexes verified with EXPLAIN. Avoid exposing draft/scheduled/anonymous content in queries. |
+| **P1** | Browser smoke suite uses API mocks; production smoke exercises anonymous GETs only. | Passing tests do not prove save/reopen with real Supabase data, cross-account permissions, email delivery, photo persistence or user-facing mobile behavior. | Build isolated staging/test users and E2E flows: signup/login, author-private draft, publish, scheduled release, anonymous feed, follow/block, message isolation, image upload/reopen, logout/recovery. No real personal letters as test fixtures. |
+| **P1** | Auth route implements registration without email verification; `createRateLimiter` uses per-process in-memory maps; current token is stored in `localStorage`. | Spam/bot creation and rate-limit bypass on restarts/scaling; XSS would expose bearer tokens. No exploit demonstrated. | Verify email ownership before enabling public interactions, add shared persistent rate limiting, audit XSS/CSP, consider secure HttpOnly cookie-backed sessions with CSRF protection in a staged auth migration. |
+| **P2** | All 12 Supabase public application tables have RLS enabled without policies. Current `anon`/`authenticated` SQL grants are absent on 10 tables, but present on `password_reset_tokens` and `user_blocks`. | No direct read established because the existing RLS policy-less configuration denies rows, but sensitive table grants are unnecessary and could become dangerous if future RLS changes are made. | After verifying Express's server-side DB role and integration tests, propose `REVOKE ALL ON TABLE public.password_reset_tokens, public.user_blocks FROM anon, authenticated;` in a reviewed migration. Do **not** disable RLS or add generic permissive policies. |
+| **P2** | Supabase public `uploads` bucket exists, 50MB bucket-level limit, no MIME allowlist at bucket level. API `saveProfileImage` verifies content signature and limits to 5MB. | Public profile avatars/covers are intentionally viewable, but accidental private attachments would become accessible. | Keep bucket restricted to public profile media; use private bucket with short-lived authorized URLs for draft attachments. Verify new and historical profile files survive redeploy and old links work. |
+| **P2** | Letter photos are in `letterPages` JSONB as base64 data strings; editor autosaves soon after image edits. | Large database payloads, backups and reads; concurrent edits/network loss need actual browser testing; possible data growth and sluggish mobile rendering. | Add attachment storage pipeline, image quotas/retention, immutable layout metadata, explicit save/failure/offline status; migrate only after copy+verify+rollback plan. |
+| **P2** | API `/api/health` returns `ok` without database readiness. Error-level logs zero in queried window, but HTTP metrics endpoint returned no latency/count data. | False-positive health checks and little visibility into performance/real incidents. | Add bounded DB readiness check, log structured correlation IDs with privacy-safe redaction; monitor 5xx rate and p95 latency; alert on failed cron/deploy. |
+| **P2** | UI shows many controls in the editor and profile; previous user screenshots demonstrate crowded sidebar, image-placement issues and inconsistent responsive hierarchy. | First-time users can struggle to find actions, understand public/private status or know whether a draft was saved. | 5-user task observation; prioritize visible Create/Save/Publish state, simplified photo controls, clear privacy wording, readable labels, focus order, contrast and mobile keyboard/touch tests. |
+| **P2** | Repository has no verified account deletion/retention flow in the reviewed auth routes and docs. Data export exists. | User trust and account lifecycle risk; policy obligations depend on launch geography. | Plan authenticated delete-account workflow with confirmation, grace period, full dependent-record/media policy and real backup/restore test; publish plain-language privacy/terms/help pages before launch. |
+| **P3** | Existing auth/session, public feed and scheduled release implementations span multiple services and routes; regression tests are focused on mocked UI and unit checks. | Changes frequently cause follow-on design regressions and hidden cross-service drift. | Release preview environment, checks on every PR, accessibility scans, contract tests, feature flags and post-release smoke verification. |
+
+## Verified positive safeguards
+
+- The Express API checks token versions, current user status and ownership; public letter response fields are explicitly allowlisted in `publicLetterDTO`.
+- Password reset tokens are SHA-256 hashed, single-use and password changes increment the JWT token version.
+- Supabase `public` application tables have RLS enabled. Database metadata confirms 10 tables have no direct SELECT/INSERT grants to `anon` or `authenticated`; the other two are still denied row access by the current policy-less RLS configuration.
+- Supabase `pg_cron` is enabled and `sendtheletter-release-due-letters` is **active**, scheduled `* * * * *`. The API also has a worker with row-lock/status recheck. The cron materially reduces the Render Free cold-sleep scheduling risk.
+- Render reports the API and static website as **live** on their last deployed commits; this does not prove every client flow works or the latest GitHub commit is live.
+- The existing production smoke script checks public feed privacy fields and anonymous access to private endpoints, but is not an authenticated data-isolation penetration test.
+
+## Go/no-go public launch gates
+
+1. **P0:** Classify and remediate public tracked uploads; rotate and validate any previously leaked credentials. Do not delete source images or rewrite Git history before backup and user data classification.
+2. **P1:** Confirm strict DB TLS verification, read-only audit CI and no high/critical dependency advisories.
+3. **P1:** Fix the room ID bug, deploy a tested API build and validate realtime isolation with two test users.
+4. **P1:** Verify direct route reload/refresh on Render and turn on strict deep-link smoke gate.
+5. **P1:** Run signed-in end-to-end test plan against separate seeded staging accounts, including offline draft recovery and release schedule behavior.
+6. **P1:** Add release rollback instructions, error monitoring, nightly backup policy and restore drill before broad invitations.
+7. **P2:** Improve feed pagination/aggregated counts and mobile first-write usability; validate outcomes with human testers and latency/error metrics.
+
+## Suggested roadmap
+
+**First 48 hours — protect data and fix reliability:** exposure/credential inventory, known realtime fix, green CI, verify Render rewrite and TLS, avoid any destructive migration.
+
+**Week 1 — trust and publishing:** staging test users, save/reopen photos and drafts, two-user privacy isolation, account verification plan, explicit publish/scheduled time feedback, error/empty/loading states.
+
+**Weeks 2–3 — growth:** paginated feeds and messages, improved caching, private media storage design, rate limiting and analytics/alerting, contrast and keyboard/phone audits.
+
+**Week 4 — controlled beta:** invite a small cohort, observe 5+ first-time sessions, measure signup completion, draft save success, publish success, p95 response time, failed requests, and re-engagement. Expand only after launch gates hold.
+
+### References
+
+- [GitHub security state](../security/current-state-and-gaps.md)
+- [Production QA checklist](../production-qa-checklist.md)
+- [Production smoke implementation](../../Note_letter/server/scripts/production-smoke.mjs)
+- [Supabase no-RLS-policy advisory](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy)
+- [Supabase breaking-change changelog](https://supabase.com/changelog?types=breaking-change)
+
+**Change policy:** This report is an assessment and does not authorize deleting public image files, rewriting Git history, rotating keys, altering Supabase RLS/grants, or changing Render secrets without a tested rollback plan.
