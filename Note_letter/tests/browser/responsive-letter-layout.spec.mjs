@@ -1,3 +1,4 @@
+import { mkdir } from 'node:fs/promises';
 import { test, expect } from '@playwright/test';
 
 const member = {
@@ -89,7 +90,8 @@ for (const width of phoneTabletDesktop) {
       await expect(page.locator('#main-content')).toBeVisible();
       await geometry(page, name, width);
       if ((width === 320 || width === 390 || width === 768 || width === 1440) && ['overview','community','messages'].includes(name)) {
-        await testInfo.attach(name + '-' + width + '.png', { body: await page.screenshot({ fullPage: false }), contentType: 'image/png' });
+        await mkdir('layout-snapshots', { recursive: true });
+        await page.screenshot({ path: 'layout-snapshots/' + name + '-' + width + '.png', fullPage: false });
       }
     }
   });
@@ -116,13 +118,14 @@ for (const width of [320, 390, 768, 1024, 1440]) {
     await expect(modal.getByRole('complementary', { name: 'Letter comments drawer' })).toHaveCount(0);
     const before = await modal.locator('.stl-reading-book').boundingBox();
     expect(before).not.toBeNull();
-    await testInfo.attach('letter-reading-' + width + '.png', { body: await page.screenshot(), contentType: 'image/png' });
+    await mkdir('layout-snapshots', { recursive: true });
+    await page.screenshot({ path: 'layout-snapshots/letter-reading-' + width + '.png', fullPage: false });
 
     await modal.getByRole('group', { name: 'Letter actions' }).getByRole('button', { name: 'View comments' }).click();
     await expect(modal.getByRole('complementary', { name: 'Letter comments drawer' })).toBeVisible();
     const after = await modal.locator('.stl-reading-book').boundingBox();
     expect(Math.abs(after.width - before.width)).toBeLessThan(1.5);
-    await testInfo.attach('comments-on-demand-' + width + '.png', { body: await page.screenshot(), contentType: 'image/png' });
+    await page.screenshot({ path: 'layout-snapshots/comments-on-demand-' + width + '.png', fullPage: false });
     await modal.getByRole('group', { name: 'Letter actions' }).getByRole('button', { name: 'Hide comments' }).click();
     await expect(modal.getByRole('complementary', { name: 'Letter comments drawer' })).toHaveCount(0);
     await geometry(page, 'reader', width);
@@ -175,7 +178,8 @@ for (const width of [320, 390, 768, 1024, 1440]) {
       await expect(page.locator('main').first()).toBeVisible();
       await geometry(page, name, width);
       if ((width === 320 || width === 768 || width === 1440) && ['home', 'login', 'shared-letter'].includes(name)) {
-        await testInfo.attach(name + '-' + width + '.png', { body: await page.screenshot({ fullPage: false }), contentType: 'image/png' });
+        await mkdir('layout-snapshots', { recursive: true });
+        await page.screenshot({ path: 'layout-snapshots/' + name + '-' + width + '.png', fullPage: false });
       }
     }
   });
