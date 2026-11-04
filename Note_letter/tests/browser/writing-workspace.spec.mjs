@@ -406,3 +406,59 @@ test('writer profile is compact, readable and navigable on desktop and mobile', 
     await expect(mobile.getByText('My profile')).toBeVisible();
   }
 });
+
+test('writer can create, share as QR and revoke a private invite without eager friends fetch', async ({ page }) => {
+  const ownPrivateLetter = {
+    id: 52, userId: sampleUser.id, authorId: sampleUser.id, authorName: sampleUser.username,
+    title: 'For a friend', content: 'I wanted to say thank you.',
+    category: 'Friendship', type: 'Friendship',
+    createdAt: '2026-11-03T08:00:00Z',
+    isPublic: false, status: 'published', isArchived: false, isAnonymous: false,
+    letterPages: [{ text: 'I wanted to say thank you.' }],
+  };
+  await fakeAuthenticatedApi(page, []);
+  await page.route('**/api/letters/mine', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    headers: { 'access-control-allow-origin': '*' },
+    body: JSON.stringify([ownPrivateLetter]),
+  }));
+  let created = 0;
+  let revoked = 0;
+  let friendsCalls = 0;
+  const raw = 'a'.repeat(48);
+  await page.route('**/api/friends', route => {
+    friendsCalls++;
+    return route.fulfill({ status: 200, contentType: 'application/json', body: '[]' });
+  });
+  await page.route('**/api/letters/52/recipient-link', async route => {
+    const req = route.request();
+    if (req.method() === 'POST') {
+      expect(req.postDataJSON()).toEqual({ expiresInDays: 7 });
+      created++;
+      return route.fulfill({
+        status: 201, contentType: 'application/json',
+        body: JSON.stringify({ token: raw, expiresAt: '2026-11-11T12:00:00Z' }),
+      });
+    }
+    if (req.method() === 'DELETE') {
+      revoked++;
+      return route.fulfill({ status: 200, contentType: 'application/json', body: '{"revoked":true}' });
+    }
+    return route.fulfill({ status: 200, contentType: 'application/json', body: '{"active":false}' });
+  });
+  page.on('dialog', dialog => dialog.accept());
+  await page.goto('/dashboard/notes');
+  await page.getByRole('button', { name: 'Read letter: For a friend' }).click();
+  await page.getByRole('button', { name: 'Share', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Private recipient invitation' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Create private invitation' })).toBeVisible();
+  await page.getByRole('button', { name: 'Create private invitation' }).click();
+  await expect(page.getByLabel('Your one-time-generated invitation URL')).toHaveValue(
+    new RegExp('^http://127\\.0\\.0\\.1:4173/open#' + raw + '$'));
+  await expect(page.getByRole('img', { name: 'Scannable private invitation QR code' })).toBeVisible();
+  expect(created).toBe(1);
+  expect(friendsCalls).toBe(0);
+  await page.getByRole('button', { name: 'Revoke' }).click();
+  await expect(page.getByLabel('Your one-time-generated invitation URL')).toHaveCount(0);
+  expect(revoked).toBe(1);
+});

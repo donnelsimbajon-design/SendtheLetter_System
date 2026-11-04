@@ -23,7 +23,7 @@ interface LetterAttributes {
     longitude?: number;
     openDate?: Date | null;
     isTimeCapsule?: boolean;
-    isArchived?: boolean;
+    isArchived?: boolean | null;
     shareToken?: string;
     letterPages?: { text: string; imageData?: string; caption?: string; imageX?: number; imageY?: number; imageWidth?: number; imagePlacement?: 'before' | 'after' | 'left' | 'right'; imageAnchor?: number }[] | null;
 }
@@ -51,7 +51,7 @@ class Letter extends Model<LetterAttributes, LetterCreationAttributes> implement
     public longitude?: number;
     openDate?: Date;
     public isTimeCapsule?: boolean;
-    public isArchived?: boolean;
+    public isArchived?: boolean | null;
     public shareToken!: string;
     public letterPages?: { text: string; imageData?: string; caption?: string; imageX?: number; imageY?: number; imageWidth?: number; imagePlacement?: 'before' | 'after' | 'left' | 'right'; imageAnchor?: number }[] | null;
 
