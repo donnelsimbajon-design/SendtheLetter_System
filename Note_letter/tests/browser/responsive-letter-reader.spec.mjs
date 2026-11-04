@@ -75,11 +75,11 @@ test('open letter with 3D animation, read the full book, then optionally open co
   await expect(book.getByText('Second page of the story. The 3D book should let us turn the page.')).toBeVisible();
   await expect(book.locator('[data-turn="next"]')).toBeVisible();
 
-  await modal.getByRole('button', { name: 'View comments' }).click();
+  await modal.getByRole('button', { name: 'View comments', exact: true }).click();
   const drawer = modal.getByRole('complementary', { name: 'Letter comments drawer' });
   await expect(drawer).toBeVisible();
   await expect(drawer.getByRole('heading', { name: 'Comments' })).toBeVisible();
-  await modal.getByRole('button', { name: 'Close comments overlay' }).click();
+  await modal.getByRole('complementary', { name: 'Letter comments drawer' }).getByRole('button', { name: 'Hide comments' }).click();
   await expect(drawer).toHaveCount(0);
   await expect(book.getByText('Second page of the story. The 3D book should let us turn the page.')).toBeVisible();
 });
@@ -92,7 +92,7 @@ test('community comment icon skips the envelope and opens only the requested dra
   await expect(modal.getByTestId('3d-letter-book')).toBeVisible();
   await expect(modal.getByRole('region', { name: 'Open the 3D letter' })).toHaveCount(0);
   await expect(modal.getByTestId('letter-comments-overlay')).toBeVisible();
-  await modal.getByRole('button', { name: 'Close comments overlay' }).click();
+  await modal.getByRole('complementary', { name: 'Letter comments drawer' }).getByRole('button', { name: 'Hide comments' }).click();
   await expect(modal.getByTestId('3d-letter-book')).toBeVisible();
 });
 
@@ -108,6 +108,13 @@ test('letter reading and comments drawer fit small phones, tablets, and large de
 
   for (const vp of viewports) {
     await page.setViewportSize(vp);
+    // Radix modal recalculates its centered geometry during viewport rotation.
+    // Wait for the transform transition to settle before measuring actual fit.
+    await expect.poll(async () => {
+      const rect = await modal.boundingBox();
+      if (!rect) return Infinity;
+      return Math.max(-rect.x, rect.x + rect.width - vp.width, rect.height - vp.height);
+    }, { timeout: 6000, intervals: [80, 150, 250, 500] }).toBeLessThanOrEqual(2);
     await checkHorizontalFit(page, 'Letter ' + vp.width);
     const rect = await modal.boundingBox();
     expect(rect, 'Modal should stay mounted at ' + vp.width).not.toBeNull();
@@ -118,14 +125,14 @@ test('letter reading and comments drawer fit small phones, tablets, and large de
     expect(readerRect).not.toBeNull();
     expect.soft(readerRect.width, 'Book must remain readable at ' + vp.width).toBeGreaterThan(Math.min(vp.width * .69, 500));
 
-    await modal.getByRole('button', { name: 'View comments' }).click();
+    await modal.getByRole('button', { name: 'View comments', exact: true }).click();
     const comments = modal.getByRole('complementary', { name: 'Letter comments drawer' });
     await expect(comments).toBeVisible();
     const drawerRect = await comments.boundingBox();
     expect(drawerRect).not.toBeNull();
     expect.soft(drawerRect.x, 'Drawer x at ' + vp.width).toBeGreaterThanOrEqual(-2);
     expect.soft(drawerRect.x + drawerRect.width, 'Drawer right at ' + vp.width).toBeLessThanOrEqual(vp.width + 2);
-    await modal.getByRole('button', { name: 'Close comments overlay' }).click();
+    await modal.getByRole('complementary', { name: 'Letter comments drawer' }).getByRole('button', { name: 'Hide comments' }).click();
     await expect(book).toBeVisible();
   }
 });
