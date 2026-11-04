@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { BookHeart, HeartHandshake, LockKeyhole, MailOpen, Send, ShieldCheck } from 'lucide-react';
 import LetterBookReader from '../../components/LetterBookReader';
 import { API_ENDPOINTS } from '../../config/api';
@@ -16,7 +16,7 @@ const reactionChoices = [
 ];
 
 export default function RecipientLetterPage() {
-    const { token = '' } = useParams();
+    const token = window.location.hash.slice(1);
     const [invitation, setInvitation] = useState<LetterInvitation | null>(null);
     const [loading, setLoading] = useState(true);
     const [unavailable, setUnavailable] = useState('');
@@ -42,7 +42,9 @@ export default function RecipientLetterPage() {
         if (!/^[a-f0-9]{48}$/.test(token)) { setLoading(false); setUnavailable('This invitation is invalid.'); return; }
         const abort = new AbortController();
         setLoading(true); setUnavailable(''); setInvitation(null); setOpened(false);
-        fetch(`${API_ENDPOINTS.letters}/recipient/${token}`, {
+        fetch(`${API_ENDPOINTS.letters}/recipient/open`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token }),
             cache: 'no-store', signal: abort.signal, referrerPolicy: 'no-referrer',
         }).then(async response => {
             const body = await response.json().catch(() => ({}));
@@ -59,10 +61,10 @@ export default function RecipientLetterPage() {
         if (!invitation || sending || sent) return;
         setSending(true); setFeedback('');
         try {
-            const response = await fetch(`${API_ENDPOINTS.letters}/recipient/${token}/reply`, {
+            const response = await fetch(`${API_ENDPOINTS.letters}/recipient/reply`, {
                 method: 'POST', cache: 'no-store', referrerPolicy: 'no-referrer',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ reaction, displayName, message }),
+                body: JSON.stringify({ token, reaction, displayName, message }),
             });
             const result = await response.json().catch(() => ({}));
             if (!response.ok) throw new Error(result.message || 'Your reply could not be delivered.');
