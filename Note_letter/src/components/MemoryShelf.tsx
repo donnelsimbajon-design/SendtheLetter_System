@@ -1,4 +1,4 @@
-import { BookOpenText, LockKeyholeOpen } from 'lucide-react';
+import { BookOpenText, Unlock } from 'lucide-react';
 import type { Note } from '../types/note';
 import Mascot from './Mascot';
 
@@ -29,7 +29,7 @@ export default function MemoryShelf({ notes, onOpen }: Props) {
           >
             <span className="flex items-center justify-between gap-2">
               <Mascot name={note.isTimeCapsule ? 'araw' : 'basa'} className="h-12 w-12 shrink-0" />
-              {note.isTimeCapsule ? <LockKeyholeOpen size={17} aria-hidden="true" className="text-muted-foreground" /> : <BookOpenText size={17} aria-hidden="true" className="text-muted-foreground" />}
+              {note.isTimeCapsule ? <Unlock size={17} aria-hidden="true" className="text-muted-foreground" /> : <BookOpenText size={17} aria-hidden="true" className="text-muted-foreground" />}
             </span>
             <span className="min-w-0">
               <span className="block break-words font-editorial text-xl leading-snug">{note.title || 'Untitled letter'}</span>
