@@ -120,7 +120,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
         }
     };
 
-    const shareNative = async (platform: string) => {
+    const shareNative = async () => {
         if (!isPubliclyShareable) return;
         if (navigator.share) {
             try {
@@ -184,10 +184,10 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                     <Button type="button" variant="outline" onClick={shareEmail} className="justify-start gap-2"><Mail size={16} /> Email</Button>
                                     <Button type="button" variant="outline" onClick={shareFacebook} className="justify-start gap-2"><Facebook size={16} /> Facebook</Button>
-                                    <Button type="button" variant="outline" onClick={() => shareNative('Messenger')} className="justify-start gap-2"><CharacterBadge name="chika" tone="paper" size="sm" /> Messenger</Button>
-                                    <Button type="button" variant="outline" onClick={() => shareNative('Instagram')} className="justify-start gap-2"><Instagram size={16} /> Instagram</Button>
-                                    <Button type="button" variant="outline" onClick={() => shareNative('TikTok')} className="justify-start gap-2"><Share2 size={16} /> TikTok / apps</Button>
-                                    <Button type="button" variant="outline" onClick={() => shareNative('your device')} className="justify-start gap-2"><CharacterBadge name="piko" tone="paper" size="sm" /> More options</Button>
+                                    <Button type="button" variant="outline" onClick={() => shareNative()} className="justify-start gap-2"><CharacterBadge name="chika" tone="paper" size="sm" /> Messenger</Button>
+                                    <Button type="button" variant="outline" onClick={() => shareNative()} className="justify-start gap-2"><Instagram size={16} /> Instagram</Button>
+                                    <Button type="button" variant="outline" onClick={() => shareNative()} className="justify-start gap-2"><Share2 size={16} /> TikTok / apps</Button>
+                                    <Button type="button" variant="outline" onClick={() => shareNative()} className="justify-start gap-2"><CharacterBadge name="piko" tone="paper" size="sm" /> More options</Button>
                                     <Button type="button" variant="outline" onClick={copyLink} className="justify-start gap-2"><Copy size={16} /> Copy link</Button>
                                     <Button type="button" variant="outline" onClick={() => setShowPublicQr(value => !value)} className="justify-start gap-2"><QrCode size={16} /> {showPublicQr ? 'Hide QR' : 'QR code'}</Button>
                                 </div>
