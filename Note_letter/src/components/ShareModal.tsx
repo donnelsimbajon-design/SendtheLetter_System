@@ -32,7 +32,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
     const [isSendingEmail, setIsSendingEmail] = useState(false);
     const isPubliclyShareable = note.isPublic && note.status === 'published' && !!note.shareToken && !note.isArchived;
     const noteOwnerId = note.authorId ?? (note as Note & { userId?: string | number }).userId;
-    const canEmail = String(noteOwnerId) === String(user?.id) && note.status === 'published';
+    const canEmail = Boolean(user && noteOwnerId != null && String(noteOwnerId) === String(user.id) && note.status === 'published');
     const canPrivateInvite = canEmail && !note.isPublic && !note.isArchived &&
         (!note.openDate || new Date(note.openDate).getTime() <= Date.now()) &&
         (!note.scheduledDate || new Date(note.scheduledDate).getTime() <= Date.now());
@@ -51,7 +51,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
 
     // Fetch friends only when someone opens the in-app sharing controls.
     useEffect(() => {
-        if (isOpen && showFriends) void fetchFriends();
+        if (isOpen && showFriends && user) void fetchFriends();
     }, [isOpen, showFriends]);
 
     const fetchFriends = async () => {
@@ -147,8 +147,6 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
         window.location.href = `mailto:?subject=${subject}&body=${body}`;
     };
 
-    if (!user) return null;
-
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-lg p-0 overflow-hidden bg-background border border-border shadow-2xl">
@@ -212,12 +210,12 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
                         {shareFeedback && <p role="status" className="text-xs text-primary">{shareFeedback}</p>}
                     </section>
 
-                    <section className="space-y-3">
+                    {user && <section className="space-y-3">
                         <button type="button" onClick={() => setShowFriends(value => !value)}
                             className="inline-flex min-h-11 items-center text-left text-sm font-semibold text-primary underline underline-offset-4">
                             {showFriends ? 'Hide friends' : 'Send to a SendTheLetter friend'}
                         </button>
-                        {showFriends && <>
+                        {showFriends && user && <>
                             <p className="text-xs text-muted-foreground">Choose a friend to send a public letter inside SendTheLetter.</p>
                         <div className="relative">
                             <CharacterBadge name="suri" tone="paper" size="xs" className="absolute left-3 top-1/2 -translate-y-1/2" />
@@ -252,7 +250,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
                             )}
                         </div>
                         </>}
-                    </section>
+                    </section>}
                 </div>
             </DialogContent>
         </Dialog>
