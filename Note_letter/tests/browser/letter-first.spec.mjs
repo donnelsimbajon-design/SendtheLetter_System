@@ -59,7 +59,7 @@ test('private invitation opens for a guest without signup and accepts one option
   const token = 'a'.repeat(48);
   const seen = [];
   await page.route('**/api/letters/recipient/**', async route => {
-    if (route.request().method() === 'POST') {
+    if (new URL(route.request().url()).pathname.endsWith('/reply')) {
       seen.push(route.request().postDataJSON());
       return route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ sent: true }) });
     }
