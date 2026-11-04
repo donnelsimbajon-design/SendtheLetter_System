@@ -175,6 +175,7 @@ const SettingsPage = () => {
                         <div className="mt-4 border-b border-border py-5"><p className="mb-3 text-sm font-semibold">Text size</p><div className="inline-flex gap-1 rounded-2xl bg-muted p-1">
                             {(['normal', 'large'] as const).map(size => <button type="button" key={size} onClick={() => change('readingSize', size)} className={`rounded-xl px-5 py-2.5 text-sm font-semibold ${preferences.readingSize === size ? 'bg-card shadow-sm' : 'text-muted-foreground'}`}>{size === 'normal' ? 'Standard' : 'Larger text'}</button>)}
                         </div></div>
+                        <SettingToggle title="3D website surfaces" description="Show dimensional cards, paper, character hover effects and navigation depth throughout SendTheLetter. Switch off for a simpler flat look." enabled={preferences.depth3D} onChange={v => change('depth3D', v)} />
                         <SettingToggle title="Reduce motion" description="Minimize animations and decorative movement on this device." enabled={preferences.reduceMotion} onChange={v => change('reduceMotion', v)} />
                     </section>
                     <button type="button" onClick={restoreDefaults} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-3 text-sm font-semibold hover:bg-muted">Reset display and writing preferences</button>
