@@ -7,6 +7,7 @@ import sequelize from '../config/database';
 import { Op } from 'sequelize';
 import { parseStoryPages } from '../services/storyPageValidation';
 import { publicLetterDTO } from '../services/publicLetterDTO';
+import { withPublicEngagement } from '../services/publicEngagementBatch';
 
 interface AuthRequest extends Request {
     user?: any;
@@ -132,9 +133,6 @@ export const getPublicLetters = async (req: Request, res: Response) => {
     try {
         const userId = (req as AuthRequest).user?.id;
 
-        const { default: Like } = await import('../models/Like');
-        const { default: Comment } = await import('../models/Comment');
-
         const letters = await Letter.findAll({
             where: { isPublic: true, status: 'published', isArchived: false, [Op.and]: [
                 { [Op.or]: [{ openDate: null }, { openDate: { [Op.lte]: new Date() } }] },
@@ -150,25 +148,7 @@ export const getPublicLetters = async (req: Request, res: Response) => {
             order: [['createdAt', 'DESC']],
         });
 
-        // Fetch like and comment counts for each letter
-        const lettersWithCounts = await Promise.all(
-            letters.map(async (letter) => {
-                const likeCount = await Like.count({ where: { letterId: letter.id } });
-                const commentCount = await Comment.count({ where: { letterId: letter.id } });
-
-                let isLikedByUser = false;
-                if (userId) {
-                    const like = await Like.findOne({
-                        where: { letterId: letter.id, userId },
-                    });
-                    isLikedByUser = !!like;
-                }
-
-                return { ...publicLetterDTO(letter.toJSON() as any), likeCount, commentCount, isLikedByUser };
-            })
-        );
-
-        res.json(lettersWithCounts);
+        res.json(await withPublicEngagement(letters, userId));
     } catch (error) {
         console.error('Error fetching public letters:', error);
         res.status(500).json({ message: 'Server error' });
@@ -189,9 +169,6 @@ export const getUserPublicLetters = async (req: Request, res: Response) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-
-        const { default: Like } = await import('../models/Like');
-        const { default: Comment } = await import('../models/Comment');
 
         const letters = await Letter.findAll({
             where: {
@@ -215,25 +192,7 @@ export const getUserPublicLetters = async (req: Request, res: Response) => {
             order: [['createdAt', 'DESC']],
         });
 
-        // Fetch like and comment counts for each letter
-        const lettersWithCounts = await Promise.all(
-            letters.map(async (letter) => {
-                const likeCount = await Like.count({ where: { letterId: letter.id } });
-                const commentCount = await Comment.count({ where: { letterId: letter.id } });
-
-                let isLikedByUser = false;
-                if (currentUserId) {
-                    const like = await Like.findOne({
-                        where: { letterId: letter.id, userId: currentUserId },
-                    });
-                    isLikedByUser = !!like;
-                }
-
-                return { ...publicLetterDTO(letter.toJSON() as any), likeCount, commentCount, isLikedByUser };
-            })
-        );
-
-        res.json(lettersWithCounts);
+        res.json(await withPublicEngagement(letters, currentUserId));
     } catch (error) {
         console.error('Error fetching user public letters:', error);
         res.status(500).json({ message: 'Server error' });
