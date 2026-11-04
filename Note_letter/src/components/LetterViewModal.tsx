@@ -150,7 +150,7 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
             <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
                 <DialogContent
                     onEscapeKeyDown={(event) => { if (isCommentsOpen) { event.preventDefault(); setIsCommentsOpen(false); } }}
-                    className="stl-full-letter-reader flex h-[min(94dvh,1000px)] w-[calc(100vw-1rem)] max-w-[1100px] min-w-0 flex-col gap-0 overflow-hidden rounded-[22px] border border-[#e7dbcc] bg-[#fcf9f4] p-0 shadow-2xl sm:h-[min(92dvh,1000px)] sm:rounded-[30px]"
+                    className={cn("stl-full-letter-reader flex w-[calc(100vw-1rem)] min-w-0 flex-col gap-0 overflow-hidden rounded-[22px] border border-[#e7dbcc] bg-[#fcf9f4] p-0 shadow-2xl sm:rounded-[30px]", showEnvelope ? "h-[min(94dvh,760px)] max-w-[820px] sm:h-[min(86dvh,760px)]" : "h-[min(94dvh,1000px)] max-w-[1100px] sm:h-[min(92dvh,1000px)]")}
                 >
                     <DialogTitle className="sr-only">Letter from {note.isAnonymous ? 'A Friend' : note.authorName || 'Unknown'}</DialogTitle>
                     <DialogDescription className="sr-only">A paper envelope opening, followed by a full letter reader. Comments are separate and hidden until requested.</DialogDescription>
