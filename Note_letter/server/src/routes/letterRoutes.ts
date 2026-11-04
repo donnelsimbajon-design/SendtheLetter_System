@@ -5,9 +5,14 @@ import * as likeController from '../controllers/likeController';
 import * as repostController from '../controllers/repostController';
 import * as guestController from '../controllers/guestInteractionController';
 import * as publicThreadController from '../controllers/publicThreadController';
+import * as recipientShare from '../controllers/recipientShareController';
 import { authenticateToken, optionalAuth } from '../middleware/authMiddleware';
 
 const router = express.Router();
+
+// Recipient bearer links are separate from discoverable/public letters.
+router.get('/recipient/:token', recipientShare.readRecipientLetter);
+router.post('/recipient/:token/reply', recipientShare.limitRecipientReplies, recipientShare.replyToRecipientLetter);
 
 // Public reads allow anonymous visitors while optionally personalizing engagement state.
 router.get('/public', optionalAuth, letterController.getPublicLetters);
@@ -25,6 +30,10 @@ router.get('/user/:username/reposts', optionalAuth, repostController.getPublicUs
 router.use(authenticateToken);
 router.post('/', letterController.createLetter);
 router.post('/drafts/:id/publish', letterController.publishDraft);
+router.post('/:id/recipient-link', recipientShare.createRecipientLink);
+router.get('/:id/recipient-link', recipientShare.getRecipientLinkStatus);
+router.delete('/:id/recipient-link', recipientShare.revokeRecipientLinks);
+router.get('/:id/recipient-replies', recipientShare.getRecipientReplies);
 router.get('/mine', letterController.getMyLetters);
 router.post('/:id/email', letterController.sendLetterByEmail);
 router.get('/drafts', letterController.getDrafts);
