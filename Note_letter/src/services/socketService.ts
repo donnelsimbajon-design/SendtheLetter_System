@@ -46,7 +46,7 @@ class SocketService {
     onNewNotification(callback: (notification: any) => void) { this.socket?.on('new_notification', callback); }
     onNewMessage(callback: (message: any) => void) { this.socket?.on('new_message', callback); }
 
-    offNewMessage() { this.socket?.off('new_message'); }
+    offNewMessage(callback?: (message: any) => void) { if (callback) this.socket?.off('new_message', callback); else this.socket?.off('new_message'); }
     offNewComment() { this.socket?.off('new_comment'); }
     offLikeUpdate() { this.socket?.off('like_update'); }
     offNewNotification() { this.socket?.off('new_notification'); }
