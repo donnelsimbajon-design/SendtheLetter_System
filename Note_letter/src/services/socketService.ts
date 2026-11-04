@@ -5,6 +5,7 @@ class SocketService {
     private socket: Socket | null = null;
     private activeUserId: number | null = null;
     private activeToken: string | null = null;
+    private newMessageListeners = new Set<(message: any) => void>();
 
     connect(userId: number, token: string) {
         // Reuse an existing connection (including one still handshaking).
@@ -19,8 +20,8 @@ class SocketService {
             autoConnect: true,
         });
         this.socket = socket;
-
-
+        // Components can subscribe before App establishes the socket connection.
+        this.newMessageListeners.forEach(listener => socket.on('new_message', listener));
     }
 
     disconnect() {
@@ -44,9 +45,20 @@ class SocketService {
     onNewComment(callback: (comment: any) => void) { this.socket?.on('new_comment', callback); }
     onLikeUpdate(callback: (data: { letterId: string; likeCount: number; liked: boolean }) => void) { this.socket?.on('like_update', callback); }
     onNewNotification(callback: (notification: any) => void) { this.socket?.on('new_notification', callback); }
-    onNewMessage(callback: (message: any) => void) { this.socket?.on('new_message', callback); }
+    onNewMessage(callback: (message: any) => void) {
+        this.newMessageListeners.add(callback);
+        this.socket?.on('new_message', callback);
+    }
 
-    offNewMessage() { this.socket?.off('new_message'); }
+    offNewMessage(callback?: (message: any) => void) {
+        if (callback) {
+            this.newMessageListeners.delete(callback);
+            this.socket?.off('new_message', callback);
+        } else {
+            this.newMessageListeners.clear();
+            this.socket?.off('new_message');
+        }
+    }
     offNewComment() { this.socket?.off('new_comment'); }
     offLikeUpdate() { this.socket?.off('like_update'); }
     offNewNotification() { this.socket?.off('new_notification'); }

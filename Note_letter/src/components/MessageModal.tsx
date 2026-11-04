@@ -70,7 +70,7 @@ const MessageModal: React.FC<MessageModalProps> = ({ isOpen, onClose, otherUser 
         socketService.onNewMessage(handleNewMessage);
 
         return () => {
-            socketService.offNewMessage();
+            socketService.offNewMessage(handleNewMessage);
         };
     }, [otherUser, user]);
 

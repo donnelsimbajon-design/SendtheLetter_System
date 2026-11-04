@@ -56,6 +56,7 @@ export default function CommunityPage() {
     const navigate = useNavigate();
     const location = useLocation();
     const searchInput = useRef<HTMLInputElement>(null);
+    const loadMoreRef = useRef<HTMLDivElement>(null);
     const user = useAuthStore(state => state.user);
     const { publicLetters, isLoadingPublic, publicError, fetchPublicLetters, toggleLike } = useNoteStore();
 
@@ -137,6 +138,21 @@ export default function CommunityPage() {
 
     const shownLetters = filteredLetters.slice(0, visibleCount);
     const hasFilters = categoryFilter !== 'all' || searchQuery.trim() !== '' || sortOrder !== 'newest';
+
+    // Load the next page automatically when the reader nears the end of the feed.
+    // No manual “Show more” button and no backend data changes.
+    useEffect(() => {
+        const target = loadMoreRef.current;
+        if (!target || visibleCount >= filteredLetters.length || isLoadingPublic || publicError) return;
+        const observer = new IntersectionObserver(entries => {
+            if (entries[0]?.isIntersecting) {
+                observer.disconnect();
+                setVisibleCount(count => Math.min(count + PAGE_SIZE, filteredLetters.length));
+            }
+        }, { rootMargin: '0px 0px 400px 0px' });
+        observer.observe(target);
+        return () => observer.disconnect();
+    }, [visibleCount, filteredLetters.length, isLoadingPublic, publicError]);
     // Date-based creative prompt, not a claim about site-wide writing activity.
     const todayPrompt = prompts[Math.floor(Date.now() / 86400000) % prompts.length];
 
@@ -199,7 +215,7 @@ export default function CommunityPage() {
                             </div>
                         </div>
                         <p className="mt-3 text-xs leading-5 text-muted-foreground">
-                            Writers sharing public letters in this collection.
+                            Meet people sharing public letters. Select a writer to explore their stories.
                         </p>
                         <div className="mt-4 space-y-1.5">
                             {writers.length ? writers.slice(0, 5).map(writer => (
@@ -239,9 +255,9 @@ export default function CommunityPage() {
 
                     <section className="rounded-[1.5rem] bg-[hsl(var(--surface-rose))] p-5 text-[#49363B]">
                         <CharacterBadge name="lumi" tone="paper" size="md" />
-                        <h2 className="mt-4 font-editorial text-2xl leading-snug">Your story belongs here, too.</h2>
-                        <p className="mt-2 text-xs leading-6 opacity-80">You do not need perfect words to begin.</p>
-                        <Link to={writeLink} className="mt-4 inline-flex min-h-11 items-center rounded-full bg-[#49363B] px-4 py-2.5 text-xs font-bold text-white">Start writing</Link>
+                        <h2 className="mt-4 font-editorial text-2xl leading-snug">Stir my feelings</h2>
+                        <p className="mt-2 text-xs leading-6 opacity-80">Need a first thought? Try this gentle prompt: {todayPrompt}</p>
+                        <Link to={writeLink} className="mt-4 inline-flex min-h-11 items-center rounded-full bg-[#49363B] px-4 py-2.5 text-xs font-bold text-white">Write about it</Link>
                     </section>
                 </aside>
 
@@ -391,11 +407,10 @@ export default function CommunityPage() {
                         </section>
                     )}
 
-                    {shownLetters.length < filteredLetters.length && (
-                        <button type="button" onClick={() => setVisibleCount(count => count + PAGE_SIZE)}
-                            className="min-h-12 w-full rounded-2xl border border-border bg-card px-5 py-3 text-sm font-bold text-primary transition-colors hover:bg-muted">
-                            Show more letters
-                        </button>
+                    {shownLetters.length < filteredLetters.length && !publicError && (
+                        <div ref={loadMoreRef} role="status" aria-label="More letters appear automatically as you scroll" className="flex min-h-12 items-center justify-center py-3 text-xs text-muted-foreground">
+                            Keep scrolling to discover more stories…
+                        </div>
                     )}
                 </section>
 
@@ -408,7 +423,7 @@ export default function CommunityPage() {
                                 <h2 className="font-editorial text-xl">Popular topics</h2>
                             </div>
                         </div>
-                        <p className="mt-3 text-xs leading-5 text-muted-foreground">Based on the published letters currently available.</p>
+                        <p className="mt-3 text-xs leading-5 text-muted-foreground">Explore the topics that appear most often in published community letters.</p>
                         <div className="mt-4 space-y-2">
                             {topics.length ? topics.slice(0, 5).map((topic, index) => (
                                 <button type="button" key={topic.name} onClick={() => chooseTopic(topic.name)}
@@ -424,7 +439,7 @@ export default function CommunityPage() {
 
                     <section className="rounded-[1.5rem] border border-border bg-card p-5 shadow-sm">
                         <h2 className="flex items-center gap-2 font-editorial text-xl"><CharacterBadge name="sely" tone="rose" size="sm" /> Most appreciated</h2>
-                        <p className="mt-3 text-xs leading-5 text-muted-foreground">Letters with appreciations in the selected stories.</p>
+                        <p className="mt-3 text-xs leading-5 text-muted-foreground">Discover letters readers have appreciated most among the selected stories.</p>
                         <div className="mt-4 space-y-3">
                             {mostLoved.length ? mostLoved.map(letter => (
                                 <button type="button" key={letter.id} onClick={() => openLetter(letter)}

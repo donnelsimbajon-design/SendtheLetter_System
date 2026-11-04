@@ -100,7 +100,7 @@ test('community uses transparent original-mascot rail and three-column public fe
     expect((await link.innerText()).trim()).toBe('');
   }
   await expect(rail.getByRole('link', { name: 'SendTheLetter home' })
-    .locator('img[src="/mascots/sely.svg"]')).toBeVisible();
+    .locator('img[src="/sendtheletter-logo.svg"]')).toBeVisible();
   await expect(rail.getByRole('button', { name: /Notifications/ })
     .locator('img[src="/mascots/nori.svg"]')).toBeVisible();
   await expect(rail.getByRole('button', { name: 'Account, settings and appearance' })
@@ -202,7 +202,7 @@ test('writer can open the full letter and use real appreciation actions', async 
   await expect(page.getByRole('button', { name: 'Unlike letter: Thank you for showing up' })).toBeVisible();
 });
 
-test('loads more public letter cards without inventing extra recommendations', async ({ page }) => {
+test('automatically loads more public letter cards as readers scroll', async ({ page }) => {
   const more = Array.from({ length: 8 }, (_, index) => ({
     ...fixedLetters[0], id: 100 + index, title: 'Community letter ' + index,
     createdAt: new Date(Date.UTC(2026, 9, 15 + index)).toISOString(),
@@ -211,7 +211,8 @@ test('loads more public letter cards without inventing extra recommendations', a
   await page.goto('/dashboard/community');
   await expect(page.getByText('Showing 5 of 8 public letters')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Read letter: Community letter 0' })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Show more letters' }).click();
+  await expect(page.getByRole('button', { name: 'Show more letters' })).toHaveCount(0);
+  await page.getByRole('status', { name: 'More letters appear automatically as you scroll' }).scrollIntoViewIfNeeded();
   await expect(page.getByText('Showing 8 of 8 public letters')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Read letter: Community letter 0' })).toBeVisible();
 });
