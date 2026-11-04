@@ -192,22 +192,11 @@
   transform: translate(-50%, -50%) scale(.8);
   pointer-events: none;
 }
-.stl-real-envelope-caption {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  right: 12px;
-  color: #9b8774;
-  font: italic 12px Georgia, serif;
-  letter-spacing: .03em;
-  text-align: center;
-}
 @media (max-width: 480px) {
   .stl-real-envelope-scene { height: clamp(220px, 37dvh, 260px); min-height: 220px; border-radius: 20px; }
   .stl-real-envelope { width: min(305px, 84%); }
   .stl-real-envelope-paper { padding: 8% 9%; }
   .stl-real-envelope-paper-lines { gap: 5px; }
-  .stl-real-envelope-caption { bottom: 9px; font-size: 11px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .stl-real-envelope *, .stl-real-envelope-scene * { transition-duration: 0.01ms !important; animation: none !important; }
