@@ -154,3 +154,49 @@ test('public share URL keeps the letter full width and its comments behind a but
   const after = await page.locator('article.public-letter-sheet').boundingBox();
   expect(Math.abs(after.width - sheet.width)).toBeLessThan(1.5);
 });
+
+
+for (const width of [320, 390, 768, 1024, 1440]) {
+  test('public, authentication and shared-letter pages fit ' + width + 'px', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop-chromium', 'Width matrix runs in desktop Chromium; mobile project is tested separately');
+    await page.setViewportSize({ width, height: width < 600 ? 740 : 900 });
+    await setup(page);
+    const paths = [
+      ['home', '/'],
+      ['about', '/about'],
+      ['features', '/services'],
+      ['contact', '/contact'],
+      ['login', '/login'],
+      ['signup', '/signup'],
+      ['shared-letter', '/letters/' + 'a'.repeat(48)],
+    ];
+    for (const [name, path] of paths) {
+      await page.goto(path);
+      await expect(page.locator('main').first()).toBeVisible();
+      await geometry(page, name, width);
+      if ((width === 320 || width === 768 || width === 1440) && ['home', 'login', 'shared-letter'].includes(name)) {
+        await testInfo.attach(name + '-' + width + '.png', { body: await page.screenshot({ fullPage: false }), contentType: 'image/png' });
+      }
+    }
+  });
+}
+
+test('small 320x568 display keeps the 3D letter modal entirely inside the screen', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop-chromium', 'Small-phone viewport is covered in the width sweep');
+  await page.setViewportSize({ width: 320, height: 568 });
+  await setup(page);
+  await page.goto('/dashboard/community');
+  await page.getByRole('button', { name: 'Read letter: A long letter to keep forever' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Letter from a-friend' });
+  await expect(dialog).toBeVisible();
+  const rect = await dialog.boundingBox();
+  expect(rect).not.toBeNull();
+  expect(rect.x).toBeGreaterThanOrEqual(-1);
+  expect(rect.y).toBeGreaterThanOrEqual(-1);
+  expect(rect.x + rect.width).toBeLessThanOrEqual(321);
+  expect(rect.y + rect.height).toBeLessThanOrEqual(569);
+  await dialog.getByRole('button', { name: 'Skip 3D & read' }).click();
+  await expect(dialog.getByTestId('full-letter-scroll')).toBeVisible();
+  await dialog.getByRole('group', { name: 'Letter actions' }).getByRole('button', { name: 'View comments' }).click();
+  await expect(dialog.getByRole('complementary', { name: 'Letter comments drawer' })).toBeVisible();
+});
