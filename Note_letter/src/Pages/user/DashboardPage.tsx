@@ -14,7 +14,7 @@ const prompts: { title: string; description: string; template: string; mascot: M
   { title: 'Reach out with a hello', description: 'Start a connection with a few honest words.', template: 'hello', mascot: 'piko' },
 ];
 
-const surface = 'rounded-[1.5rem] border border-border/80 bg-card/70 shadow-sm';
+const surface = 'stl-depth-card rounded-[1.5rem] border border-border/80 bg-card/70 shadow-sm';
 const hover = 'transition-[transform,border-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-md active:translate-y-0 motion-reduce:transform-none';
 
 const StatLink = ({ to, icon, label, value, description }: {
