@@ -43,7 +43,8 @@ export default function LetterBookReader({ title, content, letterPages, recipien
     const beforePhoto = page.text.slice(0, anchor);
     const afterPhoto = page.text.slice(anchor);
 
-    return <div className={`stl-depth-card stl-depth-static stl-reading-book min-w-0 overflow-hidden rounded-[22px] border border-[#e4d9c9] bg-[#fffdf9] shadow-[0_14px_35px_rgba(60,46,31,.08)] ${className}`}>
+    return <div data-testid="3d-letter-book" className={`stl-reading-book-3d min-w-0 ${className}`}>
+      <div className="stl-depth-card stl-depth-static stl-reading-book min-w-0 overflow-hidden rounded-[22px] border border-[#e4d9c9] bg-[#fffdf9] shadow-[0_14px_35px_rgba(60,46,31,.08)]">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e6ddd2] bg-[#fffaf3] px-5 py-3 text-[#785e4b] sm:px-7">
             <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.16em]"><CharacterBadge name="basa" tone="gold" size="sm" /> The letter book</div>
             <div className="flex items-center gap-2 text-[11px]"><span>{pages.length} {pages.length === 1 ? 'page' : 'pages'}</span><span className="h-1 w-1 rounded-full bg-[#bcae9c]" /> <span>{bookWordCount(pages)} words</span></div>
@@ -76,5 +77,6 @@ export default function LetterBookReader({ title, content, letterPages, recipien
                 <button type="button" disabled={pageIndex >= pages.length - 1} onClick={() => setPageIndex(i => Math.min(pages.length - 1, i + 1))} className="inline-flex items-center gap-2 rounded-full bg-[#344a3c] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#47604f] disabled:cursor-not-allowed disabled:opacity-35">Next <ArrowRight size={15} /></button>
             </nav>
         </div>
+      </div>
     </div>;
 }
