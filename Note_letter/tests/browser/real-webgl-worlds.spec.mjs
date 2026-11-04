@@ -36,7 +36,7 @@ test('homepage renders an actual perspective WebGL world, not a flat CSS shadow'
   await expect(page.locator('img[src="/sendtheletter-logo.svg"]')).toBeVisible();
 });
 
-test('member sections have live 3D worlds with their own scene variants', async ({ page }) => {
+test('member sections show content without decorative 3D banners', async ({ page }) => {
   await mockedSession(page);
   const screens = [
     ['/dashboard','overview'],
@@ -48,9 +48,9 @@ test('member sections have live 3D worlds with their own scene variants', async 
   ];
   for (const [path, kind] of screens) {
     await page.goto(path);
-    const world = page.getByRole('region', { name: 'Interactive 3D SendTheLetter workspace' });
-    await expect(world).toBeVisible();
-    await expect(world.locator('canvas[data-renderer="webgl"]')).toBeVisible();
+    // Dashboard pages should not push their actual content below a 3D banner.
+    await expect(page.getByRole('region', { name: 'Interactive 3D SendTheLetter workspace' })).toHaveCount(0);
+    await expect(page.locator('#main-content')).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('data-stl-depth', 'on');
   }
 });
