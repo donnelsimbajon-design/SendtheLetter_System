@@ -46,3 +46,71 @@
   animation: none !important;
   transform: none !important;
 }
+
+/* Layered book covers and page-turn direction, shared by modals and public readers. */
+/* The letter itself is a dimensional book, not a flat panel.
+   Text remains on a normal readable surface. Animations only happen on page turn. */
+.stl-reading-book-3d {
+  position: relative;
+  isolation: isolate;
+  perspective: 1500px;
+  padding: 0 0 10px 8px;
+}
+.stl-reading-book-3d::before,
+.stl-reading-book-3d::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border: 1px solid #d8c5ad;
+  border-radius: 9px 16px 16px 9px;
+}
+.stl-reading-book-3d::before {
+  inset: 10px 1px 1px 17px;
+  background: #ebdfcf;
+  transform: translateZ(-9px) rotateZ(.35deg);
+  box-shadow: 5px 10px 0 -3px #d2c1ae, 11px 24px 32px -23px rgba(35,32,25,.46);
+}
+.stl-reading-book-3d::after {
+  inset: 6px 4px 5px 11px;
+  background: #faf4e9;
+  transform: translateZ(-5px) rotateZ(-.25deg);
+}
+.stl-reading-book-3d > .stl-reading-book-3d-page {
+  position: relative;
+  z-index: 1;
+  transform-origin: 6% 50%;
+  backface-visibility: hidden;
+  border-radius: 8px 15px 15px 8px;
+  box-shadow: inset 6px 0 9px -6px rgba(91,62,40,.22),
+              2px 3px 0 #e4d5c2,
+              8px 15px 28px -19px rgba(42,33,22,.28);
+}
+.stl-reading-book-3d .stl-reading-page-turn[data-turn="next"] {
+  animation: stl-book-next 420ms cubic-bezier(.25,.7,.2,1) both;
+}
+.stl-reading-book-3d .stl-reading-page-turn[data-turn="previous"] {
+  animation: stl-book-previous 420ms cubic-bezier(.25,.7,.2,1) both;
+}
+@keyframes stl-book-next {
+  from { opacity: .78; transform: rotateY(12deg) translateX(5px); }
+  to { opacity: 1; transform: rotateY(0) translateX(0); }
+}
+@keyframes stl-book-previous {
+  from { opacity: .78; transform: rotateY(-12deg) translateX(-5px); }
+  to { opacity: 1; transform: rotateY(0) translateX(0); }
+}
+@media (max-width: 480px) {
+  .stl-reading-book-3d { padding: 0 0 7px 4px; }
+  .stl-reading-book-3d::before { inset: 7px 1px 1px 11px; }
+  .stl-reading-book-3d::after { inset: 4px 2px 4px 7px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stl-reading-book-3d .stl-reading-page-turn { animation: none !important; }
+}
+:root[data-reduce-motion="true"] .stl-reading-book-3d .stl-reading-page-turn {
+  animation: none !important;
+}
+:root[data-stl-depth="off"] .stl-reading-book-3d { perspective: none; padding: 0; }
+:root[data-stl-depth="off"] .stl-reading-book-3d::before,
+:root[data-stl-depth="off"] .stl-reading-book-3d::after { display: none; }
+:root[data-stl-depth="off"] .stl-reading-book-3d .stl-reading-page-turn { animation: none !important; }
