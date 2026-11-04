@@ -15,6 +15,12 @@ on:
   schedule:
     - cron: '27 3 * * *'
   workflow_dispatch:
+    inputs:
+      verify_database_readiness:
+        description: "Also verify /api/ready after the backend change is deployed"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -50,5 +56,6 @@ jobs:
         shell: bash
         env:
           STRICT_DEEP_LINKS: 'true'
+          VERIFY_DB_READINESS: ${{ github.event_name == 'workflow_dispatch' && inputs.verify_database_readiness && 'true' || 'false' }}
           EXPECTED_WEB_SHA: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.sha || '' }}
         run: node Note_letter/server/scripts/production-smoke.mjs

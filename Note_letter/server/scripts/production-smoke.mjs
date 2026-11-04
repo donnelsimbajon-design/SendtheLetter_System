@@ -67,6 +67,16 @@ const health = await json(API, '/api/health');
 assert.equal(health.status, 'ok');
 console.log('PASS: API health');
 
+// Opt-in until the new backend is deployed. Never query user records or write
+// to the production DB; this endpoint checks only server-to-database readiness.
+if (process.env.VERIFY_DB_READINESS === 'true') {
+    const readiness = await json(API, '/api/ready');
+    assert.equal(readiness.status, 'ok', 'Production database readiness failed');
+    console.log('PASS: API database readiness');
+} else {
+    console.log('SKIP: database readiness (enable after backend deployment)');
+}
+
 for (const route of ['/api/letters/mine', '/api/letters/drafts', '/api/letters/scheduled', '/api/letters/archived']) {
     await json(API, route, [401]);
     console.log(`PASS: private library endpoint requires authentication (${route})`);
