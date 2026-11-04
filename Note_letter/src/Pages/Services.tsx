@@ -27,7 +27,7 @@ const Services = () => {
         <div className="mx-auto flex min-h-[76px] max-w-7xl flex-wrap items-center justify-between gap-3 px-5 py-3 sm:px-8">
           <Link to="/" className="inline-flex items-center" aria-label="SendTheLetter home"><img src="/sendtheletter-logo.svg" alt="SendTheLetter" width="180" height="48" className="h-11 w-[155px] object-contain object-left sm:w-[195px]" /></Link>
           <nav aria-label="Page navigation" className="flex items-center gap-3 text-xs font-bold sm:gap-5 sm:text-sm">
-            <Link to="/about" className="hover:underline">Our story</Link>
+            <Link to="/about" className="hidden hover:underline sm:inline">Our story</Link>
             <Link to="/contact" className="hidden hover:underline sm:inline">Contact</Link>
             {isVerifying ? <span role="status" className="text-muted-foreground">Checking session…</span> : <Link to={isAuthenticated ? '/dashboard' : '/login'} className="inline-flex min-h-11 items-center rounded-full bg-primary px-4 py-2 text-primary-foreground hover:opacity-90">{isAuthenticated ? 'My space' : 'Sign in'}</Link>}
           </nav>
@@ -40,7 +40,7 @@ const Services = () => {
           <div className="mx-auto grid max-w-7xl items-center gap-7 px-5 py-16 sm:px-8 sm:py-24 lg:grid-cols-[1fr_.55fr]">
             <div>
               <p className="text-xs font-bold uppercase tracking-[.2em] text-[hsl(var(--accent))]">The SendTheLetter experience</p>
-              <h1 className="mt-5 max-w-3xl font-editorial text-5xl leading-[1.08] tracking-tight sm:text-6xl">A little more room for what matters.</h1>
+              <h1 className="mt-5 max-w-3xl break-words font-editorial text-4xl leading-[1.1] tracking-tight sm:text-6xl">A little more room for what matters.</h1>
               <p className="mt-6 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">Letters can hold feelings that ordinary messages sometimes cannot. Write freely, keep a thought close, or share a story when you are ready.</p>
               <Link to={startLink} className="mt-8 inline-flex min-h-12 items-center gap-3 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90">
                 <CharacterBadge name="lumi" tone="paper" size="xs" /> Start a letter
