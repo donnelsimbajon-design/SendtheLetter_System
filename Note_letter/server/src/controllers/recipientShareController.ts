@@ -4,7 +4,7 @@ import { Op, QueryTypes } from 'sequelize';
 import sequelize from '../config/database';
 import Letter from '../models/Letter';
 import User from '../models/User';
-import { publicLetterDTO } from '../services/publicLetterDTO';
+import { privateRecipientDTO } from '../services/privateRecipientDTO';
 import { createRateLimiter } from '../middleware/rateLimit';
 import { hashRecipientToken, isVisibleRecipientLetter } from '../services/privateRecipientSecurity';
 
@@ -136,10 +136,10 @@ export const readRecipientLetter = async (req: Request, res: Response) => {
         if (!link) return unavailable(res);
         const letter = await readableLetter(link);
         if (!letter) return unavailable(res);
-        const safe: Record<string, unknown> = { ...publicLetterDTO(letter.toJSON() as Record<string, any>) };
-        delete safe.shareToken;
-        delete safe.authorId;
-        return res.json({ letter: safe, expiresAt: link.expiresAt });
+        return res.json({
+            letter: privateRecipientDTO(letter.toJSON() as Record<string, any>),
+            expiresAt: link.expiresAt,
+        });
     } catch (error) { return fail(error, res); }
 };
 
