@@ -130,7 +130,7 @@ if (writer) {
 // direct client-side route URLs. This rule lives in Render Settings, not in Vite.
 // Report this launch blocker explicitly without hiding successful privacy checks.
 const brokenRoutes = [];
-for (const route of ['/', '/open', '/dashboard/community', '/dashboard/notes', '/writers/__route_smoke__']) {
+for (const route of ['/', '/try', '/try?template=gratitude', '/signup', '/open', '/dashboard/community', '/dashboard/notes', '/writers/__route_smoke__']) {
     // A single missing catch-all rewrite breaks all deep links. Avoid repeated
     // slow CDN 404 lookups until this site-wide configuration is corrected.
     if (brokenRoutes.length) {
@@ -154,5 +154,18 @@ if (brokenRoutes.length) {
     if (process.env.STRICT_DEEP_LINKS === 'true') {
         throw new Error(`Direct SPA deep-link validation failed: ${brokenRoutes.join(', ')}`);
     }
+}
+// Check the exact commit only for scheduled/on-demand verification, after Render
+// has had time to build and publish the latest main branch. PR and push checks
+// intentionally avoid racing the deployment with a premature SHA comparison.
+const expectedWebSha = process.env.EXPECTED_WEB_SHA?.trim().toLowerCase();
+if (expectedWebSha) {
+    assert.match(expectedWebSha, /^[a-f0-9]{40}$/, 'EXPECTED_WEB_SHA must be a full Git commit SHA');
+    const build = await json(WEB, '/build-version.json');
+    assert.equal(build.commit, expectedWebSha,
+        'Production frontend is stale: Render has not deployed the expected main commit');
+    console.log(`PASS: production frontend build matches commit ${expectedWebSha.slice(0, 12)}`);
+} else {
+    console.log('SKIP: deploy commit comparison (only enforced for scheduled/on-demand checks)');
 }
 console.log('Completed read-only production checks; no accounts or letters modified.');

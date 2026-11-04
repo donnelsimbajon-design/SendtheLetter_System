@@ -50,4 +50,5 @@ jobs:
         shell: bash
         env:
           STRICT_DEEP_LINKS: 'true'
+          EXPECTED_WEB_SHA: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.sha || '' }}
         run: node Note_letter/server/scripts/production-smoke.mjs
