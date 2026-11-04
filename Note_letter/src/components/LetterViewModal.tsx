@@ -161,7 +161,7 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                             <CharacterBadge name="basa" tone="paper" size="sm" />
                             <span className="min-w-0">
                                 <span className="block text-[10px] font-bold uppercase tracking-[.14em] text-[#a16f54]">SendTheLetter · Reader</span>
-                                <span className="block max-w-full truncate font-editorial text-sm font-semibold text-[#30443a] sm:max-w-[360px] sm:text-lg">{note.title || 'Your letter'}</span>
+                                <span className="block max-w-full truncate font-editorial text-sm font-semibold text-[#30443a] sm:text-lg">{note.title || 'Your letter'}</span>
                             </span>
                         </div>
                         <div role="group" aria-label="Letter actions" className="scrollbar-hide flex w-full min-w-0 shrink-0 flex-nowrap items-center gap-1 overflow-x-auto sm:w-auto sm:max-w-full sm:flex-wrap sm:overflow-visible sm:gap-2">
