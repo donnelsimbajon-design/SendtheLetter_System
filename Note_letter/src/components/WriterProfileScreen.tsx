@@ -201,11 +201,21 @@ export default function WriterProfileScreen({
                 {ownProfile && onEditProfile && <button type="button" onClick={onEditProfile} className="absolute right-4 top-4 inline-flex min-h-9 items-center gap-1.5 rounded-full border border-white/80 bg-[#fffaf2]/95 px-3 py-1.5 text-xs font-semibold text-[#304d3e] shadow-sm hover:bg-white sm:right-7">Edit cover</button>}
             </div>
             <div className="px-5 pb-5 sm:px-7 sm:pb-6">
-                <div className="-mt-9 flex flex-wrap items-end justify-between gap-x-5 gap-y-4 sm:-mt-11">
+                <div className="-mt-9 flex flex-wrap items-center gap-x-5 gap-y-3 sm:-mt-11">
                     <div className="relative flex h-[82px] w-[82px] shrink-0 items-center justify-center overflow-hidden rounded-[21px] border-[4px] border-card bg-[#e4d7b9] font-editorial text-3xl font-semibold text-[#425746] shadow-[0_4px_16px_rgba(40,52,38,.12)] sm:h-[94px] sm:w-[94px]">
                         {profile.avatar ? <img src={getImageUrl(profile.avatar)} alt={name} className="h-full w-full object-cover" /> : name.slice(0, 1).toUpperCase()}
                     </div>
-                                        <div className="flex min-w-0 flex-wrap items-center justify-start gap-2 sm:justify-end">
+                    <div className="min-w-[160px] flex-1 pt-9 sm:pt-11">
+                        <p className="text-[11px] font-bold uppercase tracking-[.13em] text-[#9a765c]">{ownProfile ? 'Your space, your stories' : 'Meet the writer'}</p>
+                        <h1 className="mt-1 break-words font-editorial text-[clamp(1.8rem,3.2vw,2.55rem)] font-semibold leading-tight tracking-tight text-[#283f35]">{name}</h1>
+                        <p className="mt-1.5 max-w-xl break-words text-sm leading-6 text-[#66756b]">{profile.bio?.trim() || (ownProfile ? 'Add a little introduction so other writers can get to know you.' : 'Sharing stories one letter at a time.')}</p>
+                        <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-[#738074]">
+                            {profile.location && <span>{profile.location}</span>}
+                            {friendlyDate(profile.createdAt) && <span>Joined {friendlyDate(profile.createdAt)}</span>}
+                            <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-[#7f9b81]" /> Public writer profile</span>
+                        </div>
+                    </div>
+                    <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end lg:self-end">
                         {ownProfile ? <>
                             <button type="button" onClick={onEditProfile} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border bg-white/90 px-4 py-2.5 text-xs font-bold hover:bg-muted"><CharacterBadge name="lumi" tone="paper" size="xs" /> Edit profile</button>
                             <button type="button" onClick={onWriteLetter} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground hover:bg-primary/90"><CharacterBadge name="lumi" tone="paper" size="xs" /> Write a letter</button>
@@ -222,16 +232,6 @@ export default function WriterProfileScreen({
                             </button>}
                         </>}
                         <button type="button" onClick={() => void shareProfile()} aria-label="Copy public profile link" title="Copy public profile link" className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white/90 hover:bg-muted"><CharacterBadge name="piko" tone="paper" size="sm" /></button>
-                    </div>
-                </div>
-                <div className="mt-3 max-w-3xl">
-                    <p className="text-[11px] font-bold uppercase tracking-[.13em] text-[#9a765c]">{ownProfile ? 'Your space, your stories' : 'Meet the writer'}</p>
-                    <h1 className="mt-1 break-words font-editorial text-[clamp(1.8rem,3.3vw,2.55rem)] font-semibold leading-tight tracking-tight text-[#283f35]">{name}</h1>
-                    <p className="mt-2 max-w-2xl break-words text-sm leading-6 text-[#66756b]">{profile.bio?.trim() || (ownProfile ? 'Add a little introduction so other writers can get to know you.' : 'Sharing stories one letter at a time.')}</p>
-                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-[#738074]">
-                        {profile.location && <span>{profile.location}</span>}
-                        {friendlyDate(profile.createdAt) && <span>Joined {friendlyDate(profile.createdAt)}</span>}
-                        <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-[#7f9b81]" /> Public writer profile</span>
                     </div>
                 </div>
                 <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-[#e5dfd5] pt-4 text-xs text-muted-foreground sm:gap-x-8">
