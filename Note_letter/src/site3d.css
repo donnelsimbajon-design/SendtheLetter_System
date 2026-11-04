@@ -83,8 +83,8 @@
 
 /* First-frame 3D is achieved by quiet relief/shadows. Only pointer-precise devices tilt. */
 @media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference) {
-  :root[data-stl-depth="on"]:not([data-reduce-motion="true"]) .stl-depth-card:hover,
-  :root[data-stl-depth="on"]:not([data-reduce-motion="true"]) .stl-depth-card:focus-within {
+  :root[data-stl-depth="on"]:not([data-reduce-motion="true"]) .stl-depth-card:not(.stl-depth-static):hover,
+  :root[data-stl-depth="on"]:not([data-reduce-motion="true"]) .stl-depth-card:not(.stl-depth-static):focus-visible {
     transform: perspective(1200px) translate3d(0,-4px,9px) rotateX(1deg) rotateY(-.8deg);
     box-shadow: var(--stl-depth-shadow-hover);
   }
@@ -101,7 +101,7 @@
     transform: perspective(900px) translate3d(0,-4px,8px) rotateX(2deg) rotateY(-2deg);
     box-shadow: var(--stl-depth-shadow-hover);
   }
-  :root[data-stl-depth="on"]:not([data-reduce-motion="true"]) .stl-depth-paper:hover {
+  :root[data-stl-depth="on"]:not([data-reduce-motion="true"]) .stl-depth-paper:not(.stl-depth-static):hover {
     transform: perspective(1100px) translate3d(0,-2px,6px) rotateY(-1deg);
   }
   :root[data-stl-depth="on"]:not([data-reduce-motion="true"]) #root main :is(a,button)[class*="rounded-full"]:not(:disabled):hover {
@@ -146,3 +146,9 @@
 :root[data-stl-depth="off"] .stl-book-button:focus-visible,
 :root[data-stl-depth="off"] .stl-capsule,
 :root[data-stl-depth="off"] .group:hover .stl-capsule { transform:none !important; }
+
+/* Conversations, profile headers and forms have layered depth but must never tilt as people type or scroll. */
+:root[data-stl-depth="on"] .stl-depth-card.stl-depth-static,
+:root[data-stl-depth="on"] .stl-depth-paper.stl-depth-static {
+  transform: none;
+}
