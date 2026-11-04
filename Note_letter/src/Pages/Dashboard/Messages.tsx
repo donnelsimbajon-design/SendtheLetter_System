@@ -197,7 +197,7 @@ export default function Messages() {
             <div className="min-w-0 flex-1"><p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.19em] text-[hsl(var(--accent))]"><CharacterBadge name="chika" tone="gold" size="xs" /> Your connections</p><h1 className="mt-2 font-editorial text-4xl">Messages</h1><p className="mt-2 text-sm text-muted-foreground">A quieter way to connect, one thoughtful note at a time.</p></div>
             <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-3 sm:w-auto sm:flex-nowrap">
               <Link to="/dashboard/community" className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-xs font-bold hover:bg-muted"><CharacterBadge name="lumi" tone="sage" size="xs" /> Explore writers</Link>
-              <WorldScene3D kind="messages" title="Interactive 3D SendTheLetter workspace" controls={false} className="h-[126px] w-full max-w-[380px] shrink-0 sm:h-[144px] sm:w-[300px] xl:w-[360px]" />
+              <WorldScene3D kind="messages" title="Interactive 3D SendTheLetter workspace" controls={false} className="hidden h-[144px] w-full max-w-[360px] shrink-0 sm:block sm:w-[300px] xl:w-[360px]" />
             </div>
         </header>
 
@@ -262,5 +262,7 @@ export default function Messages() {
                 </div>}
             </section>
         </div>
+        {/* On phones the inbox comes first; the 3D scene remains available below it. */}
+        <WorldScene3D kind="messages" title="Interactive 3D SendTheLetter workspace" controls={false} className="mt-4 h-[145px] w-full sm:hidden" />
     </div>;
 }
