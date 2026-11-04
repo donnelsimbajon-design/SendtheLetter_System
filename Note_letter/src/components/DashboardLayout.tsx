@@ -6,6 +6,7 @@ import NotificationsMenu from './NotificationsMenu';
 import CharacterBadge from './CharacterBadge';
 import Mascot from './Mascot';
 import MessageDock from './MessageDock';
+import WorldScene3D, { type WorldKind } from './WorldScene3D';
 import { useInboxStore } from '../store/inboxStore';
 import ProfileDropdown from './ProfileDropdown';
 import { useWriterPreferences } from '../store/writerPreferences';
@@ -20,6 +21,15 @@ const navigation = [
 
 // These are the app's own illustrated SVG characters, not generic navigation glyphs.
 const railNavigation = navigation.slice(0, 4);
+
+const worldFor = (path: string): WorldKind => {
+  if (path.includes('/notes')) return 'library';
+  if (path.includes('/community')) return 'community';
+  if (path.includes('/messages')) return 'messages';
+  if (path.includes('/profile')) return 'profile';
+  if (path.includes('/settings')) return 'settings';
+  return 'overview';
+};
 
 const railLink = (active: boolean) =>
   'stl-depth-nav relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-transparent transition-[transform,opacity,box-shadow] duration-200 ease-out hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transform-none motion-reduce:transition-none ' +
@@ -163,6 +173,7 @@ export default function DashboardLayout() {
       <div className="min-h-screen min-w-0 pt-16 lg:pl-[72px] lg:pt-0">
         <main id="main-content" tabIndex={-1}
           className="mx-auto min-w-0 w-full max-w-[1800px] px-3 pb-28 pt-5 sm:px-6 sm:pt-7 lg:px-8 lg:pb-10 lg:pt-8 xl:px-10">
+          <WorldScene3D key={worldFor(location.pathname)} kind={worldFor(location.pathname)} className="mb-5 h-[175px] sm:mb-7 sm:h-[205px]" title="Interactive 3D SendTheLetter workspace" />
           <div key={location.pathname} className="workspace-page-enter min-w-0">
             <Outlet />
           </div>
