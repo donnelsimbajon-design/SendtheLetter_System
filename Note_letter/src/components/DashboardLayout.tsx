@@ -24,8 +24,8 @@ const railNavigation: { to: string; label: string; symbol: RailSymbol; end: bool
 ];
 
 const railLink = (active: boolean) =>
-  'relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ' +
-  (active ? 'bg-white/10 text-white' : 'text-[#e7e7e9] hover:bg-white/10 hover:text-white');
+  'relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-transparent transition-[transform,opacity] duration-200 ease-out hover:scale-110 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:transform-none motion-reduce:transition-none ' +
+  (active ? 'text-white opacity-100 scale-[1.06]' : 'text-white/80 hover:text-white hover:opacity-100');
 
 const MobileNavLink = ({ to, label, mascot, end, avatar }: {
   to: string;
@@ -36,8 +36,8 @@ const MobileNavLink = ({ to, label, mascot, end, avatar }: {
 }) => (
   <NavLink to={to} end={end} aria-label={label} title={label}
     className={({ isActive }) =>
-      'flex min-h-12 min-w-0 flex-col items-center justify-center rounded-xl px-1 py-1 transition-colors focus-visible:outline-2 focus-visible:outline-primary ' +
-      (isActive ? 'bg-muted text-primary' : 'text-muted-foreground hover:bg-muted/60')
+      'flex min-h-12 min-w-0 flex-col items-center justify-center rounded-xl bg-transparent px-1 py-1 transition-[transform,opacity] duration-200 ease-out hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-primary motion-reduce:transform-none ' +
+      (isActive ? 'text-primary opacity-100' : 'text-muted-foreground opacity-80 hover:opacity-100')
     }>
     {avatar
       ? <img src={getImageUrl(avatar)} alt="" className="h-8 w-8 rounded-full border-2 border-primary object-cover" />
@@ -99,9 +99,9 @@ export default function DashboardLayout() {
       {/* The screenshot-inspired desktop layout: a thin dark column, generously spaced
           original line art, and persistent account tools at the bottom. */}
       <aside aria-label="SendTheLetter sidebar"
-        className="fixed inset-y-0 left-0 z-40 hidden w-[72px] flex-col items-center border-r border-[#24292e] bg-[#0b0f12] px-3 pb-4 pt-4 text-white lg:flex">
+        className="fixed inset-y-0 left-0 z-40 hidden w-[72px] flex-col items-center border-r border-white/10 bg-[#0b0f12]/95 px-3 pb-4 pt-4 text-white backdrop-blur-xl lg:flex">
         <Link to="/dashboard" aria-label="SendTheLetter home" title="SendTheLetter"
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-transparent text-white transition-[transform,opacity] duration-200 ease-out hover:scale-105 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:transform-none">
           <WorkspaceRailIcon name="brand" size={29} />
         </Link>
 
@@ -163,7 +163,9 @@ export default function DashboardLayout() {
       <div className="min-h-screen min-w-0 pt-16 lg:pl-[72px] lg:pt-0">
         <main id="main-content" tabIndex={-1}
           className="mx-auto min-w-0 w-full max-w-[1800px] px-3 pb-28 pt-5 sm:px-6 sm:pt-7 lg:px-8 lg:pb-10 lg:pt-8 xl:px-10">
-          <Outlet />
+          <div key={location.pathname} className="workspace-page-enter min-w-0">
+            <Outlet />
+          </div>
         </main>
       </div>
 
