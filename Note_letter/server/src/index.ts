@@ -21,6 +21,7 @@ import Message from './models/Message';
 import Friend from './models/Friend';
 import { startScheduledLetterWorker } from './services/scheduledLetterWorker';
 import { parseLetterRoomId } from './services/letterRoomId';
+import { createDatabaseReadiness } from './services/databaseReadiness';
 
 dotenv.config();
 
@@ -85,6 +86,16 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/friends', friendRoutes);
 app.use('/api/admin', adminRoutes);
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
+
+// Liveness is deliberately cheap. Readiness checks the database separately,
+// without exposing connectivity diagnostics to anonymous callers.
+const databaseIsReady = createDatabaseReadiness(() => sequelize.authenticate());
+app.get('/api/ready', async (_req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
+    const ready = await databaseIsReady();
+    if (!ready) res.setHeader('Retry-After', '5');
+    return res.status(ready ? 200 : 503).json({ status: ready ? 'ok' : 'unavailable' });
+});
 
 app.use((error: any, _req: Request, res: Response, next: NextFunction) => {
     if (res.headersSent) return next(error);
