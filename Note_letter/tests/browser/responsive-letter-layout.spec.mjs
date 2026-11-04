@@ -136,7 +136,7 @@ test('mobile device opens and closes comments without shrinking the letter', asy
   await page.getByRole('button', { name: 'View comments for A long letter to keep forever' }).click();
   const modal = page.getByRole('dialog', { name: 'Letter from a-friend' });
   await expect(modal.getByRole('complementary', { name: 'Letter comments drawer' })).toBeVisible();
-  await modal.getByRole('button', { name: 'Close comments overlay' }).click();
+  await modal.getByRole('complementary', { name: 'Letter comments drawer' }).getByRole('button', { name: 'Hide comments' }).click();
   await expect(modal.getByRole('complementary', { name: 'Letter comments drawer' })).toHaveCount(0);
   await expect(modal.getByTestId('full-letter-scroll')).toBeVisible();
   await geometry(page, 'mobile-reader', page.viewportSize().width);
