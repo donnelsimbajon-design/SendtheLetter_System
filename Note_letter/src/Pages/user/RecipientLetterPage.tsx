@@ -78,7 +78,7 @@ export default function RecipientLetterPage() {
     if (loading) return <main className="flex min-h-screen items-center justify-center bg-[#f6f1e9] px-5 text-center text-[#294336]"><p role="status">Opening your invitation…</p></main>;
 
     if (!invitation) return <main className="flex min-h-screen items-center justify-center bg-[#f6f1e9] px-5 py-16 text-center text-[#294336]">
-        <section className="max-w-md rounded-[24px] border border-[#e0d7c8] bg-white p-8 shadow-sm">
+        <section className="stl-depth-card stl-depth-static max-w-md rounded-[24px] border border-[#e0d7c8] bg-white p-8 shadow-sm">
             <LockKeyhole className="mx-auto h-10 w-10" aria-hidden="true" />
             <h1 className="mt-5 font-editorial text-3xl">This letter is unavailable.</h1>
             <p role="alert" className="mt-3 text-sm leading-6 text-[#6b746b]">{unavailable || 'This invitation has expired or been revoked.'} Ask the writer for a fresh invitation.</p>
@@ -93,7 +93,7 @@ export default function RecipientLetterPage() {
                 <Link to="/" className="inline-flex items-center gap-2 font-editorial text-xl font-bold text-[#30483b]"><BookHeart size={22}/> SendTheLetter</Link>
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d9d6c8] bg-white px-3 py-2 text-xs font-semibold"><LockKeyhole size={14}/> Private invitation</span>
             </header>
-            {!opened ? <section aria-label="Private letter envelope" className="flex min-h-[500px] flex-col items-center justify-center rounded-[30px] border border-[#dfd3bf] bg-[#fcf9f3] px-5 py-12 text-center shadow-[0_12px_42px_rgba(53,66,48,.07)] sm:min-h-[570px]">
+            {!opened ? <section aria-label="Private letter envelope" className="stl-depth-paper stl-depth-static flex min-h-[500px] flex-col items-center justify-center rounded-[30px] border border-[#dfd3bf] bg-[#fcf9f3] px-5 py-12 text-center shadow-[0_12px_42px_rgba(53,66,48,.07)] sm:min-h-[570px]">
                 <div aria-hidden="true" className="flex h-36 w-48 items-center justify-center rounded-[20px] border-2 border-[#d5b896] bg-[#eedfc8] shadow-[0_16px_30px_rgba(91,74,48,.12)] sm:h-44 sm:w-60">
                     <MailOpen className="h-20 w-20 text-[#7b705c]" strokeWidth={1.3}/>
                 </div>
@@ -110,7 +110,7 @@ export default function RecipientLetterPage() {
                 <div className="mb-4 rounded-xl border border-[#dfe0d3] bg-[#e9eee6] px-4 py-3 text-xs leading-5 text-[#41624e]">
                     <ShieldCheck size={15} className="mr-1.5 inline" aria-hidden="true"/> This is a private invitation. You may read it for free until it expires. Please don't forward it without the writer's permission.
                 </div>
-                <article aria-label="Your private letter" className="overflow-hidden rounded-[28px] border border-[#dfd3bf] bg-[#fffdf8] shadow-sm">
+                <article aria-label="Your private letter" className="stl-depth-paper stl-depth-static overflow-hidden rounded-[28px] border border-[#dfd3bf] bg-[#fffdf8] shadow-sm">
                     <LetterBookReader
                         title={letter.title}
                         content={letter.content}
@@ -124,7 +124,7 @@ export default function RecipientLetterPage() {
                         coverImage={letter.imageUrl}
                     />
                 </article>
-                <section className="mt-6 rounded-[25px] border border-[#e2d7c8] bg-white p-5 sm:p-7">
+                <section className="stl-depth-card stl-depth-static mt-6 rounded-[25px] border border-[#e2d7c8] bg-white p-5 sm:p-7">
                     <div className="flex items-center gap-2"><HeartHandshake size={22}/><h2 className="font-editorial text-2xl">Send a little love back</h2></div>
                     <p className="mt-2 text-sm leading-6 text-[#6b766d]">Want to let the writer know you read their letter? One optional reaction and short reply. No signup required, no public posting.</p>
                     {sent ? <p role="status" className="mt-5 rounded-xl bg-[#e7f0e5] p-4 text-sm font-semibold">Your reply has been delivered. Thank you for reading with care.</p>
