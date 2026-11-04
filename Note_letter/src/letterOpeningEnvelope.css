@@ -214,4 +214,7 @@
 }
 :root[data-reduce-motion="true"] .stl-real-envelope *,
 :root[data-reduce-motion="true"] .stl-real-envelope-scene * { transition-duration: 0.01ms !important; animation: none !important; }
+:root[data-stl-depth="off"] .stl-real-envelope-scene { perspective: none; }
+:root[data-stl-depth="off"] .stl-real-envelope { transform: translate(-50%, -50%) !important; }
+:root[data-stl-depth="off"] .stl-real-envelope-scene[data-opened="true"] .stl-real-envelope-flap { opacity: 0; }
 @media print { .stl-real-envelope-scene { display: none; } }
