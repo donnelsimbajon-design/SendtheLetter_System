@@ -44,7 +44,7 @@ test('recipient DTO cannot expose private addresses, location, owner IDs or publ
     assert.equal(dto.content, 'Thinking of you.');
     assert.equal(dto.isPublic, false);
     for (const sensitive of ['user', 'userId', 'authorId', 'shareToken', 'recipientEmail', 'recipientAddress', 'address', 'latitude', 'longitude']) {
-        assert.ok(!Object.hasOwn(dto, sensitive), `Leaked field ${sensitive}`);
+        assert.ok(!Object.prototype.hasOwnProperty.call(dto, sensitive), `Leaked field ${sensitive}`);
     }
     assert.equal(privateRecipientDTO({ ...raw, isAnonymous: true }).authorName, 'Anonymous Writer');
 });
