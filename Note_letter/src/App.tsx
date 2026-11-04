@@ -53,14 +53,18 @@ const Landing = () => {
 function App() {
     const { user, isAuthenticated, token, isVerifying, verifySession } = useAuthStore();
     const depth3D = useWriterPreferences(state => state.preferences.depth3D);
+    const reduceMotion = useWriterPreferences(state => state.preferences.reduceMotion);
+    const loadPreferences = useWriterPreferences(state => state.loadForUser);
 
     useEffect(() => { void verifySession(); }, [verifySession]);
+    useEffect(() => { loadPreferences(user?.id); }, [loadPreferences, user?.id]);
 
     // The dimensional visual language applies to public and authenticated routes.
     // Keep it in a single root attribute so no route gets a different palette.
     useEffect(() => {
         document.documentElement.dataset.stlDepth = depth3D ? 'on' : 'off';
-    }, [depth3D]);
+        document.documentElement.dataset.reduceMotion = String(reduceMotion);
+    }, [depth3D, reduceMotion]);
 
     useEffect(() => {
         if (!isVerifying && isAuthenticated && user?.id) {
