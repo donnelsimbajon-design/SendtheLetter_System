@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { BookHeart, HeartHandshake, LockKeyhole, MailOpen, Send, ShieldCheck } from 'lucide-react';
 import LetterBookReader from '../../components/LetterBookReader';
@@ -53,7 +54,7 @@ export default function RecipientLetterPage() {
         return () => abort.abort();
     }, [token]);
 
-    const reply = async (event: React.FormEvent) => {
+    const reply = async (event: FormEvent) => {
         event.preventDefault();
         if (!invitation || sending || sent) return;
         setSending(true); setFeedback('');
