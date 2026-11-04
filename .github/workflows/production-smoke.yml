@@ -46,6 +46,8 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Check public-letter safety, writer profiles, private routes, and SPA paths
+      - name: Check public/recipient privacy, guest entry, and strict SPA paths
         shell: bash
+        env:
+          STRICT_DEEP_LINKS: 'true'
         run: node Note_letter/server/scripts/production-smoke.mjs
