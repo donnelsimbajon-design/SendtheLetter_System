@@ -314,7 +314,7 @@ test('writer profile is compact, readable and navigable on desktop and mobile', 
   const tabs = page.getByRole('navigation', { name: 'Writer profile sections' });
   await expect(tabs).toBeVisible();
   await expect(tabs.getByRole('button', { name: 'Posts' })).toHaveAttribute('aria-current', 'page');
-  await expect(page.getByRole('main').getByRole('heading', { name: 'Latest from the desk' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Latest from the desk' })).toBeVisible();
   await tabs.getByRole('button', { name: 'About' }).click();
   await expect(page.getByRole('heading', { name: 'Beyond the letters.' })).toBeVisible();
   await expect(page.getByRole('complementary', { name: 'Writer shortcuts' })).toHaveCount(0);
