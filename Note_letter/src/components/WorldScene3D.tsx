@@ -39,7 +39,7 @@ const vertexSource = [
   'vec3 n=pitch(yaw(a_normal,u_local.x),u_local.y);',
   'v_light=.72+.28*max(dot(normalize(n),normalize(vec3(-.45,.7,1.))),0.);',
   'v_uv=a_uv;',
-  'gl_Position=vec4(p.x*4.2/u_aspect,p.y*4.2,1.8-p.z,7.1-p.z);',
+  'gl_Position=vec4(p.x*4.2/max(1.,min(u_aspect,2.5)),p.y*4.2,1.8-p.z,7.1-p.z);',
   '}',
 ].join('\n');
 
