@@ -7,6 +7,7 @@ import { getImageUrl } from '../../lib/utils';
 import { API_ENDPOINTS } from '../../config/api';
 import Mascot from '../../components/Mascot';
 import CharacterBadge from '../../components/CharacterBadge';
+import { useInboxStore } from '../../store/inboxStore';
 
 type Contact = { id: number; username: string; avatar?: string; location?: string };
 type Conversation = { user: Contact; lastMessage: string; lastMessageTime: string; unreadCount: number };
@@ -16,6 +17,8 @@ const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem('toke
 
 export default function Messages() {
     const user = useAuthStore(state => state.user);
+    const markInboxRead = useInboxStore(state => state.markRead);
+    const refreshInbox = useInboxStore(state => state.refresh);
     const [searchParams] = useSearchParams();
     const initialUserId = searchParams.get('userId');
     const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -62,7 +65,7 @@ export default function Messages() {
         };
         socketService.onNewMessage(handleIncoming);
         const refreshTimer = window.setInterval(() => { if (!document.hidden) void loadConversations(); }, 30000);
-        return () => { socketService.offNewMessage(); window.clearInterval(refreshTimer); };
+        return () => { socketService.offNewMessage(handleIncoming); window.clearInterval(refreshTimer); };
     }, [loadConversations]);
 
     useEffect(() => {
@@ -104,7 +107,11 @@ export default function Messages() {
                 setMessages(Array.isArray(data.messages) ? data.messages : []);
                 setNextBeforeId(typeof data.nextBeforeId === 'number' ? data.nextBeforeId : null);
                 const mark = await fetch(`${API_ENDPOINTS.messages}/read`, { method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify({ senderId: selected.id }) });
-                if (mark.ok) setConversations(previous => previous.map(convo => convo.user.id === selected.id ? { ...convo, unreadCount: 0 } : convo));
+                if (mark.ok) {
+                    setConversations(previous => previous.map(convo => convo.user.id === selected.id ? { ...convo, unreadCount: 0 } : convo));
+                    markInboxRead(selected.id);
+                    void refreshInbox();
+                }
             } catch (err: any) {
                 if (active) setError(err?.message || 'Could not open this conversation.');
             } finally {
@@ -112,7 +119,7 @@ export default function Messages() {
             }
         })();
         return () => { active = false; };
-    }, [selected?.id]);
+    }, [selected?.id, markInboxRead, refreshInbox]);
 
     useEffect(() => {
         if (skipNextScroll.current) { skipNextScroll.current = false; return; }
@@ -165,6 +172,7 @@ export default function Messages() {
             setMessages(prev => prev.some(msg => msg.id === data.id) ? prev : [...prev, data]);
             setDraft('');
             void loadConversations();
+            void refreshInbox();
         } catch (err: any) {
             setError(err?.message || 'Could not send this message. Your text is still here.');
         } finally {
