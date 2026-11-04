@@ -6,6 +6,7 @@ import { useNoteStore } from '../../store/noteStore';
 import { useInboxStore } from '../../store/inboxStore';
 import { getImageUrl } from '../../lib/utils';
 import Mascot, { type MascotName } from '../../components/Mascot';
+import InteractiveMascot from '../../components/InteractiveMascot';
 
 const prompts: { title: string; description: string; template: string; mascot: MascotName }[] = [
   { title: 'Say what you appreciate', description: 'A small thank-you can mean a lot.', template: 'gratitude', mascot: 'tala' },
@@ -76,7 +77,7 @@ export default function DashboardPage() {
                 {firstDraft ? 'Come back to the thoughts you saved. You can keep writing at your own pace.' : 'Begin with a memory, a feeling, or one sentence you want to remember.'}
               </p>
             </div>
-            <Mascot name="lumi" className="hidden h-24 w-24 shrink-0 sm:block" />
+            <InteractiveMascot name="lumi" className="h-20 w-20 shrink-0 sm:h-24 sm:w-24" label="Wave to Lumi" />
           </div>
           <div className="flex flex-wrap gap-3">
             <Link to={firstDraft ? '/dashboard/notes?tab=drafts' : '/dashboard/notes?compose=1'} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-bold text-primary-foreground transition-opacity hover:opacity-85">
@@ -91,13 +92,13 @@ export default function DashboardPage() {
         <div className={`${surface} flex flex-col justify-between gap-4 p-6 sm:p-7`}>
           <div className="flex items-center justify-between gap-3">
             <p className="text-[11px] font-bold uppercase tracking-[.16em] text-muted-foreground">A gentle prompt for today</p>
-            <Mascot name="araw" className="h-12 w-12 shrink-0" />
+            <InteractiveMascot name="araw" className="h-12 w-12 shrink-0" label="Wave to Araw" />
           </div>
           <div>
             <h2 className="font-editorial text-2xl leading-snug">What would you tell your future self?</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">You do not have to find the perfect words to begin.</p>
           </div>
-          <Link to="/dashboard/notes?compose=1&template=future-self" className="inline-flex min-h-10 items-center gap-2 self-start text-xs font-bold text-primary underline underline-offset-4">Write about it <ArrowRight size={15} /></Link>
+          <div className="flex flex-wrap gap-4"><Link to="/dashboard/notes?compose=1&template=future-self" className="inline-flex min-h-10 items-center gap-2 text-xs font-bold text-primary underline underline-offset-4">Write about it <ArrowRight size={15} /></Link><Link to="/dashboard/notes?tab=scheduled" className="inline-flex min-h-10 items-center gap-2 text-xs font-bold text-primary underline underline-offset-4">My time capsules <ArrowRight size={15} /></Link></div>
         </div>
       </section>
 

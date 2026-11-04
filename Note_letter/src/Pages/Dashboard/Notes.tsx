@@ -11,6 +11,10 @@ import clsx from 'clsx';
 import Mascot from '../../components/Mascot';
 import CharacterBadge from '../../components/CharacterBadge';
 import { API_ENDPOINTS } from '../../config/api';
+import { LayoutGrid, BookOpenText } from 'lucide-react';
+import MemoryShelf from '../../components/MemoryShelf';
+import LetterOpeningDialog from '../../components/LetterOpeningDialog';
+import TimeCapsuleCard from '../../components/TimeCapsuleCard';
 
 const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public' }) => {
     const isCommunity = initialTab === 'public';
@@ -18,6 +22,8 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
     const [searchQuery, setSearchQuery] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'popular'>('newest');
+    const [libraryView, setLibraryView] = useState<'grid' | 'shelf'>('grid');
+    const [openingNote, setOpeningNote] = useState<Note | null>(null);
     const [params, setParams] = useSearchParams();
     const navigate = useNavigate();
     const openWriterProfile = (username: string) => {
@@ -77,6 +83,18 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
             void Promise.all([fetchMyLetters(), fetchDrafts(), fetchArchivedLetters(), fetchScheduledNotes()]);
         }
     }, [isCommunity, fetchMyLetters, fetchPublicLetters, fetchDrafts, fetchArchivedLetters]);
+
+    // Refresh the server release status when returning to the tab, and periodically
+    // while it is open. Never unlock a capsule on the client clock alone.
+    useEffect(() => {
+        if (isCommunity || activeTab !== 'scheduled') return;
+        const refresh = () => {
+            if (!document.hidden) void Promise.all([fetchScheduledNotes(), fetchMyLetters()]);
+        };
+        const timer = window.setInterval(refresh, 60000);
+        document.addEventListener('visibilitychange', refresh);
+        return () => { window.clearInterval(timer); document.removeEventListener('visibilitychange', refresh); };
+    }, [activeTab, isCommunity, fetchMyLetters]);
 
     const visibleNotes = isCommunity
         ? publicLetters.filter(note => note.isPublic && note.status === 'published' && !note.isArchived &&
@@ -273,9 +291,27 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
             {isCommunity && isLoadingPublic && publicLetters.length === 0 && <p role="status" className="text-sm text-muted-foreground">Loading community letters…</p>}
             {restoreError && <p role="alert" className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{restoreError}</p>}
 
-            {/* Notes Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredNotes.map((note) => activeTab === 'archived' ? (
+            {!isCommunity && activeTab === 'personal' && (
+                <div role="group" aria-label="Library view mode" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/70 bg-card/60 p-3">
+                    <p className="px-2 text-xs text-muted-foreground">Choose how to browse your memories. Your normal library stays available.</p>
+                    <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-background p-1">
+                        <button type="button" onClick={() => setLibraryView('grid')} aria-pressed={libraryView === 'grid'} className={clsx('inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-xs font-bold transition-colors', libraryView === 'grid' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/60')}><LayoutGrid size={16} /> Normal view</button>
+                        <button type="button" onClick={() => setLibraryView('shelf')} aria-pressed={libraryView === 'shelf'} className={clsx('inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-xs font-bold transition-colors', libraryView === 'shelf' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/60')}><BookOpenText size={16} /> 3D library</button>
+                    </div>
+                </div>
+            )}
+
+            {!isCommunity && activeTab === 'personal' && libraryView === 'shelf' && filteredNotes.length > 0 && (
+                <MemoryShelf notes={filteredNotes} onOpen={setOpeningNote} />
+            )}
+
+            {/* Existing grid stays the default, including its edit/delete controls. */}
+            {(isCommunity || activeTab !== 'personal' || libraryView === 'grid' || filteredNotes.length === 0) && <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredNotes.map((note) => !isCommunity && activeTab === 'scheduled' && note.isTimeCapsule ? (
+                    <TimeCapsuleCard key={note.id} note={note}
+                        onManage={capsule => { setStarterTemplate(''); setEditingNote(capsule); setIsEditorOpen(true); }}
+                        onOpen={setOpeningNote} />
+                ) : activeTab === 'archived' ? (
                     <article key={note.id} className="flex min-h-[245px] flex-col rounded-[26px] border border-border bg-card p-6 shadow-sm">
                         <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Archived letter</span>
                         <h3 className="mt-5 line-clamp-2 font-editorial text-2xl">{note.title || 'Untitled letter'}</h3>
@@ -312,7 +348,9 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                         ) : null}
                     </div>
                 )}
-            </div>
+            </div>}
+
+            <LetterOpeningDialog note={openingNote} onClose={() => setOpeningNote(null)} onRead={note => { setOpeningNote(null); handleNoteClick(note); }} />
 
             <LetterEditorModal
                 isOpen={isEditorOpen}
