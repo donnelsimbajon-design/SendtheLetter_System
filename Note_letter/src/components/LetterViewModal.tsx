@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dialog';
 // VisuallyHidden removed
-import { Button } from './ui/button';
 import CharacterBadge from './CharacterBadge';
 import CommentsPanel from './CommentsPanel';
 import LetterBookReader from './LetterBookReader';
@@ -17,6 +16,8 @@ import socketService from '../services/socketService';
 import ShareModal from './ShareModal';
 import { API_ENDPOINTS } from '../config/api';
 import { useNavigate } from 'react-router-dom';
+import { ArrowRight, BookOpenText, Heart, MailOpen, MessageCircle, Pencil, Repeat2, Share2 } from 'lucide-react';
+import WorldScene3D from './WorldScene3D';
 
 interface LetterViewModalProps {
     isOpen: boolean;
@@ -24,9 +25,11 @@ interface LetterViewModalProps {
     note: Note | null;
     onAuthorClick?: (username: string) => void;
     onEdit?: (note: Note) => void;
+    skipOpening?: boolean;
+    initialComments?: boolean;
 }
 
-const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note, onAuthorClick, onEdit }) => {
+const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note, onAuthorClick, onEdit, skipOpening = false, initialComments = false }) => {
     const user = useAuthStore((state) => state.user);
     const navigate = useNavigate();
     const { toggleLike } = useNoteStore();
@@ -36,13 +39,18 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
     const [isReposted, setIsReposted] = useState(false);
     const [repostCount, setRepostCount] = useState(0);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+    const [showEnvelope, setShowEnvelope] = useState(true);
+    const [envelopeOpened, setEnvelopeOpened] = useState(false);
 
     useEffect(() => {
         if (note && isOpen) {
             setIsLiked(note.isLikedByUser || false);
             setLikeCount(note.likeCount || 0);
-            setIsSidebarOpen(true); // Reset to open when opening a new letter
+            // 3D envelope first, full-width reading second; comments only on demand.
+            setIsCommentsOpen(initialComments);
+            setShowEnvelope(!skipOpening && !initialComments);
+            setEnvelopeOpened(skipOpening || initialComments);
 
             // Initialize repost count from note if available, or fetch
             setRepostCount(note.repostCount || 0);
@@ -83,7 +91,7 @@ const LetterViewModal: React.FC<LetterViewModalProps> = ({ isOpen, onClose, note
                 socketService.offLikeUpdate();
             };
         }
-    }, [note, isOpen]);
+    }, [note, isOpen, skipOpening, initialComments]);
 
     const handleRepost = async () => {
         if (!note || !user) return;
