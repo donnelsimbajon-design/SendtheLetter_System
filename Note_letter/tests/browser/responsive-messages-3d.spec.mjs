@@ -58,38 +58,25 @@ async function checkViewportFit(page, width, name) {
   expect.soft(size.body, name + ' body overflow at ' + width).toBeLessThanOrEqual(size.viewport + 2);
 }
 
-test('responsive Messages 3D scene stays compact and exposes the inbox on six device widths', async ({ page }, testInfo) => {
+test('responsive Messages skips decorative 3D and exposes the inbox on six device widths', async ({ page }, testInfo) => {
   test.setTimeout(90_000);
   await mockMessages(page);
   await page.goto('/dashboard/messages');
   for (const viewport of viewports) {
     await page.setViewportSize(viewport);
-    const world = page.getByRole('region', { name: 'Interactive 3D SendTheLetter workspace' });
-    await expect(world).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Interactive 3D SendTheLetter workspace' })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: 'Messages' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible();
-    const tile = await world.boundingBox();
     const inbox = await page.getByRole('complementary', { name: 'Conversations' }).boundingBox();
-    expect(tile).not.toBeNull();
     expect(inbox).not.toBeNull();
-    expect.soft(tile.height, '3D tile too tall at ' + viewport.width).toBeLessThanOrEqual(150);
-    expect.soft(tile.width, '3D tile too wide at ' + viewport.width).toBeLessThanOrEqual(350);
-    expect.soft(tile.x, '3D tile off left at ' + viewport.width).toBeGreaterThanOrEqual(-2);
-    expect.soft(tile.x + tile.width, '3D tile off right at ' + viewport.width).toBeLessThanOrEqual(viewport.width + 2);
     expect.soft(inbox.x + inbox.width, 'Inbox off right at ' + viewport.width).toBeLessThanOrEqual(viewport.width + 2);
     expect.soft(inbox.y, 'Inbox pushed off the first screen at ' + viewport.width).toBeLessThan(viewport.height - 130);
     if (viewport.width >= 1024) {
       expect.soft(inbox.y, 'Desktop inbox starts too far down').toBeLessThan(345);
     }
-    const canvas = world.locator('canvas[data-renderer="webgl"]');
-    if (await canvas.count()) {
-      const rect = await canvas.boundingBox();
-      expect(rect).not.toBeNull();
-      expect.soft(rect.height, 'WebGL canvas clips compact scene at ' + viewport.width).toBeLessThanOrEqual(tile.height + 2);
-    }
     await checkViewportFit(page, viewport.width, 'Messages');
     if (testInfo.project.name === 'desktop-chromium') {
-      await page.screenshot({ path: 'layout-snapshots/messages-compact-' + viewport.width + '.png', fullPage: false });
+      await page.screenshot({ path: 'layout-snapshots/messages-clean-' + viewport.width + '.png', fullPage: false });
     }
   }
 });
