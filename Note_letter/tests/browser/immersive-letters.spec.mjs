@@ -48,8 +48,9 @@ test('library can opt into a 3D shelf, open the envelope, and use the existing r
   await expect(shelf.getByText('Opened time capsule')).toBeVisible();
 
   await shelf.getByRole('button', { name: 'Open A note worth keeping with 3D envelope' }).click();
-  const scene = page.getByRole('dialog', { name: '3D letter opening' });
+  const scene = page.getByRole('dialog', { name: 'A letter for you' });
   await expect(scene).toBeVisible();
+  await expect(scene.getByRole('img', { name: 'A sealed paper envelope waiting to be opened' })).toBeVisible();
   await expect(scene.getByText('These are words from my own private letter.')).toHaveCount(0);
   await scene.getByRole('button', { name: 'Open envelope' }).click();
   await expect(scene.getByText('Envelope opened. Your letter is ready.')).toBeVisible();
