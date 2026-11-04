@@ -33,7 +33,8 @@ const gradients: Record<string, string> = {
 export default function LetterBookReader({ title, content, letterPages, recipientName, authorName, isAnonymous, category, font, backgroundImage, coverImage, className = '', compact = false }: Props) {
     const pages = useMemo(() => bookPagesFromContent(content, letterPages), [content, letterPages]);
     const [pageIndex, setPageIndex] = useState(0);
-    useEffect(() => setPageIndex(0), [content, letterPages]);
+    const [turnDirection, setTurnDirection] = useState<'next' | 'previous' | 'none'>('none');
+    useEffect(() => { setPageIndex(0); setTurnDirection('none'); }, [content, letterPages]);
     const page = pages[Math.min(pageIndex, pages.length - 1)];
     const author = isAnonymous ? 'Anonymous' : authorName || 'A SendTheLetter writer';
     const paperBackground = gradients[backgroundImage || ''] || 'linear-gradient(145deg,#fffdf9,#f8f2e7)';
@@ -50,7 +51,7 @@ export default function LetterBookReader({ title, content, letterPages, recipien
             <div className="flex items-center gap-2 text-[11px]"><span>{pages.length} {pages.length === 1 ? 'page' : 'pages'}</span><span className="h-1 w-1 rounded-full bg-[#bcae9c]" /> <span>{bookWordCount(pages)} words</span></div>
         </div>
         <div className="relative stl-reading-perspective">
-            <div key={pageIndex} style={{ background: paperBackground }} className={`stl-reading-page-turn relative flex min-h-[460px] flex-col px-4 py-7 sm:px-6 sm:py-8 text-[#354337] sm:px-9 sm:py-10 ${compact ? 'lg:min-h-[500px]' : 'lg:min-h-[620px]'}`}>
+            <div key={pageIndex} data-turn={turnDirection} style={{ background: paperBackground }} className={`stl-reading-page-turn relative flex min-h-[460px] flex-col px-4 py-7 sm:px-6 sm:py-8 text-[#354337] sm:px-9 sm:py-10 ${compact ? 'lg:min-h-[500px]' : 'lg:min-h-[620px]'}`}>
                 <div className="mb-6 flex items-center justify-between gap-3 border-b border-[#a58d75]/25 pb-4 text-[10px] font-semibold uppercase tracking-[.19em] text-[#9c715e]"><span className="inline-flex items-center gap-2"><CharacterBadge name="lumi" tone="paper" size="xs" /> From the heart</span><span>{category || 'Letter'}</span></div>
                 {pageIndex === 0 ? <>
                     {coverImage && <img src={getImageUrl(coverImage)} alt="Letter cover illustration" className="mb-6 max-h-48 w-full rounded-2xl object-cover" />}
@@ -72,9 +73,9 @@ export default function LetterBookReader({ title, content, letterPages, recipien
         <div className="border-t border-[#e7ddce] bg-[#fffaf4] px-4 pb-4 pt-3 text-[#344a3c] sm:px-7">
             <div className="mb-4 h-1 overflow-hidden rounded-full bg-[#e8ddce]"><div className="h-full rounded-full bg-[#a98570] transition-[width] duration-300" style={{ width: `${progress}%` }} /></div>
             <nav aria-label="Book pages" className="flex items-center justify-between gap-3">
-                <button type="button" disabled={pageIndex <= 0} onClick={() => setPageIndex(i => Math.max(0, i - 1))} className="inline-flex items-center gap-2 rounded-full border border-[#dfd1c1] bg-white px-4 py-2.5 text-xs font-bold hover:bg-[#f6eee3] disabled:cursor-not-allowed disabled:opacity-35"><ArrowLeft size={15} /> Previous</button>
+                <button type="button" disabled={pageIndex <= 0} onClick={() => { setTurnDirection('previous'); setPageIndex(i => Math.max(0, i - 1)); }} className="inline-flex items-center gap-2 rounded-full border border-[#dfd1c1] bg-white px-4 py-2.5 text-xs font-bold hover:bg-[#f6eee3] disabled:cursor-not-allowed disabled:opacity-35"><ArrowLeft size={15} /> Previous</button>
                 <div className="text-center text-[11px] font-semibold text-[#877667]">Page {pageIndex + 1} of {pages.length}</div>
-                <button type="button" disabled={pageIndex >= pages.length - 1} onClick={() => setPageIndex(i => Math.min(pages.length - 1, i + 1))} className="inline-flex items-center gap-2 rounded-full bg-[#344a3c] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#47604f] disabled:cursor-not-allowed disabled:opacity-35">Next <ArrowRight size={15} /></button>
+                <button type="button" disabled={pageIndex >= pages.length - 1} onClick={() => { setTurnDirection('next'); setPageIndex(i => Math.min(pages.length - 1, i + 1)); }} className="inline-flex items-center gap-2 rounded-full bg-[#344a3c] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#47604f] disabled:cursor-not-allowed disabled:opacity-35">Next <ArrowRight size={15} /></button>
             </nav>
         </div>
       </div>

@@ -93,3 +93,28 @@
 :root[data-stl-depth="off"] .stl-reading-book-3d { perspective: none; padding: 0; }
 :root[data-stl-depth="off"] .stl-reading-book-3d::before,
 :root[data-stl-depth="off"] .stl-reading-book-3d::after { display: none; }
+
+/* Direction-aware page movement. Keep the slimmer 3D book styling from #67;
+ * only the page transitions rotate, never the entire letter or comments. */
+.stl-reading-book-3d .stl-reading-page-turn[data-turn="next"] {
+  animation: stl-book-next 420ms cubic-bezier(.25,.7,.2,1) both;
+}
+.stl-reading-book-3d .stl-reading-page-turn[data-turn="previous"] {
+  animation: stl-book-previous 420ms cubic-bezier(.25,.7,.2,1) both;
+}
+@keyframes stl-book-next {
+  from { opacity: .78; transform: rotateY(12deg) translateX(5px); }
+  to { opacity: 1; transform: rotateY(0) translateX(0); }
+}
+@keyframes stl-book-previous {
+  from { opacity: .78; transform: rotateY(-12deg) translateX(-5px); }
+  to { opacity: 1; transform: rotateY(0) translateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stl-reading-book-3d .stl-reading-page-turn { animation: none !important; transform: none !important; }
+}
+:root[data-reduce-motion="true"] .stl-reading-book-3d .stl-reading-page-turn,
+:root[data-stl-depth="off"] .stl-reading-book-3d .stl-reading-page-turn {
+  animation: none !important;
+  transform: none !important;
+}
