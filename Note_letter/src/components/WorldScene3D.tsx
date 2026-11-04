@@ -190,7 +190,9 @@ function drawWorld(
   if (portrait) {
     const x = kind === 'library' ? 1.5 : 1.73;
     const y = kind === 'capsule' ? .65 : .78;
-    draw(sheet, [x,y+float,.12], [1.02,1.02,1], [1,1,1,1], [-.3,.06], portrait);
+    draw(box, [x,y+float,-.02], [1.12,1.12,.20], paper, [-.3,.06]);
+    draw(box, [x-.48,y+float,.10], [.09,1.12,.06], accent, [-.3,.06]);
+    draw(sheet, [x,y+float,.16], [1.02,1.02,1], [1,1,1,1], [-.3,.06], portrait);
   }
   // Floating three-dimensional paper scraps accent the space.
   draw(box, [-1.97,.95,-1.10], [.55,.75,.06], rose, [.65,.25]);
