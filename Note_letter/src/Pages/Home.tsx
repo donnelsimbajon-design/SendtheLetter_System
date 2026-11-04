@@ -158,7 +158,7 @@ const Home = () => {
               </div>
             </div>
             <Mascot name="lumi" alt="Lumi, the SendTheLetter letter companion" loading="eager" className="pointer-events-none absolute -right-2 -top-10 z-10 h-28 w-28 drop-shadow-lg sm:-right-4 sm:-top-12 sm:h-36 sm:w-36" />
-            <div className="absolute -bottom-2 left-0 z-10 inline-flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-xs font-semibold shadow-lg sm:left-[-12px] sm:text-sm">
+            <div className="stl-depth-paper absolute -bottom-2 left-0 z-10 inline-flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-xs font-semibold shadow-lg sm:left-[-12px] sm:text-sm">
               <CharacterBadge name="basa" tone="gold" size="xs" /> Every story starts somewhere
             </div>
           </div>
@@ -210,7 +210,7 @@ const Home = () => {
           </div>
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {paths.map((step) => (
-              <article key={step.number} className="group rounded-[1.75rem] border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:shadow-md sm:p-7">
+              <article key={step.number} className="stl-depth-card group rounded-[1.75rem] border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:shadow-md sm:p-7">
                 <div className="flex items-start justify-between gap-3">
                   <CharacterBadge name={step.mascot} tone={step.tone} size="lg" />
                   <span className="font-editorial text-2xl text-muted-foreground/55">{step.number}</span>
