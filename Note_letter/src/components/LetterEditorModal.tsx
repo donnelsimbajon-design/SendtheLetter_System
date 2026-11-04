@@ -455,7 +455,7 @@ const LetterEditorModal: React.FC<LetterEditorModalProps> = ({ isOpen, onClose, 
                 </aside>
 
                 <div className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-[hsl(var(--background))] p-3 sm:p-5 lg:p-7">
-                    <div className={cn('relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[19px] border border-[#e9dfd1] shadow-[0_12px_40px_rgba(64,48,31,.09)] sm:rounded-[24px]', paper.className)} >
+                    <div className={cn('stl-depth-paper relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[19px] border border-[#e9dfd1] shadow-[0_12px_40px_rgba(64,48,31,.09)] sm:rounded-[24px]', paper.className)} >
                         <div className={cn('relative flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-7 sm:px-10 sm:py-9 lg:px-12', 'text-[#35483d]')}
                             onDragOver={event => { if (Array.from(event.dataTransfer.types).includes('Files')) event.preventDefault(); }}
                             onDrop={event => {

@@ -312,7 +312,7 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                         onManage={capsule => { setStarterTemplate(''); setEditingNote(capsule); setIsEditorOpen(true); }}
                         onOpen={setOpeningNote} />
                 ) : activeTab === 'archived' ? (
-                    <article key={note.id} className="flex min-h-[245px] flex-col rounded-[26px] border border-border bg-card p-6 shadow-sm">
+                    <article key={note.id} className="stl-depth-card flex min-h-[245px] flex-col rounded-[26px] border border-border bg-card p-6 shadow-sm">
                         <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Archived letter</span>
                         <h3 className="mt-5 line-clamp-2 font-editorial text-2xl">{note.title || 'Untitled letter'}</h3>
                         <p className="mt-3 line-clamp-3 whitespace-pre-wrap text-sm text-muted-foreground">{note.content}</p>
@@ -322,7 +322,7 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                         </button>
                     </article>
                 ) : activeTab === 'drafts' || activeTab === 'scheduled' ? (
-                    <button type="button" key={note.id} onClick={() => { setStarterTemplate(''); setEditingNote(note); setIsEditorOpen(true); }} className="group flex h-[265px] flex-col rounded-[26px] border border-border bg-card p-6 text-left shadow-sm transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg">
+                    <button type="button" key={note.id} onClick={() => { setStarterTemplate(''); setEditingNote(note); setIsEditorOpen(true); }} className="stl-depth-card group flex h-[265px] flex-col rounded-[26px] border border-border bg-card p-6 text-left shadow-sm transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg">
                         <span className="flex items-center justify-between text-xs font-bold uppercase tracking-[.14em] text-muted-foreground"><span className="inline-flex items-center gap-2"><CharacterBadge name={activeTab === 'drafts' ? 'lumi' : 'araw'} tone="paper" size="xs" />{activeTab === 'drafts' ? 'Unfinished thought' : 'Coming soon'}</span><span className="text-xs font-bold text-primary">Open</span></span>
                         <h3 className="mt-6 line-clamp-2 font-editorial text-2xl leading-tight">{note.title || 'Untitled letter'}</h3>
                         <p className="mt-3 line-clamp-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{note.content}</p>

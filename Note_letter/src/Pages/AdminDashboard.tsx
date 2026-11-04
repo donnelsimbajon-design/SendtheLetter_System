@@ -76,7 +76,7 @@ const AdminDashboard = () => {
           { label: 'All letters', value: overview?.letters ?? '—', mascot: 'basa', tone: 'gold' },
           { label: 'Public letters', value: overview?.publicLetters ?? '—', mascot: 'piko', tone: 'sage' },
           { label: 'Saved drafts', value: overview?.drafts ?? '—', mascot: 'lumi', tone: 'gold' },
-        ] as const).map(({ label, value, mascot, tone }) => <div key={label} className="rounded-3xl border border-border bg-card p-5"><div className="flex items-center justify-between text-muted-foreground"><span className="text-sm">{label}</span><CharacterBadge name={mascot} tone={tone} size="lg" /></div><p className="mt-3 font-editorial text-3xl">{value}</p></div>)}
+        ] as const).map(({ label, value, mascot, tone }) => <div key={label} className="stl-depth-card rounded-3xl border border-border bg-card p-5"><div className="flex items-center justify-between text-muted-foreground"><span className="text-sm">{label}</span><CharacterBadge name={mascot} tone={tone} size="lg" /></div><p className="mt-3 font-editorial text-3xl">{value}</p></div>)}
       </section>
       <form onSubmit={(event) => { event.preventDefault(); void load(search); }} className="flex flex-wrap gap-2">
         <div className="flex min-w-[240px] flex-1 items-center gap-2 rounded-full border border-border bg-card px-4"><CharacterBadge name="suri" tone="paper" size="sm" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search users or letters" className="h-11 w-full bg-transparent text-sm outline-none" /></div>
@@ -85,7 +85,7 @@ const AdminDashboard = () => {
       </form>
       <section className="space-y-4">
         <div><h2 className="font-editorial text-2xl">User accounts</h2><p className="text-sm text-muted-foreground">Promote trusted staff, or suspend accounts. Public sign-up cannot assign administrator access.</p></div>
-        <div className="overflow-x-auto rounded-3xl border border-border bg-card">
+        <div className="stl-depth-card stl-depth-static overflow-x-auto rounded-3xl border border-border bg-card">
           <table className="w-full min-w-[720px] text-left text-sm"><thead className="bg-muted/60 text-xs uppercase tracking-wide text-muted-foreground"><tr><th className="px-5 py-4">Account</th><th className="px-5 py-4">Role</th><th className="px-5 py-4">Status</th><th className="px-5 py-4">Actions</th></tr></thead>
             <tbody className="divide-y divide-border">
               {users.map((user) => <tr key={user.id}><td className="px-5 py-4"><p className="font-semibold">{user.username}</p><p className="text-xs text-muted-foreground">{user.email}</p></td><td className="px-5 py-4 capitalize">{user.role}</td><td className="px-5 py-4"><span className={user.isActive ? 'text-emerald-700' : 'text-destructive'}>{user.isActive ? 'Active' : 'Suspended'}</span></td><td className="px-5 py-4"><div className="flex flex-wrap gap-2">
@@ -99,7 +99,7 @@ const AdminDashboard = () => {
       </section>
       <section className="space-y-4">
         <div><h2 className="font-editorial text-2xl">Letter moderation</h2><p className="text-sm text-muted-foreground">Removing a letter makes it private, archived, and unavailable in public feeds; the author’s record is retained.</p></div>
-        <div className="overflow-x-auto rounded-3xl border border-border bg-card">
+        <div className="stl-depth-card stl-depth-static overflow-x-auto rounded-3xl border border-border bg-card">
           <table className="w-full min-w-[720px] text-left text-sm"><thead className="bg-muted/60 text-xs uppercase tracking-wide text-muted-foreground"><tr><th className="px-5 py-4">Letter</th><th className="px-5 py-4">Author</th><th className="px-5 py-4">Visibility</th><th className="px-5 py-4">Action</th></tr></thead>
             <tbody className="divide-y divide-border">
               {letters.map((letter) => <tr key={letter.id}><td className="px-5 py-4"><p className="max-w-sm truncate font-semibold">{letter.title || 'Untitled letter'}</p><p className="text-xs text-muted-foreground">#{letter.id} · {letter.status}</p></td><td className="px-5 py-4">{letter.user?.username || 'Unknown'}</td><td className="px-5 py-4">{letter.isPublic && !letter.isArchived && letter.status === 'published' ? 'Public' : 'Private / archived'}</td><td className="px-5 py-4"><button disabled={!letter.isPublic || letter.isArchived} onClick={() => void removeLetter(letter)} className="rounded-full border border-border px-3 py-1.5 text-xs font-semibold disabled:opacity-40">Remove from public</button></td></tr>)}

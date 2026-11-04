@@ -44,7 +44,7 @@ const Signup = () => {
         <div className="absolute -bottom-20 -right-24 h-96 w-96 rounded-full border border-[#49363B]/15"/><div className="absolute -bottom-10 -right-14 h-72 w-72 rounded-full border border-[#49363B]/15"/>
       </section>
       <section className="flex items-center justify-center px-5 py-12 sm:px-10">
-        <div className="w-full max-w-md">
+        <div className="stl-depth-paper stl-depth-static w-full max-w-md rounded-[1.8rem] border border-border bg-card/70 p-6 sm:p-9">
           <Link to="/" className="mb-9 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground">Back to home</Link>
           <div className="mb-8 lg:hidden"><CharacterBadge name="lumi" tone="forest" size="md" /><p className="mt-4 font-editorial text-2xl">SendTheLetter</p></div>
           <p className="text-xs font-bold uppercase tracking-[.2em] text-[hsl(var(--accent))]">Start here</p>
@@ -55,7 +55,7 @@ const Signup = () => {
             <div className="space-y-2"><label htmlFor="username" className="text-sm font-semibold">Username</label><div className="relative"><Input id="username" autoComplete="username" required value={username} onChange={(event)=>setUsername(event.target.value)} placeholder="Choose a username" className="h-12 rounded-xl bg-card px-4"/></div></div>
             <div className="space-y-2"><label htmlFor="email" className="text-sm font-semibold">Email address</label><div className="relative"><Input id="email" type="email" autoComplete="email" required value={email} onChange={(event)=>setEmail(event.target.value)} placeholder="you@example.com" className="h-12 rounded-xl bg-card px-4"/></div></div>
             <div className="space-y-2"><label htmlFor="password" className="text-sm font-semibold">Password</label><div className="relative"><Input id="password" type={showPassword ? "text" : "password"} autoComplete="new-password" minLength={8} required value={password} onChange={(event)=>setPassword(event.target.value)} placeholder="At least 8 characters" className="h-12 rounded-xl bg-card px-4 pr-20"/><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword(current => !current)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-3 py-2 text-xs font-bold text-primary hover:bg-muted">{showPassword ? "Hide" : "Show"}</button></div></div>
-            <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+            <div className="stl-depth-card stl-depth-static rounded-2xl border border-border bg-card p-4 sm:p-5">
               <AvatarPicker value={avatarPreset} onChange={setAvatarPreset} />
             </div>
             <Button type="submit" disabled={isLoading} className="h-12 w-full rounded-xl text-sm font-semibold">{isLoading?'Creating your space...':'Create account'}</Button>

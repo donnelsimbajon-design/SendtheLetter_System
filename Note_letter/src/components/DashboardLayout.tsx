@@ -22,7 +22,7 @@ const navigation = [
 const railNavigation = navigation.slice(0, 4);
 
 const railLink = (active: boolean) =>
-  'relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-transparent transition-[transform,opacity,box-shadow] duration-200 ease-out hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transform-none motion-reduce:transition-none ' +
+  'stl-depth-nav relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-transparent transition-[transform,opacity,box-shadow] duration-200 ease-out hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transform-none motion-reduce:transition-none ' +
   (active ? 'opacity-100 ring-1 ring-border/70 shadow-sm' : 'opacity-90 hover:opacity-100');
 
 const MobileNavLink = ({ to, label, mascot, end, avatar, unreadCount = 0 }: {
@@ -35,7 +35,7 @@ const MobileNavLink = ({ to, label, mascot, end, avatar, unreadCount = 0 }: {
 }) => (
   <NavLink to={to} end={end} aria-label={label} title={label}
     className={({ isActive }) =>
-      'relative flex min-h-12 min-w-0 flex-col items-center justify-center rounded-xl bg-transparent px-1 py-1 transition-[transform,opacity] duration-200 ease-out hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-primary motion-reduce:transform-none ' +
+      'stl-depth-nav relative flex min-h-12 min-w-0 flex-col items-center justify-center rounded-xl bg-transparent px-1 py-1 transition-[transform,opacity] duration-200 ease-out hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-primary motion-reduce:transform-none ' +
       (isActive ? 'text-primary opacity-100' : 'text-muted-foreground opacity-80 hover:opacity-100')
     }>
     {avatar
@@ -101,7 +101,7 @@ export default function DashboardLayout() {
       {/* Original SendTheLetter character icons in a lightweight, translucent rail.
           No solid sidebar color, no copied social-network icons. */}
       <aside aria-label="SendTheLetter sidebar"
-        className="fixed inset-y-0 left-0 z-40 hidden w-[72px] flex-col items-center border-r border-border/50 bg-background/40 px-3 pb-4 pt-4 text-foreground backdrop-blur-xl lg:flex">
+        className="stl-depth-rail fixed inset-y-0 left-0 z-40 hidden w-[72px] flex-col items-center border-r border-border/50 bg-background/40 px-3 pb-4 pt-4 text-foreground backdrop-blur-xl lg:flex">
         <Link to="/dashboard" aria-label="SendTheLetter home" title="SendTheLetter"
           className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-transparent transition-[transform,opacity] duration-200 ease-out hover:scale-105 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transform-none">
           <span className="relative block h-10 w-10 overflow-hidden rounded-xl" aria-hidden="true">
@@ -172,10 +172,10 @@ export default function DashboardLayout() {
       {/* A compact bottom bar keeps every main destination reachable on phones. */}
       <nav aria-label="Mobile workspace navigation"
         className={'fixed inset-x-0 bottom-0 z-40 grid ' + (user?.role === 'admin' ? 'grid-cols-7' : 'grid-cols-6') +
-          ' items-center gap-0.5 border-t border-border bg-card/95 px-1 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-4px_24px_rgba(0,0,0,.04)] backdrop-blur-xl lg:hidden sm:px-3'}>
+          ' stl-depth-bottomnav items-center gap-0.5 border-t border-border bg-card/95 px-1 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-4px_24px_rgba(0,0,0,.04)] backdrop-blur-xl lg:hidden sm:px-3'}>
         {navigation.slice(0, 3).map(item => <MobileNavLink key={item.to} {...item} />)}
         <Link to="/dashboard/notes?compose=1" aria-label="Write a new letter" title="Write a letter"
-          className="relative -mt-3 flex min-h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl bg-primary text-primary-foreground shadow-md focus-visible:outline-2 focus-visible:outline-primary">
+          className="stl-depth-nav relative -mt-3 flex min-h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl bg-primary text-primary-foreground shadow-md focus-visible:outline-2 focus-visible:outline-primary">
           <CharacterBadge name="tala" tone="paper" size="sm" />
           <span className="text-[9px] font-bold leading-tight sm:text-[10px]">Write</span>
         </Link>

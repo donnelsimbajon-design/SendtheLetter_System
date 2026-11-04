@@ -140,8 +140,8 @@ const Home = () => {
           <div className="relative mx-auto w-full max-w-[540px] px-3 pb-7 pt-8 sm:px-6">
             <div aria-hidden="true" className="absolute left-2 top-10 h-44 w-44 rounded-full bg-[hsl(var(--surface-rose))] opacity-60 blur-3xl" />
             <div aria-hidden="true" className="absolute bottom-0 right-0 h-56 w-56 rounded-full bg-[hsl(var(--surface-sage))] opacity-65 blur-3xl" />
-            <div className="relative rotate-[2deg] rounded-[2.25rem] bg-[hsl(var(--surface-sage))] p-3 shadow-[0_28px_80px_-35px_rgba(38,59,53,.4)] sm:p-5">
-              <div className="paper-grain min-h-[410px] rounded-[1.8rem] border border-[#E4DACE] bg-[#FBF7EF] px-7 py-8 text-[#263B35] sm:min-h-[480px] sm:px-10 sm:py-10">
+            <div className="stl-depth-hero relative rounded-[2.25rem] bg-[hsl(var(--surface-sage))] p-3 shadow-[0_28px_80px_-35px_rgba(38,59,53,.4)] sm:p-5">
+              <div className="stl-depth-paper paper-grain min-h-[410px] rounded-[1.8rem] border border-[#E4DACE] bg-[#FBF7EF] px-7 py-8 text-[#263B35] sm:min-h-[480px] sm:px-10 sm:py-10">
                 <div className="flex items-center justify-between border-b border-[#E6DCCF] pb-4">
                   <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#718075]">A letter from the heart</p>
                   <CharacterBadge name="sely" tone="rose" size="xs" />
@@ -158,7 +158,7 @@ const Home = () => {
               </div>
             </div>
             <Mascot name="lumi" alt="Lumi, the SendTheLetter letter companion" loading="eager" className="pointer-events-none absolute -right-2 -top-10 z-10 h-28 w-28 drop-shadow-lg sm:-right-4 sm:-top-12 sm:h-36 sm:w-36" />
-            <div className="absolute -bottom-2 left-0 z-10 inline-flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-xs font-semibold shadow-lg sm:left-[-12px] sm:text-sm">
+            <div className="stl-depth-paper absolute -bottom-2 left-0 z-10 inline-flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-xs font-semibold shadow-lg sm:left-[-12px] sm:text-sm">
               <CharacterBadge name="basa" tone="gold" size="xs" /> Every story starts somewhere
             </div>
           </div>
@@ -175,7 +175,7 @@ const Home = () => {
               <div role="group" aria-label="Choose a letter starting point" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
                 {startingPoints.map((point, index) => (
                   <button key={point.value} type="button" aria-pressed={index === selectedIndex} onClick={() => setSelectedIndex(index)}
-                    className={'flex min-h-[80px] w-full items-center gap-4 rounded-2xl border p-4 text-left transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ' +
+                    className={'stl-depth-choice flex min-h-[80px] w-full items-center gap-4 rounded-2xl border p-4 text-left transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ' +
                       (index === selectedIndex ? 'border-primary bg-background shadow-md' : 'border-border bg-card hover:bg-muted/60')}>
                     <CharacterBadge name={point.mascot} tone="paper" size="md" />
                     <span className="flex-1">
@@ -186,9 +186,9 @@ const Home = () => {
                   </button>
                 ))}
               </div>
-              <div className={'relative flex min-h-[340px] flex-col overflow-hidden rounded-[2rem] p-5 sm:p-8 ' + selected.tone}>
+              <div className={'stl-depth-card relative flex min-h-[340px] flex-col overflow-hidden rounded-[2rem] p-5 sm:p-8 ' + selected.tone}>
                 <p className="mb-3 text-xs font-bold uppercase tracking-[.18em] text-[#344A3C]/80">A peek at your first page</p>
-                <div className="paper-grain flex flex-1 flex-col rounded-[1.5rem] border border-[#E4DACE] bg-[#FFFCF7] px-6 py-7 text-[#2F4137] shadow-[0_16px_40px_-28px_rgba(38,59,53,.35)] sm:px-9 sm:py-9" aria-live="polite">
+                <div className="stl-depth-paper paper-grain flex flex-1 flex-col rounded-[1.5rem] border border-[#E4DACE] bg-[#FFFCF7] px-6 py-7 text-[#2F4137] shadow-[0_16px_40px_-28px_rgba(38,59,53,.35)] sm:px-9 sm:py-9" aria-live="polite">
                   <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#7B887B]">{selected.eyebrow}</p>
                   <h3 className="mt-5 font-editorial text-2xl leading-snug sm:text-3xl">{selected.title}</h3>
                   <p className="mt-5 max-w-lg font-editorial text-lg leading-8 text-[#58675C]">{selected.excerpt}</p>
@@ -210,7 +210,7 @@ const Home = () => {
           </div>
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {paths.map((step) => (
-              <article key={step.number} className="group rounded-[1.75rem] border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:shadow-md sm:p-7">
+              <article key={step.number} className="stl-depth-card group rounded-[1.75rem] border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:shadow-md sm:p-7">
                 <div className="flex items-start justify-between gap-3">
                   <CharacterBadge name={step.mascot} tone={step.tone} size="lg" />
                   <span className="font-editorial text-2xl text-muted-foreground/55">{step.number}</span>

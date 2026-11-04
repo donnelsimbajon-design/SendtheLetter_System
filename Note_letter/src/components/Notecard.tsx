@@ -75,7 +75,7 @@ const Notecard = ({ note, onClick, onAuthorClick }: NotecardProps) => {
     return (
         <article
             className={clsx(
-                "group p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden h-[280px] flex flex-col hover:-translate-y-1 focus-within:border-primary/40 focus-within:shadow-md",
+                "stl-depth-card group p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden h-[280px] flex flex-col hover:-translate-y-1 focus-within:border-primary/40 focus-within:shadow-md",
                 backgroundClass && !isImageBackground ? [backgroundClass, "border-stone-200/50 shadow-sm"] : "bg-card border-border shadow-sm hover:border-primary/30 hover:shadow-md"
             )}
         >

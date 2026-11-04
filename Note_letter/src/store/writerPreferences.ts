@@ -7,6 +7,7 @@ export type WriterPreferences = {
     theme: ThemeChoice;
     readingSize: ReadingSize;
     reduceMotion: boolean;
+    depth3D: boolean;
     defaultPublic: boolean;
     defaultAnonymous: boolean;
     confirmBeforePublishing: boolean;
@@ -16,6 +17,7 @@ const defaults: WriterPreferences = {
     theme: 'warm',
     readingSize: 'normal',
     reduceMotion: false,
+    depth3D: true,
     defaultPublic: false,
     defaultAnonymous: false,
     confirmBeforePublishing: true,
@@ -32,6 +34,7 @@ function fromStorage(userId?: number | null): WriterPreferences {
             theme: ['warm', 'cool', 'dark'].includes(obj.theme) ? obj.theme : ['warm', 'cool', 'dark'].includes(oldTheme || '') ? oldTheme as ThemeChoice : defaults.theme,
             readingSize: obj.readingSize === 'large' ? 'large' : 'normal',
             reduceMotion: obj.reduceMotion === true,
+            depth3D: obj.depth3D !== false,
             defaultPublic: obj.defaultPublic === true,
             defaultAnonymous: obj.defaultAnonymous === true,
             confirmBeforePublishing: obj.confirmBeforePublishing !== false,

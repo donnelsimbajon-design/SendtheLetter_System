@@ -191,7 +191,7 @@ export default function MessageDock() {
       {!inFullInbox && (
         <div className="fixed bottom-6 right-6 z-[55] hidden lg:block">
           {isOpen && (
-            <section aria-label={selected ? `Chat with ${selected.username}` : 'Recent messages'} className="mb-3 flex h-[min(550px,calc(100dvh-8rem))] w-[360px] flex-col overflow-hidden rounded-[1.6rem] border border-border bg-card shadow-2xl workspace-page-enter">
+            <section aria-label={selected ? `Chat with ${selected.username}` : 'Recent messages'} className="stl-depth-card stl-depth-static mb-3 flex h-[min(550px,calc(100dvh-8rem))] w-[360px] flex-col overflow-hidden rounded-[1.6rem] border border-border bg-card shadow-2xl workspace-page-enter">
               <header className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-3">
                 {selected && <button type="button" onClick={() => { setSelected(null); setThreadError(''); }} aria-label="Back to inbox" className="rounded-full p-2 hover:bg-muted"><ArrowLeft size={18} /></button>}
                 <CharacterBadge name="chika" tone="paper" size="sm" />
@@ -204,7 +204,7 @@ export default function MessageDock() {
                   {loading && conversations.length === 0 && <p className="p-4 text-sm text-muted-foreground">Loading inbox…</p>}
                   {error && <p role="alert" className="p-3 text-sm text-destructive">{error} <button type="button" onClick={() => void refresh()} className="underline">Retry</button></p>}
                   {!loading && !error && conversations.length === 0 && <div className="flex flex-col items-center px-5 py-10 text-center"><Mascot name="chika" className="h-20 w-20" /><p className="mt-3 font-editorial text-xl">No conversations yet</p><p className="mt-2 text-xs text-muted-foreground">Say hello to a writer in the community.</p></div>}
-                  {conversations.map(conversation => <button key={conversation.user.id} type="button" onClick={() => openContact(conversation.user)} className="flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary">
+                  {conversations.map(conversation => <button key={conversation.user.id} type="button" onClick={() => openContact(conversation.user)} className="stl-depth-choice flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary">
                     {conversation.user.avatar ? <img src={getImageUrl(conversation.user.avatar)} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" /> : <CharacterBadge name="chika" tone="paper" size="sm" />}
                     <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold">{conversation.user.username}</span><span className="block truncate text-xs text-muted-foreground">{conversation.lastMessage || 'Open conversation'}</span></span>
                     {conversation.unreadCount > 0 && <span className="min-w-5 rounded-full bg-primary px-1.5 py-1 text-center text-[10px] font-bold text-primary-foreground">{unreadLabel(conversation.unreadCount)}</span>}
@@ -217,7 +217,7 @@ export default function MessageDock() {
                     {!threadLoading && !thread.length && <p className="py-8 text-center text-xs text-muted-foreground">Start with a hello.</p>}
                     {thread.map(message => (
                       <div key={message.id} className={`flex ${message.senderId === user?.id ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${message.senderId === user?.id ? 'bg-primary text-primary-foreground' : 'border border-border bg-card text-foreground'}`}>
+                        <div data-sent={message.senderId === user?.id} className={`stl-depth-bubble max-w-[85%] rounded-2xl px-3 py-2 text-sm ${message.senderId === user?.id ? 'bg-primary text-primary-foreground' : 'border border-border bg-card text-foreground'}`}>
                           <p className="whitespace-pre-wrap break-words">{message.content}</p>
                           <p className="mt-1 text-[10px] opacity-70">{formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}</p>
                         </div>

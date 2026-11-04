@@ -197,7 +197,7 @@ export default function Messages() {
             <Link to="/dashboard/community" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-xs font-bold hover:bg-muted"><CharacterBadge name="lumi" tone="sage" size="xs" /> Explore writers</Link>
         </header>
 
-        <div className="flex h-[min(74dvh,760px)] min-h-[530px] overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_14px_45px_rgba(46,50,39,.07)]">
+        <div className="stl-depth-card stl-depth-static flex h-[min(74dvh,760px)] min-h-[530px] overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_14px_45px_rgba(46,50,39,.07)]">
             <aside className={`flex w-full shrink-0 flex-col border-r border-border bg-background/50 md:w-[325px] lg:w-[360px] ${activeMobile ? 'hidden md:flex' : 'flex'}`} aria-label="Conversations">
                 <div className="border-b border-border p-5">
                     <div className="flex items-center justify-between"><h2 className="font-editorial text-2xl">Inbox</h2><CharacterBadge name="chika" tone="gold" size="sm" /></div>
@@ -207,7 +207,7 @@ export default function Messages() {
                     {listLoading ? <p className="p-5 text-sm text-muted-foreground">Loading conversations…</p> :
                         listError ? <div className="p-5 text-sm text-muted-foreground"><p>{listError}</p><button onClick={() => void loadConversations()} className="mt-3 font-bold underline">Try again</button></div> :
                         filteredConversations.length === 0 ? <div className="flex flex-col items-center px-5 py-12 text-center"><Mascot name="chika" className="h-28 w-28" /><p className="mt-4 font-editorial text-xl">No conversations yet</p><p className="mt-2 text-xs leading-6 text-muted-foreground">Visit a writer's profile to send your first message.</p><Link to="/dashboard/community" className="mt-5 rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground">Explore community</Link></div> :
-                        filteredConversations.map(convo => <button type="button" key={convo.user.id} onClick={() => choose(convo.user)} className={`flex w-full items-start gap-3 rounded-[19px] px-3 py-4 text-left transition-colors ${selected?.id === convo.user.id ? 'bg-[hsl(var(--surface-gold))]/55' : 'hover:bg-muted/65'}`}>
+                        filteredConversations.map(convo => <button type="button" key={convo.user.id} onClick={() => choose(convo.user)} className={`stl-depth-choice flex w-full items-start gap-3 rounded-[19px] px-3 py-4 text-left transition-colors ${selected?.id === convo.user.id ? 'bg-[hsl(var(--surface-gold))]/55' : 'hover:bg-muted/65'}`}>
                             <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-[18px] bg-[hsl(var(--surface-rose))] text-xl font-semibold">{convo.user.avatar ? <img src={getImageUrl(convo.user.avatar)} alt="" className="h-full w-full object-cover" /> : convo.user.username.slice(0, 1).toUpperCase()}</span>
                             <span className="min-w-0 flex-1"><span className="flex items-center justify-between gap-2"><strong className="truncate text-sm">{convo.user.username}</strong>{convo.lastMessageTime && <span className="shrink-0 text-[10px] text-muted-foreground">{formatDistanceToNow(new Date(convo.lastMessageTime), { addSuffix: false })}</span>}</span><span className="mt-1 flex items-center justify-between gap-2"><span className="line-clamp-1 text-xs leading-5 text-muted-foreground">{convo.lastMessage}</span>{convo.unreadCount > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">{convo.unreadCount}</span>}</span></span>
                         </button>)}
@@ -233,7 +233,7 @@ export default function Messages() {
                                 return <div key={message.id}>
                                     {showDate && <p className="mb-5 text-center text-[11px] font-bold uppercase tracking-[.14em] text-muted-foreground">{format(new Date(message.createdAt), 'MMM d, yyyy')}</p>}
                                     <div className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`max-w-[84%] rounded-[22px] px-4 py-3 text-sm shadow-sm sm:max-w-[72%] ${mine ? 'rounded-br-[6px] bg-primary text-primary-foreground' : 'rounded-bl-[6px] border border-border bg-card text-foreground'}`}>
+                                        <div data-sent={mine} className={`stl-depth-bubble max-w-[84%] rounded-[22px] px-4 py-3 text-sm shadow-sm sm:max-w-[72%] ${mine ? 'rounded-br-[6px] bg-primary text-primary-foreground' : 'rounded-bl-[6px] border border-border bg-card text-foreground'}`}>
                                             <p className="whitespace-pre-wrap break-words leading-6">{message.content}</p>
                                             <div className={`mt-2 flex items-center justify-end gap-1.5 text-[10px] ${mine ? 'text-primary-foreground/75' : 'text-muted-foreground'}`}><span>{format(new Date(message.createdAt), 'h:mm a')}</span>{mine && <span aria-label={message.isRead ? "Read" : "Sent"}>{message.isRead ? "Read" : "Sent"}</span>}</div>
                                         </div>

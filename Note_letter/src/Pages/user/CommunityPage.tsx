@@ -206,7 +206,7 @@ export default function CommunityPage() {
             {/* The center is first on phones. Sidebars become two discovery cards below the feed. */}
             <div className="grid min-w-0 grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-[minmax(185px,225px)_minmax(0,1fr)_minmax(200px,245px)] xl:items-start xl:gap-5 2xl:grid-cols-[minmax(205px,245px)_minmax(0,1fr)_minmax(230px,265px)]">
                 <aside aria-label="Writer recommendations and community links" className="order-2 min-w-0 space-y-4 xl:order-1 xl:sticky xl:top-[92px]">
-                    <section className="rounded-[1.5rem] border border-border bg-card p-5 shadow-sm">
+                    <section className="stl-depth-card rounded-[1.5rem] border border-border bg-card p-5 shadow-sm">
                         <div className="flex items-center gap-2">
                             <CharacterBadge name="tala" tone="gold" size="sm" />
                             <div>
@@ -237,7 +237,7 @@ export default function CommunityPage() {
                         </div>
                     </section>
 
-                    <section className="rounded-[1.5rem] border border-border bg-card p-5 shadow-sm">
+                    <section className="stl-depth-card rounded-[1.5rem] border border-border bg-card p-5 shadow-sm">
                         <h2 className="inline-flex items-center gap-2 font-editorial text-xl">
                             <CharacterBadge name="basa" tone="sage" size="sm" /> Explore by feeling
                         </h2>
@@ -253,7 +253,7 @@ export default function CommunityPage() {
                         </div>
                     </section>
 
-                    <section className="rounded-[1.5rem] bg-[hsl(var(--surface-rose))] p-5 text-[#49363B]">
+                    <section className="stl-depth-card rounded-[1.5rem] bg-[hsl(var(--surface-rose))] p-5 text-[#49363B]">
                         <CharacterBadge name="lumi" tone="paper" size="md" />
                         <h2 className="mt-4 font-editorial text-2xl leading-snug">Stir my feelings</h2>
                         <p className="mt-2 text-xs leading-6 opacity-80">Need a first thought? Try this gentle prompt: {todayPrompt}</p>
@@ -262,7 +262,7 @@ export default function CommunityPage() {
                 </aside>
 
                 <section aria-label="Community letter feed" className="order-1 min-w-0 space-y-4 md:col-span-2 xl:order-2 xl:col-span-1">
-                    <section className="rounded-[1.65rem] border border-border bg-card p-4 shadow-sm sm:p-5">
+                    <section className="stl-depth-card rounded-[1.65rem] border border-border bg-card p-4 shadow-sm sm:p-5">
                         <div className="flex items-center gap-3">
                             <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[hsl(var(--surface-gold))] font-editorial text-lg font-bold text-[#493D2A]">
                                 {user?.avatar ? <img src={getImageUrl(user.avatar)} alt="" className="h-full w-full object-cover" /> : user?.username?.slice(0, 1).toUpperCase() || 'W'}
@@ -279,7 +279,7 @@ export default function CommunityPage() {
                         <p className="mt-2 text-[11px] leading-5 text-muted-foreground">Choose Private or Public inside the editor before finishing.</p>
                     </section>
 
-                    <section id="community-topics" aria-label="Explore letter topics" className="rounded-[1.5rem] border border-border bg-card p-4 shadow-sm sm:p-5">
+                    <section id="community-topics" aria-label="Explore letter topics" className="stl-depth-card rounded-[1.5rem] border border-border bg-card p-4 shadow-sm sm:p-5">
                         <div className="flex items-center justify-between gap-3">
                             <h2 className="inline-flex items-center gap-2 font-editorial text-xl"><CharacterBadge name="basa" tone="sage" size="xs" /> Explore stories</h2>
                             <span className="text-[11px] text-muted-foreground">Public letters only</span>
@@ -331,7 +331,7 @@ export default function CommunityPage() {
                         {shownLetters.map(letter => {
                             const writer = validWriter(letter);
                             return (
-                                <article key={letter.id} className="overflow-hidden rounded-[1.6rem] border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
+                                <article key={letter.id} className="stl-depth-card overflow-hidden rounded-[1.6rem] border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
                                     <div className="flex items-center gap-3 px-5 pb-3 pt-5 sm:px-6">
                                         {writer && letter.authorAvatar
                                             ? <img src={getImageUrl(letter.authorAvatar)} alt="" className="h-11 w-11 shrink-0 rounded-full bg-muted object-cover" />
@@ -395,7 +395,7 @@ export default function CommunityPage() {
                     </div>
 
                     {!isLoadingPublic && !publicError && filteredLetters.length === 0 && (
-                        <section className="rounded-[1.6rem] border border-dashed border-border bg-card px-5 py-10 text-center">
+                        <section className="stl-depth-card rounded-[1.6rem] border border-dashed border-border bg-card px-5 py-10 text-center">
                             <Mascot name="basa" className="mx-auto h-24 w-24" />
                             <h2 className="mt-3 font-editorial text-2xl">{hasFilters ? 'No stories match yet' : 'A story will find its way here.'}</h2>
                             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-muted-foreground">
@@ -415,7 +415,7 @@ export default function CommunityPage() {
                 </section>
 
                 <aside aria-label="Community topics and spotlights" className="order-3 min-w-0 space-y-4 xl:sticky xl:top-[92px]">
-                    <section className="rounded-[1.5rem] border border-border bg-card p-5 shadow-sm">
+                    <section className="stl-depth-card rounded-[1.5rem] border border-border bg-card p-5 shadow-sm">
                         <div className="flex items-center gap-2">
                             <CharacterBadge name="araw" tone="gold" size="sm" />
                             <div>
@@ -437,7 +437,7 @@ export default function CommunityPage() {
                         </div>
                     </section>
 
-                    <section className="rounded-[1.5rem] border border-border bg-card p-5 shadow-sm">
+                    <section className="stl-depth-card rounded-[1.5rem] border border-border bg-card p-5 shadow-sm">
                         <h2 className="flex items-center gap-2 font-editorial text-xl"><CharacterBadge name="sely" tone="rose" size="sm" /> Most appreciated</h2>
                         <p className="mt-3 text-xs leading-5 text-muted-foreground">Discover letters readers have appreciated most among the selected stories.</p>
                         <div className="mt-4 space-y-3">
@@ -454,7 +454,7 @@ export default function CommunityPage() {
                         </div>
                     </section>
 
-                    <section className="rounded-[1.5rem] bg-primary p-5 text-primary-foreground">
+                    <section className="stl-depth-card rounded-[1.5rem] bg-primary p-5 text-primary-foreground">
                         <CharacterBadge name="tala" tone="paper" size="md" />
                         <p className="mt-4 text-[10px] font-bold uppercase tracking-[.16em] opacity-70">Today's writing prompt</p>
                         <h2 className="mt-2 font-editorial text-2xl leading-snug">{todayPrompt}</h2>
@@ -462,7 +462,7 @@ export default function CommunityPage() {
                         <Link to={writeLink} className="mt-4 inline-flex min-h-11 items-center rounded-full bg-[hsl(var(--surface-gold))] px-4 py-2.5 text-xs font-bold text-[#493D2A]">Write your answer</Link>
                     </section>
 
-                    <section className="rounded-[1.5rem] border border-border bg-card p-5 shadow-sm">
+                    <section className="stl-depth-card rounded-[1.5rem] border border-border bg-card p-5 shadow-sm">
                         <h2 className="font-editorial text-xl">A kinder place to write</h2>
                         <p className="mt-2 text-xs leading-6 text-muted-foreground">
                             Share with care. Respect privacy, avoid personal attacks, and remember there is a person behind every letter.

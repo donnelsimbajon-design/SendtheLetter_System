@@ -43,7 +43,7 @@ const Services = () => {
                 <CharacterBadge name="lumi" tone="paper" size="xs" /> Start a letter
               </Link>
             </div>
-            <div className="relative flex min-h-[220px] items-center justify-center rounded-[2rem] bg-[hsl(var(--surface-sage))] sm:min-h-[300px]">
+            <div className="stl-depth-hero relative flex min-h-[220px] items-center justify-center rounded-[2rem] bg-[hsl(var(--surface-sage))] sm:min-h-[300px]">
               <div aria-hidden="true" className="paper-grain absolute inset-4 rounded-[1.6rem] border border-white/35 bg-white/15" />
               <Mascot name="lumi" className="relative h-52 w-52 drop-shadow-lg sm:h-64 sm:w-64" alt="Lumi, the friendly SendTheLetter mascot" />
               <CharacterBadge name="tala" tone="gold" size="lg" className="absolute right-7 top-7" />
@@ -60,7 +60,7 @@ const Services = () => {
           </div>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {features.map(feature => (
-              <article key={feature.title} className="flex min-h-[265px] flex-col rounded-[1.75rem] border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:border-primary/25 hover:shadow-md sm:p-7">
+              <article key={feature.title} className="stl-depth-card flex min-h-[265px] flex-col rounded-[1.75rem] border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:border-primary/25 hover:shadow-md sm:p-7">
                 <div className="flex items-start justify-between gap-3">
                   <CharacterBadge name={feature.mascot} tone={feature.tone} size="lg" />
                   <span className="text-right text-[10px] font-bold uppercase tracking-[.12em] text-muted-foreground">{feature.label}</span>
@@ -79,7 +79,7 @@ const Services = () => {
               <h2 className="mt-5 font-editorial text-3xl leading-tight sm:text-4xl">Share with care.</h2>
               <p className="mt-4 text-sm leading-7 text-muted-foreground">Private drafts stay in your personal library. Public letters can be discovered and shared through a public link. Scheduled letters need a future release time.</p>
             </div>
-            <div className="rounded-[1.75rem] border border-border bg-card p-6 sm:p-8">
+            <div className="stl-depth-card rounded-[1.75rem] border border-border bg-card p-6 sm:p-8">
               <p className="text-xs font-bold uppercase tracking-[.16em] text-[hsl(var(--accent))]">A few things to know</p>
               <ul className="mt-5 space-y-4 text-sm leading-7 text-muted-foreground">
                 <li><strong className="text-foreground">Private or public:</strong> you choose how a letter is stored and whether it appears in the community.</li>
