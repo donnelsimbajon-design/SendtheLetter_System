@@ -54,3 +54,48 @@ test('no horizontal page overflow on a compact mobile viewport', async ({ page }
     expect(sizes.page, 'Horizontal overflow at ' + path).toBeLessThanOrEqual(sizes.viewport + 2);
   }
 });
+
+test('private invitation opens for a guest without signup and accepts one optional reply', async ({ page }) => {
+  const token = 'a'.repeat(48);
+  const seen = [];
+  await page.route('**/api/letters/recipient/**', async route => {
+    if (route.request().method() === 'POST') {
+      seen.push(route.request().postDataJSON());
+      return route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ sent: true }) });
+    }
+    return route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({
+        expiresAt: '2026-11-11T12:00:00Z',
+        letter: {
+          id: '27', title: 'For a special person', content: 'You are appreciated every day.',
+          type: 'Gratitude', letterPages: [{ text: 'You are appreciated every day.' }],
+          authorName: 'A Writer', isAnonymous: true, isPublic: false, status: 'published',
+        },
+      }),
+    });
+  });
+  await page.goto('/open/' + token);
+  await expect(page.getByRole('heading', { name: "You've received a letter." })).toBeVisible();
+  await expect(page.getByText('No account or payment needed')).toBeVisible();
+  await expect(page.locator('a[href*="/signup"]')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Open my letter' }).click();
+  await expect(page.getByRole('article', { name: 'Your private letter' })).toContainText('You are appreciated every day.');
+  await page.getByLabel('Your name (optional)').fill('A friend');
+  await page.getByLabel('Your message (optional)').fill('Thanks for thinking of me!');
+  await page.getByRole('button', { name: 'Send private reply' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Your reply has been delivered' })).toBeVisible();
+  expect(seen).toEqual([{ reaction: 'heart', displayName: 'A friend', message: 'Thanks for thinking of me!' }]);
+});
+
+test('expired private letter invitation does not reveal letter content or prompt for login', async ({ page }) => {
+  await page.route('**/api/letters/recipient/**', route => route.fulfill({
+    status: 404, contentType: 'application/json',
+    body: JSON.stringify({ message: 'Invitation expired or revoked.' }),
+  }));
+  await page.goto('/open/' + 'b'.repeat(48));
+  await expect(page.getByRole('heading', { name: 'This letter is unavailable.' })).toBeVisible();
+  await expect(page.getByRole('alert')).toContainText('Invitation expired or revoked.');
+  await expect(page.locator('input[type=password]')).toHaveCount(0);
+  await expect(page.getByText('For a special person')).toHaveCount(0);
+});
