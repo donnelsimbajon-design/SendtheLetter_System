@@ -71,7 +71,7 @@ test('community uses screenshot-style 72px near-black rail and three-column publ
     position: getComputedStyle(element).position,
     background: getComputedStyle(element).backgroundColor,
   }));
-  expect(railLayout).toMatchObject({ width: 72, left: 0, position: 'fixed', background: 'rgb(11, 15, 18)' });
+  expect(railLayout).toMatchObject({ width: 72, left: 0, position: 'fixed', background: 'rgba(11, 15, 18, 0.95)' });
   await expect(page.getByRole('heading', { name: 'Discover words that matter' })).toBeVisible();
   await expect(page.getByRole('complementary', { name: 'Writer recommendations and community links' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Community letter feed' })).toBeVisible();
