@@ -7,7 +7,6 @@ import { getImageUrl } from '../../lib/utils';
 import { API_ENDPOINTS } from '../../config/api';
 import Mascot from '../../components/Mascot';
 import CharacterBadge from '../../components/CharacterBadge';
-import WorldScene3D from '../../components/WorldScene3D';
 import { useInboxStore } from '../../store/inboxStore';
 
 type Contact = { id: number; username: string; avatar?: string; location?: string };
@@ -193,14 +192,13 @@ export default function Messages() {
     const activeConversation = conversations.some(c => c.user.id === selected?.id);
 
     return <div className="mx-auto w-full min-w-0 max-w-[1380px] space-y-3 pb-0 sm:space-y-4">
-        <header className="grid min-w-0 grid-cols-[minmax(0,1fr)_110px] items-center gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(180px,280px)] lg:grid-cols-[minmax(0,1fr)_minmax(240px,340px)]">
+        <header className="flex min-w-0 flex-wrap items-end justify-between gap-3 border-b border-border/70 pb-3 sm:pb-4">
             <div className="min-w-0">
                 <p className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.15em] text-[hsl(var(--accent))] sm:text-xs"><CharacterBadge name="chika" tone="gold" size="xs" /> Your connections</p>
                 <h1 className="mt-1 font-editorial text-3xl leading-tight sm:text-4xl">Messages</h1>
                 <p className="mt-1 max-w-xl text-xs leading-5 text-muted-foreground sm:text-sm sm:leading-6">A quieter way to connect, one thoughtful note at a time.</p>
                 <Link to="/dashboard/community" className="mt-2 inline-flex min-h-10 max-w-full items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-bold hover:bg-muted sm:mt-3 sm:px-4"><CharacterBadge name="lumi" tone="sage" size="xs" /> Explore writers</Link>
             </div>
-            <WorldScene3D kind="messages" title="Interactive 3D SendTheLetter workspace" controls={false} compact className="h-[112px] w-full min-w-0 sm:h-[145px]" />
         </header>
 
         <div className="stl-depth-card stl-depth-static flex h-[min(76dvh,760px)] min-h-[360px] overflow-hidden sm:min-h-[500px] rounded-[28px] border border-border bg-card shadow-[0_14px_45px_rgba(46,50,39,.07)]">
