@@ -399,7 +399,7 @@ test('writer profile is compact, readable and navigable on desktop and mobile', 
     const profile = workspace.getByRole('link', { name: 'My profile' });
     await expect(library).toBeVisible();
     await expect(profile).toBeVisible();
-    await expect(library.locator('svg[role="presentation"]')).toBeVisible();
+    await expect(library.locator('img[src="/mascots/basa.svg"]')).toBeVisible();
   } else {
     const mobile = page.getByRole('navigation', { name: 'Mobile workspace navigation' });
     await expect(mobile.getByText('Community')).toBeVisible();
