@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { X, ArrowLeft, Send, MessageSquareText } from 'lucide-react';
 import CharacterBadge from './CharacterBadge';
@@ -30,6 +30,7 @@ const unreadLabel = (count: number) => count > 99 ? '99+' : String(count);
 export default function MessageDock() {
   const user = useAuthStore(state => state.user);
   const location = useLocation();
+  const navigate = useNavigate();
   const conversations = useInboxStore(state => state.conversations);
   const loading = useInboxStore(state => state.loading);
   const error = useInboxStore(state => state.error);
@@ -172,7 +173,12 @@ export default function MessageDock() {
         <div role="status" aria-live="polite" className="fixed right-4 top-20 z-[65] w-[min(340px,calc(100vw-2rem))] rounded-2xl border border-border bg-card p-3 shadow-xl lg:bottom-24 lg:right-6 lg:top-auto">
           <div className="flex items-start gap-3">
             <CharacterBadge name="chika" tone="paper" size="sm" />
-            <button type="button" className="min-w-0 flex-1 text-left" onClick={() => openContact(incomingPreview.sender)}>
+            <button type="button" className="min-w-0 flex-1 text-left" onClick={() => {
+              if (window.innerWidth < 1024) {
+                setIncomingPreview(null);
+                navigate(`/dashboard/messages?userId=${incomingPreview.sender.id}`);
+              } else openContact(incomingPreview.sender);
+            }}>
               <span className="block truncate text-sm font-bold">New message from {incomingPreview.sender.username}</span>
               <span className="mt-1 block truncate text-xs text-muted-foreground">{incomingPreview.content}</span>
               <span className="mt-1 block text-[11px] font-semibold underline underline-offset-2">Open chat</span>
