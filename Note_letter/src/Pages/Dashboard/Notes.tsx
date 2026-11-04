@@ -15,6 +15,7 @@ import { LayoutGrid, BookOpenText } from 'lucide-react';
 import MemoryShelf from '../../components/MemoryShelf';
 import LetterOpeningDialog from '../../components/LetterOpeningDialog';
 import TimeCapsuleCard from '../../components/TimeCapsuleCard';
+import { readGuestLetter, clearGuestLetter } from '../../lib/guestLetterDraft';
 
 const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public' }) => {
     const isCommunity = initialTab === 'public';
@@ -47,17 +48,22 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
     const [editingNote, setEditingNote] = useState<Note | null>(null);
     const [isEditorOpen, setIsEditorOpen] = useState(false);
     const [starterTemplate, setStarterTemplate] = useState('');
+    const [guestImportPending, setGuestImportPending] = useState(false);
 
     // A safe, shareable compose link opens an existing editor template.
     useEffect(() => {
         if (isCommunity || params.get('compose') !== '1') return;
         const template = params.get('template') || '';
-        setStarterTemplate(['gratitude', 'future-self', 'apology', 'hello'].includes(template) ? template : '');
-        setEditingNote(null);
+        const fromGuest = !isCommunity && params.get('guest') === '1';
+        const guestDraft = fromGuest ? readGuestLetter() : null;
+        setGuestImportPending(Boolean(guestDraft));
+        setStarterTemplate(fromGuest ? '' : (['gratitude', 'future-self', 'apology', 'hello'].includes(template) ? template : ''));
+        setEditingNote(guestDraft ? ({ ...guestDraft, status: 'draft', isPublic: false, type: guestDraft.category } as unknown as Note) : null);
         setIsEditorOpen(true);
         const next = new URLSearchParams(params);
         next.delete('compose');
         next.delete('template');
+        next.delete('guest');
         setParams(next, { replace: true });
     }, [isCommunity, params, setParams]);
 
@@ -358,8 +364,8 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                 onSubmit={handleLetterCreate}
                 initialData={editingNote || undefined}
                 starterTemplate={starterTemplate}
-                onDraftSaved={fetchDrafts}
-                onPublished={async (status, publicLetter) => { await reloadLetters(); if (isCommunity) { if (!publicLetter || status === 'scheduled') navigate('/dashboard/notes'); } else { setActiveTab(status === 'scheduled' ? 'scheduled' : 'personal'); } }}
+                onDraftSaved={async () => { await fetchDrafts(); if (guestImportPending) { clearGuestLetter(); setGuestImportPending(false); } }}
+                onPublished={async (status, publicLetter) => { if (guestImportPending) { clearGuestLetter(); setGuestImportPending(false); } await reloadLetters(); if (isCommunity) { if (!publicLetter || status === 'scheduled') navigate('/dashboard/notes'); } else { setActiveTab(status === 'scheduled' ? 'scheduled' : 'personal'); } }}
             />
 
             <LetterViewModal

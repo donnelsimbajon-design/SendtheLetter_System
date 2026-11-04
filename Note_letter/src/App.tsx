@@ -24,6 +24,7 @@ import Creator from './Pages/Creator';
 import AdminDashboard from './Pages/AdminDashboard';
 import PublicLetterPage from './Pages/user/PublicLetterPage';
 import RecipientLetterPage from './Pages/user/RecipientLetterPage';
+import TryLetterPage from './Pages/TryLetterPage';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     const { pathname, search } = useLocation();
@@ -80,6 +81,7 @@ function App() {
                 <Route path="/" element={<Landing />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/services" element={<Services />} />
+                <Route path="/try" element={<TryLetterPage />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />

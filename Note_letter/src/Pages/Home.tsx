@@ -72,7 +72,8 @@ const Home = () => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const selected = startingPoints[selectedIndex];
   const composePath = '/dashboard/notes?compose=1&template=' + selected.value;
-  const startLink = isAuthenticated ? composePath : '/signup?returnTo=' + encodeURIComponent(composePath);
+  const startLink = isAuthenticated ? '/dashboard/notes?compose=1' : '/try';
+  const selectedTemplateLink = isAuthenticated ? composePath : '/try?template=' + selected.value;
   const exploreLink = isAuthenticated ? '/dashboard/community' : '/services';
 
   return (
@@ -123,7 +124,7 @@ const Home = () => {
               </Link>
             </div>
             <p className="mt-5 text-xs leading-5 text-muted-foreground">
-              Start with a template. Save your words in your own writing space.
+              Try writing for free. Create an account only when you want to save or send.
             </p>
             <div className="mt-10 grid max-w-lg grid-cols-2 gap-3 border-t border-border pt-6">
               <div>
@@ -194,7 +195,7 @@ const Home = () => {
                   <p className="mt-5 max-w-lg font-editorial text-lg leading-8 text-[#58675C]">{selected.excerpt}</p>
                   <p className="mt-auto pt-8 font-editorial text-xl italic text-[#C87965]">Your story begins here.</p>
                 </div>
-                <Link to={startLink} className="mt-5 inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground transition-colors hover:opacity-90">
+                <Link to={selectedTemplateLink} className="mt-5 inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground transition-colors hover:opacity-90">
                   Open this writing template
                   <CharacterBadge name="piko" tone="paper" size="xs" />
                 </Link>

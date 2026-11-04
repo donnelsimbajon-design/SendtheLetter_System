@@ -10,7 +10,7 @@ const Signup = () => {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const requested = params.get('returnTo') || '';
-  const returnTo = /^\/dashboard\/notes\?compose=1(?:&template=(?:gratitude|future-self|apology|hello))?$/.test(requested) ? requested : '/dashboard';
+  const returnTo = /^\/dashboard\/notes\?compose=1(?:&template=(?:gratitude|future-self|apology|hello)|&guest=1)?$/.test(requested) ? requested : '/dashboard';
   const loginLink = returnTo === '/dashboard' ? '/login' : '/login?returnTo=' + encodeURIComponent(returnTo);
   const register = useAuthStore((state) => state.register);
   const [username, setUsername] = useState('');
