@@ -171,3 +171,20 @@
     row-gap: 0 !important;
   }
 }
+
+
+/* Workspace route feedback only. These styles do not change public pages,
+   profile themes, or other UI elements outside the dashboard layout. */
+@keyframes workspace-page-enter {
+  from { opacity: .55; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.workspace-page-enter {
+  animation: workspace-page-enter 190ms cubic-bezier(.2, .7, .2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .workspace-page-enter { animation: none !important; }
+}
+:root[data-reduce-motion="true"] .workspace-page-enter {
+  animation: none !important;
+}
