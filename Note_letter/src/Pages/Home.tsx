@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import Mascot from '../components/Mascot';
 import CharacterBadge from '../components/CharacterBadge';
+import WorldScene3D from '../components/WorldScene3D';
+import Mascot from '../components/Mascot';
 
 const startingPoints = [
   {
@@ -137,30 +138,9 @@ const Home = () => {
             </div>
           </div>
 
-          <div className="relative mx-auto w-full max-w-[540px] px-3 pb-7 pt-8 sm:px-6">
-            <div aria-hidden="true" className="absolute left-2 top-10 h-44 w-44 rounded-full bg-[hsl(var(--surface-rose))] opacity-60 blur-3xl" />
-            <div aria-hidden="true" className="absolute bottom-0 right-0 h-56 w-56 rounded-full bg-[hsl(var(--surface-sage))] opacity-65 blur-3xl" />
-            <div className="stl-depth-hero relative rounded-[2.25rem] bg-[hsl(var(--surface-sage))] p-3 shadow-[0_28px_80px_-35px_rgba(38,59,53,.4)] sm:p-5">
-              <div className="stl-depth-paper paper-grain min-h-[410px] rounded-[1.8rem] border border-[#E4DACE] bg-[#FBF7EF] px-7 py-8 text-[#263B35] sm:min-h-[480px] sm:px-10 sm:py-10">
-                <div className="flex items-center justify-between border-b border-[#E6DCCF] pb-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#718075]">A letter from the heart</p>
-                  <CharacterBadge name="sely" tone="rose" size="xs" />
-                </div>
-                <p className="mt-11 font-editorial text-4xl sm:mt-14 sm:text-5xl">Dear you,</p>
-                <p className="mt-7 font-editorial text-xl leading-9 text-[#57675D] sm:text-[1.55rem] sm:leading-10">
-                  I hope you know that the little things you do matter more than you think.
-                  Sometimes the best words are the ones we finally write down.
-                </p>
-                <div className="mt-10 flex items-end justify-between border-t border-[#E6DCCF] pt-5">
-                  <p className="font-editorial text-2xl italic text-[#C87965]">With care,</p>
-                  <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#8D988E]">SendTheLetter</p>
-                </div>
-              </div>
-            </div>
-            <Mascot name="lumi" alt="Lumi, the SendTheLetter letter companion" loading="eager" className="pointer-events-none absolute -right-2 -top-10 z-10 h-28 w-28 drop-shadow-lg sm:-right-4 sm:-top-12 sm:h-36 sm:w-36" />
-            <div className="stl-depth-paper absolute -bottom-2 left-0 z-10 inline-flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-xs font-semibold shadow-lg sm:left-[-12px] sm:text-sm">
-              <CharacterBadge name="basa" tone="gold" size="xs" /> Every story starts somewhere
-            </div>
+          <div className="stl-depth-hero relative min-w-0">
+            <WorldScene3D kind="home" title="Explore the 3D SendTheLetter story world" className="h-[360px] w-full sm:h-[480px] lg:h-[525px]" />
+            <Mascot name="lumi" alt="Lumi, the SendTheLetter letter companion" className="pointer-events-none absolute -right-2 -top-6 z-10 h-20 w-20 drop-shadow-lg sm:-right-4 sm:-top-8 sm:h-28 sm:w-28" />
           </div>
         </section>
 

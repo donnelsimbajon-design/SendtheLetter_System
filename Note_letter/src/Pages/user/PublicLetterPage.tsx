@@ -1,3 +1,4 @@
+import WorldScene3D from '../../components/WorldScene3D';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import CommentsPanel from '../../components/CommentsPanel';
@@ -150,6 +151,8 @@ const PublicLetterPage = () => {
 
     return (
         <main className="min-h-screen bg-[#f6f1e9] px-4 py-10 text-[#263b35]">
+      <WorldScene3D kind="letter" title="SendTheLetter interactive 3D experience" className="mb-7 h-[190px] w-full no-print " />
+
             <div className="mx-auto max-w-7xl lg:grid lg:grid-cols-[370px_minmax(0,1fr)] lg:items-start lg:gap-7">
                 <aside className="no-print hidden lg:sticky lg:top-5 lg:block lg:h-[calc(100vh-2.5rem)] lg:min-h-[540px]" aria-label="Letter comments">
                     <CommentsPanel shareToken={token} className="rounded-[1.75rem] border border-[#e3d8cd] shadow-xl" />

@@ -1,3 +1,4 @@
+import WorldScene3D from '../components/WorldScene3D';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import CharacterBadge from '../components/CharacterBadge';
@@ -10,6 +11,8 @@ const About = () => {
   <div className="min-h-screen bg-background text-foreground">
     <header className="border-b border-border/70"><div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-8"><Link to="/" className="flex items-center gap-3"><CharacterBadge name="lumi" tone="forest" size="md" className="!h-10 !w-10" /><span className="font-editorial text-xl font-semibold">SendTheLetter</span></Link><nav className="flex items-center gap-5 text-sm font-medium text-muted-foreground sm:gap-8"><Link to="/services" className="hover:text-foreground">Features</Link><Link to="/contact" className="hover:text-foreground">Contact</Link>{isVerifying ? <span role="status" className="rounded-full px-4 py-2.5 text-xs text-muted-foreground">Checking session…</span> : <Link to={isAuthenticated ? '/dashboard' : '/login'} className="rounded-full bg-primary px-4 py-2.5 text-primary-foreground">{isAuthenticated ? 'My space' : 'Sign in'}</Link>}</nav></div></header>
     <main className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-24">
+      <WorldScene3D kind="general" title="SendTheLetter interactive 3D experience" className="mb-7 h-[220px] w-full " />
+
       <p className="text-xs font-bold uppercase tracking-[.2em] text-[hsl(var(--accent))]">Our story</p>
       <h1 className="mt-5 max-w-4xl font-editorial text-5xl leading-[1.08] sm:text-7xl">A place for the words that deserve to be kept.</h1>
       <p className="mt-8 max-w-2xl text-lg leading-8 text-muted-foreground">SendTheLetter brings a little intention back to digital communication. It gives people room to write, share thoughts, and hold on to meaningful messages without the rush of an ordinary feed.</p>

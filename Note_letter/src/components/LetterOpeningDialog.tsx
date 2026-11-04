@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { BookOpenText, ArrowRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog';
 import Mascot from './Mascot';
+import WorldScene3D from './WorldScene3D';
 import type { Note } from '../types/note';
 
 type Props = {
@@ -25,19 +26,7 @@ export default function LetterOpeningDialog({ note, onClose, onRead }: Props) {
             Open the envelope to reveal your letter, or skip straight to the familiar reader.
           </DialogDescription>
         </div>
-        <div className="stl-envelope-scene" aria-hidden="true">
-          <div className={`stl-envelope ${opened ? 'is-open' : ''}`}>
-            <div className="stl-envelope__back" />
-            <div className="stl-envelope__paper">
-              <Mascot name="lumi" className="h-12 w-12" />
-              <span className="max-w-[190px] truncate text-xs font-semibold text-muted-foreground">SendTheLetter</span>
-              <span className="max-w-[190px] truncate font-editorial text-sm">{note?.title || 'Your letter'}</span>
-            </div>
-            <div className="stl-envelope__front" />
-            <div className="stl-envelope__flap" />
-            <Mascot name="sely" className="stl-envelope__seal" />
-          </div>
-        </div>
+        <WorldScene3D kind="letter" opened={opened} controls={false} className="h-[260px] sm:h-[310px]" title="3D letter opening animation" />
         <div aria-live="polite" className="text-center text-xs text-muted-foreground">
           {opened ? 'Envelope opened. Your letter is ready.' : 'Sealed and ready to open.'}
         </div>
