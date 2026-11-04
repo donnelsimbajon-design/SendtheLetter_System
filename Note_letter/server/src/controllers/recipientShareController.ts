@@ -1,11 +1,12 @@
-import { createHash, randomBytes } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import type { Request, Response } from 'express';
-import { Op, QueryTypes } from 'sequelize';
+import { QueryTypes } from 'sequelize';
 import sequelize from '../config/database';
 import Letter from '../models/Letter';
 import User from '../models/User';
 import { publicLetterDTO } from '../services/publicLetterDTO';
 import { createRateLimiter } from '../middleware/rateLimit';
+import { hashRecipientToken, isVisibleRecipientLetter } from '../services/privateRecipientSecurity';
 
 type OwnerRequest = Request & { user?: { id: number } };
 type LinkRow = {
@@ -18,15 +19,6 @@ const validToken = /^[a-f0-9]{48}$/;
 const reactions = ['heart', 'hug', 'smile', 'thanks', 'star'] as const;
 const rateLimitReply = createRateLimiter(15 * 60_000, 3);
 export const limitRecipientReplies = rateLimitReply;
-
-export const hashRecipientToken = (token: string): string =>
-    createHash('sha256').update(token, 'utf8').digest('hex');
-
-export const isVisibleRecipientLetter = (letter: Letter | null, now = Date.now()): boolean =>
-    !!letter && letter.status === 'published' && letter.isPublic === false &&
-    letter.isArchived !== true &&
-    (!letter.openDate || new Date(letter.openDate).getTime() <= now) &&
-    (!letter.scheduledDate || new Date(letter.scheduledDate).getTime() <= now);
 
 function idFromRoute(raw: string): number | null {
     const n = Number(raw);
