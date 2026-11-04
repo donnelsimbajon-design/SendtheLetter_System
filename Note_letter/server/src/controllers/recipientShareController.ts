@@ -19,6 +19,7 @@ const validToken = /^[a-f0-9]{48}$/;
 const reactions = ['heart', 'hug', 'smile', 'thanks', 'star'] as const;
 const rateLimitReply = createRateLimiter(15 * 60_000, 3);
 export const limitRecipientReplies = rateLimitReply;
+export const limitRecipientOpens = createRateLimiter(15 * 60_000, 120);
 
 function idFromRoute(raw: string): number | null {
     const n = Number(raw);
@@ -155,18 +156,32 @@ export const replyToRecipientLetter = async (req: Request, res: Response) => {
     const displayName = typeof rawName === 'string' ? rawName.trim().slice(0, 60) || null : null;
     const message = typeof rawMessage === 'string' ? rawMessage.trim().slice(0, 600) || null : null;
     try {
-        const link = await activeLink(req.body?.token);
-        if (!link || !(await readableLetter(link))) return unavailable(res);
+        const token = req.body?.token;
+        if (typeof token !== 'string' || !validToken.test(token)) return unavailable(res);
+        // Revalidate the bearer link and private publication state in the SAME
+        // INSERT statement. Row locking serializes this against link revocation,
+        // preventing an already-revoked invitation from posting after a stale read.
         const rows = await sequelize.query<{ id: number }>(
+            'WITH eligible AS ( ' +
+            '  SELECT invitation.id, invitation."letterId" FROM public.letter_recipient_links invitation ' +
+            '  JOIN public.letters letter ON letter.id = invitation."letterId" ' +
+            '  WHERE invitation."tokenHash" = :hash ' +
+            '    AND invitation."revokedAt" IS NULL AND invitation."expiresAt" > now() ' +
+            "    AND letter.status = 'published' AND letter.\"isPublic\" IS FALSE " +
+            '    AND letter."isArchived" IS NOT TRUE ' +
+            '    AND (letter."openDate" IS NULL OR letter."openDate" <= now()) ' +
+            '    AND (letter."scheduledDate" IS NULL OR letter."scheduledDate" <= now()) ' +
+            '  FOR UPDATE OF invitation ' +
+            ') ' +
             'INSERT INTO public.letter_recipient_replies ("linkId", "letterId", "displayName", reaction, message) ' +
-            'VALUES (:linkId, :letterId, :displayName, :reaction, :message) ' +
+            'SELECT id, "letterId", :displayName, :reaction, :message FROM eligible WHERE true ' +
             'ON CONFLICT ("linkId") DO NOTHING RETURNING id',
             {
                 type: QueryTypes.SELECT,
-                replacements: { linkId: link.id, letterId: link.letterId, displayName, reaction, message },
+                replacements: { hash: hashRecipientToken(token), displayName, reaction, message },
             },
         );
-        if (!rows.length) return res.status(409).json({ message: 'A reply has already been sent from this invitation.' });
+        if (!rows.length) return res.status(409).json({ message: 'This invitation is no longer available or has already received a reply.' });
         return res.status(201).json({ sent: true, message: 'Your reply was delivered to the writer.' });
     } catch (error) { return fail(error, res); }
 };
