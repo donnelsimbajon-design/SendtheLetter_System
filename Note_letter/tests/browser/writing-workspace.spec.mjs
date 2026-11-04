@@ -79,7 +79,7 @@ test('dashboard draft and discovery panels stay readable at desktop and tablet w
     });
     expect(layout.page, 'Document overflow at width ' + width).toBeLessThanOrEqual(layout.viewport + 2);
     expect(layout.right.width, 'Discovery must not become a thin clipped strip at ' + width).toBeGreaterThan(240);
-    if (width >= 1280) {
+    if (width >= 1024) {
       expect(layout.right.x).toBeGreaterThanOrEqual(layout.left.x + layout.left.width - 1);
     } else {
       expect(layout.right.y).toBeGreaterThan(layout.left.y);
