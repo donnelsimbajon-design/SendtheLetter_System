@@ -56,7 +56,8 @@ export function qrForInvitation(url: string): boolean[][] {
     for (let i = 0; i < bits.length; i += 8) {
         data.push(parseInt(bits.slice(i, i + 8).join(''), 2));
     }
-    while (data.length < DATA_BYTES) data.push(data.length % 2 === 0 ? 0xec : 0x11);
+    let padIndex = 0;
+    while (data.length < DATA_BYTES) data.push(padIndex++ % 2 === 0 ? 0xec : 0x11);
     const blocks = [data.slice(0, 68), data.slice(68, 136)];
     const parity = blocks.map(errorCorrection);
     const words: number[] = [];
