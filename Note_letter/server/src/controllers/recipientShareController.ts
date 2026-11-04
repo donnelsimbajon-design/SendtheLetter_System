@@ -155,7 +155,7 @@ export const replyToRecipientLetter = async (req: Request, res: Response) => {
     const displayName = typeof rawName === 'string' ? rawName.trim().slice(0, 60) || null : null;
     const message = typeof rawMessage === 'string' ? rawMessage.trim().slice(0, 600) || null : null;
     try {
-        const link = await activeLink(req.params.token);
+        const link = await activeLink(req.body?.token);
         if (!link || !(await readableLetter(link))) return unavailable(res);
         const rows = await sequelize.query<{ id: number }>(
             'INSERT INTO public.letter_recipient_replies ("linkId", "letterId", "displayName", reaction, message) ' +
