@@ -1,0 +1,217 @@
+/* A tactile paper envelope replaces the low-poly WebGL cubes in the reader.
+   Keep the content real HTML; the envelope is purely the opening animation. */
+.stl-real-envelope-scene {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: clamp(235px, 36dvh, 325px);
+  min-height: 235px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid #e8ddd0;
+  border-radius: 24px;
+  background: radial-gradient(ellipse 62% 70% at 50% 40%, #fffdf9 0%, #f7f0e7 75%, #eee5da 100%);
+  perspective: 1200px;
+}
+.stl-real-envelope-scene::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .32;
+  background: repeating-linear-gradient(91deg, transparent 0 4px, rgba(129,95,66,.015) 4px 5px);
+}
+.stl-real-envelope-light {
+  position: absolute;
+  width: min(560px, 100%);
+  height: 290px;
+  top: -130px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: #fff;
+  filter: blur(50px);
+  opacity: .62;
+  pointer-events: none;
+}
+.stl-real-envelope-shadow {
+  position: absolute;
+  top: 83%;
+  left: 50%;
+  width: min(390px, 73%);
+  height: 22px;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  background: rgba(70, 45, 29, .28);
+  filter: blur(18px);
+  transition: width 650ms ease, opacity 650ms ease;
+}
+.stl-real-envelope {
+  --envelope-paper: #f3e5d2;
+  position: absolute;
+  z-index: 2;
+  top: 56%;
+  left: 50%;
+  width: min(388px, 78%);
+  aspect-ratio: 1.64;
+  transform: translate(-50%, -50%) rotateX(7deg) rotateY(-9deg) rotateZ(-2deg);
+  transform-style: preserve-3d;
+  filter: drop-shadow(0 17px 14px rgba(69,48,30,.17));
+  transition: transform 850ms cubic-bezier(.2,.7,.2,1);
+}
+.stl-real-envelope-scene[data-opened="true"] .stl-real-envelope {
+  transform: translate(-50%, -45%) rotateX(2deg) rotateY(-2deg) rotateZ(0deg);
+}
+.stl-real-envelope-scene[data-opened="true"] .stl-real-envelope-shadow { width: min(340px, 65%); opacity: .65; }
+.stl-real-envelope-back,
+.stl-real-envelope-flap,
+.stl-real-envelope-fold,
+.stl-real-envelope-edge,
+.stl-real-envelope-paper,
+.stl-real-envelope-seal { position: absolute; }
+.stl-real-envelope-back {
+  inset: 0;
+  z-index: 0;
+  border-radius: 9px;
+  border: 1px solid #cdb99e;
+  background: linear-gradient(135deg, #e7d3b6 4%, #f2e2ce 50%, #decaad 100%);
+  box-shadow: inset 0 1px 7px rgba(100,73,42,.19), inset -9px -7px 14px rgba(93,65,39,.09);
+}
+.stl-real-envelope-paper {
+  inset: 11% 9% 13%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 9% 10%;
+  overflow: hidden;
+  border-radius: 3px;
+  border: 1px solid #e8dfd3;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 20px, rgba(119,104,82,.028) 20px 21px),
+    linear-gradient(155deg, #fffefa, #fffaf1);
+  color: #755d4d;
+  box-shadow: 0 3px 8px rgba(78,55,32,.13), 0 -2px 1px #fff inset;
+  transform: translateY(10%) translateZ(1px);
+  transition: transform 1050ms cubic-bezier(.18,.83,.24,1) 80ms, box-shadow 750ms ease;
+}
+.stl-real-envelope-scene[data-opened="true"] .stl-real-envelope-paper {
+  transform: translateY(-37%) translateZ(6px);
+  box-shadow: 0 9px 20px rgba(78,55,32,.2);
+  transition-delay: 430ms;
+}
+.stl-real-envelope-paper-mark {
+  font: 700 clamp(6px, 1vw, 9px)/1.3 system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: .23em;
+  color: #b39072;
+}
+.stl-real-envelope-paper-title {
+  margin-top: 9%;
+  font: italic clamp(13px, 2.8vw, 23px)/1.1 Georgia, serif;
+  color: #4b6253;
+}
+.stl-real-envelope-paper-lines { display: grid; gap: 8px; width: 100%; margin-top: 11%; }
+.stl-real-envelope-paper-lines span { display: block; height: 1px; width: 95%; background: #dacfc1; }
+.stl-real-envelope-paper-lines span:nth-child(2) { width: 84%; }
+.stl-real-envelope-paper-lines span:nth-child(3) { width: 89%; }
+.stl-real-envelope-paper-lines span:nth-child(4) { width: 62%; }
+.stl-real-envelope-paper-signature { margin-top: auto; font: italic clamp(10px, 1.7vw, 14px) Georgia, serif; color: #9c8973; }
+.stl-real-envelope-fold {
+  inset: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 0 1px rgba(90,60,35,.12));
+}
+.stl-real-envelope-fold-left {
+  z-index: 3;
+  background: linear-gradient(120deg, #efdfc9 0%, #e9d6bc 95%);
+  clip-path: polygon(0 0, 56% 53%, 0 100%);
+}
+.stl-real-envelope-fold-right {
+  z-index: 3;
+  background: linear-gradient(235deg, #e4ceb2 10%, #f1e3cf 95%);
+  clip-path: polygon(100% 0, 44% 53%, 100% 100%);
+}
+.stl-real-envelope-fold-bottom {
+  z-index: 4;
+  background: linear-gradient(10deg, #ead7bc 0%, #f4e8d7 70%, #ecddc6 100%);
+  clip-path: polygon(0 100%, 50% 44%, 100% 100%);
+  box-shadow: inset 0 -12px 14px rgba(123,96,66,.1);
+}
+.stl-real-envelope-flap {
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(170deg, #f7e9d5, #dfc5a5);
+  clip-path: polygon(0 0, 100% 0, 50% 57%);
+  transform-origin: top center;
+  backface-visibility: visible;
+  transform: rotateX(0deg) translateZ(2px);
+  transition: transform 900ms cubic-bezier(.18,.75,.21,1), z-index 0s 900ms;
+  filter: drop-shadow(0 2px 2px rgba(96,67,41,.13));
+}
+.stl-real-envelope-scene[data-opened="true"] .stl-real-envelope-flap {
+  z-index: 1;
+  transform: rotateX(178deg) translateZ(-2px);
+  transition: transform 900ms cubic-bezier(.18,.75,.21,1);
+}
+.stl-real-envelope-edge {
+  z-index: 6;
+  inset: 0;
+  border: 1px solid rgba(167,130,96,.32);
+  border-radius: 9px;
+  pointer-events: none;
+  box-shadow: inset 0 -1px 2px rgba(124,83,55,.12), 0 1px 0 rgba(255,255,255,.55);
+}
+.stl-real-envelope-seal {
+  z-index: 7;
+  top: 53%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: clamp(33px, 4vw, 43px);
+  height: clamp(33px, 4vw, 43px);
+  border: 1px solid rgba(121,53,51,.45);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #d7847a, #a24949 78%, #783438);
+  color: #f9ded2;
+  box-shadow: inset -2px -3px 4px rgba(56,23,23,.22), 0 3px 5px rgba(87,49,34,.2);
+  transform: translate(-50%, -50%) translateZ(8px);
+  transition: opacity 180ms ease, transform 400ms ease;
+}
+.stl-real-envelope-seal::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(251,225,207,.45);
+  border-radius: 50%;
+}
+.stl-real-envelope-scene[data-opened="true"] .stl-real-envelope-seal {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.8);
+  pointer-events: none;
+}
+.stl-real-envelope-caption {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  color: #9b8774;
+  font: italic 12px Georgia, serif;
+  letter-spacing: .03em;
+  text-align: center;
+}
+@media (max-width: 480px) {
+  .stl-real-envelope-scene { height: clamp(220px, 37dvh, 260px); min-height: 220px; border-radius: 20px; }
+  .stl-real-envelope { width: min(305px, 84%); }
+  .stl-real-envelope-paper { padding: 8% 9%; }
+  .stl-real-envelope-paper-lines { gap: 5px; }
+  .stl-real-envelope-caption { bottom: 9px; font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stl-real-envelope *, .stl-real-envelope-scene * { transition-duration: 0.01ms !important; animation: none !important; }
+}
+:root[data-reduce-motion="true"] .stl-real-envelope *,
+:root[data-reduce-motion="true"] .stl-real-envelope-scene * { transition-duration: 0.01ms !important; animation: none !important; }
+@media print { .stl-real-envelope-scene { display: none; } }
