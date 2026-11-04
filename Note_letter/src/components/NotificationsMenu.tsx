@@ -5,7 +5,6 @@ import { useNoteStore, type Notification } from '../store/noteStore';
 import socketService from '../services/socketService';
 import Mascot from './Mascot';
 import CharacterBadge from './CharacterBadge';
-import WorkspaceRailIcon from './WorkspaceRailIcon';
 
 function destination(n: Notification): string {
   if (n.letterId && Number.isSafeInteger(Number(n.letterId))) {
@@ -38,9 +37,9 @@ export default function NotificationsMenu({ placement = 'header' }: { placement?
   return <div className="relative">
     <button type="button" onClick={() => { setOpen(!open); setError(''); }}
       aria-label={`Notifications, ${unread} unread`} aria-expanded={open} aria-haspopup="dialog"
-      className={placement === 'rail' ? "relative flex h-12 w-12 items-center justify-center rounded-xl text-[#e7e7e9] hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" : "relative flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"}>
-      {placement === 'rail' ? <WorkspaceRailIcon name="activity" /> : <CharacterBadge name="nori" tone="gold" size="sm" />}
-      {unread > 0 && <span aria-hidden="true" className="absolute right-0 top-0 min-w-4 rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">{unread > 99 ? '99+' : unread}</span>}
+      className={placement === 'rail' ? "relative flex h-12 w-12 items-center justify-center rounded-2xl bg-transparent opacity-90 transition-[transform,opacity] duration-200 ease-out hover:scale-105 hover:opacity-100 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transform-none" : "relative flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"}>
+      <CharacterBadge name="nori" tone="paper" size="sm" />
+      {unread > 0 && <span aria-hidden="true" className="absolute right-0 top-0 min-w-4 rounded-full bg-foreground px-1 text-[10px] font-bold text-background">{unread > 99 ? '99+' : unread}</span>}
     </button>
     {open && <section role="dialog" aria-label="Notifications" className={placement === 'rail' ? "absolute bottom-0 left-[calc(100%+24px)] z-50 w-[min(22rem,calc(100vw-7rem))] overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-xl" : "absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-card shadow-xl"}>
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
