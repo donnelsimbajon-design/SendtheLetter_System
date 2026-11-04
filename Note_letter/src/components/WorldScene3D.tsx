@@ -365,6 +365,9 @@ export default function WorldScene3D({ kind, className='', title, opened, contro
   const [supported, setSupported] = useState(true);
   const preferences = useWriterPreferences(state => state.preferences);
   const controlled = opened !== undefined;
+  const isConversation = kind === 'messages';
+  const isCapsule = kind === 'capsule' || kind === 'settings';
+  const subject = isCapsule ? 'capsule' : 'letter';
   const actualOpen = controlled ? Boolean(opened) : expanded;
   const openRef = useRef(actualOpen);
   const movingRef = useRef(false);
@@ -431,14 +434,18 @@ export default function WorldScene3D({ kind, className='', title, opened, contro
           {enabled && supported && (
             <button
               type="button"
-              aria-label={actualOpen ? 'Close 3D letter' : 'Open 3D letter'}
-              aria-pressed={actualOpen}
-              onClick={() => { if (!controlled) setExpanded(value => !value); }}
+              aria-label={isConversation ? 'Rotate 3D messages' : (actualOpen ? 'Close 3D ' + subject : 'Open 3D ' + subject)}
+              aria-pressed={isConversation ? undefined : actualOpen}
+              onClick={() => {
+                if (controlled) return;
+                if (isConversation) yawRef.current += .45;
+                setExpanded(value => !value);
+              }}
               disabled={controlled}
               className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border border-border bg-card/95 px-3 text-[11px] font-bold shadow-md transition-colors hover:bg-muted disabled:opacity-50"
             >
               <RotateCcw size={13} aria-hidden="true" />
-              {actualOpen ? 'Close letter' : 'Open letter'}
+              {isConversation ? 'Rotate chat' : (actualOpen ? 'Close ' + subject : 'Open ' + subject)}
             </button>
           )}
         </div>
