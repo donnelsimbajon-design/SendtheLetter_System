@@ -1,3 +1,4 @@
+import WorldScene3D from '../../components/WorldScene3D';
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
@@ -88,6 +89,8 @@ export default function RecipientLetterPage() {
 
     const letter = invitation.letter;
     return <main className="min-h-screen bg-[#f5f0e8] px-3 pb-16 pt-6 text-[#30483b] sm:px-6">
+      <WorldScene3D kind="letter" title="SendTheLetter interactive 3D experience" className="mb-7 h-[190px] w-full no-print " />
+
         <div className="mx-auto max-w-[800px]">
             <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
                 <Link to="/" className="inline-flex items-center gap-2 font-editorial text-xl font-bold text-[#30483b]"><BookHeart size={22}/> SendTheLetter</Link>
