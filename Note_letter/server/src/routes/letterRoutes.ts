@@ -11,8 +11,9 @@ import { authenticateToken, optionalAuth } from '../middleware/authMiddleware';
 const router = express.Router();
 
 // Recipient bearer links are separate from discoverable/public letters.
-router.get('/recipient/:token', recipientShare.readRecipientLetter);
-router.post('/recipient/:token/reply', recipientShare.limitRecipientReplies, recipientShare.replyToRecipientLetter);
+// POST body keeps the bearer token out of normal URL/access logs.
+router.post('/recipient/open', recipientShare.readRecipientLetter);
+router.post('/recipient/reply', recipientShare.limitRecipientReplies, recipientShare.replyToRecipientLetter);
 
 // Public reads allow anonymous visitors while optionally personalizing engagement state.
 router.get('/public', optionalAuth, letterController.getPublicLetters);
