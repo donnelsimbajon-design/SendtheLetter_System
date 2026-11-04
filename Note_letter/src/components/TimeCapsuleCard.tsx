@@ -1,4 +1,4 @@
-import { LockKeyhole, LockKeyholeOpen } from 'lucide-react';
+import { LockKeyhole, Unlock } from 'lucide-react';
 import Mascot from './Mascot';
 import type { Note } from '../types/note';
 
@@ -25,7 +25,7 @@ export default function TimeCapsuleCard({ note, onManage, onOpen }: Props) {
     <article className="stl-capsule-card group flex min-h-[330px] flex-col rounded-[1.5rem] border border-border bg-card/70 p-5 shadow-sm">
       <div className="flex items-center justify-between gap-3 text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground">
         <span>{locked ? 'Sealed time capsule' : 'Ready to open'}</span>
-        {locked ? <LockKeyhole size={16} aria-label="Locked" /> : <LockKeyholeOpen size={16} aria-label="Unlocked" />}
+        {locked ? <LockKeyhole size={16} aria-label="Locked" /> : <Unlock size={16} aria-label="Unlocked" />}
       </div>
       <div className="stl-capsule-scene" aria-hidden="true">
         <div className={`stl-capsule ${locked ? '' : 'is-unlocked'}`}>
