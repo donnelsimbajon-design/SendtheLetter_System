@@ -179,7 +179,7 @@ export default function DashboardPage() {
         <div className="grid gap-3 md:grid-cols-3">
           {prompts.map(prompt => (
             <Link key={prompt.template} to={`/dashboard/notes?compose=1&template=${prompt.template}`} className={`${surface} ${hover} flex min-w-0 items-start gap-3 p-5`}>
-              <InteractiveMascot name={prompt.mascot} className="h-11 w-11 shrink-0" />
+              <Mascot name={prompt.mascot} className="h-11 w-11 shrink-0" />
               <span className="min-w-0 flex-1"><span className="block font-editorial text-lg">{prompt.title}</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">{prompt.description}</span></span>
               <ArrowRight size={16} className="mt-2 shrink-0 text-muted-foreground" />
             </Link>
