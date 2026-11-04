@@ -26,7 +26,7 @@ const DashboardPage = () => {
   const recentNotes = notes.slice(0, 3);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-7 pb-6 sm:space-y-9">
+    <div className="mx-auto min-w-0 max-w-6xl space-y-7 overflow-x-clip pb-6 sm:space-y-9">
       <section className="relative overflow-hidden rounded-[2rem] bg-primary px-6 py-9 text-primary-foreground sm:px-10 sm:py-12">
         <div aria-hidden="true" className="paper-grain pointer-events-none absolute inset-0 opacity-25" />
         <div className="relative z-10 max-w-2xl">
@@ -71,7 +71,7 @@ const DashboardPage = () => {
           <p className="mt-2 font-editorial text-4xl tabular-nums">{drafts.length}</p>
           <Link to="/dashboard/notes?tab=drafts" className="mt-2 inline-flex text-xs font-semibold text-primary hover:underline">Continue your thoughts</Link>
         </div>
-        <div className="rounded-[1.65rem] border border-border bg-[hsl(var(--surface-rose))] p-5 text-[#49363B] shadow-sm sm:p-6">
+        <div className="rounded-[1.65rem] border border-border/70 bg-card/70 p-5 text-foreground shadow-sm sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <p className="text-sm opacity-80">Today's invitation</p>
             <CharacterBadge name="araw" tone="paper" size="md" />
@@ -81,8 +81,8 @@ const DashboardPage = () => {
         </div>
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-[1.15fr_.85fr]">
-        <div className="rounded-[1.8rem] border border-border bg-card p-6 sm:p-8">
+      <section aria-label="Your letters and community discovery" className="grid min-w-0 grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,.85fr)]">
+        <div className="min-w-0 rounded-[1.8rem] border border-border/70 bg-card/70 p-5 sm:p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-[.17em] text-[hsl(var(--accent))]">Back to your words</p>
@@ -91,12 +91,12 @@ const DashboardPage = () => {
             <Link to="/dashboard/notes" className="inline-flex min-h-10 items-center rounded-full border border-border px-4 py-2 text-xs font-bold text-primary transition-colors hover:bg-muted">View library</Link>
           </div>
           {firstDraft ? (
-            <div className="mt-6 flex flex-col gap-5 rounded-[1.45rem] bg-background p-5 sm:flex-row sm:items-center sm:p-6">
+            <div className="mt-6 flex min-w-0 flex-col gap-5 rounded-[1.45rem] bg-background/45 p-5 sm:flex-row sm:items-center sm:p-6">
               <CharacterBadge name="lumi" tone="gold" size="lg" />
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-bold uppercase tracking-[.14em] text-muted-foreground">Saved for later</p>
                 <h3 className="mt-2 truncate font-editorial text-2xl">{firstDraft.title || 'Untitled letter'}</h3>
-                <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">{firstDraft.content}</p>
+                <p className="mt-2 line-clamp-2 break-words text-sm leading-6 text-muted-foreground [overflow-wrap:anywhere]">{firstDraft.content}</p>
               </div>
               <Link to="/dashboard/notes?tab=drafts" className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full bg-primary px-5 py-2 text-xs font-bold text-primary-foreground">Continue draft</Link>
             </div>
@@ -123,12 +123,12 @@ const DashboardPage = () => {
           )}
         </div>
 
-        <div className="relative overflow-hidden rounded-[1.8rem] bg-[hsl(var(--surface-gold))] p-6 text-[#493D2A] sm:p-8">
+        <div className="relative min-w-0 overflow-hidden rounded-[1.8rem] border border-border/70 bg-card/70 p-6 text-foreground shadow-sm sm:p-8">
           <CharacterBadge name="basa" tone="paper" size="lg" />
           <p className="mt-6 text-xs font-bold uppercase tracking-[.17em] opacity-70">A gentle discovery</p>
           <h2 className="mt-3 max-w-sm font-editorial text-3xl leading-tight">Every letter holds a little world.</h2>
           <p className="mt-4 max-w-sm text-sm leading-7 opacity-85">Read published stories from other writers when you feel like finding a little connection.</p>
-          <Link to="/dashboard/community" className="mt-7 inline-flex min-h-11 items-center rounded-full bg-[#493D2A] px-5 py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-90">Explore community letters</Link>
+          <Link to="/dashboard/community" className="mt-7 inline-flex min-h-11 items-center rounded-full border border-border bg-transparent px-5 py-2.5 text-xs font-bold text-foreground transition-[transform,opacity] duration-200 ease-out hover:-translate-y-0.5 hover:opacity-75 active:scale-[.98] motion-reduce:transform-none">Explore community letters</Link>
           <Mascot name="piko" className="pointer-events-none absolute -bottom-10 -right-9 h-32 w-32 opacity-60" />
         </div>
       </section>
