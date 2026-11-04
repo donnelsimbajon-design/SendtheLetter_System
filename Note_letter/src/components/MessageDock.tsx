@@ -47,10 +47,18 @@ export default function MessageDock() {
   const [threadError, setThreadError] = useState('');
   const [incomingPreview, setIncomingPreview] = useState<{ sender: InboxContact; content: string } | null>(null);
   const selectedRef = useRef<InboxContact | null>(null);
+  const openRef = useRef(false);
   const conversationsRef = useRef(conversations);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { selectedRef.current = selected; }, [selected]);
+  useEffect(() => { openRef.current = isOpen; }, [isOpen]);
+  useEffect(() => {
+    if (location.pathname === '/dashboard/messages') {
+      setIncomingPreview(null);
+      setOpen(false);
+    }
+  }, [location.pathname]);
   useEffect(() => { conversationsRef.current = conversations; }, [conversations]);
   useEffect(() => {
     if (!user?.id) { reset(); return; }
@@ -66,10 +74,20 @@ export default function MessageDock() {
         setThread(previous => previous.some(item => item.id === message.id) ? previous : [...previous, message]);
       }
       if (message.receiverId === user.id) {
-        const contact = conversationsRef.current.find(item => item.user.id === peerId)?.user
-          || message.sender
-          || { id: peerId, username: 'A writer' };
-        setIncomingPreview({ sender: contact, content: message.content });
+        if (openRef.current && selectedRef.current?.id === peerId) {
+          void fetch(`${API_ENDPOINTS.messages}/read`, {
+            method: 'POST',
+            headers: { ...headers(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ senderId: peerId }),
+          }).then(result => {
+            if (result.ok) { markRead(peerId); void refresh(); }
+          }).catch(() => { /* Polling will recover if marking read fails. */ });
+        } else if (location.pathname !== '/dashboard/messages') {
+          const contact = conversationsRef.current.find(item => item.user.id === peerId)?.user
+            || message.sender
+            || { id: peerId, username: 'A writer' };
+          setIncomingPreview({ sender: contact, content: message.content });
+        }
       }
     };
     socketService.onNewMessage(onIncoming);
@@ -77,7 +95,7 @@ export default function MessageDock() {
       window.clearInterval(poll);
       socketService.offNewMessage(onIncoming);
     };
-  }, [user?.id, refresh, reset]);
+  }, [user?.id, refresh, reset, markRead, location.pathname]);
 
   const openContact = useCallback((contact: InboxContact) => {
     setSelected(contact);
