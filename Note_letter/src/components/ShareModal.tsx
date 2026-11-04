@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
-import { Check, User as UserIcon, Copy, Mail, Facebook, Instagram, Lock } from 'lucide-react';
+import { Check, User as UserIcon, Copy, Mail, Facebook, Lock } from 'lucide-react';
 import CharacterBadge from './CharacterBadge';
 import { useAuthStore } from '../store/authStore';
 import { getImageUrl } from '../lib/utils';
@@ -182,10 +182,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                     <Button type="button" variant="outline" onClick={shareEmail} className="justify-start gap-2"><Mail size={16} /> Email</Button>
                                     <Button type="button" variant="outline" onClick={shareFacebook} className="justify-start gap-2"><Facebook size={16} /> Facebook</Button>
-                                    <Button type="button" variant="outline" onClick={() => shareNative()} className="justify-start gap-2"><CharacterBadge name="chika" tone="paper" size="sm" /> Messenger</Button>
-                                    <Button type="button" variant="outline" onClick={() => shareNative()} className="justify-start gap-2"><Instagram size={16} /> Instagram</Button>
-                                    <Button type="button" variant="outline" onClick={() => shareNative()} className="justify-start gap-2"><Share2 size={16} /> TikTok / apps</Button>
-                                    <Button type="button" variant="outline" onClick={() => shareNative()} className="justify-start gap-2"><CharacterBadge name="piko" tone="paper" size="sm" /> More options</Button>
+                                    <Button type="button" variant="outline" onClick={() => shareNative()} className="justify-start gap-2"><Share2 size={16} /> Share via apps</Button>
                                     <Button type="button" variant="outline" onClick={copyLink} className="justify-start gap-2"><Copy size={16} /> Copy link</Button>
                                     <Button type="button" variant="outline" onClick={() => setShowPublicQr(value => !value)} className="justify-start gap-2"><QrCode size={16} /> {showPublicQr ? 'Hide QR' : 'QR code'}</Button>
                                 </div>
@@ -210,7 +207,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
                         {shareFeedback && <p role="status" className="text-xs text-primary">{shareFeedback}</p>}
                     </section>
 
-                    {user && <section className="space-y-3">
+                    {user && isPubliclyShareable && <section className="space-y-3">
                         <button type="button" onClick={() => setShowFriends(value => !value)}
                             className="inline-flex min-h-11 items-center text-left text-sm font-semibold text-primary underline underline-offset-4">
                             {showFriends ? 'Hide friends' : 'Send to a SendTheLetter friend'}
