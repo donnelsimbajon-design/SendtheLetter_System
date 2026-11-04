@@ -4,6 +4,9 @@ import { useAuthStore } from '../store/authStore';
 import { getImageUrl } from '../lib/utils';
 import NotificationsMenu from './NotificationsMenu';
 import CharacterBadge from './CharacterBadge';
+import Mascot from './Mascot';
+import MessageDock from './MessageDock';
+import { useInboxStore } from '../store/inboxStore';
 import ProfileDropdown from './ProfileDropdown';
 import { useWriterPreferences } from '../store/writerPreferences';
 
@@ -22,27 +25,31 @@ const railLink = (active: boolean) =>
   'relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-transparent transition-[transform,opacity,box-shadow] duration-200 ease-out hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transform-none motion-reduce:transition-none ' +
   (active ? 'opacity-100 ring-1 ring-border/70 shadow-sm' : 'opacity-90 hover:opacity-100');
 
-const MobileNavLink = ({ to, label, mascot, end, avatar }: {
+const MobileNavLink = ({ to, label, mascot, end, avatar, unreadCount = 0 }: {
   to: string;
   label: string;
   mascot: typeof navigation[number]['mascot'];
   end: boolean;
   avatar?: string;
+  unreadCount?: number;
 }) => (
   <NavLink to={to} end={end} aria-label={label} title={label}
     className={({ isActive }) =>
-      'flex min-h-12 min-w-0 flex-col items-center justify-center rounded-xl bg-transparent px-1 py-1 transition-[transform,opacity] duration-200 ease-out hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-primary motion-reduce:transform-none ' +
+      'relative flex min-h-12 min-w-0 flex-col items-center justify-center rounded-xl bg-transparent px-1 py-1 transition-[transform,opacity] duration-200 ease-out hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-primary motion-reduce:transform-none ' +
       (isActive ? 'text-primary opacity-100' : 'text-muted-foreground opacity-80 hover:opacity-100')
     }>
     {avatar
       ? <img src={getImageUrl(avatar)} alt="" className="h-8 w-8 rounded-full border-2 border-primary object-cover" />
       : <CharacterBadge name={mascot} tone="paper" size="sm" />}
+    {unreadCount > 0 && <span className="absolute right-0 top-0 min-w-5 rounded-full bg-primary px-1 text-center text-[10px] font-bold text-primary-foreground" aria-label={`${unreadCount} unread messages`}>{unreadCount > 99 ? '99+' : unreadCount}</span>}
     <span className="max-w-full truncate text-[9px] font-semibold leading-tight sm:text-[10px]">{label}</span>
   </NavLink>
 );
 
 export default function DashboardLayout() {
   const user = useAuthStore(state => state.user);
+  const inboxConversations = useInboxStore(state => state.conversations);
+  const unreadMessages = inboxConversations.reduce((sum, item) => sum + Math.max(0, item.unreadCount || 0), 0);
   const location = useLocation();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const preferences = useWriterPreferences(state => state.preferences);
@@ -84,7 +91,7 @@ export default function DashboardLayout() {
               className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary">
               {user?.avatar
                 ? <img src={getImageUrl(user.avatar)} alt="" className="h-9 w-9 rounded-full object-cover" />
-                : <CharacterBadge name="sely" tone="paper" size="sm" />}
+                : <Mascot name="sely" className="h-10 w-10" />}
             </button>
             <ProfileDropdown isOpen={showAccountMenu} onClose={() => setShowAccountMenu(false)} />
           </div>
@@ -97,7 +104,9 @@ export default function DashboardLayout() {
         className="fixed inset-y-0 left-0 z-40 hidden w-[72px] flex-col items-center border-r border-border/50 bg-background/40 px-3 pb-4 pt-4 text-foreground backdrop-blur-xl lg:flex">
         <Link to="/dashboard" aria-label="SendTheLetter home" title="SendTheLetter"
           className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-transparent transition-[transform,opacity] duration-200 ease-out hover:scale-105 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transform-none">
-          <CharacterBadge name="sely" tone="paper" size="sm" />
+          <span className="relative block h-10 w-10 overflow-hidden rounded-xl" aria-hidden="true">
+            <img src="/sendtheletter-logo.svg" alt="" className="absolute left-0 top-0 h-10 w-[158px] max-w-none" />
+          </span>
         </Link>
 
         <nav aria-label="Workspace navigation"
@@ -105,18 +114,19 @@ export default function DashboardLayout() {
           {railNavigation.map(({ to, label, mascot, end }) => (
             <NavLink key={to} to={to} end={end} aria-label={label} title={label}
               className={({ isActive }) => railLink(isActive)}>
-              <CharacterBadge name={mascot} tone="paper" size="sm" />
+              <Mascot name={mascot} className="h-10 w-10" />
+              {label === "Messages" && unreadMessages > 0 && <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-primary px-1 text-center text-[10px] font-bold text-primary-foreground" aria-label={`${unreadMessages} unread messages`}>{unreadMessages > 99 ? "99+" : unreadMessages}</span>}
             </NavLink>
           ))}
 
           <Link to="/dashboard/community?focus=search" aria-label="Search public letters" title="Search public letters"
             className={railLink(false)}>
-            <CharacterBadge name="suri" tone="paper" size="sm" />
+            <Mascot name="suri" className="h-10 w-10" />
           </Link>
 
           <Link to="/dashboard/notes?compose=1" aria-label="Write a new letter" title="Write a letter"
             className={railLink(false)}>
-            <CharacterBadge name="tala" tone="paper" size="sm" />
+            <Mascot name="tala" className="h-10 w-10" />
           </Link>
 
           <NavLink to="/dashboard/profile" aria-label="My profile" title="My profile"
@@ -137,7 +147,7 @@ export default function DashboardLayout() {
               aria-haspopup="menu"
               aria-expanded={showAccountMenu}
               className={railLink(showAccountMenu)}>
-              <CharacterBadge name="susi" tone="paper" size="sm" />
+              <Mascot name="susi" className="h-10 w-10" />
             </button>
             <ProfileDropdown isOpen={showAccountMenu} onClose={() => setShowAccountMenu(false)} placement="rail" />
           </div>
@@ -169,9 +179,10 @@ export default function DashboardLayout() {
           <CharacterBadge name="tala" tone="paper" size="sm" />
           <span className="text-[9px] font-bold leading-tight sm:text-[10px]">Write</span>
         </Link>
-        {navigation.slice(3).map(item => <MobileNavLink key={item.to} {...item} avatar={item.to === '/dashboard/profile' ? user?.avatar : undefined} />)}
+        {navigation.slice(3).map(item => <MobileNavLink key={item.to} {...item} unreadCount={item.to === '/dashboard/messages' ? unreadMessages : 0} avatar={item.to === '/dashboard/profile' ? user?.avatar : undefined} />)}
         {user?.role === 'admin' && <Link to="/admin" aria-label="Admin panel" title="Admin panel" className="flex min-h-12 min-w-0 items-center justify-center rounded-xl hover:bg-muted"><CharacterBadge name="susi" tone="paper" size="sm" /></Link>}
       </nav>
+      <MessageDock />
     </div>
   );
 }
