@@ -199,6 +199,7 @@ test('letter soundtrack follows Spotify playback, countdown, pause and modal cle
   await page.goto('/dashboard/community');
   await page.getByRole('button', { name: 'Read letter: Thank you for showing up' }).click();
   const reader = page.getByRole('dialog');
+  await reader.getByRole('button', { name: 'Skip 3D & read' }).click();
   await expect(reader.getByRole('region', { name: 'Letter soundtrack' })).toBeVisible();
   await expect(reader.getByRole('button', { name: 'Pause letter soundtrack' })).toBeVisible();
   await expect(reader.getByLabel('Soundtrack time remaining')).toContainText(/-[12]:[0-5][0-9]/);
@@ -232,6 +233,7 @@ test('letter reader wraps text around anchored photos with no duplicated paragra
   }]);
   await page.goto('/dashboard/community');
   await page.getByRole('button', { name: 'Read letter: Thank you for showing up' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Skip 3D & read' }).click();
   const flow = page.getByTestId('letter-reader-flow');
   await expect(flow).toBeVisible();
   await expect(flow.locator('figure[data-letter-photo]')).toHaveCount(1);
@@ -303,6 +305,7 @@ test('YouTube link is an external music reference, not a hidden video player', a
   await page.goto('/dashboard/community');
   await page.getByRole('button', { name: 'Read letter: Thank you for showing up' }).click();
   const modal = page.getByRole('dialog');
+  await modal.getByRole('button', { name: 'Skip 3D & read' }).click();
   await expect(modal.getByRole('link', { name: 'Open YouTube' })).toHaveAttribute(
     'href', 'https://www.youtube.com/watch?v=M7lc1UVf-VE');
   await expect(modal.getByText(/YouTube soundtrack reference/)).toBeVisible();
@@ -458,7 +461,7 @@ test('writer can create, share as QR and revoke a private invite without eager f
   page.on('dialog', dialog => dialog.accept());
   await page.goto('/dashboard/notes');
   await page.getByRole('button', { name: 'Read letter: For a friend' }).click();
-  await page.getByRole('button', { name: 'Share', exact: true }).click();
+  await page.getByRole('button', { name: 'Share letter', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Private recipient invitation' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Create private invitation' })).toBeVisible();
   await page.getByRole('button', { name: 'Create private invitation' }).click();

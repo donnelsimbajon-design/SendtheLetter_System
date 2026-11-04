@@ -197,7 +197,7 @@ export default function Messages() {
             <Link to="/dashboard/community" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-xs font-bold hover:bg-muted"><CharacterBadge name="lumi" tone="sage" size="xs" /> Explore writers</Link>
         </header>
 
-        <div className="stl-depth-card stl-depth-static flex h-[min(74dvh,760px)] min-h-[530px] overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_14px_45px_rgba(46,50,39,.07)]">
+        <div className="stl-depth-card stl-depth-static flex h-[min(74dvh,760px)] min-h-[360px] sm:min-h-[500px] overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_14px_45px_rgba(46,50,39,.07)]">
             <aside className={`flex w-full shrink-0 flex-col border-r border-border bg-background/50 md:w-[325px] lg:w-[360px] ${activeMobile ? 'hidden md:flex' : 'flex'}`} aria-label="Conversations">
                 <div className="border-b border-border p-5">
                     <div className="flex items-center justify-between"><h2 className="font-editorial text-2xl">Inbox</h2><CharacterBadge name="chika" tone="gold" size="sm" /></div>

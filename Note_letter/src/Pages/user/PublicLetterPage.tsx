@@ -151,16 +151,13 @@ const PublicLetterPage = () => {
 
     return (
         <main className="min-h-screen bg-[#f6f1e9] px-4 py-10 text-[#263b35]">
-      <WorldScene3D kind="letter" title="SendTheLetter interactive 3D experience" className="mb-7 h-[190px] w-full no-print " />
+      <WorldScene3D kind="letter" title="3D SendTheLetter envelope" className="no-print mx-auto mb-6 h-[190px] w-full max-w-4xl sm:h-[230px]" />
 
-            <div className="mx-auto max-w-7xl lg:grid lg:grid-cols-[370px_minmax(0,1fr)] lg:items-start lg:gap-7">
-                <aside className="no-print hidden lg:sticky lg:top-5 lg:block lg:h-[calc(100vh-2.5rem)] lg:min-h-[540px]" aria-label="Letter comments">
-                    <CommentsPanel shareToken={token} className="rounded-[1.75rem] border border-[#e3d8cd] shadow-xl" />
-                </aside>
-                <div className="mx-auto w-full max-w-3xl min-w-0">
+            <div className="mx-auto w-full max-w-4xl min-w-0">
                 <div className="no-print flex flex-wrap items-center justify-between gap-2">
                     <Link to="/" className="inline-flex items-center gap-2 text-sm text-[#52645d] hover:text-[#263b35]"><ArrowLeft size={16} /> SendTheLetter</Link>
                     <div className="flex flex-wrap gap-2">
+                        <button type="button" onClick={() => setMobileCommentsOpen(true)} aria-label="View comments" aria-expanded={mobileCommentsOpen} className="no-print inline-flex min-h-11 items-center gap-2 rounded-full border border-[#d8cfc1] bg-[#fffdf8] px-4 py-2 text-sm font-semibold text-[#263b35] hover:bg-white"><MessageCircle size={17} /> Comments &amp; gifts</button>
                         <button type="button" onClick={downloadShareImage} className="inline-flex items-center gap-2 rounded-full border border-[#d8cfc1] bg-[#fffdf8] px-4 py-2 text-sm text-[#263b35] hover:bg-white"><Download size={15} /> Download image</button>
                         <button type="button" onClick={() => window.print()} className="inline-flex items-center gap-2 rounded-full border border-[#d8cfc1] bg-[#fffdf8] px-4 py-2 text-sm text-[#263b35] hover:bg-white"><Printer size={15} /> Print / Save as PDF</button>
                     </div>
@@ -181,12 +178,10 @@ const PublicLetterPage = () => {
                         coverImage={letter.imageUrl}
                     />
                 </article>
-                </div>
             </div>
-            <button type="button" onClick={() => setMobileCommentsOpen(true)} className="no-print fixed bottom-5 left-5 z-40 inline-flex items-center gap-2 rounded-full bg-[#263b35] px-5 py-3 text-sm font-semibold text-white shadow-2xl hover:bg-[#375747] lg:hidden"><MessageCircle size={18} /> Comments & gifts</button>
-            {mobileCommentsOpen && <div className="no-print fixed inset-0 z-[70] lg:hidden" role="dialog" aria-modal="true" aria-label="Comments drawer">
+            {mobileCommentsOpen && <div className="no-print fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-label="Comments drawer">
                 <button type="button" aria-label="Close comments drawer" onClick={() => setMobileCommentsOpen(false)} className="absolute inset-0 bg-black/55" />
-                <aside className="absolute inset-y-0 left-0 w-[min(420px,96vw)] overflow-hidden bg-white shadow-2xl">
+                <aside className="absolute inset-y-0 right-0 w-[min(420px,100vw)] overflow-hidden border-l border-[#e3d8cd] bg-white shadow-2xl">
                     <CommentsPanel shareToken={token} onCollapse={() => setMobileCommentsOpen(false)} />
                 </aside>
             </div>}

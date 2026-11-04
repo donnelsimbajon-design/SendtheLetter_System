@@ -1,0 +1,48 @@
+/*
+ * Full-letter reading: a perspective paper page, not a split-screen discussion.
+ * Only page changes turn; typing, photos and the comments drawer never tilt.
+ */
+.stl-reading-perspective { perspective: 1500px; }
+.stl-reading-page-turn {
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  animation: stl-reader-page-in 420ms cubic-bezier(.19,.82,.3,1) both;
+}
+@keyframes stl-reader-page-in {
+  from { opacity: .75; transform: rotateY(-10deg) translate3d(-6px,0,-10px); }
+  to { opacity: 1; transform: rotateY(0) translate3d(0,0,0); }
+}
+.stl-full-letter-reader {
+  /* Radix's fixed positioning and limited vertical room stay intact on tablets. */
+  max-height: calc(100dvh - 8px);
+  overscroll-behavior: contain;
+}
+.stl-full-letter-reader .stl-reading-book {
+  box-shadow: 2px 3px 0 #f8efe2, 6px 7px 0 #e8d9c5, 0 20px 45px -25px rgba(60,46,31,.26);
+}
+.stl-full-letter-reader [data-testid="full-letter-scroll"] {
+  scrollbar-gutter: stable;
+}
+.stl-full-letter-paper,
+.stl-full-letter-paper * { min-width: 0; }
+.stl-full-letter-paper img { max-width: 100%; }
+@media (max-width: 480px) {
+  .stl-full-letter-reader .stl-reading-book { border-radius: 16px; }
+  .stl-full-letter-reader .stl-reading-page-turn { padding: 20px 16px; }
+  .stl-full-letter-reader .stl-reading-book nav[aria-label="Book pages"] button { padding: 10px 12px; }
+  .stl-full-letter-reader [data-testid="full-letter-scroll"] { scrollbar-gutter: auto; }
+  /* Don't let the desktop-style dimensional hero spill outside a small screen. */
+  :root[data-stl-depth="on"] .stl-depth-hero {
+    transform: none;
+    box-shadow: 0 12px 30px -22px hsl(var(--foreground) / .3);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stl-reading-page-turn { animation: none !important; transform: none !important; }
+}
+:root[data-reduce-motion="true"] .stl-reading-page-turn,
+:root[data-stl-depth="off"] .stl-reading-page-turn {
+  animation: none !important;
+  transform: none !important;
+}

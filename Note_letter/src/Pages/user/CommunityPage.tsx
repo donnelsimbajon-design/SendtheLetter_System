@@ -65,6 +65,7 @@ export default function CommunityPage() {
     const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
     const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+    const [openCommentsFirst, setOpenCommentsFirst] = useState(false);
     const [likingId, setLikingId] = useState<string | null>(null);
     const [interactionError, setInteractionError] = useState('');
 
@@ -166,7 +167,7 @@ export default function CommunityPage() {
         setSortOrder('newest');
         setVisibleCount(PAGE_SIZE);
     };
-    const openLetter = (letter: Note) => setSelectedNote(letter);
+    const openLetter = (letter: Note, comments = false) => { setOpenCommentsFirst(comments); setSelectedNote(letter); };
     const openWriter = (name: string) => {
         setSelectedNote(null);
         navigate('/dashboard/profile/' + encodeURIComponent(name));
@@ -380,7 +381,7 @@ export default function CommunityPage() {
                                             <CharacterBadge name="sely" tone={letter.isLikedByUser ? 'rose' : 'paper'} size="xs" />
                                             <span>{letter.likeCount || 0} <span className="hidden sm:inline">Appreciations</span></span>
                                         </button>
-                                        <button type="button" onClick={() => openLetter(letter)} aria-label={'View comments for ' + (letter.title || 'Untitled letter')}
+                                        <button type="button" onClick={() => openLetter(letter, true)} aria-label={'View comments for ' + (letter.title || 'Untitled letter')}
                                             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground">
                                             <CharacterBadge name="chika" tone="paper" size="xs" />{letter.commentCount || 0} <span className="hidden sm:inline">Comments</span>
                                         </button>
@@ -473,7 +474,7 @@ export default function CommunityPage() {
             </div>
 
             <LetterViewModal isOpen={selectedNote !== null} onClose={() => setSelectedNote(null)}
-                note={selectedNote} onAuthorClick={openWriter} />
+                note={selectedNote} initialComments={openCommentsFirst} onAuthorClick={openWriter} />
         </div>
     );
 }

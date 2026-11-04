@@ -43,13 +43,13 @@ export default function LetterBookReader({ title, content, letterPages, recipien
     const beforePhoto = page.text.slice(0, anchor);
     const afterPhoto = page.text.slice(anchor);
 
-    return <div className={`stl-depth-card stl-depth-static overflow-hidden rounded-[22px] border border-[#e4d9c9] bg-[#fffdf9] shadow-[0_14px_35px_rgba(60,46,31,.08)] ${className}`}>
+    return <div className={`stl-depth-card stl-depth-static stl-reading-book min-w-0 overflow-hidden rounded-[22px] border border-[#e4d9c9] bg-[#fffdf9] shadow-[0_14px_35px_rgba(60,46,31,.08)] ${className}`}>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e6ddd2] bg-[#fffaf3] px-5 py-3 text-[#785e4b] sm:px-7">
             <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.16em]"><CharacterBadge name="basa" tone="gold" size="sm" /> The letter book</div>
             <div className="flex items-center gap-2 text-[11px]"><span>{pages.length} {pages.length === 1 ? 'page' : 'pages'}</span><span className="h-1 w-1 rounded-full bg-[#bcae9c]" /> <span>{bookWordCount(pages)} words</span></div>
         </div>
-        <div className="relative">
-            <div style={{ background: paperBackground }} className={`relative flex min-h-[460px] flex-col px-6 py-8 text-[#354337] sm:px-9 sm:py-10 ${compact ? 'lg:min-h-[500px]' : 'lg:min-h-[620px]'}`}>
+        <div className="relative stl-reading-perspective">
+            <div key={pageIndex} style={{ background: paperBackground }} className={`stl-reading-page-turn relative flex min-h-[460px] flex-col px-4 py-7 sm:px-6 sm:py-8 text-[#354337] sm:px-9 sm:py-10 ${compact ? 'lg:min-h-[500px]' : 'lg:min-h-[620px]'}`}>
                 <div className="mb-6 flex items-center justify-between gap-3 border-b border-[#a58d75]/25 pb-4 text-[10px] font-semibold uppercase tracking-[.19em] text-[#9c715e]"><span className="inline-flex items-center gap-2"><CharacterBadge name="lumi" tone="paper" size="xs" /> From the heart</span><span>{category || 'Letter'}</span></div>
                 {pageIndex === 0 ? <>
                     {coverImage && <img src={getImageUrl(coverImage)} alt="Letter cover illustration" className="mb-6 max-h-48 w-full rounded-2xl object-cover" />}
