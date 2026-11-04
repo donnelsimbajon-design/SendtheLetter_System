@@ -9,6 +9,9 @@ import axios from 'axios';
 import { Note } from '../types/note';
 import { API_ENDPOINTS, API_BASE_URL } from '../config/api';
 import Mascot from './Mascot';
+import RecipientInvitePanel from './RecipientInvitePanel';
+import { invitationQrSvg } from '../lib/invitationQr';
+import { QrCode, Share2 } from 'lucide-react';
 
 interface ShareModalProps {
     isOpen: boolean;
@@ -24,10 +27,15 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
     const [sentTo, setSentTo] = useState<number[]>([]);
     const [shareFeedback, setShareFeedback] = useState('');
     const [emailAddress, setEmailAddress] = useState('');
+    const [showFriends, setShowFriends] = useState(false);
+    const [showPublicQr, setShowPublicQr] = useState(false);
     const [isSendingEmail, setIsSendingEmail] = useState(false);
     const isPubliclyShareable = note.isPublic && note.status === 'published' && !!note.shareToken && !note.isArchived;
     const noteOwnerId = note.authorId ?? (note as Note & { userId?: string | number }).userId;
     const canEmail = String(noteOwnerId) === String(user?.id) && note.status === 'published';
+    const canPrivateInvite = canEmail && !note.isPublic && !note.isArchived &&
+        (!note.openDate || new Date(note.openDate).getTime() <= Date.now()) &&
+        (!note.scheduledDate || new Date(note.scheduledDate).getTime() <= Date.now());
 
     const shareUrl = useMemo(() => {
         if (typeof window === 'undefined') return '';
@@ -41,9 +49,10 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
         return new URL(`/api/letters/public/${encodeURIComponent(String(note.shareToken || ''))}/share`, API_BASE_URL).toString();
     }, [note.id]);
 
+    // Fetch friends only when someone opens the in-app sharing controls.
     useEffect(() => {
-        if (isOpen) fetchFriends();
-    }, [isOpen]);
+        if (isOpen && showFriends) void fetchFriends();
+    }, [isOpen, showFriends]);
 
     const fetchFriends = async () => {
         setIsSearching(true);
@@ -116,7 +125,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
         if (navigator.share) {
             try {
                 await navigator.share({ title: note.title || 'A letter from SendTheLetter', text: 'I wanted to share this letter with you.', url: shareUrl });
-                setShareFeedback(`Share sheet opened for ${platform}.`);
+                setShareFeedback('The device share sheet opened. Choose a recipient or app.');
             } catch (error) {
                 if ((error as Error).name !== 'AbortError') setShareFeedback('Sharing was not completed. You can copy the link instead.');
             }
@@ -151,6 +160,8 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
                 </div>
 
                 <div className="p-4 space-y-5 max-h-[75vh] overflow-y-auto">
+                    {canPrivateInvite && <RecipientInvitePanel key={String(note.id)} letterId={note.id} title={note.title} />}
+
                     {canEmail && (
                         <section className="space-y-2">
                             <h3 className="font-semibold text-sm">Send this letter by email</h3>
@@ -175,21 +186,39 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
                                     <Button type="button" variant="outline" onClick={shareFacebook} className="justify-start gap-2"><Facebook size={16} /> Facebook</Button>
                                     <Button type="button" variant="outline" onClick={() => shareNative('Messenger')} className="justify-start gap-2"><CharacterBadge name="chika" tone="paper" size="sm" /> Messenger</Button>
                                     <Button type="button" variant="outline" onClick={() => shareNative('Instagram')} className="justify-start gap-2"><Instagram size={16} /> Instagram</Button>
+                                    <Button type="button" variant="outline" onClick={() => shareNative('TikTok')} className="justify-start gap-2"><Share2 size={16} /> TikTok / apps</Button>
                                     <Button type="button" variant="outline" onClick={() => shareNative('your device')} className="justify-start gap-2"><CharacterBadge name="piko" tone="paper" size="sm" /> More options</Button>
                                     <Button type="button" variant="outline" onClick={copyLink} className="justify-start gap-2"><Copy size={16} /> Copy link</Button>
+                                    <Button type="button" variant="outline" onClick={() => setShowPublicQr(value => !value)} className="justify-start gap-2"><QrCode size={16} /> {showPublicQr ? 'Hide QR' : 'QR code'}</Button>
                                 </div>
+                                <p className="text-[11px] text-muted-foreground">Messenger and TikTok availability depends on your device's share sheet. We never automatically send a DM.</p>
+                                {showPublicQr && (() => {
+                                    try {
+                                        const svg = invitationQrSvg(shareUrl);
+                                        return <div className="flex flex-col items-center gap-2 rounded-xl border border-border bg-white p-3">
+                                            <img src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`} alt="Public letter QR code" width="180" height="180" />
+                                            <button type="button" className="text-xs font-semibold underline" onClick={() => {
+                                                const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+                                                const a = document.createElement('a'); a.href = url; a.download = 'sendtheletter-public-qr.svg'; a.click();
+                                                window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+                                            }}>Download QR code</button>
+                                        </div>;
+                                    } catch { return <p className="text-xs text-amber-700">This URL is too long for the offline QR generator. Please copy the link.</p>; }
+                                })()}
                             </>
                         ) : (
-                            <p className="text-sm text-muted-foreground bg-muted/50 rounded-xl p-3">Only published public letters with a secure share token can be shared. Save or refresh the letter if its link is not ready. You can still send an in-app message to a friend.</p>
+                            <p className="text-sm text-muted-foreground bg-muted/50 rounded-xl p-3">Private letters can be shared by the author using a revocable invitation above. Public sharing requires a published public letter.</p>
                         )}
                         {shareFeedback && <p role="status" className="text-xs text-primary">{shareFeedback}</p>}
                     </section>
 
                     <section className="space-y-3">
-                        <div>
-                            <h3 className="font-semibold text-sm">Send to a SendTheLetter friend</h3>
-                            <p className="text-xs text-muted-foreground">Choose a friend to send an in-app message.</p>
-                        </div>
+                        <button type="button" onClick={() => setShowFriends(value => !value)}
+                            className="inline-flex min-h-11 items-center text-left text-sm font-semibold text-primary underline underline-offset-4">
+                            {showFriends ? 'Hide friends' : 'Send to a SendTheLetter friend'}
+                        </button>
+                        {showFriends && <>
+                            <p className="text-xs text-muted-foreground">Choose a friend to send a public letter inside SendTheLetter.</p>
                         <div className="relative">
                             <CharacterBadge name="suri" tone="paper" size="xs" className="absolute left-3 top-1/2 -translate-y-1/2" />
                             <input type="text" placeholder="Search friends..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-muted/50 rounded-lg border border-transparent focus:border-primary/20 focus:bg-background focus:outline-none transition-all text-sm" />
@@ -222,6 +251,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, note }) => {
                                 </div>
                             )}
                         </div>
+                        </>}
                     </section>
                 </div>
             </DialogContent>
