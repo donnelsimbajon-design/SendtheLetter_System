@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import CharacterBadge from '../components/CharacterBadge';
 import WorldScene3D from '../components/WorldScene3D';
+import Mascot from '../components/Mascot';
 
 const startingPoints = [
   {
@@ -137,7 +138,10 @@ const Home = () => {
             </div>
           </div>
 
-          <WorldScene3D kind="home" title="Explore the 3D SendTheLetter story world" className="h-[360px] w-full sm:h-[480px] lg:h-[525px]" />
+          <div className="stl-depth-hero relative min-w-0">
+            <WorldScene3D kind="home" title="Explore the 3D SendTheLetter story world" className="h-[360px] w-full sm:h-[480px] lg:h-[525px]" />
+            <Mascot name="lumi" alt="Lumi, the SendTheLetter letter companion" className="pointer-events-none absolute -right-2 -top-6 z-10 h-20 w-20 drop-shadow-lg sm:-right-4 sm:-top-8 sm:h-28 sm:w-28" />
+          </div>
         </section>
 
         <section id="starting-points" className="border-y border-border bg-card/75">
