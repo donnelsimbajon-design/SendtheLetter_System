@@ -217,7 +217,7 @@ export default function MessageDock() {
                     {!threadLoading && !thread.length && <p className="py-8 text-center text-xs text-muted-foreground">Start with a hello.</p>}
                     {thread.map(message => (
                       <div key={message.id} className={`flex ${message.senderId === user?.id ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`stl-depth-bubble max-w-[85%] rounded-2xl px-3 py-2 text-sm ${message.senderId === user?.id ? 'bg-primary text-primary-foreground' : 'border border-border bg-card text-foreground'}`}>
+                        <div data-sent={message.senderId === user?.id} className={`stl-depth-bubble max-w-[85%] rounded-2xl px-3 py-2 text-sm ${message.senderId === user?.id ? 'bg-primary text-primary-foreground' : 'border border-border bg-card text-foreground'}`}>
                           <p className="whitespace-pre-wrap break-words">{message.content}</p>
                           <p className="mt-1 text-[10px] opacity-70">{formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}</p>
                         </div>
