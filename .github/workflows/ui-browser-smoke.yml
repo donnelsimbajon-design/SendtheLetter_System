@@ -34,6 +34,14 @@ jobs:
         run: npx playwright test
         env:
           CI: "true"
+      - name: Upload Playwright device layout screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: responsive-visual-review
+          path: Note_letter/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Upload failing test traces
         if: failure()
         uses: actions/upload-artifact@v4
