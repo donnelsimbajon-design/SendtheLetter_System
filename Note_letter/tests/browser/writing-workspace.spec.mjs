@@ -334,16 +334,25 @@ test('a tall photo stays inside the letter page and the photo can move to top or
     image.style.height = '270px';
     image.style.objectFit = 'cover';
   });
-  const footer = modal.getByText('With care,', { exact: true }).locator('..');
-  const rects = await Promise.all([
-    figure.boundingBox(), writing.boundingBox(), footer.boundingBox(),
-  ]);
-  const [imageRect, writingRect, footerRect] = rects;
-  expect(imageRect).not.toBeNull();
-  expect(writingRect).not.toBeNull();
-  expect(footerRect).not.toBeNull();
-  expect(imageRect.y + imageRect.height).toBeLessThanOrEqual(writingRect.y + writingRect.height + 2);
-  expect(imageRect.y + imageRect.height).toBeLessThanOrEqual(footerRect.y + 2);
+  // Read all rectangles in the SAME layout snapshot. Position buttons
+  // intentionally smooth-scroll the editor, so separate boundingBox() calls
+  // can measure different scroll frames and invent a 16–40 px overflow.
+  // This still fails on any real float overflow or signature overlap.
+  const geometry = await writing.evaluate(editor => {
+    const photo = editor.querySelector('[data-editable-letter-photo]');
+    const dialog = editor.closest('[role="dialog"]');
+    const signature = Array.from(dialog?.querySelectorAll('span') || [])
+      .find(span => span.textContent?.trim() === 'With care,')?.parentElement;
+    if (!photo || !signature) return null;
+    return {
+      photoBottom: photo.getBoundingClientRect().bottom,
+      editorBottom: editor.getBoundingClientRect().bottom,
+      signatureTop: signature.getBoundingClientRect().top,
+    };
+  });
+  expect(geometry).not.toBeNull();
+  expect(geometry.photoBottom).toBeLessThanOrEqual(geometry.editorBottom + 2);
+  expect(geometry.photoBottom).toBeLessThanOrEqual(geometry.signatureTop + 2);
 
   await position.getByRole('button', { name: 'Top' }).click();
   await expect.poll(() => figure.evaluate(node => node.previousSibling?.textContent || '')).toBe('');

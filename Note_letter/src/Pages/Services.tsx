@@ -18,7 +18,7 @@ const features: Feature[] = [
 const Services = () => {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const isVerifying = useAuthStore(state => state.isVerifying);
-  const startLink = isAuthenticated ? '/dashboard/notes?compose=1' : '/signup?returnTo=' + encodeURIComponent('/dashboard/notes?compose=1');
+  const startLink = isAuthenticated ? '/dashboard/notes?compose=1' : '/try';
 
   return (
     <div className="min-h-screen bg-background text-foreground">
