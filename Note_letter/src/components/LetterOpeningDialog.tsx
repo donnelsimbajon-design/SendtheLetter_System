@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { BookOpenText, ArrowRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog';
 import Mascot from './Mascot';
-import WorldScene3D from './WorldScene3D';
+import LetterOpeningEnvelope from './LetterOpeningEnvelope';
 import type { Note } from '../types/note';
 
 type Props = {
@@ -21,12 +21,12 @@ export default function LetterOpeningDialog({ note, onClose, onRead }: Props) {
       <DialogContent className="w-[calc(100vw-2rem)] max-w-xl overflow-hidden rounded-[1.7rem] border-border bg-background p-5 sm:p-8">
         <div className="pr-6">
           <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-muted-foreground">An envelope just for you</p>
-          <DialogTitle className="mt-2 font-editorial text-2xl leading-tight sm:text-3xl">3D letter opening</DialogTitle>
+          <DialogTitle className="mt-2 font-editorial text-2xl leading-tight sm:text-3xl">A letter for you</DialogTitle>
           <DialogDescription className="mt-2 text-sm leading-6">
             Open the envelope to reveal your letter, or skip straight to the familiar reader.
           </DialogDescription>
         </div>
-        <WorldScene3D kind="letter" opened={opened} controls={false} className="h-[260px] sm:h-[310px]" title="3D letter opening animation" />
+        <LetterOpeningEnvelope opened={opened} />
         <div aria-live="polite" className="text-center text-xs text-muted-foreground">
           {opened ? 'Envelope opened. Your letter is ready.' : 'Sealed and ready to open.'}
         </div>
