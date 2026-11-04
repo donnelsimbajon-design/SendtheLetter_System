@@ -186,7 +186,7 @@ export default function WriterProfileScreen({
     const profileUrl = `/writers/${encodeURIComponent(profile.username)}`;
 
     return <div className="mx-auto w-full max-w-[1080px] space-y-5 pb-12 text-foreground">
-        <section className="overflow-hidden rounded-[24px] border border-[#d9d4c6] bg-card shadow-[0_8px_30px_rgba(36,54,43,.045)]">
+        <section aria-label="Writer profile header" className="overflow-hidden rounded-[24px] border border-[#d9d4c6] bg-card shadow-[0_8px_30px_rgba(36,54,43,.045)]">
             <div className="relative h-28 overflow-hidden bg-[#d7e2d9] sm:h-36">
                 {profile.coverImage
                     ? <img src={getImageUrl(profile.coverImage)} alt="Writer cover" className="absolute inset-0 h-full w-full object-cover" />
