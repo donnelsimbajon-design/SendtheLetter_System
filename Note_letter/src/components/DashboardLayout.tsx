@@ -4,7 +4,6 @@ import { useAuthStore } from '../store/authStore';
 import { getImageUrl } from '../lib/utils';
 import NotificationsMenu from './NotificationsMenu';
 import CharacterBadge from './CharacterBadge';
-import WorkspaceRailIcon, { type RailSymbol } from './WorkspaceRailIcon';
 import ProfileDropdown from './ProfileDropdown';
 import { useWriterPreferences } from '../store/writerPreferences';
 
@@ -16,16 +15,12 @@ const navigation = [
   { to: '/dashboard/profile', label: 'My profile', mascot: 'sely', end: false },
 ] as const;
 
-const railNavigation: { to: string; label: string; symbol: RailSymbol; end: boolean }[] = [
-  { to: '/dashboard', label: 'Overview', symbol: 'home', end: true },
-  { to: '/dashboard/notes', label: 'My library', symbol: 'library', end: false },
-  { to: '/dashboard/community', label: 'Community', symbol: 'community', end: false },
-  { to: '/dashboard/messages', label: 'Messages', symbol: 'messages', end: false },
-];
+// These are the app's own illustrated SVG characters, not generic navigation glyphs.
+const railNavigation = navigation.slice(0, 4);
 
 const railLink = (active: boolean) =>
-  'relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-transparent transition-[transform,opacity] duration-200 ease-out hover:scale-110 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:transform-none motion-reduce:transition-none ' +
-  (active ? 'text-white opacity-100 scale-[1.06]' : 'text-white/80 hover:text-white hover:opacity-100');
+  'relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-transparent transition-[transform,opacity,box-shadow] duration-200 ease-out hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transform-none motion-reduce:transition-none ' +
+  (active ? 'opacity-100 ring-1 ring-border/70 shadow-sm' : 'opacity-90 hover:opacity-100');
 
 const MobileNavLink = ({ to, label, mascot, end, avatar }: {
   to: string;
@@ -96,45 +91,44 @@ export default function DashboardLayout() {
         </div>
       </header>
 
-      {/* The screenshot-inspired desktop layout: a thin dark column, generously spaced
-          original line art, and persistent account tools at the bottom. */}
+      {/* Original SendTheLetter character icons in a lightweight, translucent rail.
+          No solid sidebar color, no copied social-network icons. */}
       <aside aria-label="SendTheLetter sidebar"
-        className="fixed inset-y-0 left-0 z-40 hidden w-[72px] flex-col items-center border-r border-white/10 bg-[#0b0f12]/95 px-3 pb-4 pt-4 text-white backdrop-blur-xl lg:flex">
+        className="fixed inset-y-0 left-0 z-40 hidden w-[72px] flex-col items-center border-r border-border/50 bg-background/40 px-3 pb-4 pt-4 text-foreground backdrop-blur-xl lg:flex">
         <Link to="/dashboard" aria-label="SendTheLetter home" title="SendTheLetter"
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-transparent text-white transition-[transform,opacity] duration-200 ease-out hover:scale-105 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:transform-none">
-          <WorkspaceRailIcon name="brand" size={29} />
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-transparent transition-[transform,opacity] duration-200 ease-out hover:scale-105 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transform-none">
+          <CharacterBadge name="sely" tone="paper" size="sm" />
         </Link>
 
         <nav aria-label="Workspace navigation"
           className="workspace-rail-primary mt-[clamp(40px,16vh,150px)] flex min-h-0 w-full flex-1 flex-col items-center gap-2 overflow-visible pb-3">
-          {railNavigation.map(({ to, label, symbol, end }) => (
+          {railNavigation.map(({ to, label, mascot, end }) => (
             <NavLink key={to} to={to} end={end} aria-label={label} title={label}
               className={({ isActive }) => railLink(isActive)}>
-              {({ isActive }) => <WorkspaceRailIcon name={symbol} active={isActive} />}
+              <CharacterBadge name={mascot} tone="paper" size="sm" />
             </NavLink>
           ))}
 
           <Link to="/dashboard/community?focus=search" aria-label="Search public letters" title="Search public letters"
             className={railLink(false)}>
-            <WorkspaceRailIcon name="search" />
+            <CharacterBadge name="suri" tone="paper" size="sm" />
           </Link>
-
-          <NotificationsMenu placement="rail" />
 
           <Link to="/dashboard/notes?compose=1" aria-label="Write a new letter" title="Write a letter"
             className={railLink(false)}>
-            <WorkspaceRailIcon name="write" size={29} />
+            <CharacterBadge name="tala" tone="paper" size="sm" />
           </Link>
 
           <NavLink to="/dashboard/profile" aria-label="My profile" title="My profile"
-            className={({ isActive }) => railLink(isActive)}>
+            className={({ isActive }) => railLink(isActive) + ' mt-auto'}>
             {({ isActive }) => user?.avatar
-              ? <img src={getImageUrl(user.avatar)} alt="" className={'h-8 w-8 rounded-full object-cover ' + (isActive ? 'ring-2 ring-white' : 'ring-1 ring-white/60')} />
-              : <WorkspaceRailIcon name="profile" active={isActive} />}
+              ? <img src={getImageUrl(user.avatar)} alt="" className={'h-9 w-9 rounded-full object-cover ' + (isActive ? 'ring-2 ring-foreground/70' : 'ring-1 ring-border')} />
+              : <CharacterBadge name="sely" tone="paper" size="sm" />}
           </NavLink>
         </nav>
 
-        <div className="flex w-full shrink-0 flex-col items-center gap-2 border-t border-white/10 pt-3">
+        <div className="flex w-full shrink-0 flex-col items-center gap-2 border-t border-border/40 pt-3">
+          <NotificationsMenu placement="rail" />
           <div className="relative">
             <button type="button"
               onClick={() => setShowAccountMenu(value => !value)}
@@ -143,18 +137,14 @@ export default function DashboardLayout() {
               aria-haspopup="menu"
               aria-expanded={showAccountMenu}
               className={railLink(showAccountMenu)}>
-              <WorkspaceRailIcon name="menu" />
+              <CharacterBadge name="susi" tone="paper" size="sm" />
             </button>
             <ProfileDropdown isOpen={showAccountMenu} onClose={() => setShowAccountMenu(false)} placement="rail" />
           </div>
 
-          {user?.role === 'admin' ? (
+          {user?.role === 'admin' && (
             <Link to="/admin" aria-label="Admin panel" title="Admin panel" className={railLink(false)}>
-              <WorkspaceRailIcon name="admin" />
-            </Link>
-          ) : (
-            <Link to="/dashboard/settings" aria-label="Settings and privacy" title="Settings and privacy" className={railLink(false)}>
-              <WorkspaceRailIcon name="admin" />
+              <CharacterBadge name="araw" tone="paper" size="sm" />
             </Link>
           )}
         </div>
