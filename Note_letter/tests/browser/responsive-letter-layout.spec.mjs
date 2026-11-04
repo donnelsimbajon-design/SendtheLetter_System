@@ -123,6 +123,8 @@ for (const width of [320, 390, 768, 1024, 1440]) {
 
     await modal.getByRole('button', { name: 'Open envelope' }).click();
     await expect(modal.getByRole('img', { name: 'The envelope is open and a letter is emerging' })).toHaveAttribute('data-opened', 'true');
+    // Capture the settled paper movement rather than a mid-transition frame.
+    await page.waitForTimeout(1350);
     await page.screenshot({ path: 'layout-snapshots/paper-envelope-open-' + width + '.png', fullPage: false });
     await modal.getByRole('button', { name: 'Read full letter' }).click();
     await expect(modal.getByTestId('full-letter-scroll')).toBeVisible();
