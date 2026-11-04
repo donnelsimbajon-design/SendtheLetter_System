@@ -370,6 +370,7 @@ function tryStart(
 export default function WorldScene3D({ kind, className='', title, opened, controls=true }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [expanded, setExpanded] = useState(false);
+  const [poseVersion, setPoseVersion] = useState(0);
   const [supported, setSupported] = useState(true);
   const preferences = useWriterPreferences(state => state.preferences);
   const controlled = opened !== undefined;
@@ -395,7 +396,7 @@ export default function WorldScene3D({ kind, className='', title, opened, contro
       open: openRef, moving: movingRef, yaw: yawRef, pitch: pitchRef,
     }, useMotion, () => setSupported(false));
     return stop;
-  }, [enabled, kind, motion, preferences.theme, supported, actualOpen && !motion]);
+  }, [enabled, kind, motion, preferences.theme, supported, actualOpen && !motion, poseVersion]);
 
   const onPointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
     if (event.pointerType !== 'mouse' || event.button !== 0) return;
@@ -440,6 +441,10 @@ export default function WorldScene3D({ kind, className='', title, opened, contro
             <span className="block text-[10px] text-muted-foreground">{enabled && supported ? 'Drag the world to rotate' : 'Simple view'}</span>
           </div>
           {enabled && supported && (
+            <div className="flex shrink-0 items-center gap-1.5">
+              <button type="button" aria-label="Rotate 3D view" title="Rotate 3D view" onClick={() => { yawRef.current += .40; setPoseVersion(n => n + 1); }} className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-card/95 shadow-md hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary">
+                <RotateCcw size={16} aria-hidden="true" />
+              </button>
             <button
               type="button"
               aria-label={isConversation ? 'Rotate 3D messages' : (actualOpen ? 'Close 3D ' + subject : 'Open 3D ' + subject)}
@@ -455,6 +460,7 @@ export default function WorldScene3D({ kind, className='', title, opened, contro
               <RotateCcw size={13} aria-hidden="true" />
               {isConversation ? 'Rotate chat' : (actualOpen ? 'Close ' + subject : 'Open ' + subject)}
             </button>
+            </div>
           )}
         </div>
       )}
