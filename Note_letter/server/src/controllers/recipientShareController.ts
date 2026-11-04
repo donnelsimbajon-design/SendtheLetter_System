@@ -30,8 +30,8 @@ function privateResponse(res: Response) {
     res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
     res.setHeader('Referrer-Policy', 'no-referrer');
 }
-async function activeLink(token: string) {
-    if (!validToken.test(token)) return null;
+async function activeLink(token: unknown) {
+    if (typeof token !== 'string' || !validToken.test(token)) return null;
     const rows = await sequelize.query<LinkRow>(
         'SELECT id, "letterId", "expiresAt", "revokedAt" FROM public.letter_recipient_links ' +
         'WHERE "tokenHash" = :hash AND "revokedAt" IS NULL AND "expiresAt" > now() LIMIT 1',
@@ -128,7 +128,7 @@ export const revokeRecipientLinks = async (req: OwnerRequest, res: Response) => 
 export const readRecipientLetter = async (req: Request, res: Response) => {
     privateResponse(res);
     try {
-        const link = await activeLink(req.params.token);
+        const link = await activeLink(req.body?.token);
         if (!link) return unavailable(res);
         const letter = await readableLetter(link);
         if (!letter) return unavailable(res);
