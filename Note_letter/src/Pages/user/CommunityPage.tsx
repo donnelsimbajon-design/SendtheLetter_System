@@ -189,17 +189,17 @@ export default function CommunityPage() {
 
     return (
         <div className="mx-auto max-w-[1500px] space-y-5 pb-12 sm:space-y-6">
-            <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border/70 pb-5">
-                <div className="max-w-2xl">
-                    <p className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.17em] text-[hsl(var(--accent))]">
+            <header data-testid="community-frozen-header" className="sticky top-16 z-30 -mx-3 flex min-w-0 flex-wrap items-center justify-between gap-3 border-b border-border/70 bg-background/95 px-3 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 sm:py-4 lg:top-0 lg:-mx-8 lg:px-8 xl:-mx-10 xl:px-10">
+                <div className="min-w-0 flex-1">
+                    <p className="hidden items-center gap-2 text-[11px] font-bold uppercase tracking-[.17em] text-[hsl(var(--accent))] sm:inline-flex">
                         <CharacterBadge name="chika" tone="gold" size="xs" /> Stories from the community
                     </p>
-                    <h1 className="mt-2 font-editorial text-3xl leading-tight sm:text-4xl">Discover words that matter</h1>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    <h1 className="font-editorial text-xl leading-tight sm:mt-2 sm:text-3xl xl:text-4xl">Discover words that matter</h1>
+                    <p className="mt-2 hidden text-sm leading-6 text-muted-foreground md:block">
                         Read stories, share a feeling, and find a little connection through letters.
                     </p>
                 </div>
-                <Link to={writeLink} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-sm transition-opacity hover:opacity-90">
+                <Link to={writeLink} className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full bg-primary px-3 py-2.5 text-xs font-bold text-primary-foreground shadow-sm transition-opacity hover:opacity-90 sm:gap-2 sm:px-5 sm:text-sm">
                     <CharacterBadge name="lumi" tone="paper" size="xs" /> Write a letter
                 </Link>
             </header>

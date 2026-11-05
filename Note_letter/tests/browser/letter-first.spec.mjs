@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test('first-time visitor can choose a writing prompt and carry it into signup', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: /Some things are better in a letter/i })).toBeVisible();
-  await expect(page.getByRole('img', { name: 'Lumi, the SendTheLetter letter companion' })).toBeVisible();
+  await expect(page.getByTestId('home-letter-hero').getByRole('button', { name: 'Tap Iver for a reaction' })).toBeVisible();
 
   await page.getByRole('button', { name: /Say thank you/i }).click();
   await expect(page.getByRole('heading', { name: 'Thank you for being you' })).toBeVisible();

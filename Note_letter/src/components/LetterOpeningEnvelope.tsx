@@ -4,6 +4,7 @@ import PlushCompanion from './PlushCompanion';
 type Props = {
   opened: boolean;
   className?: string;
+  showCompanion?: boolean;
 };
 
 /**
@@ -11,7 +12,7 @@ type Props = {
  * slides out. CSS perspective keeps it dimensional without low-poly WebGL
  * artifacts or relying on GPU support.
  */
-export default function LetterOpeningEnvelope({ opened, className = '' }: Props) {
+export default function LetterOpeningEnvelope({ opened, className = '', showCompanion = true }: Props) {
   return (
     <div className={`stl-iver-envelope-stage ${className}`}>
       <div
@@ -28,9 +29,6 @@ export default function LetterOpeningEnvelope({ opened, className = '' }: Props)
         <div className="stl-real-envelope-paper">
           <div className="stl-real-envelope-paper-mark">a note for you</div>
           <div className="stl-real-envelope-paper-title">Dear you,</div>
-          <div className="stl-real-envelope-paper-lines">
-            <span /><span /><span /><span />
-          </div>
           <span className="stl-real-envelope-paper-signature">with care,</span>
         </div>
         <div className="stl-real-envelope-fold stl-real-envelope-fold-left" />
@@ -40,7 +38,7 @@ export default function LetterOpeningEnvelope({ opened, className = '' }: Props)
         <div className="stl-real-envelope-seal"><Heart size={17} strokeWidth={1.8} /></div>
       </div>
       </div>
-      <PlushCompanion name="iver" size="envelope" className="stl-envelope-iver" />
+      {showCompanion && <PlushCompanion name="iver" size="envelope" className="stl-envelope-iver" />}
     </div>
   );
 }
