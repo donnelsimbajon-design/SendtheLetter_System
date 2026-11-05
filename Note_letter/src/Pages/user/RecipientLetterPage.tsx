@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { BookHeart, HeartHandshake, LockKeyhole, MailOpen, Send, ShieldCheck } from 'lucide-react';
+import { BookHeart, HeartHandshake, LockKeyhole, Send, ShieldCheck } from 'lucide-react';
 import LetterBookReader from '../../components/LetterBookReader';
+import LetterOpeningStage from '../../components/LetterOpeningStage';
+import CharacterBadge from '../../components/CharacterBadge';
 import { API_ENDPOINTS } from '../../config/api';
 import type { Note } from '../../types/note';
 
@@ -21,6 +23,7 @@ export default function RecipientLetterPage() {
     const [loading, setLoading] = useState(true);
     const [unavailable, setUnavailable] = useState('');
     const [opened, setOpened] = useState(false);
+    const [envelopeOpened, setEnvelopeOpened] = useState(false);
     const [reaction, setReaction] = useState('heart');
     const [displayName, setDisplayName] = useState('');
     const [message, setMessage] = useState('');
@@ -41,7 +44,7 @@ export default function RecipientLetterPage() {
     useEffect(() => {
         if (!/^[a-f0-9]{48}$/.test(token)) { setLoading(false); setUnavailable('This invitation is invalid.'); return; }
         const abort = new AbortController();
-        setLoading(true); setUnavailable(''); setInvitation(null); setOpened(false);
+        setLoading(true); setUnavailable(''); setInvitation(null); setOpened(false); setEnvelopeOpened(false);
         fetch(`${API_ENDPOINTS.letters}/recipient/open`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token }),
@@ -94,19 +97,27 @@ export default function RecipientLetterPage() {
                 <Link to="/" className="inline-flex items-center gap-2 font-editorial text-xl font-bold text-[#30483b]"><BookHeart size={22}/> SendTheLetter</Link>
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d9d6c8] bg-white px-3 py-2 text-xs font-semibold"><LockKeyhole size={14}/> Private invitation</span>
             </header>
-            {!opened ? <section aria-label="Private letter envelope" className="stl-depth-paper stl-depth-static flex min-h-[500px] flex-col items-center justify-center rounded-[30px] border border-[#dfd3bf] bg-[#fcf9f3] px-5 py-12 text-center shadow-[0_12px_42px_rgba(53,66,48,.07)] sm:min-h-[570px]">
-                <div aria-hidden="true" className="flex h-36 w-48 items-center justify-center rounded-[20px] border-2 border-[#d5b896] bg-[#eedfc8] shadow-[0_16px_30px_rgba(91,74,48,.12)] sm:h-44 sm:w-60">
-                    <MailOpen className="h-20 w-20 text-[#7b705c]" strokeWidth={1.3}/>
+            {!opened ? <section aria-label="Private letter envelope" className="stl-full-letter-reader flex h-[min(94dvh,760px)] min-h-0 w-full flex-col overflow-hidden rounded-[22px] border border-[#e7dbcc] bg-[#fcf9f4] shadow-2xl sm:h-[min(86dvh,760px)] sm:rounded-[30px]">
+                <div className="flex shrink-0 items-center gap-3 border-b border-[#e7dbcc] bg-[#fffdf9] px-4 py-3 sm:px-6 sm:py-4">
+                    <CharacterBadge name="basa" tone="paper" size="sm" />
+                    <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#a16f54]">SendTheLetter · Reader</p>
+                        <p className="truncate font-editorial text-sm font-semibold text-[#30443a] sm:text-lg">{letter.title || 'Your private letter'}</p>
+                    </div>
                 </div>
-                <p className="mt-9 text-xs font-bold uppercase tracking-[.22em] text-[#a07761]">For someone special</p>
-                <h1 className="mt-3 font-editorial text-3xl font-semibold sm:text-4xl">You've received a letter.</h1>
-                <p className="mt-4 max-w-sm text-sm leading-7 text-[#66796e]">
-                    Someone took the time to write something just for you. No account or payment needed to read it.
-                </p>
-                <button type="button" onClick={() => setOpened(true)} className="mt-7 inline-flex min-h-12 items-center gap-2 rounded-full bg-[#315541] px-7 py-3 text-sm font-bold text-white shadow-sm hover:bg-[#254232] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#315541]">
-                    <MailOpen size={19}/> Open my letter
-                </button>
-                <p className="mt-4 text-xs text-[#829084]">Available until {new Date(invitation.expiresAt).toLocaleDateString()}</p>
+                <LetterOpeningStage
+                    title={letter.title || 'A note from the heart'}
+                    opened={envelopeOpened}
+                    onOpen={() => setEnvelopeOpened(true)}
+                    onRead={() => setOpened(true)}
+                    onSkip={() => setOpened(true)}
+                    description="Unseal the envelope, then read your private letter without distractions."
+                    footer={<>
+                        <p>No account or payment needed to read this letter.</p>
+                        <p className="mt-1">Available until {new Date(invitation.expiresAt).toLocaleDateString()}</p>
+                    </>}
+                    className="min-h-0 flex-1"
+                />
             </section> : <>
                 <div className="mb-4 rounded-xl border border-[#dfe0d3] bg-[#e9eee6] px-4 py-3 text-xs leading-5 text-[#41624e]">
                     <ShieldCheck size={15} className="mr-1.5 inline" aria-hidden="true"/> This is a private invitation. You may read it for free until it expires. Please don't forward it without the writer's permission.
