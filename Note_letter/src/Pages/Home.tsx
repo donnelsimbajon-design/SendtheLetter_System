@@ -150,9 +150,12 @@ const Home = () => {
               </div>
               <LetterOpeningEnvelope opened={homeEnvelopeOpen} className="stl-home-envelope mt-5" />
               <div className="relative mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <p className="font-editorial text-xl text-[#30483b] sm:text-2xl">Some words are worth keeping.</p>
-                  <p className="mt-1 text-xs leading-5 text-[#7a7165]">Open this little envelope, then write your own.</p>
+                <div className="flex min-w-0 items-center gap-3">
+                  <Mascot name="lumi" alt="Lumi, the SendTheLetter letter companion" className="h-14 w-14 sm:h-16 sm:w-16" loading="eager" />
+                  <div className="min-w-0">
+                    <p className="font-editorial text-xl text-[#30483b] sm:text-2xl">Some words are worth keeping.</p>
+                    <p className="mt-1 text-xs leading-5 text-[#7a7165]">Open this little envelope, then write your own.</p>
+                  </div>
                 </div>
                 <button
                   type="button"
@@ -166,7 +169,6 @@ const Home = () => {
                 </button>
               </div>
             </div>
-            <Mascot name="lumi" alt="Lumi, the SendTheLetter letter companion" className="pointer-events-none absolute -right-2 -top-7 z-10 h-20 w-20 drop-shadow-lg sm:-right-5 sm:-top-9 sm:h-28 sm:w-28" loading="eager" />
           </div>
         </section>
 
