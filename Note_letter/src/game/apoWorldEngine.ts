@@ -137,8 +137,9 @@ class Mesh {
       const at=(x:number,z:number):V3=>[x,groundHeight(x,z)-.13,z];
       const shade=.1*Math.sin(x0*.41+z0*.25)+.06*Math.sin(z0*.9);
       const c=mix(COLORS.meadow,COLORS.mint,clamp(.4+shade,0,1));
-      this.tri(at(x0,z0),at(x1,z0),at(x1,z1),c);
-      this.tri(at(x0,z0),at(x1,z1),at(x0,z1),c);
+      // Upward-facing terrain normals are essential for correct sun lighting.
+      this.tri(at(x0,z0),at(x1,z1),at(x1,z0),c);
+      this.tri(at(x0,z0),at(x0,z1),at(x1,z1),c);
     }
   }
   data():Float32Array { return new Float32Array(this.values); }
@@ -383,7 +384,7 @@ function createGPU(gl:WebGLRenderingContext, data:Float32Array):GPUBuffer {
 export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):WorldController {
   const moves:Record<WorldMove,boolean>={forward:false,back:false,left:false,right:false,sprint:false};
   let disposed=false,frame=0,last=0,lastPositionUpdate=0,ready=false;
-  let x=0,z=18,yaw=0,avatarYaw=0,orbit=0,distance=11,jumpHeight=0,jumpSpeed=0;
+  let x=0,z=18,avatarYaw=0,orbit=0,distance=11,jumpHeight=0,jumpSpeed=0;
   let nearId:WorldLandmark['id']|null=null;
   let pointerId:number|null=null,lastPointerX=0;
   const gl=canvas.getContext('webgl',{alpha:true,antialias:true,depth:true,powerPreference:'default',premultipliedAlpha:false});
@@ -394,9 +395,8 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
   const buffers:GPUBuffer[]=[];
   let program:WebGLProgram|null=null;
   let observer:ResizeObserver|null=null;
-  let position=gl.getAttribLocation(program as WebGLProgram,'a_position');
-  let normalAttr=gl.getAttribLocation(program as WebGLProgram,'a_normal');
-  let colorAttr=gl.getAttribLocation(program as WebGLProgram,'a_color');
+  // Attribute locations are queried only *after* the shader program is linked.
+  let position=-1,normalAttr=-1,colorAttr=-1;
   let poseUniform:WebGLUniformLocation|null=null,viewUniform:WebGLUniformLocation|null=null,projectionUniform:WebGLUniformLocation|null=null;
   let world:GPUBuffer,player:GPUBuffer,alexis:GPUBuffer,iver:GPUBuffer;
   try {
@@ -453,7 +453,7 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
   const interact=()=>events.onInteract(closest());
   const keyDown=(event:KeyboardEvent)=>{
     const target=event.target as HTMLElement|null;
-    if(event.altKey||event.ctrlKey||event.metaKey||target?.isContentEditable||target?.closest('input,textarea,select,[role="dialog"]'))return;
+    if(event.altKey||event.ctrlKey||event.metaKey||target?.isContentEditable||target?.closest('button,a,input,textarea,select,[role="dialog"]'))return;
     const key=event.key.toLowerCase();
     const keyMap:Record<string,WorldMove>={'w':'forward','arrowup':'forward','s':'back','arrowdown':'back','a':'left','arrowleft':'left','d':'right','arrowright':'right','shift':'sprint'};
     if(keyMap[key]){moves[keyMap[key]]=true;event.preventDefault();}
@@ -499,7 +499,12 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
         const speed=moves.sprint?7.4:4.4;
         const fx=Math.sin(orbit),fz=-Math.cos(orbit),sx=Math.cos(orbit),sz=Math.sin(orbit);
         const dx=(side*sx+forward*fx)/mag,dz=(side*sz+forward*fz)/mag;
-        x=clamp(x+dx*speed*dt,-35,35);z=clamp(z+dz*speed*dt,-33,32);
+        const nx=clamp(x+dx*speed*dt,-35,35),nz=clamp(z+dz*speed*dt,-33,32);
+        // House foundations are solid: do not let the avatar walk through walls.
+        const buildings=[[-17,-11,5.4],[17,-14,5.6],[27,-27,3.7],[-27,-22,3.9]];
+        const blocked=(px:number,pz:number)=>buildings.some(([bx,bz,r])=>Math.hypot(px-bx,pz-bz)<r);
+        if(!blocked(nx,z))x=nx;
+        if(!blocked(x,nz))z=nz;
         avatarYaw=Math.atan2(-dx,-dz);
       }
       if(jumpHeight>0||jumpSpeed>0){
