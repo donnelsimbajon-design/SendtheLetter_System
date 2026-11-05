@@ -1,9 +1,9 @@
 import { Heart } from 'lucide-react';
-import PlushCompanion from './PlushCompanion';
 
 type Props = {
   opened: boolean;
   className?: string;
+  /** Kept for backwards compatibility with homepage props; companions now live outside envelopes. */
   showCompanion?: boolean;
 };
 
@@ -12,7 +12,7 @@ type Props = {
  * slides out. CSS perspective keeps it dimensional without low-poly WebGL
  * artifacts or relying on GPU support.
  */
-export default function LetterOpeningEnvelope({ opened, className = '', showCompanion = true }: Props) {
+export default function LetterOpeningEnvelope({ opened, className = '' }: Props) {
   return (
     <div className={`stl-iver-envelope-stage ${className}`}>
       <div
@@ -38,7 +38,6 @@ export default function LetterOpeningEnvelope({ opened, className = '', showComp
         <div className="stl-real-envelope-seal"><Heart size={17} strokeWidth={1.8} /></div>
       </div>
       </div>
-      {showCompanion && <PlushCompanion name="iver" size="envelope" className="stl-envelope-iver" />}
     </div>
   );
 }

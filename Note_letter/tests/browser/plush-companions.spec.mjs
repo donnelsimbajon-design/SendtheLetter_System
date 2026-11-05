@@ -40,7 +40,7 @@ test('the Messages dock keeps Alexis seated and reacts without starting a chat',
   await expect(dock.getByText('No conversations yet')).toBeVisible();
 });
 
-test('Iver sits on the opening envelope and reacts without opening the letter', async ({page}) => {
+test('Iver sits beside the opening guide and reacts without covering the envelope', async ({page}) => {
   await setup(page);
   await page.goto('/dashboard/community');
   await page.getByRole('button',{name:'Read letter: Thank you for being you'}).click();
@@ -48,11 +48,66 @@ test('Iver sits on the opening envelope and reacts without opening the letter', 
   const iver = dialog.getByRole('button',{name:'Tap Iver for a reaction'});
   await expect(iver).toBeVisible();
   await expect(dialog.locator('img[src="/characters/iver.webp"]')).toBeVisible();
+  const guide = dialog.getByRole('complementary', {name:'Iver, your letter-opening companion'});
+  await expect(guide).toBeVisible();
+  const envelopeScene = dialog.getByRole('img',{name:'A sealed paper envelope waiting to be opened'});
+  await expect(envelopeScene.locator('[data-character="iver"]')).toHaveCount(0);
+  const guideRect = await guide.boundingBox();
+  const envelopeRect = await envelopeScene.boundingBox();
+  expect(guideRect).not.toBeNull();
+  expect(envelopeRect).not.toBeNull();
+  // Desktop: guide sits to the left. Mobile: guide stacks above the envelope.
+  expect(guideRect.x + guideRect.width <= envelopeRect.x + 2 ||
+    guideRect.y + guideRect.height <= envelopeRect.y + 2).toBe(true);
   await iver.click();
   await expect(dialog.locator('[data-character="iver"][data-reaction="happy"]')).toBeVisible();
+  await expect(dialog.locator('[data-character="iver"] [data-testid="plush-mood-sticker"]')).toContainText('💗');
   await iver.click();
   await expect(dialog.locator('[data-character="iver"][data-reaction="grumpy"]')).toBeVisible();
   await expect(dialog.getByRole('button',{name:'Open envelope'})).toBeVisible();
   await dialog.getByRole('button',{name:'Open envelope'}).click();
   await expect(dialog.getByRole('button',{name:'Read full letter'})).toBeVisible();
+});
+
+test('Alexis explains Messages and offers real navigation actions, not chatbot promises', async ({page}, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop-chromium', 'Floating dock is desktop only');
+  await setup(page);
+  await page.goto('/dashboard');
+  await page.getByRole('button',{name:'Open messages'}).click();
+  const dock = page.getByRole('region',{name:'Recent messages'});
+  await expect(dock.getByText('Meet Alexis ✨')).toBeVisible();
+  await expect(dock.getByRole('link',{name:'Find writers'})).toHaveAttribute('href','/dashboard/community');
+  await expect(dock.getByRole('link',{name:'Open inbox'})).toHaveAttribute('href','/dashboard/messages');
+  const how = dock.getByRole('button',{name:'How it works'});
+  await how.click();
+  await expect(how).toHaveAttribute('aria-expanded','true');
+  await expect(dock.getByText('Alexis is a friendly guide, not an AI chatbot.',{exact:false})).toBeVisible();
+  await how.click();
+  await expect(how).toHaveAttribute('aria-expanded','false');
+  await dock.getByRole('link',{name:'Find writers'}).click();
+  await expect(page).toHaveURL(/\/dashboard\/community$/);
+});
+
+test('Iver never overlaps the envelope on compact phone and tablet', async ({page}) => {
+  await setup(page);
+  await page.goto('/dashboard/community');
+  await page.getByRole('button',{name:'Read letter: Thank you for being you'}).click();
+  const dialog=page.getByRole('dialog',{name:'Letter from friend'});
+  for(const width of [320,390,768]){
+    await page.setViewportSize({width,height:820});
+    const guide=dialog.getByRole('complementary',{name:'Iver, your letter-opening companion'});
+    const envelope=dialog.getByRole('img',{name:'A sealed paper envelope waiting to be opened'});
+    // Radix animates the centered dialog after viewport changes. Check the
+    // settled geometry, not a transitional frame captured mid-resize.
+    await expect.poll(async () => {
+      const g=await guide.boundingBox(), e=await envelope.boundingBox();
+      if (!g || !e) return true;
+      const overlaps = g.x < e.x+e.width-2 && g.x+g.width > e.x+2 &&
+        g.y < e.y+e.height-2 && g.y+g.height > e.y+2;
+      if (overlaps) console.log('IVER_GUIDE_OVERLAP',width,JSON.stringify({guide:g,envelope:e}));
+      return overlaps;
+    }, {timeout:5000,intervals:[100,200,350,500]}).toBe(false);
+    const doc=await page.evaluate(()=>({width:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth}));
+    expect(doc.scroll).toBeLessThanOrEqual(doc.width+2);
+  }
 });

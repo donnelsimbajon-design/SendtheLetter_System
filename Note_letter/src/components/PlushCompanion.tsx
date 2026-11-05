@@ -47,6 +47,11 @@ export default function PlushCompanion({ name, size = 'lg', className = '' }: Pr
       >
         <span key={burst} className="stl-plush-art">
           <img src={`/characters/${name}.webp`} draggable={false} alt="" loading="eager" />
+          {reaction !== 'idle' && (
+            <span aria-hidden="true" className="stl-plush-mood-sticker" data-testid="plush-mood-sticker">
+              {reaction === 'happy' ? '💗' : reaction === 'grumpy' ? '💢' : '✨'}
+            </span>
+          )}
         </span>
         {reaction !== 'idle' && (
           <span className="stl-plush-speech" aria-hidden="true" key={`speech-${burst}`}>{dialog[name][reaction]}</span>

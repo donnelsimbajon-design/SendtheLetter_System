@@ -29,3 +29,17 @@
 :root[data-reduce-motion="true"] .stl-plush .stl-plush-art,
 :root[data-reduce-motion="true"] .stl-plush .stl-plush-speech { animation:none!important; transition:none!important; transform:none!important; }
 @media print { .stl-plush { display:none!important; } }
+
+/* Three distinct, readable moods: the plush moves in depth and carries a
+   graphic expression sticker, rather than only showing a text speech bubble. */
+.stl-plush-art { position:relative; transform-style:preserve-3d; }
+.stl-plush-mood-sticker { position:absolute; top:12%; right:1%; z-index:2; display:grid; place-items:center; width:clamp(22px,25%,36px); height:clamp(22px,25%,36px); border:1px solid #f3dfc9; border-radius:50%; background:#fff9ef; box-shadow:0 5px 12px rgba(73,51,42,.17); font-size:clamp(14px,2vw,22px); transform:translateZ(20px); animation:stl-plush-sticker-pop .55s cubic-bezier(.2,1.4,.3,1) both; }
+.stl-plush--sm .stl-plush-mood-sticker { width:19px; height:19px; font-size:11px; top:3px; right:-6px; }
+.stl-plush[data-reaction="grumpy"] .stl-plush-mood-sticker { background:#fff0e9; border-color:#e8ac9b; }
+.stl-plush[data-reaction="shy"] .stl-plush-mood-sticker { background:#fff0f4; border-color:#f1c8d8; }
+.stl-plush[data-reaction="happy"] img { filter:drop-shadow(0 7px 8px rgba(90,66,52,.22)) saturate(1.14); }
+.stl-plush[data-reaction="grumpy"] img { filter:drop-shadow(0 5px 6px rgba(106,42,42,.25)) saturate(.86); }
+.stl-plush[data-reaction="shy"] img { filter:drop-shadow(0 5px 7px rgba(128,79,89,.25)) sepia(.07); }
+@keyframes stl-plush-sticker-pop { from{opacity:0;scale:.3;rotate:-22deg} 65%{opacity:1;scale:1.15;rotate:8deg} to{opacity:1;scale:1;rotate:0deg} }
+@media (prefers-reduced-motion:reduce) { .stl-plush-mood-sticker { animation:none!important; } }
+:root[data-reduce-motion="true"] .stl-plush-mood-sticker { animation:none!important; }

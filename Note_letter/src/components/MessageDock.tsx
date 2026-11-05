@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
-import { X, ArrowLeft, Send, MessageSquareText } from 'lucide-react';
+import { X, ArrowLeft, Send, MessageSquareText, UsersRound, HelpCircle, Inbox } from 'lucide-react';
 import CharacterBadge from './CharacterBadge';
 import PlushCompanion from './PlushCompanion';
 import socketService from '../services/socketService';
@@ -40,6 +40,7 @@ export default function MessageDock() {
   const unread = conversations.reduce((sum, item) => sum + Math.max(0, item.unreadCount || 0), 0);
 
   const [isOpen, setOpen] = useState(false);
+  const [showMessageHelp, setShowMessageHelp] = useState(false);
   const [selected, setSelected] = useState<InboxContact | null>(null);
   const [thread, setThread] = useState<ChatMessage[]>([]);
   const [threadLoading, setThreadLoading] = useState(false);
@@ -203,14 +204,46 @@ export default function MessageDock() {
                 <div className="min-h-0 flex-1 overflow-y-auto p-2">
                   {loading && conversations.length === 0 && <p className="p-4 text-sm text-muted-foreground">Loading inbox…</p>}
                   {error && <p role="alert" className="p-3 text-sm text-destructive">{error} <button type="button" onClick={() => void refresh()} className="underline">Retry</button></p>}
-                  {!loading && !error && conversations.length === 0 && <div className="flex flex-col items-center px-5 py-6 text-center">
-                    <div className="stl-alexis-message-shelf relative flex h-[166px] w-full max-w-[260px] items-end justify-center rounded-[24px] bg-gradient-to-b from-[#f5f1eb] to-[#ece9df]">
-                      <span aria-hidden="true" className="pointer-events-none absolute bottom-3 left-5 right-5 h-2 rounded-full bg-[#cbbcab]/55 blur-sm" />
-                      <PlushCompanion name="alexis" size="lg" />
+
+                  {!loading && !error && conversations.length === 0 && (
+                    <div className="stl-message-onboarding mx-1 my-2 rounded-[22px] border border-[#e8dacb] bg-[#fdf8f2] p-3">
+                      <div className="stl-message-guide-hero flex items-center gap-3 rounded-[18px] bg-gradient-to-br from-[#f5eee5] to-[#ecebe1] p-2.5">
+                        <div className="stl-message-alexis-seat relative flex h-[132px] w-[106px] shrink-0 items-end justify-center">
+                          <PlushCompanion name="alexis" size="lg" className="stl-message-alexis" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[10px] font-bold uppercase tracking-[.12em] text-[#986d52]">Meet Alexis ✨</p>
+                          <h3 className="mt-1 font-editorial text-lg leading-tight text-[#304b3e]">No conversations yet</h3>
+                          <p className="mt-2 text-[11px] leading-[1.55] text-[#70675f]">
+                            Alexis can show you where to start. Find a writer in Community to begin a conversation.
+                          </p>
+                          <p className="mt-1 text-[10px] font-semibold text-[#9b6b58]">Tap Alexis to see a reaction!</p>
+                        </div>
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <Link to="/dashboard/community" onClick={() => setOpen(false)}
+                          className="stl-message-guide-action inline-flex min-h-12 items-center justify-center gap-1.5 rounded-xl border border-[#d9d6c9] bg-white px-2 py-2 text-[11px] font-bold text-[#304b3e] hover:bg-[#edf2e9] focus-visible:outline-2 focus-visible:outline-primary">
+                          <UsersRound size={16} aria-hidden="true" /> Find writers
+                        </Link>
+                        <button type="button" aria-expanded={showMessageHelp} aria-controls="stl-messages-how-it-works"
+                          onClick={() => setShowMessageHelp(value => !value)}
+                          className="stl-message-guide-action inline-flex min-h-12 items-center justify-center gap-1.5 rounded-xl border border-[#e9d7c8] bg-white px-2 py-2 text-[11px] font-bold text-[#635144] hover:bg-[#fff4e8] focus-visible:outline-2 focus-visible:outline-primary">
+                          <HelpCircle size={16} aria-hidden="true" /> How it works
+                        </button>
+                        <Link to="/dashboard/messages" onClick={() => setOpen(false)}
+                          className="stl-message-guide-action col-span-2 inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-[#e8ede5] px-3 py-2 text-[11px] font-semibold text-[#304b3e] hover:bg-[#dce8d8] focus-visible:outline-2 focus-visible:outline-primary">
+                          <Inbox size={16} aria-hidden="true" /> Open inbox
+                        </Link>
+                      </div>
+                      {showMessageHelp && (
+                        <div id="stl-messages-how-it-works" className="mt-3 rounded-xl border border-[#eadbcc] bg-white p-3 text-left text-[11px] leading-5 text-[#63584f]">
+                          <p className="font-semibold text-[#304b3e]">How Messages works</p>
+                          <p className="mt-1">Explore Community, choose a writer, and start a conversation when messaging is available. New replies will appear here.</p>
+                          <p className="mt-1 text-[#8c6a57]">Alexis is a friendly guide, not an AI chatbot. Tap him for playful reactions.</p>
+                        </div>
+                      )}
                     </div>
-                    <p className="mt-4 font-editorial text-xl">No conversations yet</p>
-                    <p className="mt-2 text-xs text-muted-foreground">Alexis is keeping you company. Say hello to a writer in the community.</p>
-                  </div>}
+                  )}
                   {conversations.map(conversation => <button key={conversation.user.id} type="button" onClick={() => openContact(conversation.user)} className="stl-depth-choice flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary">
                     {conversation.user.avatar ? <img src={getImageUrl(conversation.user.avatar)} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" /> : <CharacterBadge name="chika" tone="paper" size="sm" />}
                     <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold">{conversation.user.username}</span><span className="block truncate text-xs text-muted-foreground">{conversation.lastMessage || 'Open conversation'}</span></span>
