@@ -25,7 +25,8 @@ test('a real WebGL 3D village loads with interactive controls and navigation',as
   expect(await canvas.evaluate(el=>Boolean(el.getContext('webgl')))).toBe(true);
   await expect(page.getByRole('button',{name:'Walk forward'})).toBeVisible();
   await expect(page.getByRole('button',{name:'Turn camera right'})).toBeVisible();
-  await expect(page.getByTestId('world-position')).toBeVisible();
+  // Coordinates remain in the DOM but hide visually on compact phones to preserve space.
+  await expect(page.getByTestId('world-position')).toBeAttached();
   await expect(page.getByText('Real 3D solo game.',{exact:false})).toBeVisible();
 });
 test('keyboard movement updates actual coordinates and Post Office opens real letter editing',async({page})=>{
