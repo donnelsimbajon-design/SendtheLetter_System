@@ -85,7 +85,11 @@ test('community uses transparent original-mascot rail and three-column public fe
     .evaluate(el => getComputedStyle(el.parentElement).gridTemplateColumns.split(' ').length);
   expect(count).toBe(3);
   const navigation = page.getByRole('navigation', { name: 'Workspace navigation' });
-  await expect(navigation.getByRole('link')).toHaveCount(7);
+  // The eighth shortcut opens the separate 3D Apo Letter World module.
+  await expect(navigation.getByRole('link')).toHaveCount(8);
+  const worldShortcut = navigation.getByRole('link', {name:'Enter Apo Letter World 3D game'});
+  await expect(worldShortcut).toHaveAttribute('href','/world');
+  await expect(worldShortcut.locator('svg')).toBeVisible();
   const originalMascots = {
     'Overview': 'lumi', 'My library': 'basa', 'Community': 'piko',
     'Messages': 'chika', 'Search public letters': 'suri',
