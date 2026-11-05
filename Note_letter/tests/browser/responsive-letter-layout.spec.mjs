@@ -171,6 +171,9 @@ test('mobile device opens and closes comments without shrinking the letter', asy
 test('public share URL keeps the letter full width and its comments behind a button', async ({ page }) => {
   await setup(page);
   await page.goto('/letters/' + 'a'.repeat(48));
+  await expect(page.getByRole('img', { name: 'A sealed paper envelope waiting to be opened' })).toBeVisible();
+  await expect(page.locator('article.public-letter-sheet')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Skip 3D & read' }).click();
   await expect(page.getByRole('button', { name: 'View comments' })).toBeVisible();
   await expect(page.getByRole('dialog', { name: 'Comments drawer' })).toHaveCount(0);
   const sheet = await page.locator('article.public-letter-sheet').boundingBox();

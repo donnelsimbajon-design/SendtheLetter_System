@@ -137,10 +137,17 @@ test('letter reading and comments drawer fit small phones, tablets, and large de
   }
 });
 
-test('public share shows full-width book first, comments only on demand, across devices', async ({ page }) => {
+test('public share opens the same envelope before full-width book and comments, across devices', async ({ page }) => {
   await mockLetters(page);
   await page.goto('/?s=' + shareToken);
   const book = page.getByTestId('3d-letter-book');
+  const envelope = page.getByRole('img', { name: 'A sealed paper envelope waiting to be opened' });
+  await expect(envelope).toBeVisible();
+  await expect(book).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'View comments' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Open envelope' }).click();
+  await expect(page.getByRole('img', { name: 'The envelope is open and a letter is emerging' })).toBeVisible();
+  await page.getByRole('button', { name: 'Read full letter' }).click();
   await expect(book).toBeVisible();
   await expect(page.getByRole('dialog', { name: 'Comments drawer' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'View comments' })).toBeVisible();
