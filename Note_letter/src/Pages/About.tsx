@@ -1,4 +1,3 @@
-import WorldScene3D from '../components/WorldScene3D';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import CharacterBadge from '../components/CharacterBadge';
@@ -23,8 +22,6 @@ const About = () => {
       </div>
     </header>
     <main className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-24">
-      <WorldScene3D kind="general" title="SendTheLetter interactive 3D experience" className="mb-7 h-[220px] w-full " />
-
       <p className="text-xs font-bold uppercase tracking-[.2em] text-[hsl(var(--accent))]">Our story</p>
       <h1 className="mt-5 max-w-4xl break-words font-editorial text-4xl leading-[1.12] sm:text-6xl lg:text-7xl">A place for the words that deserve to be kept.</h1>
       <p className="mt-8 max-w-2xl text-lg leading-8 text-muted-foreground">SendTheLetter brings a little intention back to digital communication. It gives people room to write, share thoughts, and hold on to meaningful messages without the rush of an ordinary feed.</p>

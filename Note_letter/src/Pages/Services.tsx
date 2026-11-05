@@ -1,4 +1,3 @@
-import WorldScene3D from '../components/WorldScene3D';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import CharacterBadge from '../components/CharacterBadge';
@@ -34,8 +33,6 @@ const Services = () => {
         </div>
       </header>
       <main id="main-content" tabIndex={-1}>
-      <WorldScene3D kind="overview" title="SendTheLetter interactive 3D experience" className="mb-7 h-[220px] w-full " />
-
         <section className="relative overflow-hidden border-b border-border bg-card">
           <div className="mx-auto grid max-w-7xl items-center gap-7 px-5 py-16 sm:px-8 sm:py-24 lg:grid-cols-[1fr_.55fr]">
             <div>
