@@ -1,0 +1,31 @@
+/* The illustrated, transparent Alexis and Iver are actual clickable companions.
+   CSS-only reactions keep them light and avoid extra canvas/WebGL or APIs. */
+.stl-plush { position:relative; display:inline-flex; flex:none; align-items:end; justify-content:center; vertical-align:middle; }
+.stl-plush--sm { width:44px; height:45px; }
+.stl-plush--lg { width:146px; height:155px; }
+.stl-plush--envelope { width:clamp(112px,21vw,164px); height:clamp(122px,22vw,178px); }
+.stl-plush-hit { position:relative; display:flex; width:100%; height:100%; padding:0; border:0; background:transparent; cursor:pointer; align-items:end; justify-content:center; touch-action:manipulation; }
+.stl-plush-hit:focus-visible { outline:3px solid #375c4b; outline-offset:3px; border-radius:15px; }
+.stl-plush-art { width:100%; height:100%; display:flex; justify-content:center; align-items:end; transform-origin:50% 88%; }
+.stl-plush-art img { display:block; max-width:100%; max-height:100%; width:100%; height:100%; object-fit:contain; user-select:none; pointer-events:none; filter:drop-shadow(0 5px 4px rgba(49,35,29,.17)); }
+.stl-plush-hit:hover .stl-plush-art { transform:translateY(-3px) rotate(-2deg); }
+.stl-plush[data-reaction="happy"] .stl-plush-art { animation:stl-plush-happy .7s ease-in-out both; }
+.stl-plush[data-reaction="grumpy"] .stl-plush-art { animation:stl-plush-grumpy .55s ease-in-out both; }
+.stl-plush[data-reaction="shy"] .stl-plush-art { animation:stl-plush-shy .8s ease-in-out both; }
+.stl-plush-speech { position:absolute; z-index:11; top:-9px; left:65%; white-space:nowrap; border:1px solid #e7d0c6; border-radius:999px; padding:5px 9px; color:#4a3a35; background:#fffdfb; box-shadow:0 7px 18px rgba(49,35,29,.16); font-size:12px; font-weight:700; pointer-events:none; animation:stl-plush-bubble .2s ease-out both; }
+.stl-plush--sm .stl-plush-speech { left:20%; top:-28px; }
+@keyframes stl-plush-happy { 0%,100%{transform:translateY(0) rotate(0)} 30%{transform:translateY(-11px) rotate(-8deg)} 65%{transform:translateY(-5px) rotate(7deg)} }
+@keyframes stl-plush-grumpy { 0%,100%{transform:translateY(0) rotate(0)} 18%,55%{transform:translateX(-5px) rotate(-5deg)} 37%,75%{transform:translateX(5px) rotate(5deg)} }
+@keyframes stl-plush-shy { 0%,100%{transform:rotate(0) scale(1)} 45%{transform:rotate(-9deg) scale(.93)} 75%{transform:rotate(4deg) scale(1.02)} }
+@keyframes stl-plush-bubble { from{opacity:0;transform:translateY(6px) scale(.8)}to{opacity:1;transform:translateY(0) scale(1)} }
+.stl-iver-envelope-stage { position:relative; isolation:isolate; }
+.stl-iver-envelope-stage > .stl-real-envelope-scene { width:100%; }
+.stl-envelope-iver { position:absolute; z-index:9; left:50%; top:0; transform:translateX(-50%); }
+.stl-envelope-iver .stl-plush-speech { left:65%; }
+@media (max-width:480px) { .stl-plush--envelope { width:112px; height:124px; } .stl-envelope-iver { top:1px; } }
+@media (prefers-reduced-motion:reduce) {
+ .stl-plush .stl-plush-art,.stl-plush .stl-plush-speech { animation:none!important; transition:none!important; transform:none!important; }
+}
+:root[data-reduce-motion="true"] .stl-plush .stl-plush-art,
+:root[data-reduce-motion="true"] .stl-plush .stl-plush-speech { animation:none!important; transition:none!important; transform:none!important; }
+@media print { .stl-plush { display:none!important; } }
