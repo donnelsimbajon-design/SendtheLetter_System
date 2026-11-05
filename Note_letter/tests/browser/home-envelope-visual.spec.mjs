@@ -23,6 +23,18 @@ for (const viewport of viewports) {
     await expect(hero).toBeVisible();
     await expect(envelope).toBeVisible();
     await expect(page.locator('canvas[data-renderer="webgl"]')).toHaveCount(0);
+    await expect(hero.locator('.stl-real-envelope-paper-lines')).toHaveCount(0);
+    const frame = await hero.locator('.stl-real-envelope-scene').evaluate(element => ({
+      border: getComputedStyle(element).borderTopWidth,
+      background: getComputedStyle(element).backgroundColor,
+    }));
+    expect(frame.border, 'No nested card border around homepage envelope').toBe('0px');
+    expect(frame.background, 'Envelope scene is unboxed and transparent').toBe('rgba(0, 0, 0, 0)');
+    const iver = await hero.locator('.stl-home-iver').boundingBox();
+    const actualEnvelope = await hero.locator('.stl-real-envelope').boundingBox();
+    expect(iver).not.toBeNull();
+    expect(actualEnvelope).not.toBeNull();
+    expect(iver.x + iver.width / 2, 'Iver must be to the left, not on top of the letter').toBeLessThan(actualEnvelope.x + actualEnvelope.width / 2 - 18);
     const { documentWidth, viewportWidth, headingBox, heroBox } = await page.evaluate(() => {
       const h = document.querySelector('h1');
       const visual = document.querySelector('[data-testid="home-letter-hero"]');
