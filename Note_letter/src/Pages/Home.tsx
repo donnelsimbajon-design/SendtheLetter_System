@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import CharacterBadge from '../components/CharacterBadge';
 import LetterOpeningEnvelope from '../components/LetterOpeningEnvelope';
+import PlushCompanion from '../components/PlushCompanion';
 import { MailOpen, RotateCcw } from 'lucide-react';
 import Mascot from '../components/Mascot';
 
@@ -141,33 +142,25 @@ const Home = () => {
             </div>
           </div>
 
-          <div data-testid="home-letter-hero" className="relative min-w-0">
-            <div className="relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-[#e5d8c8] bg-[#fffaf3] p-4 shadow-[0_24px_65px_-45px_rgba(54,49,36,.42)] sm:p-6 lg:p-7">
-              <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#f1e0d8]/50 blur-3xl" />
-              <div className="relative flex flex-wrap items-center justify-between gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-[.18em] text-[#a16f54]">A little letter for you</span>
-                <span className="text-[11px] font-medium text-[#7b806e]">Made with care ♡</span>
-              </div>
-              <LetterOpeningEnvelope opened={homeEnvelopeOpen} className="stl-home-envelope mt-5" />
-              <div className="relative mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex min-w-0 items-center gap-3">
-                  <Mascot name="lumi" alt="Lumi, the SendTheLetter letter companion" className="h-14 w-14 sm:h-16 sm:w-16" loading="eager" />
-                  <div className="min-w-0">
-                    <p className="font-editorial text-xl text-[#30483b] sm:text-2xl">Some words are worth keeping.</p>
-                    <p className="mt-1 text-xs leading-5 text-[#7a7165]">Open this little envelope, then write your own.</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setHomeEnvelopeOpen(value => !value)}
-                  aria-label={homeEnvelopeOpen ? 'Seal demo envelope' : 'Open demo envelope'}
-                  aria-pressed={homeEnvelopeOpen}
-                  className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 self-start rounded-full bg-[#304b3e] px-5 py-2.5 text-xs font-bold text-white transition-colors hover:bg-[#426550] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#304b3e] sm:self-auto"
-                >
-                  {homeEnvelopeOpen ? <RotateCcw size={16} aria-hidden="true" /> : <MailOpen size={16} aria-hidden="true" />}
-                  {homeEnvelopeOpen ? 'Seal again' : 'Open envelope'}
-                </button>
-              </div>
+          <div data-testid="home-letter-hero" className="relative min-w-0 px-0 pb-4 pt-3 sm:px-2 sm:pt-5">
+            <p className="text-center text-[11px] font-bold uppercase tracking-[.19em] text-[#a16f54]">A little letter for you</p>
+            <div className="stl-home-letter-stage relative mt-4 min-w-0">
+              <LetterOpeningEnvelope opened={homeEnvelopeOpen} showCompanion={false} className="stl-home-envelope" />
+              <PlushCompanion name="iver" size="envelope" className="stl-home-iver" />
+            </div>
+            <div className="relative mx-auto mt-2 flex max-w-[470px] flex-col items-center justify-center gap-3 text-center sm:mt-4">
+              <p className="font-editorial text-xl leading-tight text-[#30483b] sm:text-2xl">Some words are worth keeping.</p>
+              <p className="text-xs leading-6 text-muted-foreground">Unseal the envelope, then begin a letter of your own.</p>
+              <button
+                type="button"
+                onClick={() => setHomeEnvelopeOpen(value => !value)}
+                aria-label={homeEnvelopeOpen ? 'Seal demo envelope' : 'Open demo envelope'}
+                aria-pressed={homeEnvelopeOpen}
+                className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
+                {homeEnvelopeOpen ? <RotateCcw size={17} aria-hidden="true" /> : <MailOpen size={17} aria-hidden="true" />}
+                {homeEnvelopeOpen ? 'Seal again' : 'Open envelope'}
+              </button>
             </div>
           </div>
         </section>
