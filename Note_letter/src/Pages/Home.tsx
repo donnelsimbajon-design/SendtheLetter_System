@@ -5,7 +5,6 @@ import CharacterBadge from '../components/CharacterBadge';
 import LetterOpeningEnvelope from '../components/LetterOpeningEnvelope';
 import PlushCompanion from '../components/PlushCompanion';
 import { MailOpen, RotateCcw } from 'lucide-react';
-import Mascot from '../components/Mascot';
 
 const startingPoints = [
   {
