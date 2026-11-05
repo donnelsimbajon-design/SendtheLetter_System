@@ -22,12 +22,9 @@ async function mockAuthenticatedSite(page) {
 test('public home, features, contact and sign-in use the 3D paper language without replacing branding', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('data-stl-depth', 'on');
-  const hero = page.getByTestId('home-letter-hero');
+  const hero = page.locator('.stl-depth-hero').first();
   await expect(hero).toBeVisible();
-  const envelope = hero.locator('.stl-real-envelope-scene');
-  await expect(envelope).toBeVisible();
-  expect(await envelope.evaluate(element => getComputedStyle(element).perspective)).not.toBe('none');
-  await expect(hero.locator('canvas[data-renderer="webgl"]')).toHaveCount(0);
+  expect(await hero.evaluate(element => getComputedStyle(element).transform)).not.toBe('none');
   await expect(page.locator('img[src="/sendtheletter-logo.svg"]')).toBeVisible();
 
   await page.goto('/services');

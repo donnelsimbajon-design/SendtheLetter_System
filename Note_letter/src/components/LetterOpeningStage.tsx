@@ -1,6 +1,7 @@
 import { ArrowRight, BookOpenText, MailOpen } from 'lucide-react';
 import type { ReactNode } from 'react';
 import LetterOpeningEnvelope from './LetterOpeningEnvelope';
+import PlushCompanion from './PlushCompanion';
 
 type Props = {
     title: string;
@@ -14,8 +15,9 @@ type Props = {
     footer?: ReactNode;
 };
 
-/** The same tactile envelope opening for member, public, and private letters.
- * Content and comments are never rendered inside the envelope scene.
+/** Shared reader opening for member, public and private letters.
+ * Iver is beside the introduction, never layered over the envelope seal.
+ * Iver reactions are decorative and cannot trigger open/read actions.
  */
 export default function LetterOpeningStage({
     title, opened, onOpen, onRead, onSkip,
@@ -24,14 +26,27 @@ export default function LetterOpeningStage({
     footer,
 }: Props) {
     return (
-        <section
-            aria-label="Open the 3D letter"
-            className={`flex min-w-0 flex-col items-center justify-start gap-3 overflow-y-auto overscroll-contain px-4 pb-7 pt-5 text-center sm:justify-center sm:gap-4 sm:px-7 ${className}`}
-        >
-            <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#a16f54]">{eyebrow}</p>
-            <h2 className="max-w-[680px] break-words font-editorial text-2xl leading-tight text-[#30443a] sm:text-4xl">{title || 'A note from the heart'}</h2>
-            <p className="max-w-xl text-sm leading-6 text-[#7a7165]">{description}</p>
-            <LetterOpeningEnvelope opened={opened} className="w-full max-w-[650px] shrink-0" />
+        <section aria-label="Open the 3D letter" className={`stl-opening-stage flex min-w-0 flex-col items-center justify-start gap-3 overflow-y-auto overscroll-contain px-3 pb-7 pt-5 text-center sm:justify-center sm:gap-4 sm:px-6 ${className}`}>
+            <div className="stl-opening-heading w-full">
+                <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#a16f54]">{eyebrow}</p>
+                <h2 className="mx-auto mt-2 max-w-[720px] break-words font-editorial text-2xl leading-tight text-[#30443a] sm:text-4xl">{title || 'A note from the heart'}</h2>
+            </div>
+
+            <div className="stl-opening-layout w-full">
+                <aside className="stl-opening-guide" aria-label="Iver, your letter-opening companion">
+                    <div className="stl-opening-guide-portrait">
+                        <span className="stl-opening-tap-hint" aria-hidden="true">Tap me ✨</span>
+                        <PlushCompanion name="iver" size="envelope" />
+                    </div>
+                    <div className="stl-opening-guide-copy">
+                        <p className="stl-opening-guide-name">Iver <span aria-hidden="true">✦</span></p>
+                        <p className="stl-opening-guide-text">{description}</p>
+                        <p className="stl-opening-guide-tip">Tap Iver for a happy, grumpy, or shy reaction.</p>
+                    </div>
+                </aside>
+                <LetterOpeningEnvelope opened={opened} className="stl-opening-envelope" />
+            </div>
+
             <span aria-live="polite" className="sr-only">
                 {opened ? 'Envelope opened. Your letter is ready.' : 'Sealed and ready to open.'}
             </span>
