@@ -17,7 +17,7 @@ async function signedIn(page) {
 test('Apo world is protected behind the existing sign-in', async ({ page }) => {
   await page.goto('/world');
   await expect(page).toHaveURL(/\/login\?returnTo=/);
-  await expect(page.getByRole('heading', { name: /sign in|welcome back/i }).first()).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your space is waiting.' })).toBeVisible();
 });
 test('3D village loads and offers real controls, landmarks and writing links', async ({ page }) => {
   await signedIn(page);
