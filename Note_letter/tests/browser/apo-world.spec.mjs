@@ -24,10 +24,9 @@ test('3D village loads and offers real controls, landmarks and writing links', a
   await page.goto('/world');
   const canvas = page.getByTestId('apo-3d-canvas');
   await expect(canvas).toBeVisible();
-  const status = page.getByRole('status');
   // On CI Chromium SwiftShader provides WebGL; failure must be visible, not a fake 2D screenshot.
   await expect(page.getByText('Mt. Apo-inspired Highlands')).toBeVisible({ timeout: 15000 });
-  await expect(canvas.evaluate(el => Boolean(el.getContext('webgl')))).resolves.toBeTruthy();
+  expect(await canvas.evaluate(el => Boolean(el.getContext('webgl')))).toBeTruthy();
   await page.getByRole('button', { name: 'Start exploring' }).click();
   const before = await page.getByTestId('world-position').textContent();
   await page.keyboard.down('w');
