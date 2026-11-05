@@ -18,21 +18,17 @@ async function mockedSession(page) {
   });
 }
 
-test('homepage renders an actual perspective WebGL world, not a flat CSS shadow', async ({ page }) => {
+test('homepage presents a recognizable paper envelope instead of the broken low-poly 3D scene', async ({ page }) => {
   await page.goto('/');
-  const world = page.getByRole('region', { name: 'Explore the 3D SendTheLetter story world' });
-  await expect(world).toBeVisible();
-  const canvas = world.locator('canvas[data-renderer="webgl"]');
-  await expect(canvas).toBeVisible();
-  await expect.poll(async () => canvas.evaluate(c => c.width)).toBeGreaterThan(0);
-  const renderer = await canvas.evaluate(canvas => {
-    const context = canvas.getContext('webgl');
-    return Boolean(context && context.getParameter(context.VERSION) && context.drawingBufferWidth > 0);
-  });
-  expect(renderer).toBe(true);
-  await expect(world.getByRole('button', { name: 'Open 3D letter' })).toBeVisible();
-  await world.getByRole('button', { name: 'Open 3D letter' }).click();
-  await expect(world.getByRole('button', { name: 'Close 3D letter' })).toHaveAttribute('aria-pressed', 'true');
+  const hero = page.getByTestId('home-letter-hero');
+  await expect(hero).toBeVisible();
+  const envelope = hero.getByRole('img', { name: 'A sealed paper envelope waiting to be opened' });
+  await expect(envelope).toHaveAttribute('data-opened', 'false');
+  await expect(page.locator('canvas[data-renderer="webgl"]')).toHaveCount(0);
+  await hero.getByRole('button', { name: 'Open demo envelope' }).click();
+  await expect(hero.getByRole('img', { name: 'The envelope is open and a letter is emerging' })).toHaveAttribute('data-opened', 'true');
+  await hero.getByRole('button', { name: 'Seal demo envelope' }).click();
+  await expect(envelope).toHaveAttribute('data-opened', 'false');
   await expect(page.locator('img[src="/sendtheletter-logo.svg"]')).toBeVisible();
 });
 
@@ -55,11 +51,11 @@ test('member sections show content without decorative 3D banners', async ({ page
   }
 });
 
-test('public pages and sign-in show a real 3D scene while forms remain accessible', async ({ page }) => {
+test('public pages and authentication screens show content without obstructive WebGL banners', async ({ page }) => {
   for (const path of ['/about', '/services', '/contact', '/creator', '/login', '/signup', '/forgot-password']) {
     await page.goto(path);
-    const activeCanvas = page.locator('canvas[data-renderer="webgl"]:visible').first();
-    await expect(activeCanvas).toBeVisible();
+    await expect(page.locator('main').first()).toBeVisible();
+    await expect(page.locator('canvas[data-renderer="webgl"]')).toHaveCount(0);
   }
   await page.goto('/login');
   await expect(page.getByRole('textbox', { name: 'Email address' })).toBeVisible();
@@ -79,11 +75,13 @@ test('turning off 3D removes WebGL rendering and keeps the writing workspace', a
   await expect(page.getByRole('button', { name: 'Normal view' })).toBeVisible();
 });
 
-test('reduced motion uses a static 3D frame and keeps interactive controls readable', async ({ page }) => {
+test('reduced motion preserves an accessible static paper envelope and writing link', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
-  const world = page.getByRole('region', { name: 'Explore the 3D SendTheLetter story world' });
-  await expect(world.locator('canvas[data-renderer="webgl"]')).toBeVisible();
-  await expect(world.getByRole('button', { name: 'Open 3D letter' })).toBeVisible();
+  const hero = page.getByTestId('home-letter-hero');
+  await expect(hero.getByRole('img', { name: 'A sealed paper envelope waiting to be opened' })).toBeVisible();
+  await expect(hero.getByRole('button', { name: 'Open demo envelope' })).toBeVisible();
+  await hero.getByRole('button', { name: 'Open demo envelope' }).click();
+  await expect(hero.getByRole('img', { name: 'The envelope is open and a letter is emerging' })).toBeVisible();
   await expect(page.getByRole('link', { name: /Write your first letter/ })).toBeVisible();
 });
