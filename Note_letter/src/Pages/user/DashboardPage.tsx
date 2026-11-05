@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookOpenText, PenLine } from 'lucide-react';
+import { ArrowRight, BookOpenText, PenLine, Mountain, Sparkles } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useNoteStore } from '../../store/noteStore';
 import { useInboxStore } from '../../store/inboxStore';
@@ -64,6 +64,19 @@ export default function DashboardPage() {
           <PenLine size={16} /> Write a letter
         </Link>
       </header>
+
+
+      <section aria-label="Explore Apo Letter World" className="flex min-w-0 flex-wrap items-center justify-between gap-4 overflow-hidden rounded-[1.5rem] border border-[#b7d1b6] bg-gradient-to-r from-[#e0edda] via-[#f1eedf] to-[#f6e2ce] p-5 shadow-sm sm:p-6">
+        <div className="flex min-w-0 items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#345641] text-[#fff2dc] shadow-sm"><Mountain size={25} aria-hidden="true" /></div>
+          <div className="min-w-0">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.13em] text-[#966f52]"><Sparkles size={13} aria-hidden="true" /> New explorable 3D world</span>
+            <h2 className="mt-1 font-editorial text-xl text-[#304d3b] sm:text-2xl">Apo Letter World</h2>
+            <p className="mt-1 max-w-xl text-xs leading-5 text-[#637267] sm:text-sm">Walk through a cozy Mt. Apo-inspired village, meet Alexis and Iver, and discover places to write and read letters.</p>
+          </div>
+        </div>
+        <Link to="/world" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-[#304f3d] px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-[#426d52] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#304f3d]"><Mountain size={17} aria-hidden="true" /> Enter 3D world <ArrowRight size={16} aria-hidden="true" /></Link>
+      </section>
 
       <section aria-label="Start your day" className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.65fr)_minmax(270px,1fr)]">
         <div className={`${surface} flex min-w-0 flex-col justify-between gap-5 p-6 sm:p-8`}>

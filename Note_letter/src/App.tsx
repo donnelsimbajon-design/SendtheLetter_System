@@ -25,6 +25,8 @@ import AdminDashboard from './Pages/AdminDashboard';
 import PublicLetterPage from './Pages/user/PublicLetterPage';
 import RecipientLetterPage from './Pages/user/RecipientLetterPage';
 import TryLetterPage from './Pages/TryLetterPage';
+// Keep the 3D game off the initial letter-reading and auth bundles.
+const VirtualWorldPage = React.lazy(() => import('./Pages/VirtualWorldPage'));
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     const { pathname, search } = useLocation();
@@ -45,7 +47,7 @@ const Landing = () => {
     const params = new URLSearchParams(search);
     const route = params.get('route') || '';
     // Static hosting fallback for direct refreshes of known React routes.
-    if (/^\/(?:dashboard(?:\/.*)?|login|signup|forgot-password|reset-password|about|services|contact|creator|admin|writers\/[^/?#]+)(?:\?.*)?$/.test(route) && !route.startsWith('//')) {
+    if (/^\/(?:dashboard(?:\/.*)?|login|signup|forgot-password|reset-password|about|services|contact|creator|world|admin|writers\/[^/?#]+)(?:\?.*)?$/.test(route) && !route.startsWith('//')) {
         return <Navigate to={route} replace />;
     }
     return params.has('s') ? <PublicLetterPage /> : <Home />;
@@ -88,6 +90,7 @@ function App() {
                 <Route path="/forgot-password" element={<PasswordRecoveryPage mode="request" />} />
                 <Route path="/reset-password" element={<PasswordRecoveryPage mode="confirm" />} />
                 <Route path="/creator" element={<Creator />} />
+                <Route path="/world" element={<PrivateRoute><React.Suspense fallback={<main className="flex min-h-screen items-center justify-center bg-background">Loading the 3D world…</main>}><VirtualWorldPage /></React.Suspense></PrivateRoute>} />
                 <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
                 <Route path="/letters/:id" element={<PublicLetterPage />} />
                 <Route path="/open" element={<RecipientLetterPage />} />
