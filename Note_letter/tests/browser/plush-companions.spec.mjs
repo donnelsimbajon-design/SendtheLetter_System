@@ -97,9 +97,16 @@ test('Iver never overlaps the envelope on compact phone and tablet', async ({pag
     await page.setViewportSize({width,height:820});
     const guide=dialog.getByRole('complementary',{name:'Iver, your letter-opening companion'});
     const envelope=dialog.getByRole('img',{name:'A sealed paper envelope waiting to be opened'});
-    const g=await guide.boundingBox(), e=await envelope.boundingBox();
-    expect(g).not.toBeNull();expect(e).not.toBeNull();
-    expect(g.x+g.width<=e.x+2||g.y+g.height<=e.y+2).toBe(true);
+    // Radix animates the centered dialog after viewport changes. Check the
+    // settled geometry, not a transitional frame captured mid-resize.
+    await expect.poll(async () => {
+      const g=await guide.boundingBox(), e=await envelope.boundingBox();
+      if (!g || !e) return true;
+      const overlaps = g.x < e.x+e.width-2 && g.x+g.width > e.x+2 &&
+        g.y < e.y+e.height-2 && g.y+g.height > e.y+2;
+      if (overlaps) console.log('IVER_GUIDE_OVERLAP',width,JSON.stringify({guide:g,envelope:e}));
+      return overlaps;
+    }, {timeout:5000,intervals:[100,200,350,500]}).toBe(false);
     const doc=await page.evaluate(()=>({width:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth}));
     expect(doc.scroll).toBeLessThanOrEqual(doc.width+2);
   }
