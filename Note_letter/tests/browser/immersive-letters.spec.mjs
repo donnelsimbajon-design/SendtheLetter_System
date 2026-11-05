@@ -54,7 +54,7 @@ test('library can opt into a 3D shelf, open the envelope, and use the existing r
   await expect(scene.getByText('These are words from my own private letter.')).toHaveCount(0);
   await scene.getByRole('button', { name: 'Open envelope' }).click();
   await expect(scene.getByText('Envelope opened. Your letter is ready.')).toBeVisible();
-  await scene.getByRole('button', { name: 'Read the letter' }).click();
+  await scene.getByRole('button', { name: 'Read full letter' }).click();
   await expect(page.getByRole('dialog', { name: /Letter from/ })).toBeVisible();
   await expect(page.getByText('These are words from my own private letter.')).toBeVisible();
 });
