@@ -82,10 +82,14 @@ test('private invitation opens for a guest without signup and accepts one option
     });
   });
   await page.goto('/open#' + token);
-  await expect(page.getByRole('heading', { name: "You've received a letter." })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'For a special person' })).toBeVisible();
   await expect(page.getByText('No account or payment needed')).toBeVisible();
+  await expect(page.getByRole('img', { name: 'A sealed paper envelope waiting to be opened' })).toBeVisible();
+  await expect(page.getByRole('article', { name: 'Your private letter' })).toHaveCount(0);
   await expect(page.locator('a[href*="/signup"]')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Open my letter' }).click();
+  await page.getByRole('button', { name: 'Open envelope' }).click();
+  await expect(page.getByRole('img', { name: 'The envelope is open and a letter is emerging' })).toBeVisible();
+  await page.getByRole('button', { name: 'Read full letter' }).click();
   await expect(page.getByRole('article', { name: 'Your private letter' })).toContainText('You are appreciated every day.');
   await page.getByLabel('Your name (optional)').fill('A friend');
   await page.getByLabel('Your message (optional)').fill('Thanks for thinking of me!');
