@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import CommentsPanel from '../../components/CommentsPanel';
 import LetterBookReader from '../../components/LetterBookReader';
+import LetterOpeningStage from '../../components/LetterOpeningStage';
+import CharacterBadge from '../../components/CharacterBadge';
 import axios from 'axios';
 import { ArrowLeft, Lock, Loader2, Printer, Download, MessageCircle } from 'lucide-react';
 import { API_ENDPOINTS } from '../../config/api';
@@ -15,6 +17,14 @@ const PublicLetterPage = () => {
     const [notFound, setNotFound] = useState(false);
     const [imageStatus, setImageStatus] = useState('');
     const [mobileCommentsOpen, setMobileCommentsOpen] = useState(false);
+    const [envelopeOpened, setEnvelopeOpened] = useState(false);
+    const [reading, setReading] = useState(false);
+
+    useEffect(() => {
+        setEnvelopeOpened(false);
+        setReading(false);
+        setMobileCommentsOpen(false);
+    }, [token]);
 
     useEffect(() => {
         let active = true;
@@ -147,6 +157,29 @@ const PublicLetterPage = () => {
 
     if (loading) return <main className="min-h-screen flex items-center justify-center bg-[#f6f1e9] text-[#263b35]"><Loader2 className="animate-spin" /> <span className="ml-2">Opening your letter…</span></main>;
     if (notFound || !letter) return <main className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#f6f1e9] p-6 text-center text-[#263b35]"><Lock size={32} /><h1 className="font-serif text-3xl">This letter isn't available</h1><p className="max-w-md text-sm text-[#52645d]">The letter may be private or unavailable. Ask the author for a fresh, secure share link.</p><Link to="/" className="inline-flex items-center gap-2 rounded-full bg-[#263b35] px-5 py-3 text-white"><ArrowLeft size={16} /> Back to SendTheLetter</Link></main>;
+
+    if (!reading) return (
+        <main className="flex min-h-screen items-center justify-center bg-[#f6f1e9] px-2 py-5 text-[#263b35] sm:px-5 sm:py-10">
+            <div className="stl-full-letter-reader flex h-[min(94dvh,760px)] w-full max-w-[820px] min-w-0 flex-col overflow-hidden rounded-[22px] border border-[#e7dbcc] bg-[#fcf9f4] shadow-2xl sm:h-[min(86dvh,760px)] sm:rounded-[30px]">
+                <header className="flex shrink-0 items-center gap-3 border-b border-[#e7dbcc] bg-[#fffdf9] px-4 py-3 sm:px-6 sm:py-4">
+                    <CharacterBadge name="basa" tone="paper" size="sm" />
+                    <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#a16f54]">SendTheLetter · Reader</p>
+                        <p className="truncate font-editorial text-sm font-semibold text-[#30443a] sm:text-lg">{letter.title || 'A letter for you'}</p>
+                    </div>
+                    <Link to="/" className="shrink-0 rounded-full border border-[#e3d8cb] bg-white px-3 py-2 text-xs font-semibold text-[#30443a] hover:bg-[#f4eee5]">Home</Link>
+                </header>
+                <LetterOpeningStage
+                    title={letter.title || 'A note from the heart'}
+                    opened={envelopeOpened}
+                    onOpen={() => setEnvelopeOpened(true)}
+                    onRead={() => setReading(true)}
+                    onSkip={() => setReading(true)}
+                    className="min-h-0 flex-1"
+                />
+            </div>
+        </main>
+    );
 
     return (
         <main className="min-h-screen bg-[#f6f1e9] px-4 py-10 text-[#263b35]">
