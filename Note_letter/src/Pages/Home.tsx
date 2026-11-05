@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import CharacterBadge from '../components/CharacterBadge';
-import WorldScene3D from '../components/WorldScene3D';
+import LetterOpeningEnvelope from '../components/LetterOpeningEnvelope';
+import { MailOpen, RotateCcw } from 'lucide-react';
 import Mascot from '../components/Mascot';
 
 const startingPoints = [
@@ -71,6 +72,7 @@ const paths = [
 const Home = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [homeEnvelopeOpen, setHomeEnvelopeOpen] = useState(false);
   const selected = startingPoints[selectedIndex];
   const composePath = '/dashboard/notes?compose=1&template=' + selected.value;
   const startLink = isAuthenticated ? '/dashboard/notes?compose=1' : '/try';
@@ -102,13 +104,13 @@ const Home = () => {
       </header>
 
       <main id="main-content" tabIndex={-1}>
-        <section className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 pb-16 pt-12 sm:px-8 sm:pb-20 sm:pt-20 lg:grid-cols-[1.04fr_.96fr] lg:gap-12 lg:pb-24 lg:pt-24">
-          <div className="relative z-10">
+        <section className="relative mx-auto grid max-w-7xl min-w-0 items-center gap-10 px-5 pb-16 pt-12 sm:px-8 sm:pb-20 sm:pt-20 lg:grid-cols-[minmax(0,1.04fr)_minmax(0,.96fr)] lg:gap-9 lg:pb-24 lg:pt-24">
+          <div className="relative z-10 min-w-0">
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-[11px] font-bold tracking-wide text-muted-foreground sm:px-4">
               <CharacterBadge name="tala" tone="gold" size="xs" />
               A little space for big feelings
             </span>
-            <h1 className="mt-7 max-w-[730px] font-editorial text-[clamp(3rem,7.4vw,6.25rem)] leading-[1.02] tracking-[-.045em]">
+            <h1 className="mt-7 max-w-[730px] break-words font-editorial text-[clamp(2.8rem,6vw,5.6rem)] leading-[1.04] tracking-[-.045em]">
               Some things are <span className="italic text-[hsl(var(--accent))]">better</span> in a letter.
             </h1>
             <p className="mt-6 max-w-xl text-base leading-8 text-muted-foreground sm:text-lg">
@@ -139,9 +141,32 @@ const Home = () => {
             </div>
           </div>
 
-          <div className="stl-depth-hero relative min-w-0">
-            <WorldScene3D kind="home" title="Explore the 3D SendTheLetter story world" className="h-[360px] w-full sm:h-[480px] lg:h-[525px]" />
-            <Mascot name="lumi" alt="Lumi, the SendTheLetter letter companion" className="pointer-events-none absolute -right-2 -top-6 z-10 h-20 w-20 drop-shadow-lg sm:-right-4 sm:-top-8 sm:h-28 sm:w-28" />
+          <div data-testid="home-letter-hero" className="relative min-w-0">
+            <div className="relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-[#e5d8c8] bg-[#fffaf3] p-4 shadow-[0_24px_65px_-45px_rgba(54,49,36,.42)] sm:p-6 lg:p-7">
+              <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#f1e0d8]/50 blur-3xl" />
+              <div className="relative flex flex-wrap items-center justify-between gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-[.18em] text-[#a16f54]">A little letter for you</span>
+                <span className="text-[11px] font-medium text-[#7b806e]">Made with care ♡</span>
+              </div>
+              <LetterOpeningEnvelope opened={homeEnvelopeOpen} className="stl-home-envelope mt-5" />
+              <div className="relative mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="font-editorial text-xl text-[#30483b] sm:text-2xl">Some words are worth keeping.</p>
+                  <p className="mt-1 text-xs leading-5 text-[#7a7165]">Open this little envelope, then write your own.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setHomeEnvelopeOpen(value => !value)}
+                  aria-label={homeEnvelopeOpen ? 'Seal demo envelope' : 'Open demo envelope'}
+                  aria-pressed={homeEnvelopeOpen}
+                  className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 self-start rounded-full bg-[#304b3e] px-5 py-2.5 text-xs font-bold text-white transition-colors hover:bg-[#426550] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#304b3e] sm:self-auto"
+                >
+                  {homeEnvelopeOpen ? <RotateCcw size={16} aria-hidden="true" /> : <MailOpen size={16} aria-hidden="true" />}
+                  {homeEnvelopeOpen ? 'Seal again' : 'Open envelope'}
+                </button>
+              </div>
+            </div>
+            <Mascot name="lumi" alt="Lumi, the SendTheLetter letter companion" className="pointer-events-none absolute -right-2 -top-7 z-10 h-20 w-20 drop-shadow-lg sm:-right-5 sm:-top-9 sm:h-28 sm:w-28" loading="eager" />
           </div>
         </section>
 
