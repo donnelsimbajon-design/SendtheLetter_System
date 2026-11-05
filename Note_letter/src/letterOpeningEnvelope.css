@@ -88,9 +88,7 @@
   overflow: hidden;
   border-radius: 3px;
   border: 1px solid #e8dfd3;
-  background:
-    repeating-linear-gradient(0deg, transparent 0 20px, rgba(119,104,82,.028) 20px 21px),
-    linear-gradient(155deg, #fffefa, #fffaf1);
+  background: linear-gradient(155deg, #fffefa, #fffaf1);
   color: #755d4d;
   box-shadow: 0 3px 8px rgba(78,55,32,.13), 0 -2px 1px #fff inset;
   transform: translateY(10%) translateZ(1px);
@@ -112,11 +110,6 @@
   font: italic clamp(13px, 2.8vw, 23px)/1.1 Georgia, serif;
   color: #4b6253;
 }
-.stl-real-envelope-paper-lines { display: grid; gap: 8px; width: 100%; margin-top: 11%; }
-.stl-real-envelope-paper-lines span { display: block; height: 1px; width: 95%; background: #dacfc1; }
-.stl-real-envelope-paper-lines span:nth-child(2) { width: 84%; }
-.stl-real-envelope-paper-lines span:nth-child(3) { width: 89%; }
-.stl-real-envelope-paper-lines span:nth-child(4) { width: 62%; }
 .stl-real-envelope-paper-signature { margin-top: auto; font: italic clamp(10px, 1.7vw, 14px) Georgia, serif; color: #9c8973; }
 .stl-real-envelope-fold {
   inset: 0;
@@ -196,7 +189,6 @@
   .stl-real-envelope-scene { height: clamp(220px, 37dvh, 260px); min-height: 220px; border-radius: 20px; }
   .stl-real-envelope { width: min(305px, 84%); }
   .stl-real-envelope-paper { padding: 8% 9%; }
-  .stl-real-envelope-paper-lines { gap: 5px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .stl-real-envelope *, .stl-real-envelope-scene * { transition-duration: 0.01ms !important; animation: none !important; }
@@ -207,6 +199,37 @@
 :root[data-stl-depth="off"] .stl-real-envelope { transform: translate(-50%, -50%) !important; }
 :root[data-stl-depth="off"] .stl-real-envelope-scene[data-opened="true"] .stl-real-envelope-flap { opacity: 0; }
 @media print { .stl-real-envelope-scene { display: none; } }
+
+/* Homepage is intentionally unboxed: no frame-within-a-frame around the envelope.
+   Iver is a sibling of the paper scene and sits on its left, never above the note. */
+.stl-home-letter-stage { position: relative; min-width: 0; isolation: isolate; }
+.stl-home-envelope .stl-real-envelope-scene {
+  height: clamp(260px, 33vw, 365px);
+  min-height: 260px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+.stl-home-envelope .stl-real-envelope-scene::before,
+.stl-home-envelope .stl-real-envelope-light { display: none; }
+.stl-home-envelope .stl-real-envelope { width: min(388px, 72%); }
+.stl-home-iver.stl-plush--envelope {
+  position: absolute;
+  z-index: 9;
+  left: clamp(0px, 5%, 45px);
+  bottom: 7%;
+  width: clamp(72px, 18%, 125px);
+  height: clamp(88px, 21%, 148px);
+  transform: none;
+}
+@media (max-width: 480px) {
+  .stl-home-envelope .stl-real-envelope-scene { height: 265px; min-height: 265px; }
+  .stl-home-envelope .stl-real-envelope { width: min(285px, 76%); }
+  .stl-home-iver.stl-plush--envelope { left: 0; bottom: 3%; width: 82px; height: 96px; }
+}
+
 
 /* Editorial companion + envelope layout, shared by all letter-opening entry points.
  * The character is a sibling of the scene, so its hit target never covers the seal. */
@@ -222,7 +245,8 @@
 .stl-opening-guide-name span { color:#be8c52; }
 .stl-opening-guide-text { margin-top:7px; color:#685e54; font-size:12px; line-height:1.55; }
 .stl-opening-guide-tip { margin-top:8px; color:#8f715f; font-size:10px; line-height:1.45; }
-.stl-opening-envelope { min-width:0; height:auto; min-height:255px; }
+.stl-opening-envelope { min-width:0; width:100%; height:auto; }
+.stl-opening-envelope > .stl-real-envelope-scene { width:100%; height:clamp(250px,31dvh,325px); min-height:250px; }
 .stl-opening-layout .stl-real-envelope { width:min(388px,84%); }
 @media (max-width:650px) {
   .stl-opening-layout { grid-template-columns:minmax(0,1fr); gap:10px; }
@@ -232,13 +256,13 @@
   .stl-opening-guide-copy { text-align:left; }
   .stl-opening-guide-name { margin-top:0; }
   .stl-opening-tap-hint { top:1px; right:-4px; font-size:10px; padding:4px 7px; }
-  .stl-opening-envelope { min-height:215px; height:clamp(215px,34dvh,270px); }
+  .stl-opening-envelope > .stl-real-envelope-scene { min-height:215px; height:clamp(215px,34dvh,270px); }
 }
 @media (max-width:365px) {
   .stl-opening-guide { grid-template-columns:104px minmax(0,1fr); gap:8px; padding:8px 10px; }
   .stl-opening-guide-portrait .stl-plush { width:104px; height:117px; }
   .stl-opening-guide-text { font-size:11px; }
   .stl-opening-guide-tip { font-size:10px; }
-  .stl-opening-envelope { min-height:210px; height:220px; }
+  .stl-opening-envelope > .stl-real-envelope-scene { min-height:210px; height:220px; }
 }
 @media (prefers-reduced-motion:reduce) { .stl-opening-tap-hint { transform:none; } }

@@ -211,15 +211,20 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
 
     return (
         <div className="space-y-8 max-w-7xl mx-auto">
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <p className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.16em] text-[hsl(var(--accent))]"><CharacterBadge name={isCommunity ? "chika" : "basa"} tone="gold" size="xs" /> {isCommunity ? "Stories from the community" : "The letter collection"}</p>
-                    <h2 className="font-editorial text-4xl tracking-tight text-foreground">{isCommunity ? 'Discover words that matter' : activeTab === 'personal' ? 'My letters' : activeTab === 'drafts' ? 'Saved drafts' : activeTab === 'archived' ? 'Archived letters' : 'Letters for later'}</h2>
-                    <p className="mt-2 text-sm text-muted-foreground">{isCommunity ? 'Read published stories, find kindred voices, and share a little appreciation. Private writing stays in My library.' : activeTab === 'personal' ? 'Your finished letters, just as you wrote them.' : activeTab === 'drafts' ? 'Pick up where your thoughts left off.' : activeTab === 'archived' ? 'Letters you have set aside. Restore them whenever you are ready.' : 'Letters waiting for their special moment.'}</p>
+            {/* Frozen workspace title and compose action; tabs remain below for browsing. */}
+            <header data-testid="library-frozen-header" className="sticky top-16 z-30 -mx-3 flex min-w-0 flex-wrap items-center justify-between gap-3 border-b border-border/70 bg-background/95 px-3 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:top-0 lg:-mx-8 lg:px-8 xl:-mx-10 xl:px-10">
+                <div className="min-w-0 flex-1">
+                    <p className="mb-1 hidden items-center gap-2 text-[11px] font-bold uppercase tracking-[.16em] text-[hsl(var(--accent))] sm:inline-flex"><CharacterBadge name={isCommunity ? "chika" : "basa"} tone="gold" size="xs" /> {isCommunity ? "Stories from the community" : "The letter collection"}</p>
+                    <h2 className="font-editorial text-xl leading-tight tracking-tight text-foreground sm:text-3xl">{isCommunity ? 'Discover words that matter' : activeTab === 'personal' ? 'My letters' : activeTab === 'drafts' ? 'Saved drafts' : activeTab === 'archived' ? 'Archived letters' : 'Letters for later'}</h2>
+                    <p className="mt-2 hidden text-sm text-muted-foreground lg:block">{isCommunity ? 'Read published stories, find kindred voices, and share a little appreciation. Private writing stays in My library.' : activeTab === 'personal' ? 'Your finished letters, just as you wrote them.' : activeTab === 'drafts' ? 'Pick up where your thoughts left off.' : activeTab === 'archived' ? 'Letters you have set aside. Restore them whenever you are ready.' : 'Letters waiting for their special moment.'}</p>
                 </div>
-
-                <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-border/70 bg-muted/60 p-1.5">
+                <Button onClick={() => { setStarterTemplate(''); setEditingNote(null); setIsEditorOpen(true); }} className="min-h-11 shrink-0 gap-1.5 bg-primary px-3 text-xs text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 sm:gap-2 sm:px-4 sm:text-sm">
+                    <CharacterBadge name="lumi" tone="paper" size="xs" />
+                    Write a Letter
+                </Button>
+            </header>
+            <div className="flex min-w-0 flex-wrap items-center gap-3">
+                <div className="grid w-full grid-cols-2 gap-1.5 rounded-2xl border border-border/70 bg-muted/60 p-1.5 sm:flex sm:w-auto sm:flex-wrap">
                     {(!isCommunity ? ([
                         { key: 'personal', label: 'My letters', mascot: 'basa' },
                         { key: 'drafts', label: 'Drafts', mascot: 'lumi' },
@@ -232,10 +237,6 @@ const Notes = ({ initialTab = 'personal' }: { initialTab?: 'personal' | 'public'
                     )) : <span className="px-3 py-2 text-xs font-semibold text-muted-foreground">Public letters only</span>)}
                 </div>
 
-                <Button onClick={() => { setStarterTemplate(''); setEditingNote(null); setIsEditorOpen(true); }} className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 shadow-lg hover:shadow-xl transition-all">
-                    <CharacterBadge name="lumi" tone="paper" size="sm" />
-                    Write a Letter
-                </Button>
             </div>
 
             {isCommunity && <section aria-label="Explore letter topics" className="rounded-[1.8rem] border border-border bg-[hsl(var(--surface-sage))]/45 p-5 sm:p-7">
