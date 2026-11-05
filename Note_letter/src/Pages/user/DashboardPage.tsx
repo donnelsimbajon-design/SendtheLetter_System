@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookOpenText, PenLine } from 'lucide-react';
+import { ArrowRight, BookOpenText, PenLine, Mountain, Sparkles } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useNoteStore } from '../../store/noteStore';
 import { useInboxStore } from '../../store/inboxStore';
@@ -64,6 +64,20 @@ export default function DashboardPage() {
           <PenLine size={16} /> Write a letter
         </Link>
       </header>
+
+      <section aria-label="Explore Apo Letter World" className="flex min-w-0 flex-wrap items-center justify-between gap-4 rounded-[1.5rem] border border-[#c5d6bf] bg-gradient-to-r from-[#e2eadd] via-[#f5f3e4] to-[#f8e9d2] p-4 shadow-sm sm:p-6">
+        <div className="flex min-w-0 items-center gap-4">
+          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-[18px] border border-white/70 bg-white/70 text-[#476d56] shadow-sm"><Mountain size={28} aria-hidden="true" /></span>
+          <div className="min-w-0">
+            <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[.12em] text-[#9c754d]"><Sparkles size={12} aria-hidden="true" /> New · Playable 3D preview</p>
+            <h2 className="mt-1 font-editorial text-xl text-[#304c3e] sm:text-2xl">Apo Letter World</h2>
+            <p className="mt-1 max-w-xl text-xs leading-5 text-[#65756b]">Walk through a mountain village, meet Alexis and Iver, and discover places connected to your letters.</p>
+          </div>
+        </div>
+        <Link to="/world" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#304c3e] px-5 py-2.5 text-xs font-bold text-white transition-colors hover:bg-[#41684f] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#304c3e]">
+          Enter 3D world <ArrowRight size={16} aria-hidden="true" />
+        </Link>
+      </section>
 
       <section aria-label="Start your day" className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.65fr)_minmax(270px,1fr)]">
         <div className={`${surface} flex min-w-0 flex-col justify-between gap-5 p-6 sm:p-8`}>

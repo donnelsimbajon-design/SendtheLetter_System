@@ -1,0 +1,101 @@
+/* Apo Letter World is a true WebGL 3D scene with a separate accessible DOM HUD.
+ * No flat-image world map or screenshot is used as a gameplay backdrop. */
+.apo-world { position:relative; isolation:isolate; min-height:100dvh; overflow:hidden; background:#b5d7e4; color:#254239; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; }
+.apo-world-sky { position:absolute; inset:0; pointer-events:none; background:radial-gradient(ellipse at 75% 18%,rgba(255,236,196,.88),transparent 43%),linear-gradient(180deg,#75b7df 0%,#c3e0ee 45%,#e7ecdb 78%,#a8bd86 100%); }
+.apo-topbar { position:relative; z-index:5; display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:73px; padding:11px clamp(12px,3vw,38px); background:rgba(251,248,239,.86); border-bottom:1px solid rgba(255,255,255,.55); backdrop-filter:blur(14px); }
+.apo-back,.apo-brand,.apo-top-actions { display:flex; align-items:center; gap:10px; }
+.apo-back { min-height:44px; color:#375749; text-decoration:none; font-size:12px; font-weight:750; white-space:nowrap; }
+.apo-back:hover { text-decoration:underline; }
+.apo-brand { min-width:0; justify-content:center; }
+.apo-brand-icon { display:grid; place-items:center; width:43px; height:43px; border:1px solid #d3b9a6; border-radius:15px; background:#f4e5d4; color:#975f50; font-size:27px; box-shadow:0 4px 11px #8d6d4820; }
+.apo-brand strong,.apo-brand small { display:block; white-space:nowrap; }
+.apo-brand strong { font-family:Georgia,serif; font-size:clamp(17px,2.1vw,24px); line-height:1.15; }
+.apo-brand small { font-size:10px; letter-spacing:.07em; color:#7c8a71; }
+.apo-top-actions { justify-content:flex-end; }
+.apo-top-actions button { display:grid; place-items:center; width:42px; height:42px; color:#395549; border:1px solid #d6d9c9; background:#fff9ee; border-radius:14px; cursor:pointer; }
+.apo-top-actions button:hover { background:#e9eee0; }
+.apo-solo { display:flex; align-items:center; gap:6px; white-space:nowrap; font-size:11px; color:#506f5a; font-weight:700; }
+.apo-solo span { color:#6ca263; }
+.apo-stage { position:relative; isolation:isolate; height:calc(100dvh - 73px); min-height:420px; overflow:hidden; }
+.apo-canvas { position:absolute; inset:0; display:block; width:100%; height:100%; outline-offset:-5px; cursor:grab; touch-action:none; }
+.apo-canvas:active { cursor:grabbing; }
+.apo-canvas:focus-visible { outline:3px solid #fff3ca; }
+.apo-loading,.apo-unavailable { position:absolute; z-index:6; top:40%; left:50%; transform:translate(-50%,-50%); display:grid; justify-items:center; gap:12px; width:min(420px,90%); padding:24px; border:1px solid #efdeca; border-radius:25px; background:#fffbf0ed; box-shadow:0 20px 70px #34423230; text-align:center; color:#355242; }
+.apo-loading { font-size:14px; font-weight:750; }
+.apo-unavailable h2 { margin:0; font:700 24px Georgia,serif; }
+.apo-unavailable p { margin:0; font-size:13px; line-height:1.5; }
+.apo-unavailable a { color:#315442; text-decoration:underline; font-weight:700; }
+.apo-world-hud { position:absolute; top:16px; left:clamp(12px,2.5vw,32px); right:clamp(12px,2.5vw,32px); z-index:3; display:flex; align-items:start; justify-content:space-between; gap:10px; pointer-events:none; }
+.apo-hud-place,.apo-hud-progress { display:flex; align-items:center; gap:12px; padding:11px 14px; border:1px solid #e8dfce; border-radius:18px; background:rgba(255,250,238,.89); box-shadow:0 8px 28px #20372920; backdrop-filter:blur(12px); }
+.apo-hud-icon { display:grid; place-items:center; width:35px; height:35px; border-radius:12px; background:#e3eadd; color:#315b44; }
+.apo-hud-place strong,.apo-hud-place small { display:block; }
+.apo-hud-place strong { font-size:13px; }
+.apo-hud-place small { margin-top:3px; color:#738172; font-size:11px; }
+.apo-hud-progress { flex-direction:column; gap:3px; align-items:end; font-size:11px; }
+.apo-hud-progress-label { display:flex; align-items:center; gap:5px; color:#67766c; }
+.apo-hud-progress strong { font-size:16px; }
+.apo-world-locate { position:absolute; bottom:28px; left:50%; z-index:3; transform:translateX(-50%); display:flex; align-items:center; gap:7px; border:1px solid #e7e2d2; border-radius:999px; background:#fffaf0e8; padding:7px 13px; font-size:11px; font-weight:750; color:#4c6c5b; white-space:nowrap; pointer-events:none; }
+.apo-interact-prompt { position:absolute; bottom:94px; left:50%; transform:translateX(-50%); z-index:5; display:flex; align-items:center; gap:12px; width:max-content; max-width:calc(100% - 40px); padding:9px 16px; border-radius:20px; border:1px solid #e7d5be; background:rgba(255,250,236,.95); box-shadow:0 13px 34px #27382930; color:#304c40; cursor:pointer; }
+.apo-key-hint { display:grid; place-items:center; height:37px; width:37px; border-radius:11px; border:1px solid #ccb59b; background:#fff; font-size:15px; font-weight:800; box-shadow:0 3px 0 #dcc9b1; }
+.apo-interact-prompt strong,.apo-interact-prompt small { display:block; text-align:left; }
+.apo-interact-prompt strong { font-size:12px; }
+.apo-interact-prompt small { margin-top:2px; font-size:10px; color:#778578; }
+.apo-interact-sparkle { color:#cb9452; font-size:25px; }
+.apo-help-card,.apo-activity { position:absolute; z-index:5; top:88px; right:clamp(12px,3vw,42px); width:min(350px,calc(100% - 24px)); max-height:calc(100% - 125px); overflow-y:auto; border:1px solid #efe0c8; border-radius:26px; background:rgba(255,250,240,.97); padding:22px; box-shadow:0 20px 58px #2c42343b; backdrop-filter:blur(16px); }
+.apo-help-close,.apo-activity-close { position:absolute; top:12px; right:12px; border:0; display:grid; place-items:center; width:30px; height:30px; border-radius:50%; color:#4b6253; background:#eae9dc; cursor:pointer; }
+.apo-kicker { color:#ae7c57; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:.13em; }
+.apo-help-card h1,.apo-activity h2 { margin:11px 0 9px; color:#304c3e; font:700 28px/1.12 Georgia,serif; }
+.apo-help-card p,.apo-activity p { margin:0 0 15px; font-size:13px; line-height:1.7; color:#657469; }
+.apo-help-keys { display:flex; justify-content:space-between; gap:8px; padding:9px 0; border-bottom:1px solid #e6dccc; font-size:11px; }
+.apo-help-keys span { color:#786e60; }
+.apo-help-keys strong { color:#415748; }
+.apo-start-button,.apo-activity-link { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; min-height:45px; margin-top:16px; padding:12px 16px; border:0; border-radius:16px; background:#304c3d; color:#fffaf1; font-size:12px; font-weight:800; text-decoration:none; cursor:pointer; }
+.apo-start-button:hover,.apo-activity-link:hover { background:#426c50; }
+.apo-controls { position:absolute; z-index:6; bottom:22px; left:18px; right:18px; display:flex; align-items:end; justify-content:space-between; gap:12px; pointer-events:none; }
+.apo-dpad { display:grid; grid-template-columns:repeat(3,49px); grid-template-rows:repeat(2,49px); gap:4px; }
+.apo-dpad button,.apo-control-actions button { pointer-events:auto; display:grid; place-items:center; border:1px solid #ffffffb0; color:#254736; background:#fffaebde; border-radius:16px; font-size:19px; font-weight:800; box-shadow:0 5px 15px #233d3040; user-select:none; cursor:pointer; touch-action:none; }
+.apo-dpad button:active,.apo-control-actions button:active { background:#dcecca; transform:scale(.95); }
+.apo-dpad button[data-move="forward"] { grid-column:2; grid-row:1; }
+.apo-dpad button[data-move="left"] { grid-column:1; grid-row:2; }
+.apo-dpad button[data-move="back"] { grid-column:2; grid-row:2; }
+.apo-dpad button[data-move="right"] { grid-column:3; grid-row:2; }
+.apo-control-actions { display:flex; align-items:center; gap:8px; }
+.apo-control-actions button { min-height:49px; padding:0 15px; display:flex; gap:7px; font-size:12px; }
+.apo-control-actions button:disabled { opacity:.42; cursor:not-allowed; }
+.apo-world-note { position:absolute; left:0; right:0; bottom:2px; z-index:1; text-align:center; color:#284b36; font-size:9px; font-weight:700; pointer-events:none; text-shadow:0 1px 8px #ffffffd9; }
+.apo-skip { position:absolute; z-index:20; top:-100px; left:12px; padding:10px 15px; border-radius:10px; background:white; font-weight:700; }
+.apo-skip:focus { top:10px; }
+@media(min-width:900px) and (pointer:fine) { .apo-dpad { opacity:.65; } }
+@media(max-width:680px) {
+ .apo-topbar { padding:9px 10px; min-height:64px; }
+ .apo-stage { height:calc(100dvh - 64px); }
+ .apo-back { width:40px; overflow:hidden; font-size:0; gap:0; }
+ .apo-back svg { min-width:18px; }
+ .apo-brand { gap:5px; }
+ .apo-brand-icon { width:36px; height:36px; font-size:21px; }
+ .apo-brand strong { font-size:16px; }
+ .apo-brand small { font-size:9px; }
+ .apo-solo { display:none; }
+ .apo-top-actions { gap:5px; }
+ .apo-top-actions button { width:38px; height:38px; }
+ .apo-world-hud { top:10px; left:9px; right:9px; }
+ .apo-hud-place { gap:6px; padding:8px; }
+ .apo-hud-icon { width:30px; height:30px; }
+ .apo-hud-place strong { font-size:10px; }
+ .apo-hud-place small { font-size:9px; }
+ .apo-hud-progress { padding:9px 7px; font-size:9px; }
+ .apo-hud-progress strong { font-size:12px; }
+ .apo-help-card,.apo-activity { top:76px; right:10px; max-height:calc(100% - 210px); padding:16px; border-radius:18px; }
+ .apo-help-card h1,.apo-activity h2 { font-size:22px; }
+ .apo-help-card p,.apo-activity p { font-size:12px; }
+ .apo-help-keys { font-size:10px; padding:7px 0; }
+ .apo-interact-prompt { bottom:126px; padding:6px 10px; }
+ .apo-controls { bottom:28px; left:10px; right:10px; }
+ .apo-dpad { grid-template-columns:repeat(3,42px); grid-template-rows:repeat(2,42px); }
+ .apo-dpad button { border-radius:13px; }
+ .apo-control-actions button { min-height:42px; padding:0 10px; }
+ .apo-world-locate { display:none; }
+}
+@media(max-width:360px) { .apo-hud-progress-label { display:none; } .apo-brand strong { font-size:14px; } }
+@media(prefers-reduced-motion:reduce) { .apo-world *, .apo-world *::before,.apo-world *::after { animation:none!important; transition:none!important; } }
+:root[data-reduce-motion="true"] .apo-world * { animation:none!important; transition:none!important; }
