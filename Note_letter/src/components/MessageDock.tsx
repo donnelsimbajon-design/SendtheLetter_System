@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { X, ArrowLeft, Send, MessageSquareText } from 'lucide-react';
 import CharacterBadge from './CharacterBadge';
-import Mascot from './Mascot';
+import PlushCompanion from './PlushCompanion';
 import socketService from '../services/socketService';
 import { API_ENDPOINTS } from '../config/api';
 import { getImageUrl } from '../lib/utils';
@@ -194,7 +194,7 @@ export default function MessageDock() {
             <section aria-label={selected ? `Chat with ${selected.username}` : 'Recent messages'} className="stl-depth-card stl-depth-static mb-3 flex h-[min(550px,calc(100dvh-8rem))] w-[360px] flex-col overflow-hidden rounded-[1.6rem] border border-border bg-card shadow-2xl workspace-page-enter">
               <header className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-3">
                 {selected && <button type="button" onClick={() => { setSelected(null); setThreadError(''); }} aria-label="Back to inbox" className="rounded-full p-2 hover:bg-muted"><ArrowLeft size={18} /></button>}
-                <CharacterBadge name="chika" tone="paper" size="sm" />
+                <PlushCompanion name="alexis" size="sm" />
                 <div className="min-w-0 flex-1"><h2 className="truncate text-sm font-bold">{selected?.username || 'Messages'}</h2><p className="text-[11px] text-muted-foreground">{selected ? 'Private conversation' : `${unread} unread ${unread === 1 ? 'message' : 'messages'}`}</p></div>
                 <button type="button" onClick={() => setOpen(false)} aria-label="Close chat window" className="rounded-full p-2 hover:bg-muted"><X size={18} /></button>
               </header>
@@ -203,7 +203,14 @@ export default function MessageDock() {
                 <div className="min-h-0 flex-1 overflow-y-auto p-2">
                   {loading && conversations.length === 0 && <p className="p-4 text-sm text-muted-foreground">Loading inbox…</p>}
                   {error && <p role="alert" className="p-3 text-sm text-destructive">{error} <button type="button" onClick={() => void refresh()} className="underline">Retry</button></p>}
-                  {!loading && !error && conversations.length === 0 && <div className="flex flex-col items-center px-5 py-10 text-center"><Mascot name="chika" className="h-20 w-20" /><p className="mt-3 font-editorial text-xl">No conversations yet</p><p className="mt-2 text-xs text-muted-foreground">Say hello to a writer in the community.</p></div>}
+                  {!loading && !error && conversations.length === 0 && <div className="flex flex-col items-center px-5 py-6 text-center">
+                    <div className="stl-alexis-message-shelf relative flex h-[166px] w-full max-w-[260px] items-end justify-center rounded-[24px] bg-gradient-to-b from-[#f5f1eb] to-[#ece9df]">
+                      <span aria-hidden="true" className="pointer-events-none absolute bottom-3 left-5 right-5 h-2 rounded-full bg-[#cbbcab]/55 blur-sm" />
+                      <PlushCompanion name="alexis" size="lg" />
+                    </div>
+                    <p className="mt-4 font-editorial text-xl">No conversations yet</p>
+                    <p className="mt-2 text-xs text-muted-foreground">Alexis is keeping you company. Say hello to a writer in the community.</p>
+                  </div>}
                   {conversations.map(conversation => <button key={conversation.user.id} type="button" onClick={() => openContact(conversation.user)} className="stl-depth-choice flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary">
                     {conversation.user.avatar ? <img src={getImageUrl(conversation.user.avatar)} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" /> : <CharacterBadge name="chika" tone="paper" size="sm" />}
                     <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold">{conversation.user.username}</span><span className="block truncate text-xs text-muted-foreground">{conversation.lastMessage || 'Open conversation'}</span></span>
@@ -238,7 +245,7 @@ export default function MessageDock() {
             </section>
           )}
           <button type="button" onClick={() => { setOpen(current => !current); setIncomingPreview(null); }} aria-expanded={isOpen} aria-label={unread > 0 ? `Messages, ${unread} unread` : 'Open messages'} className="relative ml-auto flex h-14 w-14 items-center justify-center rounded-full border border-border bg-card shadow-lg transition-transform hover:-translate-y-1 active:scale-95 motion-reduce:transform-none">
-            <Mascot name="chika" className="h-11 w-11" />
+            <img src="/characters/alexis.webp" alt="" draggable={false} className="h-12 w-12 object-contain drop-shadow-sm" />
             {unread > 0 && <span className="absolute -right-1 -top-1 min-w-6 rounded-full bg-primary px-1.5 py-1 text-[10px] font-bold text-primary-foreground">{unreadLabel(unread)}</span>}
           </button>
         </div>
