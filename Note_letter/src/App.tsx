@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import socketService from './services/socketService';
@@ -26,6 +26,9 @@ import PublicLetterPage from './Pages/user/PublicLetterPage';
 import RecipientLetterPage from './Pages/user/RecipientLetterPage';
 import TryLetterPage from './Pages/TryLetterPage';
 
+// The real 3D game engine is never loaded by ordinary letter pages.
+const ApoWorldPage = lazy(() => import('./Pages/user/ApoWorldPage'));
+
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     const { pathname, search } = useLocation();
     const isAuthenticated = useAuthStore(state => state.isAuthenticated);
@@ -45,7 +48,7 @@ const Landing = () => {
     const params = new URLSearchParams(search);
     const route = params.get('route') || '';
     // Static hosting fallback for direct refreshes of known React routes.
-    if (/^\/(?:dashboard(?:\/.*)?|login|signup|forgot-password|reset-password|about|services|contact|creator|admin|writers\/[^/?#]+)(?:\?.*)?$/.test(route) && !route.startsWith('//')) {
+    if (/^\/(?:dashboard(?:\/.*)?|login|signup|forgot-password|reset-password|about|services|contact|creator|admin|world|writers\/[^/?#]+)(?:\?.*)?$/.test(route) && !route.startsWith('//')) {
         return <Navigate to={route} replace />;
     }
     return params.has('s') ? <PublicLetterPage /> : <Home />;
@@ -89,6 +92,7 @@ function App() {
                 <Route path="/reset-password" element={<PasswordRecoveryPage mode="confirm" />} />
                 <Route path="/creator" element={<Creator />} />
                 <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+                <Route path="/world" element={<PrivateRoute><Suspense fallback={<main className="flex min-h-screen items-center justify-center bg-[#e4e9df] text-sm text-[#355344]">Entering Apo Letter World in 3D…</main>}><ApoWorldPage /></Suspense></PrivateRoute>} />
                 <Route path="/letters/:id" element={<PublicLetterPage />} />
                 <Route path="/open" element={<RecipientLetterPage />} />
                 <Route path="/writers/:username" element={<PublicWriterPage />} />

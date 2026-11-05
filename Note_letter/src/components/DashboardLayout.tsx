@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Mountain } from 'lucide-react';
 import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { getImageUrl } from '../lib/utils';
@@ -124,6 +125,10 @@ export default function DashboardLayout() {
             className={railLink(false)}>
             <Mascot name="suri" className="h-10 w-10" />
           </Link>
+          <NavLink to="/world" aria-label="Enter 3D Apo Letter World" title="Apo Letter World"
+            className={({ isActive }) => railLink(isActive)}>
+            <Mountain size={25} aria-hidden="true" className="text-[#47775f]" />
+          </NavLink>
 
           <Link to="/dashboard/notes?compose=1" aria-label="Write a new letter" title="Write a letter"
             className={railLink(false)}>

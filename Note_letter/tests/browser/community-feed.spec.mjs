@@ -85,7 +85,8 @@ test('community uses transparent original-mascot rail and three-column public fe
     .evaluate(el => getComputedStyle(el.parentElement).gridTemplateColumns.split(' ').length);
   expect(count).toBe(3);
   const navigation = page.getByRole('navigation', { name: 'Workspace navigation' });
-  await expect(navigation.getByRole('link')).toHaveCount(7);
+  await expect(navigation.getByRole('link')).toHaveCount(8);
+  await expect(navigation.getByRole('link', { name: 'Enter 3D Apo Letter World' })).toHaveAttribute('href', '/world');
   const originalMascots = {
     'Overview': 'lumi', 'My library': 'basa', 'Community': 'piko',
     'Messages': 'chika', 'Search public letters': 'suri',
