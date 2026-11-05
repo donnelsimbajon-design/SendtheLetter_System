@@ -130,6 +130,15 @@ for (const width of [320, 390, 768, 1024, 1440]) {
     await expect(modal.getByTestId('full-letter-scroll')).toBeVisible();
     await expect(modal.getByText(/Opening a letter is a personal experience/)).toBeVisible();
     await expect(modal.getByRole('complementary', { name: 'Letter comments drawer' })).toHaveCount(0);
+    // DialogContent uses a 200ms zoom-in-95 animation. During that entrance,
+    // boundingBox() reports the transformed (5% smaller) page, producing a
+    // false "comments shrank the letter" failure on fast desktop test runs.
+    // Compare layout geometry only after the dialog itself is fully settled.
+    await modal.evaluate(async dialog => {
+      await Promise.all(dialog.getAnimations({ subtree: false }).map(animation =>
+        animation.finished.catch(() => undefined)
+      ));
+    });
     const before = await modal.locator('.stl-reading-book').boundingBox();
     expect(before).not.toBeNull();
     await mkdir('layout-snapshots', { recursive: true });
