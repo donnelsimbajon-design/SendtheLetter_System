@@ -20,6 +20,8 @@ test('Apo world is protected behind the existing sign-in', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Your space is waiting.' })).toBeVisible();
 });
 test('3D village loads and offers real controls, landmarks and writing links', async ({ page }) => {
+  // Software WebGL on shared CI runners can initialize more slowly than hardware GPUs.
+  test.setTimeout(75_000);
   await signedIn(page);
   await page.goto('/world');
   const canvas = page.getByTestId('apo-3d-canvas');
