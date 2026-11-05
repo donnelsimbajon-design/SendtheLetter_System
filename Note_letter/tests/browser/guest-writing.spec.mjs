@@ -48,7 +48,9 @@ test('guest writing moves into the authenticated editor and clears after a succe
   await expect.poll(() => saved.length).toBe(1);
   expect(saved[0].isPublic).toBe(false);
   expect(saved[0].content).toContain('A real sentence from the guest.');
-  expect(await page.evaluate(() => sessionStorage.getItem('sendtheletter:guest-letter:v1'))).toBeNull();
+  // The draft POST is observed before the asynchronous success handler finishes.
+  // Wait for the UI to acknowledge success and clear the guest handoff.
+  await expect.poll(() => page.evaluate(() => sessionStorage.getItem('sendtheletter:guest-letter:v1'))).toBeNull();
 });
 
 test('a new visitor can clear practice words from the tab', async ({ page }) => {
