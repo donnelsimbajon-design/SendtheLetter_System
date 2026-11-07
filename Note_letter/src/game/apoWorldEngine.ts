@@ -200,9 +200,39 @@ function shadow(mesh:Mesh,x:number,z:number,r:number) {
 function pine(mesh:Mesh,x:number,z:number,height:number,r:number) {
   const y=groundHeight(x,z);
   shadow(mesh,x,z,r*.85);
-  mesh.cylinder(x,y+height*.25,z,r*.14,height*.5,COLORS.bark,9);
-  for(let tier=0;tier<3;tier++)
-    mesh.cone(x,y+height*(.46+tier*.19),z,r*(1-tier*.20),height*(.58-tier*.095),mix(COLORS.pine,COLORS.mint,tier*.10),13);
+  mesh.cylinder(x,y+height*.28,z,r*.12,height*.56,COLORS.bark,9);
+  for(let tier=0;tier<5;tier++){
+    const radius=r*(1-tier*.145);
+    const mid=y+height*(.38+tier*.14);
+    mesh.cone(x,mid,z,radius,height*(.47-tier*.042),mix(COLORS.pine,COLORS.fern,tier*.13),15);
+  }
+  mesh.cone(x,y+height*.94,z,r*.22,height*.25,COLORS.fern,11);
+}
+function broadleaf(mesh:Mesh,x:number,z:number,height:number,r:number,autumn=false){
+  const y=groundHeight(x,z),leaf=autumn?COLORS.leafGold:COLORS.leafLight;
+  shadow(mesh,x,z,r*.96);
+  mesh.cylinder(x,y+height*.28,z,r*.18,height*.56,COLORS.bark,11);
+  for(const [dx,dy,dz,scale] of [
+    [0,.76,0,1.0],[-.59,.64,.18,.76],[.58,.66,.13,.76],[0,.68,-.50,.79],
+    [0,.68,.50,.73],[-.21,.89,-.19,.60],[.32,.84,.08,.63]
+  ]){
+    mesh.ellipsoid(x+dx*r,y+dy*height,z+dz*r,r*scale,height*.17*scale,r*scale,
+      mix(leaf,COLORS.moss,clamp(.22+dy*.21,0,.42)),11,7);
+  }
+}
+function fern(mesh:Mesh,x:number,z:number,r=.85){
+  const y=groundHeight(x,z);
+  for(let k=0;k<6;k++){
+    const angle=k*Math.PI/3,dx=Math.cos(angle),dz=Math.sin(angle),size=r*(.73+(k%3)*.10);
+    const base:V3=[x,y+.12,z],tip:V3=[x+dx*size,y+.46,z+dz*size];
+    mesh.tri(base,[x-dz*.10,y+.24,z+dx*.10],tip,COLORS.fern);
+    mesh.tri(base,tip,[x+dz*.10,y+.24,z-dx*.10],COLORS.moss);
+  }
+}
+function weatheredRock(mesh:Mesh,x:number,z:number,r:number){
+  const y=groundHeight(x,z);
+  mesh.ellipsoid(x,y+.13*r,z,r*.95,r*.52,r*.79,COLORS.stoneWarm,10,7);
+  mesh.ellipsoid(x-r*.21,y+r*.31,z+r*.08,r*.38,r*.24,r*.44,COLORS.moss,9,6);
 }
 function flower(mesh:Mesh,x:number,z:number,color:RGB) {
   const y=groundHeight(x,z);
@@ -238,6 +268,23 @@ function house(mesh:Mesh,x:number,z:number,w:number,d:number,h:number,style:'pos
     mesh.box(px,y+h*.66,z+d/2+.20,.69,.075,.075,COLORS.wall);
   }
   mesh.box(x,y+.15,z+d/2+.85,2.1,.23,1.75,COLORS.dirtLight);
+  // Raised trim, glazed window reflections and individual timber details.
+  mesh.box(x,y+h-.16,z+d/2+.09,w+.15,.17,.20,COLORS.barkLight);
+  for(const side of [-1,1]){
+    const sx=x+side*(w/2+.07);
+    mesh.box(sx,y+h*.58,z,.17,h*.74,d*.78,COLORS.barkLight);
+    mesh.box(x+side*w*.29,y+h*.69,z+d/2+.245,.25,.055,.05,COLORS.white);
+  }
+  mesh.sphere(x+.36,y+1.04,z+d/2+.2,.082,COLORS.bronze,10,7);
+  mesh.box(x,y+2.25,z+d/2+.15,1.55,.20,.12,COLORS.woodDark);
+  mesh.box(x,y+2.53,z+d/2+.19,1.24,.36,.12,COLORS.cream);
+  // Slate/timber roof ridges and eave trim.
+  for(let row=1;row<6;row++){
+    const t=row/6;
+    const width=w*(1.12-t*.85);
+    mesh.box(x,y+h+t*h*.66,z+d*.55*(1-t),width,.055,.09,
+      row%2?mix(roofColor,COLORS.woodDark,.24):mix(roofColor,COLORS.white,.13));
+  }
   for(const side of [-1,1]){
     const lanternX=x+side*(w*.52+.30);
     mesh.cylinder(lanternX,y+.8,z+d*.45,.08,1.6,COLORS.barkLight);
