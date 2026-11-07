@@ -40,7 +40,7 @@ test('the Messages dock keeps Alexis seated and reacts without starting a chat',
   await expect(dock.getByText('No conversations yet')).toBeVisible();
 });
 
-test('Iver sits beside the opening guide and reacts without covering the envelope', async ({page}) => {
+test('Iver shares the unboxed opening scene and still reacts independently', async ({page}) => {
   await setup(page);
   await page.goto('/dashboard/community');
   await page.getByRole('button',{name:'Read letter: Thank you for being you'}).click();
@@ -48,17 +48,20 @@ test('Iver sits beside the opening guide and reacts without covering the envelop
   const iver = dialog.getByRole('button',{name:'Tap Iver for a reaction'});
   await expect(iver).toBeVisible();
   await expect(dialog.locator('img[src="/characters/iver.webp"]')).toBeVisible();
-  const guide = dialog.getByRole('complementary', {name:'Iver, your letter-opening companion'});
-  await expect(guide).toBeVisible();
+  const companion = dialog.getByRole('complementary', {name:'Iver, your letter-opening companion'});
+  await expect(companion).toBeVisible();
   const envelopeScene = dialog.getByRole('img',{name:'A sealed paper envelope waiting to be opened'});
-  await expect(envelopeScene.locator('[data-character="iver"]')).toHaveCount(0);
-  const guideRect = await guide.boundingBox();
-  const envelopeRect = await envelopeScene.boundingBox();
-  expect(guideRect).not.toBeNull();
-  expect(envelopeRect).not.toBeNull();
-  // Desktop: guide sits to the left. Mobile: guide stacks above the envelope.
-  expect(guideRect.x + guideRect.width <= envelopeRect.x + 2 ||
-    guideRect.y + guideRect.height <= envelopeRect.y + 2).toBe(true);
+  await expect(envelopeScene).toBeVisible();
+  const layout = dialog.locator('.stl-opening-layout');
+  await expect(layout.locator('.stl-opening-iver')).toHaveCount(1);
+  const sceneStyle = await envelopeScene.evaluate(el => getComputedStyle(el));
+  expect(sceneStyle.borderTopWidth).toBe('0px');
+  expect(sceneStyle.backgroundImage).toBe('none');
+  const mascot = await companion.boundingBox(), envelope = await envelopeScene.boundingBox();
+  expect(mascot).not.toBeNull();
+  expect(envelope).not.toBeNull();
+  expect(mascot.x).toBeLessThan(envelope.x + envelope.width / 2);
+  expect(mascot.y + mascot.height).toBeGreaterThan(envelope.y + envelope.height / 2);
   await iver.click();
   await expect(dialog.locator('[data-character="iver"][data-reaction="happy"]')).toBeVisible();
   await expect(dialog.locator('[data-character="iver"] [data-testid="plush-mood-sticker"]')).toContainText('💗');
@@ -88,26 +91,25 @@ test('Alexis explains Messages and offers real navigation actions, not chatbot p
   await expect(page).toHaveURL(/\/dashboard\/community$/);
 });
 
-test('Iver never overlaps the envelope on compact phone and tablet', async ({page}) => {
+test('the single envelope scene stays within compact phone and tablet viewports', async ({page}) => {
   await setup(page);
   await page.goto('/dashboard/community');
   await page.getByRole('button',{name:'Read letter: Thank you for being you'}).click();
-  const dialog=page.getByRole('dialog',{name:'Letter from friend'});
-  for(const width of [320,390,768]){
+  const dialog = page.getByRole('dialog',{name:'Letter from friend'});
+  for (const width of [320,390,768]) {
     await page.setViewportSize({width,height:820});
-    const guide=dialog.getByRole('complementary',{name:'Iver, your letter-opening companion'});
-    const envelope=dialog.getByRole('img',{name:'A sealed paper envelope waiting to be opened'});
-    // Radix animates the centered dialog after viewport changes. Check the
-    // settled geometry, not a transitional frame captured mid-resize.
-    await expect.poll(async () => {
-      const g=await guide.boundingBox(), e=await envelope.boundingBox();
-      if (!g || !e) return true;
-      const overlaps = g.x < e.x+e.width-2 && g.x+g.width > e.x+2 &&
-        g.y < e.y+e.height-2 && g.y+g.height > e.y+2;
-      if (overlaps) console.log('IVER_GUIDE_OVERLAP',width,JSON.stringify({guide:g,envelope:e}));
-      return overlaps;
-    }, {timeout:5000,intervals:[100,200,350,500]}).toBe(false);
-    const doc=await page.evaluate(()=>({width:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth}));
-    expect(doc.scroll).toBeLessThanOrEqual(doc.width+2);
+    const mascot = dialog.getByRole('complementary',{name:'Iver, your letter-opening companion'});
+    const envelope = dialog.getByRole('img',{name:'A sealed paper envelope waiting to be opened'});
+    await expect(mascot).toBeVisible();
+    await expect(envelope).toBeVisible();
+    const scene = await envelope.boundingBox(), character = await mascot.boundingBox();
+    expect(scene).not.toBeNull();
+    expect(character).not.toBeNull();
+    expect(character.x + character.width).toBeLessThanOrEqual(scene.x + scene.width + 2);
+    const doc = await page.evaluate(() => ({
+      width: document.documentElement.clientWidth,
+      scroll: document.documentElement.scrollWidth
+    }));
+    expect(doc.scroll).toBeLessThanOrEqual(doc.width + 2);
   }
 });

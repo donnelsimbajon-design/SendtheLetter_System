@@ -33,18 +33,11 @@ export default function LetterOpeningStage({
             </div>
 
             <div className="stl-opening-layout w-full">
-                <aside className="stl-opening-guide" aria-label="Iver, your letter-opening companion">
-                    <div className="stl-opening-guide-portrait">
-                        <span className="stl-opening-tap-hint" aria-hidden="true">Tap me ✨</span>
-                        <PlushCompanion name="iver" size="envelope" />
-                    </div>
-                    <div className="stl-opening-guide-copy">
-                        <p className="stl-opening-guide-name">Iver <span aria-hidden="true">✦</span></p>
-                        <p className="stl-opening-guide-text">{description}</p>
-                        <p className="stl-opening-guide-tip">Tap Iver for a happy, grumpy, or shy reaction.</p>
-                    </div>
-                </aside>
                 <LetterOpeningEnvelope opened={opened} className="stl-opening-envelope" />
+                <aside className="stl-opening-iver" aria-label="Iver, your letter-opening companion">
+                    <PlushCompanion name="iver" size="envelope" />
+                    <span className="sr-only">{description} Tap Iver for a reaction.</span>
+                </aside>
             </div>
 
             <span aria-live="polite" className="sr-only">
