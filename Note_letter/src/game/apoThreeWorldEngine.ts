@@ -33,7 +33,6 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   let renderer:any;
   try{renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'default'});}
   catch{throw Error('3D graphics could not start on this device');}
-  canvas.dataset.apoRenderer='three';
   const scene=new THREE.Scene();
   scene.background=new THREE.Color(0xbdd6d7);
   scene.fog=new THREE.FogExp2(0xb8cfc9,.0058);
@@ -410,7 +409,10 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
     camera.position.set(x+Math.sin(orbit)*distance,groundHeight(x,z)+distance*.36+2.0,z+Math.cos(orbit)*distance);
     camera.lookAt(x,groundHeight(x,z)+1.55,z-1.5);
     renderer.render(scene,camera);
-    if(!ready){ready=true;events.onReady();}
+    if(!ready){
+      canvas.dataset.apoRenderer='three';
+      ready=true;events.onReady();
+    }
     const nearest=nearby();
     if(nearest?.id!==nearId){nearId=nearest?.id||null;events.onNearby(nearest);}
     if(time-lastUpdate>170){lastUpdate=time;events.onPosition({x:Math.round(x*10)/10,z:Math.round(z*10)/10});}
