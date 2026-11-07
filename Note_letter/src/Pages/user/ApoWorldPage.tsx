@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Compass, Footprints, Gamepad2, HelpCircle, MapPin, RotateCcw, Sparkles, Users, X } from 'lucide-react';
 import { useWriterPreferences } from '../../store/writerPreferences';
-import { startApoWorld, WORLD_AVATARS, WORLD_LANDMARKS, type WorldAvatar, type WorldController, type WorldLandmark, type WorldMove } from '../../game/apoWorldEngine';
+import { startApoWorld } from '../../game/apoWorldEntry';
+import { WORLD_AVATARS, WORLD_LANDMARKS, type WorldAvatar, type WorldController, type WorldLandmark, type WorldMove } from '../../game/apoWorldEngine';
 import '../../apoWorld.css';
 
 const CONTROL_KEYS: { move: WorldMove; label: string; icon: string }[] = [
