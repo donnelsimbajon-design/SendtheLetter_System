@@ -46,7 +46,7 @@ test('signing in from the protected world returns to the actual 3D scene', async
   await page.route('**/api/auth/login', route => route.fulfill({
     status: 200,
     contentType: 'application/json',
-    headers: { 'access-control-allow-origin': '*' },
+    headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'Content-Type', 'access-control-allow-methods': 'POST, OPTIONS' },
     body: JSON.stringify({ token: 'apo-world-browser-test', user }),
   }));
   await page.goto('/world');
