@@ -5,6 +5,12 @@
  * Draw-call-light geometry and no runtime third-party or remote asset downloads.
  */
 export type WorldMove = 'forward' | 'back' | 'left' | 'right' | 'sprint';
+export type WorldAvatar = 'explorer' | 'ranger' | 'traveler';
+export const WORLD_AVATARS: { id: WorldAvatar; label: string; description: string }[] = [
+  { id: 'explorer', label: 'Mountain Explorer', description: 'Forest jacket and hiking pack' },
+  { id: 'ranger', label: 'Highland Ranger', description: 'Trail hat and outdoor gear' },
+  { id: 'traveler', label: 'Story Traveler', description: 'Warm coat and messenger bag' },
+];
 
 export type WorldLandmark = {
   id: 'plaza' | 'post' | 'library' | 'capsule' | 'alexis' | 'iver';
@@ -27,6 +33,7 @@ export const WORLD_LANDMARKS: WorldLandmark[] = [
 
 export type WorldController = {
   setMove: (direction: WorldMove, active: boolean) => void;
+  setAvatar: (avatar: WorldAvatar) => void;
   jump: () => void;
   interact: () => void;
   reset: () => void;
@@ -60,6 +67,14 @@ const COLORS: Record<string, RGB> = {
   skin: [0.96, 0.77, 0.65], jeans: [0.28, 0.35, 0.50],
   blue: [0.20, 0.36, 0.67], white: [0.96, 0.95, 0.88],
   lavender: [0.69, 0.53, 0.76],
+  moss: [0.23, 0.43, 0.27], fern: [0.28, 0.53, 0.30],
+  leafLight: [0.45, 0.66, 0.37], leafGold: [0.65, 0.63, 0.34],
+  woodDark: [0.29, 0.23, 0.18], stoneWarm: [0.67, 0.64, 0.55],
+  leather: [0.42, 0.29, 0.21], bronze: [0.75, 0.56, 0.30],
+  hairBrown: [0.28, 0.20, 0.17], hairChestnut: [0.42, 0.29, 0.21],
+  jacketOlive: [0.27, 0.38, 0.28], jacketRust: [0.66, 0.37, 0.27],
+  jacketBlue: [0.30, 0.43, 0.53], trousers: [0.22, 0.27, 0.27],
+  skinWarm: [0.81, 0.57, 0.43], blush: [0.76, 0.42, 0.39],
 };
 
 const mix = (a: RGB, b: RGB, t: number): RGB =>
@@ -130,6 +145,18 @@ class Mesh {
       }
     }
   }
+  ellipsoid(x:number,y:number,z:number,rx:number,ry:number,rz:number,color:RGB,segments=12,rings=7) {
+    for(let j=0;j<rings;j++){
+      const v0=-Math.PI/2+j*Math.PI/rings,v1=-Math.PI/2+(j+1)*Math.PI/rings;
+      for(let i=0;i<segments;i++){
+        const u0=i*Math.PI*2/segments,u1=(i+1)*Math.PI*2/segments;
+        const point=(u:number,v:number):V3=>[x+rx*Math.cos(v)*Math.cos(u),y+ry*Math.sin(v),z+rz*Math.cos(v)*Math.sin(u)];
+        const emit=(p:V3)=>this.vertex(p,normal([(p[0]-x)/rx**2,(p[1]-y)/ry**2,(p[2]-z)/rz**2]),color);
+        const a=point(u0,v0),b=point(u1,v0),c=point(u1,v1),d=point(u0,v1);
+        emit(a);emit(b);emit(c);emit(a);emit(c);emit(d);
+      }
+    }
+  }
   terrain(size=50,depth=49) {
     const steps=88;
     for(let i=0;i<steps;i++)for(let j=0;j<steps;j++){
@@ -173,9 +200,39 @@ function shadow(mesh:Mesh,x:number,z:number,r:number) {
 function pine(mesh:Mesh,x:number,z:number,height:number,r:number) {
   const y=groundHeight(x,z);
   shadow(mesh,x,z,r*.85);
-  mesh.cylinder(x,y+height*.25,z,r*.14,height*.5,COLORS.bark,9);
-  for(let tier=0;tier<3;tier++)
-    mesh.cone(x,y+height*(.46+tier*.19),z,r*(1-tier*.20),height*(.58-tier*.095),mix(COLORS.pine,COLORS.mint,tier*.10),13);
+  mesh.cylinder(x,y+height*.28,z,r*.12,height*.56,COLORS.bark,9);
+  for(let tier=0;tier<5;tier++){
+    const radius=r*(1-tier*.145);
+    const mid=y+height*(.38+tier*.14);
+    mesh.cone(x,mid,z,radius,height*(.47-tier*.042),mix(COLORS.pine,COLORS.fern,tier*.13),15);
+  }
+  mesh.cone(x,y+height*.94,z,r*.22,height*.25,COLORS.fern,11);
+}
+function broadleaf(mesh:Mesh,x:number,z:number,height:number,r:number,autumn=false){
+  const y=groundHeight(x,z),leaf=autumn?COLORS.leafGold:COLORS.leafLight;
+  shadow(mesh,x,z,r*.96);
+  mesh.cylinder(x,y+height*.28,z,r*.18,height*.56,COLORS.bark,11);
+  for(const [dx,dy,dz,scale] of [
+    [0,.76,0,1.0],[-.59,.64,.18,.76],[.58,.66,.13,.76],[0,.68,-.50,.79],
+    [0,.68,.50,.73],[-.21,.89,-.19,.60],[.32,.84,.08,.63]
+  ]){
+    mesh.ellipsoid(x+dx*r,y+dy*height,z+dz*r,r*scale,height*.17*scale,r*scale,
+      mix(leaf,COLORS.moss,clamp(.22+dy*.21,0,.42)),11,7);
+  }
+}
+function fern(mesh:Mesh,x:number,z:number,r=.85){
+  const y=groundHeight(x,z);
+  for(let k=0;k<6;k++){
+    const angle=k*Math.PI/3,dx=Math.cos(angle),dz=Math.sin(angle),size=r*(.73+(k%3)*.10);
+    const base:V3=[x,y+.12,z],tip:V3=[x+dx*size,y+.46,z+dz*size];
+    mesh.tri(base,[x-dz*.10,y+.24,z+dx*.10],tip,COLORS.fern);
+    mesh.tri(base,tip,[x+dz*.10,y+.24,z-dx*.10],COLORS.moss);
+  }
+}
+function weatheredRock(mesh:Mesh,x:number,z:number,r:number){
+  const y=groundHeight(x,z);
+  mesh.ellipsoid(x,y+.13*r,z,r*.95,r*.52,r*.79,COLORS.stoneWarm,10,7);
+  mesh.ellipsoid(x-r*.21,y+r*.31,z+r*.08,r*.38,r*.24,r*.44,COLORS.moss,9,6);
 }
 function flower(mesh:Mesh,x:number,z:number,color:RGB) {
   const y=groundHeight(x,z);
@@ -211,6 +268,23 @@ function house(mesh:Mesh,x:number,z:number,w:number,d:number,h:number,style:'pos
     mesh.box(px,y+h*.66,z+d/2+.20,.69,.075,.075,COLORS.wall);
   }
   mesh.box(x,y+.15,z+d/2+.85,2.1,.23,1.75,COLORS.dirtLight);
+  // Raised trim, glazed window reflections and individual timber details.
+  mesh.box(x,y+h-.16,z+d/2+.09,w+.15,.17,.20,COLORS.barkLight);
+  for(const side of [-1,1]){
+    const sx=x+side*(w/2+.07);
+    mesh.box(sx,y+h*.58,z,.17,h*.74,d*.78,COLORS.barkLight);
+    mesh.box(x+side*w*.29,y+h*.69,z+d/2+.245,.25,.055,.05,COLORS.white);
+  }
+  mesh.sphere(x+.36,y+1.04,z+d/2+.2,.082,COLORS.bronze,10,7);
+  mesh.box(x,y+2.25,z+d/2+.15,1.55,.20,.12,COLORS.woodDark);
+  mesh.box(x,y+2.53,z+d/2+.19,1.24,.36,.12,COLORS.cream);
+  // Slate/timber roof ridges and eave trim.
+  for(let row=1;row<6;row++){
+    const t=row/6;
+    const width=w*(1.12-t*.85);
+    mesh.box(x,y+h+t*h*.66,z+d*.55*(1-t),width,.055,.09,
+      row%2?mix(roofColor,COLORS.woodDark,.24):mix(roofColor,COLORS.white,.13));
+  }
   for(const side of [-1,1]){
     const lanternX=x+side*(w*.52+.30);
     mesh.cylinder(lanternX,y+.8,z+d*.45,.08,1.6,COLORS.barkLight);
@@ -285,6 +359,53 @@ function villageStatic():Float32Array {
     if(Math.abs(x)<3&&z>2)continue;
     flower(m,x,z,[COLORS.white,COLORS.lavender,COLORS.rose,COLORS.gold][Math.floor(rand()*4)]);
   }
+  // Original sculpted environment assets: temperate broadleaf canopy, ferns,
+  // small granite outcrops, stone trails, timber benches and a forest pond.
+  for(let i=0;i<33;i++){
+    const x=rand()*91-45,z=rand()*81-43;
+    if(Math.abs(x)<11&&z>-20 || Math.hypot(x+17,z+11)<13 ||
+      Math.hypot(x-17,z+14)<14 || Math.hypot(x-14,z+28)<10)continue;
+    broadleaf(m,x,z,5.5+rand()*3.8,1.8+rand()*.85,i%9===0);
+  }
+  for(let i=0;i<65;i++){
+    const x=rand()*85-42,z=rand()*72-36;
+    if(Math.abs(x)<2.8&&z>2)continue;
+    fern(m,x,z,.7+rand()*.9);
+  }
+  for(let i=0;i<31;i++){
+    const x=rand()*86-43,z=rand()*81-40;
+    if(Math.abs(x)<3.5&&z>1)continue;
+    weatheredRock(m,x,z,.55+rand()*.72);
+  }
+  // Uneven cobblestones on the walkways, all real raised 3D stones.
+  for(let i=0;i<85;i++){
+    const z=29-rand()*27,x=(rand()-.5)*2.9;
+    const y=groundHeight(x,z);
+    m.ellipsoid(x,y+.024,z,.18+rand()*.20,.039,.20+rand()*.17,
+      mix(COLORS.stoneWarm,COLORS.dirtLight,rand()*.48),8,4);
+  }
+  // A shallow mountain pond and planted banks beside the distant trail.
+  const pondX=-29,pondZ=-34,pondY=groundHeight(pondX,pondZ)+.027;
+  for(let i=0;i<32;i++){
+    const a=i*Math.PI*2/32,b=(i+1)*Math.PI*2/32;
+    m.tri([pondX,pondY,pondZ],
+      [pondX+6*Math.cos(a),pondY,pondZ+3.7*Math.sin(a)],
+      [pondX+6*Math.cos(b),pondY,pondZ+3.7*Math.sin(b)],COLORS.lake);
+    m.ellipsoid(pondX+6.1*Math.cos(a),pondY+.04,pondZ+3.8*Math.sin(a),
+      .48,.19,.43,i%3===0?COLORS.stoneWarm:COLORS.moss,8,5);
+  }
+  for(const bx of [-8,8]){
+    const bz=13,by=groundHeight(bx,bz);
+    shadow(m,bx,bz,.94);
+    for(const sx of [-.72,.72]){
+      m.box(bx+sx,by+.50,bz,.12,.95,.82,COLORS.woodDark);
+      m.box(bx+sx,by+1.15,bz+.26,.10,.69,.13,COLORS.woodDark);
+    }
+    for(let slat=0;slat<3;slat++){
+      m.box(bx,by+1.01,bz-.24+slat*.23,1.85,.105,.16,COLORS.barkLight);
+      m.box(bx,by+1.36+slat*.20,bz+.30,1.85,.14,.10,COLORS.barkLight);
+    }
+  }
   // Hillside stones and small bushes, using smooth geometry rather than cube props.
   for(let i=0;i<50;i++){
     const x=rand()*86-43,z=rand()*79-39,y=groundHeight(x,z);
@@ -292,33 +413,82 @@ function villageStatic():Float32Array {
   }
   return m.data();
 }
-function characterMesh(kind:'player'|'alexis'|'iver'):Float32Array {
-  const m=new Mesh();
-  const shirt=kind==='alexis'?COLORS.rockMid:COLORS.black;
-  // Rounded backpack, head and limbs are all real curved meshes.
-  m.sphere(0,1.38,0,.60,COLORS.skin,15,10);
-  m.sphere(0,1.76,0,.59,COLORS.black,15,8);
-  if(kind==='alexis'){
-    m.sphere(0,1.92,0,.64,COLORS.black,15,8);
-    m.cylinder(0,1.73,0,.64,.22,COLORS.black,15);
-  } else {
-    for(let i=0;i<5;i++)m.cone((i-2)*.22,1.99,-.1,.24,.4,COLORS.black,8);
-  }
-  m.sphere(0,0.85,0,.55,shirt,14,9);
-  m.sphere(0,0.72,.47,.46,COLORS.black,10,8);
+type CharacterKind = WorldAvatar | 'alexis' | 'iver' | 'postmaster' | 'hiker';
+/** Original, fully three-dimensional human character models: faces, hair, clothes,
+ * boots, fitted jackets and equipment are actual geometry, not image sprites. */
+function characterMesh(kind: CharacterKind): Float32Array {
+  const m = new Mesh();
+  const isAlexis=kind==='alexis',isIver=kind==='iver',isRanger=kind==='ranger';
+  const isTraveler=kind==='traveler',isPost=kind==='postmaster',isHiker=kind==='hiker';
+  const jacket=isAlexis?COLORS.jacketBlue:isTraveler?COLORS.jacketRust:isIver?COLORS.jacketRust:
+    isRanger?COLORS.jacketOlive:isPost?COLORS.rose:isHiker?COLORS.jacketBlue:COLORS.jacketOlive;
+  const skin=isRanger||isIver||isHiker?COLORS.skinWarm:COLORS.skin;
+  const hair=isTraveler||isAlexis?COLORS.hairChestnut:COLORS.hairBrown;
+  const trousers=isTraveler?COLORS.ink:isAlexis?COLORS.jeans:COLORS.trousers;
+  const accent=isAlexis?COLORS.paper:isTraveler?COLORS.gold:isIver?COLORS.cream:COLORS.bronze;
+  // Anatomically more natural proportions than the original toy-like avatar.
+  // Grounded shoes with toe caps, leg segments, neck, shoulders and fitted torso.
   for(const side of [-1,1]){
-    m.sphere(side*.55,.87,0,.19,shirt,9,6);
-    m.sphere(side*.61,.56,-.03,.19,COLORS.skin,9,6);
-    m.sphere(side*.28,.33,-.03,.25,COLORS.jeans,9,7);
-    m.sphere(side*.29,.16,-.20,.26,COLORS.white,9,6);
-    m.sphere(side*.21,1.47,-.51,.078,COLORS.ink,8,5);
+    m.ellipsoid(side*.23,.52,0,.165,.44,.17,trousers,13,8);
+    m.ellipsoid(side*.24,.25,-.075,.19,.22,.23,COLORS.leather,13,8);
+    m.ellipsoid(side*.24,.105,-.19,.225,.115,.32,COLORS.woodDark,13,7);
+    m.box(side*.24,.12,-.42,.26,.038,.036,COLORS.stoneWarm);
+    m.ellipsoid(side*.47,1.16,0,.18,.36,.20,jacket,13,8);
+    m.ellipsoid(side*.53,.81,-.04,.137,.16,.15,skin,12,7);
+    m.ellipsoid(side*.455,1.48,0,.195,.18,.19,jacket,12,7);
   }
-  m.sphere(0,1.26,-.58,.065,COLORS.rose,8,5);
-  m.sphere(0,1.04,-.54,.09,COLORS.rose,8,5);
-  if(kind==='alexis'){
-    m.box(0,.94,-.53,.09,.54,.04,COLORS.blue);
+  m.ellipsoid(0,1.29,.015,.43,.58,.29,jacket,16,10);
+  m.box(0,1.16,-.286,.10,.70,.025,mix(jacket,COLORS.cream,.4)); // jacket zipper
+  m.sphere(0,1.64,0,.15,skin,12,7);
+  m.ellipsoid(0,1.99,-.025,.39,.48,.38,skin,19,13);
+  // Detailed ear geometry, eyes with pupils and light catch, eyebrows and small mouth.
+  for(const side of [-1,1]){
+    m.ellipsoid(side*.397,1.99,-.015,.085,.155,.09,skin,11,7);
+    m.ellipsoid(side*.156,2.025,-.373,.083,.065,.023,COLORS.white,12,7);
+    m.sphere(side*.157,2.02,-.399,.042,COLORS.hairBrown,11,7);
+    m.sphere(side*.146,2.043,-.433,.016,COLORS.white,8,5);
+    m.box(side*.166,2.129,-.366,.155,.032,.028,hair);
+    m.ellipsoid(side*.26,1.85,-.343,.066,.036,.017,COLORS.blush,10,6);
+  }
+  m.ellipsoid(0,1.96,-.405,.052,.073,.055,skin,10,6);
+  m.ellipsoid(0,1.795,-.366,.097,.023,.018,COLORS.hairBrown,12,6);
+  // Character-specific volumetric hairstyles and accessories.
+  m.ellipsoid(0,2.335,.04,.402,.19,.38,hair,17,9);
+  for(const side of [-1,1])
+    m.ellipsoid(side*.33,2.19,.07,.11,.19,.29,hair,11,7);
+  if(isAlexis||isTraveler){
+    m.ellipsoid(.36,2.03,.26,.19,.28,.18,hair,14,9); // ponytail
+    m.ellipsoid(-.08,2.27,-.32,.26,.11,.11,hair,12,6);
+  } else if(isRanger||isIver||isPost){
+    const hat=isPost?COLORS.rose:isRanger?COLORS.jacketOlive:COLORS.woodDark;
+    m.cylinder(0,2.34,.005,.40,.30,hat,19);
+    m.cylinder(0,2.235,-.04,.57,.055,hat,22);
+    m.box(0,2.31,-.414,.28,.075,.04,accent);
   } else {
-    m.box(0,.96,.55,.58,.72,.19,COLORS.black);
+    for(let i=0;i<4;i++)m.ellipsoid((i-1.5)*.15,2.39,-.12,.11,.115,.17,hair,10,6);
+  }
+  // Fabric panels, shirt seams, backpack straps or sling bag.
+  for(const side of [-1,1]){
+    m.box(side*.31,1.41,-.285,.08,.70,.04,mix(jacket,COLORS.ink,.18));
+    m.sphere(side*.30,.92,-.257,.035,accent,9,5);
+  }
+  if(isTraveler||isPost){
+    m.box(-.22,1.32,-.315,.07,.86,.05,COLORS.leather);
+    m.ellipsoid(.32,.91,-.25,.21,.24,.10,COLORS.leather,12,7);
+    m.box(.32,.96,-.355,.14,.055,.04,accent);
+  }else{
+    m.ellipsoid(0,1.07,.32,.36,.46,.20,COLORS.leather,14,9);
+    m.box(0,1.40,.51,.27,.09,.04,accent);
+    for(const side of [-1,1])m.box(side*.31,1.34,-.25,.062,.7,.045,COLORS.leather);
+  }
+  if(isAlexis||isIver){
+    // A physical mail badge with tiny embossed envelope.
+    m.box(.20,1.45,-.325,.24,.19,.055,COLORS.paper);
+    m.box(.20,1.45,-.364,.15,.025,.018,COLORS.rose);
+  }
+  if(isHiker){
+    m.ellipsoid(0,1.55,-.30,.22,.17,.085,COLORS.paper,12,8);
+    m.box(0,1.58,-.39,.12,.05,.03,COLORS.blue);
   }
   return m.data();
 }
@@ -329,17 +499,33 @@ attribute vec3 a_color;
 uniform mat4 u_view;
 uniform mat4 u_projection;
 uniform vec4 u_pose;
+uniform vec2 u_gait;
+uniform float u_character;
 varying vec3 v_color;
 varying float v_fog;
 void main(){
+  // GPU-driven leg/arm articulation while moving; zero deformation at rest.
+  vec3 local=a_position;
+  if(u_character>0.5){
+    float stride=sin(u_gait.x)*u_gait.y;
+    if(local.y<0.91 && abs(local.x)>0.10){
+      local.z+=sign(local.x)*stride*0.27*(1.0-smoothstep(0.16,0.96,local.y));
+      local.y+=abs(stride)*0.045*(1.0-smoothstep(0.1,0.75,local.y));
+    }
+    if(local.y>0.78 && local.y<1.58 && abs(local.x)>0.43){
+      local.z-=sign(local.x)*stride*0.17;
+    }
+  }
   float s=sin(u_pose.w),c=cos(u_pose.w);
-  vec3 p=vec3(a_position.x*c-a_position.z*s,a_position.y,a_position.x*s+a_position.z*c)+u_pose.xyz;
+  vec3 p=vec3(local.x*c-local.z*s,local.y,local.x*s+local.z*c)+u_pose.xyz;
   vec3 n=normalize(vec3(a_normal.x*c-a_normal.z*s,a_normal.y,a_normal.x*s+a_normal.z*c));
   vec4 view=u_view*vec4(p,1.0);
   gl_Position=u_projection*view;
-  float light=0.66+0.43*max(0.0,dot(n,normalize(vec3(-0.45,0.85,0.48))));
-  v_color=clamp(a_color*light+vec3(0.025),0.0,1.0);
-  v_fog=clamp((-view.z-37.0)/129.0,0.0,0.83);
+  float lambert=max(0.0,dot(n,normalize(vec3(-0.47,0.91,0.36))));
+  float fill=max(0.0,dot(n,normalize(vec3(0.38,0.52,-0.68))));
+  float light=0.63+0.53*lambert+0.11*fill;
+  v_color=clamp(a_color*light+vec3(0.022,0.025,0.018),0.0,1.0);
+  v_fog=clamp((-view.z-54.0)/155.0,0.0,0.78);
 }`;
 const fragmentShader=String.raw`
 precision mediump float;
@@ -347,7 +533,7 @@ varying vec3 v_color;
 varying float v_fog;
 void main(){
   vec3 daylight=pow(v_color,vec3(0.96));
-  gl_FragColor=vec4(mix(daylight,vec3(0.72,0.83,0.87),v_fog),1.0);
+  gl_FragColor=vec4(mix(daylight,vec3(0.77,0.84,0.81),v_fog),1.0);
 }`;
 function compile(gl:WebGLRenderingContext,type:number,src:string):WebGLShader {
   const shader=gl.createShader(type);
@@ -383,15 +569,18 @@ function createGPU(gl:WebGLRenderingContext, data:Float32Array):GPUBuffer {
 
 /** Mount and run a self-contained 3D scene. Cleanup releases every GPU resource. */
 export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):WorldController {
-  const moves:Record<WorldMove,boolean>={forward:false,back:false,left:false,right:false,sprint:false};
+  const emptyMoves=():Record<WorldMove,boolean>=>({forward:false,back:false,left:false,right:false,sprint:false});
+  const keyboardMoves=emptyMoves(),touchMoves=emptyMoves(),moves=emptyMoves();
+  const keyActivity:Record<WorldMove,number>={forward:0,back:0,left:0,right:0,sprint:0};
   let disposed=false,frame=0,last=0,lastPositionUpdate=0,ready=false;
-  let x=0,z=18,avatarYaw=0,orbit=0,distance=11,jumpHeight=0,jumpSpeed=0;
+  let x=0,z=18,avatarYaw=0,orbit=0,distance=8.9,jumpHeight=0,jumpSpeed=0;
+  let chosenAvatar:WorldAvatar='explorer',stridePhase=0,strideBlend=0;
   let nearId:WorldLandmark['id']|null=null;
   let pointerId:number|null=null,lastPointerX=0;
   const gl=canvas.getContext('webgl',{alpha:true,antialias:true,depth:true,powerPreference:'default',premultipliedAlpha:false});
   if(!gl){
     events.onError('3D graphics are unavailable on this device. Turn on hardware acceleration or try another browser.');
-    return {setMove:()=>{},jump:()=>{},interact:()=>events.onInteract(null),reset:()=>{},dispose:()=>{}};
+    return {setMove:()=>{},setAvatar:()=>{},jump:()=>{},interact:()=>events.onInteract(null),reset:()=>{},dispose:()=>{}};
   }
   const buffers:GPUBuffer[]=[];
   let program:WebGLProgram|null=null;
@@ -399,7 +588,8 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
   // Attribute locations are queried only *after* the shader program is linked.
   let position=-1,normalAttr=-1,colorAttr=-1;
   let poseUniform:WebGLUniformLocation|null=null,viewUniform:WebGLUniformLocation|null=null,projectionUniform:WebGLUniformLocation|null=null;
-  let world:GPUBuffer,player:GPUBuffer,alexis:GPUBuffer,iver:GPUBuffer;
+  let gaitUniform:WebGLUniformLocation|null=null,characterUniform:WebGLUniformLocation|null=null;
+  let world:GPUBuffer,players:Record<WorldAvatar,GPUBuffer>,alexis:GPUBuffer,iver:GPUBuffer,postmaster:GPUBuffer,hiker:GPUBuffer;
   try {
     const vs=compile(gl,gl.VERTEX_SHADER,vertexShader);
     const fs=compile(gl,gl.FRAGMENT_SHADER,fragmentShader);
@@ -415,25 +605,35 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
     poseUniform=gl.getUniformLocation(program,'u_pose');
     viewUniform=gl.getUniformLocation(program,'u_view');
     projectionUniform=gl.getUniformLocation(program,'u_projection');
+    gaitUniform=gl.getUniformLocation(program,'u_gait');
+    characterUniform=gl.getUniformLocation(program,'u_character');
     world=createGPU(gl,villageStatic());
-    player=createGPU(gl,characterMesh('player'));
+    players={
+      explorer:createGPU(gl,characterMesh('explorer')),
+      ranger:createGPU(gl,characterMesh('ranger')),
+      traveler:createGPU(gl,characterMesh('traveler')),
+    };
     alexis=createGPU(gl,characterMesh('alexis'));
     iver=createGPU(gl,characterMesh('iver'));
-    buffers.push(world,player,alexis,iver);
+    postmaster=createGPU(gl,characterMesh('postmaster'));
+    hiker=createGPU(gl,characterMesh('hiker'));
+    buffers.push(world,...Object.values(players),alexis,iver,postmaster,hiker);
     gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);
     gl.clearColor(.71,.84,.88,0);
   }catch{
     buffers.forEach(b=>gl.deleteBuffer(b.buffer));
     if(program)gl.deleteProgram(program);
     events.onError('We could not start this 3D world. Please try again with WebGL enabled.');
-    return {setMove:()=>{},jump:()=>{},interact:()=>events.onInteract(null),reset:()=>{},dispose:()=>{}};
+    return {setMove:()=>{},setAvatar:()=>{},jump:()=>{},interact:()=>events.onInteract(null),reset:()=>{},dispose:()=>{}};
   }
-  const draw=(mesh:GPUBuffer,pose:[number,number,number,number])=>{
+  const draw=(mesh:GPUBuffer,pose:[number,number,number,number],gait:[number,number]=[0,0])=>{
     gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);
     gl.vertexAttribPointer(position,3,gl.FLOAT,false,36,0);gl.enableVertexAttribArray(position);
     gl.vertexAttribPointer(normalAttr,3,gl.FLOAT,false,36,12);gl.enableVertexAttribArray(normalAttr);
     gl.vertexAttribPointer(colorAttr,3,gl.FLOAT,false,36,24);gl.enableVertexAttribArray(colorAttr);
     gl.uniform4f(poseUniform,pose[0],pose[1],pose[2],pose[3]);
+    gl.uniform2f(gaitUniform,gait[0],gait[1]);
+    gl.uniform1f(characterUniform,gait[1]>0?1:0);
     gl.drawArrays(gl.TRIANGLES,0,mesh.count);
   };
   const resize=()=>{
@@ -453,21 +653,35 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
   };
   const interact=()=>events.onInteract(closest());
   const jump=()=>{if(!disposed&&jumpHeight===0&&jumpSpeed===0)jumpSpeed=5.8;};
+  // Separate physical-key and touch input so neither can leave a phantom
+  // movement state when a pointer is cancelled or a browser menu steals focus.
+  const keyMap:Record<string,WorldMove>={'w':'forward','arrowup':'forward','s':'back','arrowdown':'back','a':'left','arrowleft':'left','d':'right','arrowright':'right','shift':'sprint'};
+  const clearMovement=()=>{
+    for(const move of Object.keys(moves) as WorldMove[]){
+      keyboardMoves[move]=false;touchMoves[move]=false;moves[move]=false;
+    }
+    strideBlend=0;
+  };
   const keyDown=(event:KeyboardEvent)=>{
     const target=event.target as HTMLElement|null;
-    if(event.altKey||event.ctrlKey||event.metaKey||target?.isContentEditable||target?.closest('button,a,input,textarea,select,[role="dialog"]'))return;
-    const key=event.key.toLowerCase();
-    const keyMap:Record<string,WorldMove>={'w':'forward','arrowup':'forward','s':'back','arrowdown':'back','a':'left','arrowleft':'left','d':'right','arrowright':'right','shift':'sprint'};
-    if(keyMap[key]){moves[keyMap[key]]=true;event.preventDefault();}
+    if(event.altKey||event.ctrlKey||event.metaKey||target?.isContentEditable||
+      target?.closest('button,a,input,textarea,select,[role="dialog"]'))return;
+    const key=event.key.toLowerCase(),movement=keyMap[key];
+    if(movement){
+      keyboardMoves[movement]=true;keyActivity[movement]=performance.now();
+      event.preventDefault();
+    }
     if((key==='e'||key==='enter')&&!event.repeat){interact();event.preventDefault();}
-    if((key===' '||key==='space')&&!event.repeat&&!(target?.closest('button,a'))){jump();event.preventDefault();}
+    if((key===' '||key==='space')&&!event.repeat){jump();event.preventDefault();}
   };
   const keyUp=(event:KeyboardEvent)=>{
-    const key=event.key.toLowerCase();
-    const keyMap:Record<string,WorldMove>={'w':'forward','arrowup':'forward','s':'back','arrowdown':'back','a':'left','arrowleft':'left','d':'right','arrowright':'right','shift':'sprint'};
-    if(keyMap[key])moves[keyMap[key]]=false;
+    // Always process release, even if focus moved to a button after keydown.
+    const movement=keyMap[event.key.toLowerCase()];
+    if(movement){keyboardMoves[movement]=false;moves[movement]=touchMoves[movement];}
   };
-  const blur=()=>{Object.keys(moves).forEach(k=>{moves[k as WorldMove]=false;});};
+  const onVisibilityChange=()=>{if(document.hidden)clearMovement();};
+  const onContextMenu=()=>clearMovement();
+  const onPageHide=()=>clearMovement();
   const pointerDown=(e:PointerEvent)=>{
     pointerId=e.pointerId;lastPointerX=e.clientX;canvas.setPointerCapture(e.pointerId);
   };
@@ -480,7 +694,10 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
   const contextLost=(event:Event)=>{event.preventDefault();events.onError('The 3D graphics context was lost. Reload the world to continue.');};
   window.addEventListener('keydown',keyDown);
   window.addEventListener('keyup',keyUp);
-  window.addEventListener('blur',blur);
+  window.addEventListener('blur',clearMovement);
+  window.addEventListener('pagehide',onPageHide);
+  window.addEventListener('contextmenu',onContextMenu,true);
+  document.addEventListener('visibilitychange',onVisibilityChange);
   canvas.addEventListener('pointerdown',pointerDown);
   canvas.addEventListener('pointermove',pointerMove);
   canvas.addEventListener('pointerup',pointerUp);
@@ -494,6 +711,13 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
     if(disposed)return;
     const dt=Math.min(.05,(time-last)/1000||.016);last=time;
     if(!document.hidden){
+      // Keyboard auto-repeat normally refreshes this watchdog; a missed keyup
+      // or browser context menu cannot make the avatar walk forever.
+      const now=performance.now();
+      for(const move of Object.keys(moves) as WorldMove[]){
+        if(keyboardMoves[move] && now-keyActivity[move]>2200)keyboardMoves[move]=false;
+        moves[move]=keyboardMoves[move]||touchMoves[move];
+      }
       const forward=Number(moves.forward)-Number(moves.back);
       const side=Number(moves.right)-Number(moves.left);
       const mag=Math.hypot(side,forward);
@@ -514,16 +738,20 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
         jumpSpeed=jumpHeight===0?0:jumpSpeed-15.4*dt;
       }
       const eyeX=x+Math.sin(orbit)*distance,eyeZ=z+Math.cos(orbit)*distance;
-      const eyeY=groundHeight(eyeX,eyeZ)+distance*.57+1.8;
-      const target:V3=[x,groundHeight(x,z)+1.65,z-2.4];
+      const eyeY=groundHeight(eyeX,eyeZ)+distance*.36+1.85;
+      const target:V3=[x,groundHeight(x,z)+1.55,z-1.9];
       gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
       gl.uniformMatrix4fv(viewUniform,false,lookAt([eyeX,eyeY,eyeZ],target));
       gl.uniformMatrix4fv(projectionUniform,false,perspective(Math.PI/3.25,canvas.width/Math.max(canvas.height,1),.12,260));
       draw(world,[0,0,0,0]);
-      draw(alexis,[-5,groundHeight(-5,3),3,Math.PI]);
-      draw(iver,[6,groundHeight(6,1),1,Math.PI]);
-      const bob=events.reduceMotion?0:mag?Math.sin(time*.015)*.065:Math.sin(time*.002)*.017;
-      draw(player,[x,groundHeight(x,z)+jumpHeight+bob,z,avatarYaw]);
+      draw(alexis,[-5,groundHeight(-5,3),3,Math.PI],[time*.0017,.07]);
+      draw(iver,[6,groundHeight(6,1),1,Math.PI],[time*.0016,.06]);
+      draw(postmaster,[-10,groundHeight(-10,-5),-5,Math.PI*.91],[time*.0014,.045]);
+      draw(hiker,[11,groundHeight(11,-3),-3,Math.PI*1.12],[time*.0019,.05]);
+      strideBlend=events.reduceMotion?0:clamp(strideBlend+(mag?dt*6:-dt*10),0,1);
+      if(mag>0)stridePhase+=dt*(moves.sprint?14.3:10.3);
+      const bob=events.reduceMotion?0:strideBlend*Math.abs(Math.sin(stridePhase))*.055;
+      draw(players[chosenAvatar],[x,groundHeight(x,z)+jumpHeight+bob,z,avatarYaw],[stridePhase,strideBlend]);
       if(!ready){ready=true;events.onReady();}
       const location=closest();
       if(location?.id!==nearId){nearId=location?.id||null;events.onNearby(location);}
@@ -534,16 +762,19 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
     frame=window.requestAnimationFrame(render);
   };
   frame=window.requestAnimationFrame(render);
-  const reset=()=>{x=0;z=18;orbit=0;avatarYaw=0;jumpHeight=0;jumpSpeed=0;blur();};
+  const reset=()=>{x=0;z=18;orbit=0;avatarYaw=0;strideBlend=0;jumpHeight=0;jumpSpeed=0;clearMovement();};
   const dispose=()=>{
     if(disposed)return;disposed=true;
     window.cancelAnimationFrame(frame);
-    window.removeEventListener('keydown',keyDown);window.removeEventListener('keyup',keyUp);window.removeEventListener('blur',blur);
+    window.removeEventListener('keydown',keyDown);window.removeEventListener('keyup',keyUp);window.removeEventListener('blur',clearMovement);
+    window.removeEventListener('pagehide',onPageHide);
+    window.removeEventListener('contextmenu',onContextMenu,true);
+    document.removeEventListener('visibilitychange',onVisibilityChange);
     window.removeEventListener('resize',resize);observer?.disconnect();
     canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);
     canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);
     canvas.removeEventListener('wheel',wheel);canvas.removeEventListener('webglcontextlost',contextLost);
     buffers.forEach(b=>gl.deleteBuffer(b.buffer));if(program)gl.deleteProgram(program);
   };
-  return {setMove:(key,active)=>{moves[key]=active;},jump,interact,reset,dispose};
+  return {setMove:(key,active)=>{touchMoves[key]=active;},setAvatar:(avatar)=>{if(avatar in players)chosenAvatar=avatar;},jump,interact,reset,dispose};
 }

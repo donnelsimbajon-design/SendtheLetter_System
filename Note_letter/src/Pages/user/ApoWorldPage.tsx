@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Compass, Footprints, Gamepad2, HelpCircle, MapPin, RotateCcw, Sparkles, X } from 'lucide-react';
+import { ArrowLeft, Compass, Footprints, Gamepad2, HelpCircle, MapPin, RotateCcw, Sparkles, Users, X } from 'lucide-react';
 import { useWriterPreferences } from '../../store/writerPreferences';
-import { startApoWorld, WORLD_LANDMARKS, type WorldController, type WorldLandmark, type WorldMove } from '../../game/apoWorldEngine';
+import { startApoWorld, WORLD_AVATARS, WORLD_LANDMARKS, type WorldAvatar, type WorldController, type WorldLandmark, type WorldMove } from '../../game/apoWorldEngine';
 import '../../apoWorld.css';
 
 const CONTROL_KEYS: { move: WorldMove; label: string; icon: string }[] = [
@@ -23,6 +23,17 @@ export default function ApoWorldPage() {
   const [selected, setSelected] = useState<WorldLandmark | null>(null);
   const [visited, setVisited] = useState<string[]>([]);
   const [showHelp, setShowHelp] = useState(true);
+  const [avatar, setAvatar] = useState<WorldAvatar>(() => {
+    try {
+      const stored=localStorage.getItem('apo-world:avatar:v1');
+      return WORLD_AVATARS.some(item=>item.id===stored)?stored as WorldAvatar:'explorer';
+    } catch { return 'explorer'; }
+  });
+  const chooseAvatar=(next:WorldAvatar)=>{
+    setAvatar(next);
+    worldRef.current?.setAvatar(next);
+    try { localStorage.setItem('apo-world:avatar:v1',next); } catch { /* storage unavailable */ }
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -39,6 +50,7 @@ export default function ApoWorldPage() {
       },
     });
     worldRef.current = controller;
+    controller.setAvatar(avatar);
     return () => {
       controller.dispose();
       worldRef.current = null;
@@ -63,6 +75,7 @@ export default function ApoWorldPage() {
         </div>
         <div className="apo-top-actions">
           <span className="apo-solo"><span aria-hidden="true">●</span> Solo exploration</span>
+          <button type="button" aria-label="Choose character" title="Choose character" onClick={() => setShowHelp(true)}><Users size={19} /></button>
           <button type="button" aria-label="How to play" title="How to play" onClick={() => setShowHelp(v => !v)}><HelpCircle size={19} /></button>
           <button type="button" aria-label="Return to start" title="Return to start" onClick={() => { worldRef.current?.reset(); setSelected(null); }}><RotateCcw size={18} /></button>
         </div>
@@ -74,6 +87,7 @@ export default function ApoWorldPage() {
           data-testid="apo-3d-canvas"
           aria-label="Interactive 3D mountain village. Use W A S D or arrow keys to walk, drag to turn the camera, press E to interact. Touch controls are also available."
           tabIndex={0}
+          onContextMenu={event => event.preventDefault()}
           className="apo-canvas"
         />
         {!ready && !error && <div className="apo-loading" role="status"><Sparkles size={30} aria-hidden="true" /> Building the mountain village in 3D…</div>}
@@ -110,7 +124,21 @@ export default function ApoWorldPage() {
           <span className="apo-kicker">Your adventure begins here</span>
           <h1>Walk into a world of letters.</h1>
           <p>Explore this real-time 3D village inspired by Mt. Apo. Discover places that connect to your existing letters.</p>
-          <div className="apo-help-keys"><span>W A S D / Arrow keys</span><strong>Move</strong></div>
+          <div className="apo-avatar-heading">Choose your 3D character</div>
+          <div className="apo-avatar-picker" role="group" aria-label="Select 3D character model">
+            {WORLD_AVATARS.map(option => <button
+              key={option.id}
+              type="button"
+              aria-pressed={avatar===option.id}
+              className={avatar===option.id?'apo-avatar-option is-active':'apo-avatar-option'}
+              onClick={() => chooseAvatar(option.id)}
+              title={option.description}
+            >
+              <span className={`apo-avatar-swatch apo-avatar-${option.id}`} aria-hidden="true">●</span>
+              <strong>{option.label}</strong>
+            </button>)}
+          </div>
+          <div className="apo-help-keys"><span>W A S D / Arrow keys</span><strong>Move · release to stop</strong></div>
           <div className="apo-help-keys"><span>Drag / Swipe</span><strong>Look around</strong></div>
           <div className="apo-help-keys"><span>E / Interact</span><strong>Visit a place</strong></div>
           <div className="apo-help-keys"><span>Shift / Space</span><strong>Run / Jump</strong></div>
@@ -133,14 +161,15 @@ export default function ApoWorldPage() {
               type="button"
               data-move={item.move}
               aria-label={item.label}
-              onPointerDown={event => {event.preventDefault();press(item.move,true);}}
+              onPointerDown={event => {event.preventDefault();try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* synthetic or unsupported pointer */ }press(item.move,true);}}
               onPointerUp={() => press(item.move,false)}
+              onLostPointerCapture={() => press(item.move,false)}
               onPointerCancel={() => press(item.move,false)}
               onPointerLeave={() => press(item.move,false)}
             >{item.icon}</button>)}
           </div>
           <div className="apo-control-actions">
-            <button type="button" aria-label="Run while moving" onPointerDown={() => press('sprint',true)} onPointerUp={() => press('sprint',false)} onPointerCancel={() => press('sprint',false)} onPointerLeave={() => press('sprint',false)}>Run</button>
+            <button type="button" aria-label="Run while moving" onPointerDown={event => {try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* synthetic or unsupported pointer */ }press('sprint',true);}} onPointerUp={() => press('sprint',false)} onLostPointerCapture={() => press('sprint',false)} onPointerCancel={() => press('sprint',false)} onPointerLeave={() => press('sprint',false)}>Run</button>
             <button type="button" aria-label="Jump" disabled={!ready} onClick={() => worldRef.current?.jump()}>Jump</button>
             <button type="button" onClick={interact} disabled={!nearby || !ready} aria-label="Interact with nearby landmark"><Gamepad2 size={19} /> Interact</button>
           </div>
