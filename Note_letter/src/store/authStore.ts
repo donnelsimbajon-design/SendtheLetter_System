@@ -47,6 +47,20 @@ const readResponse = async (response: Response) => {
     catch { throw new Error('The server returned an unreadable response. Please try again.'); }
 };
 
+// Avoid an unnecessary 401 request when a locally stored JWT has already expired.
+// This is only a client-side hint: the API still verifies signatures and revocation.
+const isLocallyExpiredJwt = (token: string): boolean => {
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+    try {
+        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'))) as { exp?: unknown };
+        return typeof payload.exp === 'number' && Number.isFinite(payload.exp) && payload.exp * 1000 <= Date.now() + 15_000;
+    } catch {
+        // Leave malformed/legacy tokens to the authoritative server validation.
+        return false;
+    }
+};
+
 export const useAuthStore = create<AuthState>((set, get) => ({
     user: readStoredUser(),
     token: localStorage.getItem('token'),
@@ -57,6 +71,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     verifySession: async () => {
         const token = get().token;
         if (!token) { set({ isVerifying: false, isAuthenticated: false }); return; }
+        if (isLocallyExpiredJwt(token)) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            socketService.disconnect();
+            set({ token: null, user: null, isAuthenticated: false, isVerifying: false, sessionNotice: 'Your sign-in expired. Please sign in again to continue.' });
+            return;
+        }
         set({ isVerifying: true });
         const abort = new AbortController();
         const timeout = window.setTimeout(() => abort.abort(), 10000);
