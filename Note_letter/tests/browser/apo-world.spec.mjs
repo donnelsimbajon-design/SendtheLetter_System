@@ -85,6 +85,44 @@ test('3D village loads and offers real controls, landmarks and writing links', a
   await page.getByRole('button', { name: 'How to play' }).click();
   await expect(page.getByRole('heading', { name: 'Walk into a world of letters.' })).toBeVisible();
 });
+test('W release and lost browser focus never leave the character moving forever', async ({ page }) => {
+  test.setTimeout(75_000);
+  await signedIn(page);
+  await page.goto('/world');
+  await expect(page.getByText('Mt. Apo-inspired Highlands')).toBeVisible({ timeout: 20000 });
+  await page.getByRole('button', { name: 'Start exploring' }).click();
+  const position = () => page.getByTestId('world-position').textContent();
+  await page.keyboard.down('w');
+  await page.waitForTimeout(750);
+  await page.keyboard.up('w');
+  await page.waitForTimeout(240); // allow pending position update to settle
+  const afterRelease = await position();
+  await page.waitForTimeout(680);
+  expect(await position()).toBe(afterRelease);
+  await page.keyboard.down('w');
+  await page.waitForTimeout(420);
+  await page.evaluate(() => window.dispatchEvent(new Event('blur')));
+  await page.keyboard.up('w');
+  await page.waitForTimeout(230);
+  const afterBlur = await position();
+  await page.waitForTimeout(650);
+  expect(await position()).toBe(afterBlur);
+});
+
+test('three original 3D avatar models can be selected and persist across reloads', async ({ page }) => {
+  await signedIn(page);
+  await page.goto('/world');
+  const picker = page.getByRole('group', { name: 'Select 3D character model' });
+  await expect(picker).toBeVisible();
+  await picker.getByRole('button', { name: 'Highland Ranger' }).click();
+  await expect(picker.getByRole('button', { name: 'Highland Ranger' })).toHaveAttribute('aria-pressed', 'true');
+  expect(await page.evaluate(() => localStorage.getItem('apo-world:avatar:v1'))).toBe('ranger');
+  await page.reload();
+  await expect(picker.getByRole('button', { name: 'Highland Ranger' })).toHaveAttribute('aria-pressed', 'true');
+  await picker.getByRole('button', { name: 'Story Traveler' }).click();
+  expect(await page.evaluate(() => localStorage.getItem('apo-world:avatar:v1'))).toBe('traveler');
+});
+
 test('mobile virtual controls keep 3D world within the viewport', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile-chromium', 'Touch controls are covered on mobile');
   await signedIn(page);
