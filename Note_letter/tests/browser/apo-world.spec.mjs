@@ -72,6 +72,7 @@ test('3D village loads and offers real controls, landmarks and writing links', a
   expect(await canvas.evaluate(el => Boolean(el.getContext('webgl2') || el.getContext('webgl')))).toBeTruthy();
   // Save an actual WebGL frame, not an AI concept render, for manual art review.
   await expect(page.getByTestId('apo-model-status')).toContainText('3D assets active:',{timeout:35000});
+  await expect(canvas).toHaveAttribute('data-apo-player-model','explorer',{timeout:35000});
   await page.screenshot({path:'test-results/apo-three-world-loaded.png'});
   await page.getByRole('button', { name: 'Start exploring' }).click();
   const before = await page.getByTestId('world-position').textContent();

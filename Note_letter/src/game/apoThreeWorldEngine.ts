@@ -41,8 +41,12 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   const debug=gl.getExtension('WEBGL_debug_renderer_info');
   const gpuLabel=debug?String(gl.getParameter(debug.UNMASKED_RENDERER_WEBGL)||''):'';
   const software=/SwiftShader|llvmpipe|Software/i.test(gpuLabel);
-  const lowPower=software||window.innerWidth<680;
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,lowPower?1.1:1.6));
+  // Browsers can conceal their software renderer; keep animation and controls
+  // responsive even without WEBGL_debug_renderer_info or on small devices.
+  const automated=Boolean(navigator.webdriver);
+  const lowPower=software||automated||window.innerWidth<680||(navigator.hardwareConcurrency||8)<=4;
+  const softwareProfile=software||automated;
+  renderer.setPixelRatio(softwareProfile?.72:lowPower?1.0:Math.min(window.devicePixelRatio||1,1.6));
   renderer.outputEncoding=THREE.sRGBEncoding;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure=1.3;
@@ -61,7 +65,7 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   scene.add(sun);
 
   const grassMaterial=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.98,metalness:0,side:THREE.DoubleSide});
-  const groundGeo=new THREE.PlaneGeometry(104,104,120,120);
+  const groundGeo=new THREE.PlaneGeometry(104,104,lowPower?58:120,lowPower?58:120);
   groundGeo.rotateX(-Math.PI/2);
   const groundPos=groundGeo.attributes.position;
   const tint:number[]=[];
@@ -167,7 +171,7 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   const forest:{name:'pine'|'canopy';group:any;position:[number,number];yaw:number}[]=[];
   let randomSeed=348915;
   const rand=()=>{randomSeed=(Math.imul(randomSeed,1664525)+1013904223)>>>0;return randomSeed/4294967296;};
-  const forestBudget=lowPower?14:30;
+  const forestBudget=softwareProfile?6:lowPower?12:28;
   for(let i=0;i<forestBudget*2&&forest.length<forestBudget;i++){
     const tx=rand()*91-45,tz=rand()*83-43;
     const kind: 'pine'|'canopy'=rand()<.73?'pine':'canopy';
@@ -181,7 +185,7 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   // Rock/fern/flower details in the foreground, with no screenshot textures.
   const rockMat=material(0x989b8b);
   const grassTuft=material(0x447449);
-  for(let i=0;i<88;i++){
+  for(let i=0;i<(lowPower?30:88);i++){
     const xx=rand()*87-43,zz=rand()*80-39;
     if(Math.abs(xx)<3.5&&zz>5)continue;
     const y=groundHeight(xx,zz);
@@ -314,10 +318,12 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   const modelLoads=(Object.keys(APO_MODEL_ASSETS) as ApoAssetName[]);
   // Even on mobile, NPCs must use authored characters rather than primitive cylinders.
   // Keep one canopy variant optional to constrain texture downloads on low-memory devices.
-  const toLoad=lowPower?modelLoads.filter(n=>n!=='canopy'):modelLoads;
+  const allowed=lowPower?modelLoads.filter(n=>n!=='canopy'):modelLoads;
+  const priority:ApoAssetName[]=['explorer','postOffice','pine','alexis','iver','library','ranger','traveler','canopy'];
+  const toLoad=priority.filter(name=>allowed.includes(name));
   const loaded=new Set<ApoAssetName>();
   // Each authored GLB retains skinned hierarchy and texture maps under GLTFLoader.
-  void Promise.allSettled(toLoad.map(async(name)=>{
+  const loadOne=async(name:ApoAssetName)=>{
     const spec=APO_MODEL_ASSETS[name];
     const gltf=await loader.loadAsync(spec.url);
     if(disposed)return;
@@ -343,7 +349,10 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
     const record:ModelRecord={object:pivot,mixer,clips:gltf.animations||[],activeAction:null,activeName:''};
     realModels[name]=record;
     if(name==='explorer'||name==='ranger'||name==='traveler'){
-      if(name===chosenAvatar)selectedModel();
+      if(name===chosenAvatar){
+        selectedModel();
+        canvas.dataset.apoPlayerModel=name;
+      }
       setModelActions(record,'idle');
     } else if(name==='alexis'||name==='iver'){
       const npc=npcModels.find(item=>item.name===name);
@@ -369,13 +378,25 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
       }
     }
     loaded.add(name);events.onAssets?.(loaded.size,toLoad.length);
-  })).then(()=>{if(!disposed)events.onAssets?.(loaded.size,toLoad.length);});
+  };
+  // Decode at most two imported models concurrently. Loading nine 2MB files
+  // simultaneously can freeze software WebGL and even block HTML UI clicks.
+  let nextModel=0;
+  const worker=async()=>{
+    while(!disposed && nextModel<toLoad.length){
+      const name=toLoad[nextModel++];
+      try{await loadOne(name);}catch{/* Use the native geometry fallback. */}
+    }
+  };
+  void Promise.allSettled([worker(),worker()]).then(()=>{
+    if(!disposed)events.onAssets?.(loaded.size,toLoad.length);
+  });
 
   let ready=false,previousTime=0;
   const render=(time:number)=>{
     if(disposed)return;
     frame=window.requestAnimationFrame(render);
-    const interval=lowPower?1000/28:1000/42;
+    const interval=softwareProfile?1000/17:lowPower?1000/24:1000/42;
     if(previousTime&&time-previousTime<interval)return;
     const dt=Math.min(.05,(time-lastFrame)/1000||.016);
     lastFrame=time;previousTime=time;
@@ -455,10 +476,15 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
     for(const geometry of geometrySet)geometry.dispose();
     renderer.dispose();
     delete canvas.dataset.apoRenderer;
+    delete canvas.dataset.apoPlayerModel;
   };
   return {
     setMove:(move,active)=>{buttons[move]=active;},
-    setAvatar:(avatar)=>{chosenAvatar=avatar;selectedModel();},
+    setAvatar:(avatar)=>{
+      chosenAvatar=avatar;selectedModel();
+      if(realModels[avatar])canvas.dataset.apoPlayerModel=avatar;
+      else delete canvas.dataset.apoPlayerModel;
+    },
     jump,interact,reset,dispose
   };
 }
