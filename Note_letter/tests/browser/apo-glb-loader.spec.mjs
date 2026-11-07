@@ -64,3 +64,22 @@ test('GLB loader rejects corrupt binaries without affecting normal writing route
   });
   expect(response).toMatch(/Invalid or oversized 3D asset/);
 });
+
+// This test runs against the actual curated model URL. It catches broken
+// references or browser CORS failures that a synthetic GLB fixture cannot.
+test('curated medieval village GLB loads from its real public source',async({page})=>{
+  test.setTimeout(75_000);
+  await page.goto('/try');
+  const result=await page.evaluate(async()=>{
+    const [{loadApoGlb},{APO_MODEL_ASSETS}]=await Promise.all([
+      import('/src/game/apoGlbLoader.ts'),import('/src/game/apoAssetCatalog.ts')
+    ]);
+    const asset=APO_MODEL_ASSETS.postOffice;
+    const data=await loadApoGlb(asset.url,asset.height);
+    let maxY=-Infinity;
+    for(let i=1;i<data.length;i+=9)maxY=Math.max(maxY,data[i]);
+    return {vertices:data.length/9,height:maxY};
+  });
+  expect(result.vertices).toBeGreaterThan(100);
+  expect(result.height).toBeCloseTo(5.6,1);
+});
