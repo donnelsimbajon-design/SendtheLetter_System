@@ -27,6 +27,7 @@ export const WORLD_LANDMARKS: WorldLandmark[] = [
 
 export type WorldController = {
   setMove: (direction: WorldMove, active: boolean) => void;
+  jump: () => void;
   interact: () => void;
   reset: () => void;
   dispose: () => void;
@@ -390,7 +391,7 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
   const gl=canvas.getContext('webgl',{alpha:true,antialias:true,depth:true,powerPreference:'default',premultipliedAlpha:false});
   if(!gl){
     events.onError('3D graphics are unavailable on this device. Turn on hardware acceleration or try another browser.');
-    return {setMove:()=>{},interact:()=>events.onInteract(null),reset:()=>{},dispose:()=>{}};
+    return {setMove:()=>{},jump:()=>{},interact:()=>events.onInteract(null),reset:()=>{},dispose:()=>{}};
   }
   const buffers:GPUBuffer[]=[];
   let program:WebGLProgram|null=null;
@@ -425,7 +426,7 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
     buffers.forEach(b=>gl.deleteBuffer(b.buffer));
     if(program)gl.deleteProgram(program);
     events.onError('We could not start this 3D world. Please try again with WebGL enabled.');
-    return {setMove:()=>{},interact:()=>events.onInteract(null),reset:()=>{},dispose:()=>{}};
+    return {setMove:()=>{},jump:()=>{},interact:()=>events.onInteract(null),reset:()=>{},dispose:()=>{}};
   }
   const draw=(mesh:GPUBuffer,pose:[number,number,number,number])=>{
     gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);
@@ -451,6 +452,7 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
     return best;
   };
   const interact=()=>events.onInteract(closest());
+  const jump=()=>{if(!disposed&&jumpHeight===0&&jumpSpeed===0)jumpSpeed=5.8;};
   const keyDown=(event:KeyboardEvent)=>{
     const target=event.target as HTMLElement|null;
     if(event.altKey||event.ctrlKey||event.metaKey||target?.isContentEditable||target?.closest('button,a,input,textarea,select,[role="dialog"]'))return;
@@ -458,7 +460,7 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
     const keyMap:Record<string,WorldMove>={'w':'forward','arrowup':'forward','s':'back','arrowdown':'back','a':'left','arrowleft':'left','d':'right','arrowright':'right','shift':'sprint'};
     if(keyMap[key]){moves[keyMap[key]]=true;event.preventDefault();}
     if((key==='e'||key==='enter')&&!event.repeat){interact();event.preventDefault();}
-    if((key===' '||key==='space')&&!event.repeat&&jumpHeight===0&&!(target?.closest('button,a'))){jumpSpeed=5.8;event.preventDefault();}
+    if((key===' '||key==='space')&&!event.repeat&&!(target?.closest('button,a'))){jump();event.preventDefault();}
   };
   const keyUp=(event:KeyboardEvent)=>{
     const key=event.key.toLowerCase();
@@ -543,5 +545,5 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
     canvas.removeEventListener('wheel',wheel);canvas.removeEventListener('webglcontextlost',contextLost);
     buffers.forEach(b=>gl.deleteBuffer(b.buffer));if(program)gl.deleteProgram(program);
   };
-  return {setMove:(key,active)=>{moves[key]=active;},interact,reset,dispose};
+  return {setMove:(key,active)=>{moves[key]=active;},jump,interact,reset,dispose};
 }
