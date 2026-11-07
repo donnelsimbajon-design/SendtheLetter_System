@@ -58,7 +58,7 @@ test('signing in from the protected world returns to the actual 3D scene', async
   await expect(page.getByTestId('apo-3d-canvas')).toBeVisible();
 });
 
-test('3D village loads and offers real controls, landmarks and writing links', async ({ page }) => {
+test('3D village loads and offers real controls, landmarks and writing links', async ({ page }, testInfo) => {
   // Software WebGL on shared CI runners can initialize more slowly than hardware GPUs.
   test.setTimeout(75_000);
   await signedIn(page);
@@ -81,8 +81,9 @@ test('3D village loads and offers real controls, landmarks and writing links', a
   // Save an actual WebGL frame, not an AI concept render, for manual art review.
   await expect(page.getByTestId('apo-model-status')).toContainText('3D assets active:',{timeout:35000});
   await expect(canvas).toHaveAttribute('data-apo-player-model','explorer',{timeout:35000});
-  await page.screenshot({path:'test-results/apo-three-world-loaded.png'});
   await page.getByRole('button', { name: 'Start exploring' }).click();
+  // Capture the unobstructed 3D terrain on each viewport (not just the tutorial modal).
+  await page.screenshot({path:`test-results/apo-three-world-${testInfo.project.name}.png`});
   const before = await page.getByTestId('world-position').textContent();
   await page.keyboard.down('w');
   await page.waitForTimeout(650);

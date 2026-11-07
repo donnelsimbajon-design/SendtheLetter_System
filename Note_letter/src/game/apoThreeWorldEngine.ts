@@ -34,7 +34,8 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   try{renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'default'});}
   catch{throw Error('3D graphics could not start on this device');}
   const scene=new THREE.Scene();
-  scene.background=new THREE.Color(0xbdd6d7);
+  // Transparent canvas reveals the atmospheric CSS sky instead of flat cyan.
+  scene.background=null;
   scene.fog=new THREE.FogExp2(0xb8cfc9,.0058);
   const camera=new THREE.PerspectiveCamera(58,1,.12,320);
   const gl=renderer.getContext();
@@ -49,12 +50,12 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   renderer.setPixelRatio(softwareProfile?.72:lowPower?1.0:Math.min(window.devicePixelRatio||1,1.6));
   renderer.outputEncoding=THREE.sRGBEncoding;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure=1.3;
+  renderer.toneMappingExposure=0.96;
   renderer.shadowMap.enabled=!lowPower;
   renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-  const hemi=new THREE.HemisphereLight(0xe9f3e6,0x66764b,1.35);
+  const hemi=new THREE.HemisphereLight(0xdce9e2,0x536648,.91);
   scene.add(hemi);
-  const sun=new THREE.DirectionalLight(0xffedce,2.3);
+  const sun=new THREE.DirectionalLight(0xffedce,1.32);
   sun.position.set(-40,70,22);
   sun.castShadow=!lowPower;
   sun.shadow.mapSize.set(1024,1024);
