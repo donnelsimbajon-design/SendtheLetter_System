@@ -333,8 +333,12 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
       if(child.isMesh||child.isSkinnedMesh){child.castShadow=!lowPower;child.receiveShadow=true;
         if(child.material){const mats=Array.isArray(child.material)?child.material:[child.material];for(const m of mats){m.side=THREE.DoubleSide;}}}
     });
+    // A separate pivot preserves normalized foot-ground offsets when a model
+    // is placed in the village. Animations still target its original GLTF root.
+    const pivot=new THREE.Group();
+    pivot.add(root);
     const mixer=gltf.animations?.length?new THREE.AnimationMixer(root):null;
-    const record:ModelRecord={object:root,mixer,clips:gltf.animations||[],activeAction:null,activeName:''};
+    const record:ModelRecord={object:pivot,mixer,clips:gltf.animations||[],activeAction:null,activeName:''};
     realModels[name]=record;
     if(name==='explorer'||name==='ranger'||name==='traveler'){
       if(name===chosenAvatar)selectedModel();
@@ -343,20 +347,20 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
       const npc=npcModels.find(item=>item.name===name);
       if(npc){
         scene.remove(npc.fallback);
-        root.position.set(npc.position[0],groundHeight(...npc.position),npc.position[1]);
-        scene.add(root);
+        pivot.position.set(npc.position[0],groundHeight(...npc.position),npc.position[1]);
+        scene.add(pivot);
         setModelActions(record,'idle');
       }
     } else if(name==='postOffice'||name==='library'){
       const ix=name==='postOffice'?0:1;
       scene.remove(houseFallbacks[ix]);
       const [hx,hz]=houses[ix];
-      root.position.set(hx,groundHeight(hx,hz),hz);scene.add(root);
+      pivot.position.set(hx,groundHeight(hx,hz),hz);scene.add(pivot);
     }else if(name==='pine'||name==='canopy'){
       for(const tree of forest){
         if(tree.name!==name)continue;
         scene.remove(tree.group);
-        const instance=root.clone(true);
+        const instance=pivot.clone(true);
         instance.position.set(tree.position[0],groundHeight(...tree.position),tree.position[1]);
         instance.rotation.y=tree.yaw;
         scene.add(instance);
