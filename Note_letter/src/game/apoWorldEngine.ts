@@ -509,7 +509,7 @@ void main(){
   if(u_character>0.5){
     float stride=sin(u_gait.x)*u_gait.y;
     if(local.y<0.91 && abs(local.x)>0.10){
-      local.z+=sign(local.x)*stride*0.27*smoothstep(0.96,0.16,local.y);
+      local.z+=sign(local.x)*stride*0.27*(1.0-smoothstep(0.16,0.96,local.y));
       local.y+=abs(stride)*0.045*(1.0-smoothstep(0.1,0.75,local.y));
     }
     if(local.y>0.78 && local.y<1.58 && abs(local.x)>0.43){
