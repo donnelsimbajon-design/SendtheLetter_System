@@ -451,7 +451,17 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
     }
     camera.position.set(x+Math.sin(orbit)*distance,groundHeight(x,z)+distance*.36+2.0,z+Math.cos(orbit)*distance);
     camera.lookAt(x,groundHeight(x,z)+1.55,z-1.5);
-    renderer.render(scene,camera);
+    try{
+      renderer.render(scene,camera);
+    }catch(cause){
+      // Never silently advertise a playable 3D scene if the GPU render fails.
+      const reason=cause instanceof Error?cause.message:String(cause);
+      canvas.dataset.apoRenderError=reason.slice(0,250);
+      console.error('Apo Letter World: Three.js frame could not render',cause);
+      try{dispose();}catch{/* The route can still show a safe error state. */}
+      events.onError('The 3D graphics device could not complete a frame. Please reload or try another browser.');
+      return;
+    }
     if(!ready){
       canvas.dataset.apoRenderer='three';
       ready=true;events.onReady();

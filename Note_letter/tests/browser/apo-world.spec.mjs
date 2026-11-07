@@ -68,7 +68,15 @@ test('3D village loads and offers real controls, landmarks and writing links', a
   // On CI Chromium SwiftShader provides WebGL; failure must be visible, not a fake 2D screenshot.
   await expect(page.getByText('Mt. Apo-inspired Highlands')).toBeVisible({ timeout: 15000 });
   // A silent switch to the old white-tree/T-pose renderer is not an acceptable pass.
-  await expect(canvas).toHaveAttribute('data-apo-renderer','three',{timeout:20000});
+  await expect.poll(async()=>{
+    const status=await canvas.evaluate(el=>({
+      active:el.getAttribute('data-apo-renderer'),
+      bootError:el.getAttribute('data-apo-boot-error'),
+      renderError:el.getAttribute('data-apo-render-error')
+    }));
+    if(status.bootError||status.renderError)throw Error('Enhanced 3D runtime: '+(status.bootError||status.renderError));
+    return status.active;
+  },{timeout:20000}).toBe('three');
   expect(await canvas.evaluate(el => Boolean(el.getContext('webgl2') || el.getContext('webgl')))).toBeTruthy();
   // Save an actual WebGL frame, not an AI concept render, for manual art review.
   await expect(page.getByTestId('apo-model-status')).toContainText('3D assets active:',{timeout:35000});

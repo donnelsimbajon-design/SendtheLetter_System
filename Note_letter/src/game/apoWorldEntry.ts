@@ -23,8 +23,11 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:Events):WorldContr
     controller.setAvatar(chosenAvatar);
     for(const [key,active] of Object.entries(moveStates))
       if(active)controller.setMove(key as WorldMove,active);
-  }).catch(()=>{
+  }).catch(cause=>{
     if(disposed)return;
+    const reason=cause instanceof Error?cause.message:String(cause);
+    canvas.dataset.apoBootError=reason.slice(0,250);
+    console.error('Apo Letter World: enhanced renderer could not initialize',cause);
     world=startLegacyWorld(canvas,events);
     world.setAvatar(chosenAvatar);
     for(const [key,active] of Object.entries(moveStates))
