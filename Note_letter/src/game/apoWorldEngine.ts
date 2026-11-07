@@ -319,33 +319,82 @@ function villageStatic():Float32Array {
   }
   return m.data();
 }
-function characterMesh(kind:'player'|'alexis'|'iver'):Float32Array {
-  const m=new Mesh();
-  const shirt=kind==='alexis'?COLORS.rockMid:COLORS.black;
-  // Rounded backpack, head and limbs are all real curved meshes.
-  m.sphere(0,1.38,0,.60,COLORS.skin,15,10);
-  m.sphere(0,1.76,0,.59,COLORS.black,15,8);
-  if(kind==='alexis'){
-    m.sphere(0,1.92,0,.64,COLORS.black,15,8);
-    m.cylinder(0,1.73,0,.64,.22,COLORS.black,15);
-  } else {
-    for(let i=0;i<5;i++)m.cone((i-2)*.22,1.99,-.1,.24,.4,COLORS.black,8);
-  }
-  m.sphere(0,0.85,0,.55,shirt,14,9);
-  m.sphere(0,0.72,.47,.46,COLORS.black,10,8);
+type CharacterKind = WorldAvatar | 'alexis' | 'iver' | 'postmaster' | 'hiker';
+/** Original, fully three-dimensional human character models: faces, hair, clothes,
+ * boots, fitted jackets and equipment are actual geometry, not image sprites. */
+function characterMesh(kind: CharacterKind): Float32Array {
+  const m = new Mesh();
+  const isAlexis=kind==='alexis',isIver=kind==='iver',isRanger=kind==='ranger';
+  const isTraveler=kind==='traveler',isPost=kind==='postmaster',isHiker=kind==='hiker';
+  const jacket=isAlexis?COLORS.jacketBlue:isTraveler?COLORS.jacketRust:isIver?COLORS.jacketRust:
+    isRanger?COLORS.jacketOlive:isPost?COLORS.rose:isHiker?COLORS.jacketBlue:COLORS.jacketOlive;
+  const skin=isRanger||isIver||isHiker?COLORS.skinWarm:COLORS.skin;
+  const hair=isTraveler||isAlexis?COLORS.hairChestnut:COLORS.hairBrown;
+  const trousers=isTraveler?COLORS.ink:isAlexis?COLORS.jeans:COLORS.trousers;
+  const accent=isAlexis?COLORS.paper:isTraveler?COLORS.gold:isIver?COLORS.cream:COLORS.bronze;
+  // Anatomically more natural proportions than the original toy-like avatar.
+  // Grounded shoes with toe caps, leg segments, neck, shoulders and fitted torso.
   for(const side of [-1,1]){
-    m.sphere(side*.55,.87,0,.19,shirt,9,6);
-    m.sphere(side*.61,.56,-.03,.19,COLORS.skin,9,6);
-    m.sphere(side*.28,.33,-.03,.25,COLORS.jeans,9,7);
-    m.sphere(side*.29,.16,-.20,.26,COLORS.white,9,6);
-    m.sphere(side*.21,1.47,-.51,.078,COLORS.ink,8,5);
+    m.ellipsoid(side*.23,.52,0,.165,.44,.17,trousers,13,8);
+    m.ellipsoid(side*.24,.25,-.075,.19,.22,.23,COLORS.leather,13,8);
+    m.ellipsoid(side*.24,.105,-.19,.225,.115,.32,COLORS.woodDark,13,7);
+    m.box(side*.24,.12,-.42,.26,.038,.036,COLORS.stoneWarm);
+    m.ellipsoid(side*.47,1.16,0,.18,.36,.20,jacket,13,8);
+    m.ellipsoid(side*.53,.81,-.04,.137,.16,.15,skin,12,7);
+    m.ellipsoid(side*.455,1.48,0,.195,.18,.19,jacket,12,7);
   }
-  m.sphere(0,1.26,-.58,.065,COLORS.rose,8,5);
-  m.sphere(0,1.04,-.54,.09,COLORS.rose,8,5);
-  if(kind==='alexis'){
-    m.box(0,.94,-.53,.09,.54,.04,COLORS.blue);
+  m.ellipsoid(0,1.29,.015,.43,.58,.29,jacket,16,10);
+  m.box(0,1.16,-.286,.10,.70,.025,mix(jacket,COLORS.cream,.4)); // jacket zipper
+  m.sphere(0,1.64,0,.15,skin,12,7);
+  m.ellipsoid(0,1.99,-.025,.39,.48,.38,skin,19,13);
+  // Detailed ear geometry, eyes with pupils and light catch, eyebrows and small mouth.
+  for(const side of [-1,1]){
+    m.ellipsoid(side*.397,1.99,-.015,.085,.155,.09,skin,11,7);
+    m.ellipsoid(side*.156,2.025,-.373,.083,.065,.023,COLORS.white,12,7);
+    m.sphere(side*.157,2.02,-.399,.042,COLORS.hairBrown,11,7);
+    m.sphere(side*.146,2.043,-.433,.016,COLORS.white,8,5);
+    m.box(side*.166,2.129,-.366,.155,.032,.028,hair);
+    m.ellipsoid(side*.26,1.85,-.343,.066,.036,.017,COLORS.blush,10,6);
+  }
+  m.ellipsoid(0,1.96,-.405,.052,.073,.055,skin,10,6);
+  m.ellipsoid(0,1.795,-.366,.097,.023,.018,COLORS.hairBrown,12,6);
+  // Character-specific volumetric hairstyles and accessories.
+  m.ellipsoid(0,2.335,.04,.402,.19,.38,hair,17,9);
+  for(const side of [-1,1])
+    m.ellipsoid(side*.33,2.19,.07,.11,.19,.29,hair,11,7);
+  if(isAlexis||isTraveler){
+    m.ellipsoid(.36,2.03,.26,.19,.28,.18,hair,14,9); // ponytail
+    m.ellipsoid(-.08,2.27,-.32,.26,.11,.11,hair,12,6);
+  } else if(isRanger||isIver||isPost){
+    const hat=isPost?COLORS.rose:isRanger?COLORS.jacketOlive:COLORS.woodDark;
+    m.cylinder(0,2.34,.005,.40,.30,hat,19);
+    m.cylinder(0,2.235,-.04,.57,.055,hat,22);
+    m.box(0,2.31,-.414,.28,.075,.04,accent);
   } else {
-    m.box(0,.96,.55,.58,.72,.19,COLORS.black);
+    for(let i=0;i<4;i++)m.ellipsoid((i-1.5)*.15,2.39,-.12,.11,.115,.17,hair,10,6);
+  }
+  // Fabric panels, shirt seams, backpack straps or sling bag.
+  for(const side of [-1,1]){
+    m.box(side*.31,1.41,-.285,.08,.70,.04,mix(jacket,COLORS.ink,.18));
+    m.sphere(side*.30,.92,-.257,.035,accent,9,5);
+  }
+  if(isTraveler||isPost){
+    m.box(-.22,1.32,-.315,.07,.86,.05,COLORS.leather);
+    m.ellipsoid(.32,.91,-.25,.21,.24,.10,COLORS.leather,12,7);
+    m.box(.32,.96,-.355,.14,.055,.04,accent);
+  }else{
+    m.ellipsoid(0,1.07,.32,.36,.46,.20,COLORS.leather,14,9);
+    m.box(0,1.40,.51,.27,.09,.04,accent);
+    for(const side of [-1,1])m.box(side*.31,1.34,-.25,.062,.7,.045,COLORS.leather);
+  }
+  if(isAlexis||isIver){
+    // A physical mail badge with tiny embossed envelope.
+    m.box(.20,1.45,-.325,.24,.19,.055,COLORS.paper);
+    m.box(.20,1.45,-.364,.15,.025,.018,COLORS.rose);
+  }
+  if(isHiker){
+    m.ellipsoid(0,1.55,-.30,.22,.17,.085,COLORS.paper,12,8);
+    m.box(0,1.58,-.39,.12,.05,.03,COLORS.blue);
   }
   return m.data();
 }
