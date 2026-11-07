@@ -1,5 +1,6 @@
 import { WORLD_LANDMARKS, groundHeight, type WorldAvatar, type WorldController, type WorldLandmark, type WorldMove } from './apoWorldEngine';
 import { APO_MODEL_ASSETS, type ApoAssetName } from './apoAssetCatalog';
+import { addApoLandscapeDetail } from './apoLandscapeDetail';
 
 type Events={
   onNearby:(location:WorldLandmark|null)=>void;
@@ -75,8 +76,16 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
     groundPos.setY(i,groundHeight(x,z)-.15);
     const noise=.12*Math.sin(x*.19+z*.43)+.07*Math.sin(x*1.47-z*1.08);
     const shade=clamp(.63+noise+.06*Math.max(0,groundHeight(x,z)),.48,.92);
-    // Deep highland greens (linear PBR vertex colours) avoid washed-out grass.
-    tint.push(shade*.14,shade*.29,shade*.13);
+    // Woodland soil and slopes subtly break up the former uniform green carpet.
+    const slope=Math.hypot(
+      groundHeight(x+.42,z)-groundHeight(x-.42,z),
+      groundHeight(x,z+.42)-groundHeight(x,z-.42)
+    );
+    const soil=clamp((slope-.26)*.65+Math.max(0,Math.sin(x*.31+z*.17)-.66)*.17,0,.42);
+    const r=shade*.14*(1-soil)+shade*.24*soil;
+    const g=shade*.29*(1-soil)+shade*.22*soil;
+    const b=shade*.13*(1-soil)+shade*.12*soil;
+    tint.push(r,g,b);
   }
   groundGeo.setAttribute('color',new THREE.Float32BufferAttribute(tint,3));
   groundGeo.computeVertexNormals();
@@ -84,7 +93,7 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   ground.receiveShadow=true;
   scene.add(ground);
 
-  const pathMaterial=new THREE.MeshStandardMaterial({color:0xc4b296,roughness:1,metalness:0,side:THREE.DoubleSide});
+  const pathMaterial=new THREE.MeshStandardMaterial({color:0xa58f73,roughness:1,metalness:0,side:THREE.DoubleSide});
   function path(points:[number,number][],width:number){
     const vertices:number[]=[];
     for(let segment=0;segment<points.length-1;segment++){
@@ -199,6 +208,13 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
       plant.position.set(xx,y+.2,zz);scene.add(plant);
     }
   }
+  // One draw call per botanical family keeps grass lush without the huge GPU
+  // overhead of thousands of individual meshes. Respect all paths and buildings.
+  const meadow=addApoLandscapeDetail(THREE,scene,{lowPower,softwareProfile,groundHeight});
+  canvas.dataset.apoGrassCount=String(meadow.grassCount);
+  canvas.dataset.apoFernCount=String(meadow.fernCount);
+  canvas.dataset.apoStoneCount=String(meadow.rockCount);
+
   // High-resolution continuous massif replaces the old repeated cone mountains.
   // Distinct broad ridges, ridgeline erosion and an uplifted summit create a
   // Mt. Apo-inspired highland silhouette without any image-plane backdrop.
@@ -453,6 +469,7 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
     }
     camera.position.set(x+Math.sin(orbit)*distance,groundHeight(x,z)+distance*.36+2.0,z+Math.cos(orbit)*distance);
     camera.lookAt(x,groundHeight(x,z)+1.55,z-1.5);
+    meadow.update(time*.001);
     try{
       renderer.render(scene,camera);
     }catch(cause){
@@ -509,6 +526,9 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
     renderer.dispose();
     delete canvas.dataset.apoRenderer;
     delete canvas.dataset.apoPlayerModel;
+    delete canvas.dataset.apoGrassCount;
+    delete canvas.dataset.apoFernCount;
+    delete canvas.dataset.apoStoneCount;
   };
   return {
     setMove:(move,active)=>{buttons[move]=active;},
