@@ -20,13 +20,13 @@ const clamp=(value:number,min:number,max:number)=>Math.max(min,Math.min(max,valu
  * the original custom WebGL scene stays available as a fallback elsewhere.
  */
 export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events):Promise<WorldController>{
-  // Import via a dynamic URL so Vite keeps the pinned MIT modules in /public
-  // outside ordinary letter-page bundles.
-  const threeUrl='/vendor/three/three.module.js';
-  const loaderUrl='/vendor/three/loaders/GLTFLoader.js';
+  // Real source modules: Vite bundles them into lazy /world-only chunks.
+  // Importing JavaScript directly from /public triggers Vite's error overlay.
   const [THREE,loaderModule]:any[]=await Promise.all([
-    import(/* @vite-ignore */ threeUrl),
-    import(/* @vite-ignore */ loaderUrl),
+    // @ts-ignore Pinned MIT JavaScript vendor file without type declarations.
+    import('../vendor/three/three.module.js'),
+    // @ts-ignore Pinned MIT JavaScript vendor file without type declarations.
+    import('../vendor/three/loaders/GLTFLoader.js'),
   ]);
   const GLTFLoader=loaderModule.GLTFLoader;
   if(!GLTFLoader||!THREE.WebGLRenderer)throw Error('Three.js GLB renderer unavailable');
