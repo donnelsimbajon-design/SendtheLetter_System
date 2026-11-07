@@ -596,6 +596,19 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
   let poseUniform:WebGLUniformLocation|null=null,viewUniform:WebGLUniformLocation|null=null,projectionUniform:WebGLUniformLocation|null=null;
   let gaitUniform:WebGLUniformLocation|null=null,characterUniform:WebGLUniformLocation|null=null;
   let world:GPUBuffer,players:Record<WorldAvatar,GPUBuffer>,alexis:GPUBuffer,iver:GPUBuffer,postmaster:GPUBuffer,hiker:GPUBuffer;
+  let detailedWorld:GPUBuffer|null=null;
+  const realModels:Partial<Record<ApoAssetName,GPUBuffer>>={};
+  const assetAbort=new AbortController();
+  const forestPositions:{x:number;z:number;kind:'pine'|'canopy';yaw:number}[]=[];
+  const forestRandom=seeded(77342);
+  for(let i=0;i<66;i++){
+    const px=forestRandom()*94-47,pz=forestRandom()*82-44;
+    const kind=forestRandom()>.65?'canopy':'pine';
+    const yaw=forestRandom()*Math.PI*2;
+    if((Math.abs(px)<10&&pz>-18) || Math.hypot(px+17,pz+11)<11 ||
+      Math.hypot(px-17,pz+14)<11 || Math.hypot(px-14,pz+28)<8)continue;
+    forestPositions.push({x:px,z:pz,kind,yaw});
+  }
   try {
     const vs=compile(gl,gl.VERTEX_SHADER,vertexShader);
     const fs=compile(gl,gl.FRAGMENT_SHADER,fragmentShader);
@@ -632,6 +645,38 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
     events.onError('We could not start this 3D world. Please try again with WebGL enabled.');
     return {setMove:()=>{},setAvatar:()=>{},jump:()=>{},interact:()=>events.onInteract(null),reset:()=>{},dispose:()=>{}};
   }
+  // Load GLB assets in parallel, never blocking first playable frame.
+  // Temporary fallback models remain in GPU memory until the route is disposed.
+  // An individual unavailable CDN asset cannot prevent exploration.
+  const allAssets=(Object.keys(APO_MODEL_ASSETS) as ApoAssetName[]);
+  const requestedAssets=window.innerWidth<680
+    ? allAssets.filter(name=>name!=='alexis'&&name!=='iver'&&name!=='canopy')
+    : allAssets;
+  void Promise.allSettled(requestedAssets.map(async name=>{
+    const asset=APO_MODEL_ASSETS[name];
+    const geometry=await loadApoGlb(asset.url,asset.height,assetAbort.signal);
+    return {name,geometry};
+  })).then(results=>{
+    if(disposed)return;
+    let imported=0;
+    for(const result of results){
+      if(result.status!=='fulfilled')continue;
+      try{
+        const {name,geometry}=result.value;
+        const gpu=createGPU(gl,geometry);
+        realModels[name]=gpu;buffers.push(gpu);imported++;
+      }catch{/* Failure is restricted to this model only. */}
+    }
+    const hasForest=!!(realModels.pine||realModels.canopy);
+    const hasVillage=!!(realModels.postOffice&&realModels.library);
+    if(hasForest||hasVillage){
+      try{
+        detailedWorld=createGPU(gl,villageStatic(hasForest,hasVillage));
+        buffers.push(detailedWorld);
+      }catch{/* Keep the existing complete world as fallback. */}
+    }
+    events.onAssets?.(imported,requestedAssets.length);
+  });
   const draw=(mesh:GPUBuffer,pose:[number,number,number,number],gait:[number,number]=[0,0])=>{
     gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);
     gl.vertexAttribPointer(position,3,gl.FLOAT,false,36,0);gl.enableVertexAttribArray(position);
@@ -749,15 +794,25 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
       gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
       gl.uniformMatrix4fv(viewUniform,false,lookAt([eyeX,eyeY,eyeZ],target));
       gl.uniformMatrix4fv(projectionUniform,false,perspective(Math.PI/3.25,canvas.width/Math.max(canvas.height,1),.12,260));
-      draw(world,[0,0,0,0]);
-      draw(alexis,[-5,groundHeight(-5,3),3,Math.PI],[time*.0017,.07]);
-      draw(iver,[6,groundHeight(6,1),1,Math.PI],[time*.0016,.06]);
+      draw(detailedWorld||world,[0,0,0,0]);
+      if(detailedWorld&&(realModels.pine||realModels.canopy)){
+        for(const tree of forestPositions){
+          const model=realModels[tree.kind]||realModels.pine||realModels.canopy;
+          if(model)draw(model,[tree.x,groundHeight(tree.x,tree.z),tree.z,tree.yaw]);
+        }
+      }
+      if(detailedWorld&&realModels.postOffice&&realModels.library){
+        draw(realModels.postOffice,[-17,groundHeight(-17,-11),-11,Math.PI]);
+        draw(realModels.library,[17,groundHeight(17,-14),-14,Math.PI]);
+      }
+      draw(realModels.alexis||alexis,[-5,groundHeight(-5,3),3,Math.PI],[time*.0017,.07]);
+      draw(realModels.iver||iver,[6,groundHeight(6,1),1,Math.PI],[time*.0016,.06]);
       draw(postmaster,[-10,groundHeight(-10,-5),-5,Math.PI*.91],[time*.0014,.045]);
       draw(hiker,[11,groundHeight(11,-3),-3,Math.PI*1.12],[time*.0019,.05]);
       strideBlend=events.reduceMotion?0:clamp(strideBlend+(mag?dt*6:-dt*10),0,1);
       if(mag>0)stridePhase+=dt*(moves.sprint?14.3:10.3);
       const bob=events.reduceMotion?0:strideBlend*Math.abs(Math.sin(stridePhase))*.055;
-      draw(players[chosenAvatar],[x,groundHeight(x,z)+jumpHeight+bob,z,avatarYaw],[stridePhase,strideBlend]);
+      draw(realModels[chosenAvatar]||players[chosenAvatar],[x,groundHeight(x,z)+jumpHeight+bob,z,avatarYaw],[stridePhase,strideBlend]);
       if(!ready){ready=true;events.onReady();}
       const location=closest();
       if(location?.id!==nearId){nearId=location?.id||null;events.onNearby(location);}
@@ -771,6 +826,7 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
   const reset=()=>{x=0;z=18;orbit=0;avatarYaw=0;strideBlend=0;jumpHeight=0;jumpSpeed=0;clearMovement();};
   const dispose=()=>{
     if(disposed)return;disposed=true;
+    assetAbort.abort();
     window.cancelAnimationFrame(frame);
     window.removeEventListener('keydown',keyDown);window.removeEventListener('keyup',keyUp);window.removeEventListener('blur',clearMovement);
     window.removeEventListener('pagehide',onPageHide);
