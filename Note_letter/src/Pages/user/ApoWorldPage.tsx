@@ -161,7 +161,7 @@ export default function ApoWorldPage() {
               type="button"
               data-move={item.move}
               aria-label={item.label}
-              onPointerDown={event => {event.preventDefault();event.currentTarget.setPointerCapture(event.pointerId);press(item.move,true);}}
+              onPointerDown={event => {event.preventDefault();try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* synthetic or unsupported pointer */ }press(item.move,true);}}
               onPointerUp={() => press(item.move,false)}
               onLostPointerCapture={() => press(item.move,false)}
               onPointerCancel={() => press(item.move,false)}
@@ -169,7 +169,7 @@ export default function ApoWorldPage() {
             >{item.icon}</button>)}
           </div>
           <div className="apo-control-actions">
-            <button type="button" aria-label="Run while moving" onPointerDown={event => {event.currentTarget.setPointerCapture(event.pointerId);press('sprint',true);}} onPointerUp={() => press('sprint',false)} onLostPointerCapture={() => press('sprint',false)} onPointerCancel={() => press('sprint',false)} onPointerLeave={() => press('sprint',false)}>Run</button>
+            <button type="button" aria-label="Run while moving" onPointerDown={event => {try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* synthetic or unsupported pointer */ }press('sprint',true);}} onPointerUp={() => press('sprint',false)} onLostPointerCapture={() => press('sprint',false)} onPointerCancel={() => press('sprint',false)} onPointerLeave={() => press('sprint',false)}>Run</button>
             <button type="button" aria-label="Jump" disabled={!ready} onClick={() => worldRef.current?.jump()}>Jump</button>
             <button type="button" onClick={interact} disabled={!nearby || !ready} aria-label="Interact with nearby landmark"><Gamepad2 size={19} /> Interact</button>
           </div>
