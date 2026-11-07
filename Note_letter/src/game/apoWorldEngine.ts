@@ -5,6 +5,12 @@
  * Draw-call-light geometry and no runtime third-party or remote asset downloads.
  */
 export type WorldMove = 'forward' | 'back' | 'left' | 'right' | 'sprint';
+export type WorldAvatar = 'explorer' | 'ranger' | 'traveler';
+export const WORLD_AVATARS: { id: WorldAvatar; label: string; description: string }[] = [
+  { id: 'explorer', label: 'Mountain Explorer', description: 'Forest jacket and hiking pack' },
+  { id: 'ranger', label: 'Highland Ranger', description: 'Trail hat and outdoor gear' },
+  { id: 'traveler', label: 'Story Traveler', description: 'Warm coat and messenger bag' },
+];
 
 export type WorldLandmark = {
   id: 'plaza' | 'post' | 'library' | 'capsule' | 'alexis' | 'iver';
@@ -27,6 +33,7 @@ export const WORLD_LANDMARKS: WorldLandmark[] = [
 
 export type WorldController = {
   setMove: (direction: WorldMove, active: boolean) => void;
+  setAvatar: (avatar: WorldAvatar) => void;
   jump: () => void;
   interact: () => void;
   reset: () => void;
@@ -60,6 +67,14 @@ const COLORS: Record<string, RGB> = {
   skin: [0.96, 0.77, 0.65], jeans: [0.28, 0.35, 0.50],
   blue: [0.20, 0.36, 0.67], white: [0.96, 0.95, 0.88],
   lavender: [0.69, 0.53, 0.76],
+  moss: [0.23, 0.43, 0.27], fern: [0.28, 0.53, 0.30],
+  leafLight: [0.45, 0.66, 0.37], leafGold: [0.65, 0.63, 0.34],
+  woodDark: [0.29, 0.23, 0.18], stoneWarm: [0.67, 0.64, 0.55],
+  leather: [0.42, 0.29, 0.21], bronze: [0.75, 0.56, 0.30],
+  hairBrown: [0.28, 0.20, 0.17], hairChestnut: [0.42, 0.29, 0.21],
+  jacketOlive: [0.27, 0.38, 0.28], jacketRust: [0.66, 0.37, 0.27],
+  jacketBlue: [0.30, 0.43, 0.53], trousers: [0.22, 0.27, 0.27],
+  skinWarm: [0.81, 0.57, 0.43], blush: [0.76, 0.42, 0.39],
 };
 
 const mix = (a: RGB, b: RGB, t: number): RGB =>
@@ -126,6 +141,18 @@ class Mesh {
         const point=(u:number,v:number):V3 => [x+r*Math.cos(v)*Math.cos(u),y+r*Math.sin(v),z+r*Math.cos(v)*Math.sin(u)];
         const a=point(u0,v0),b=point(u1,v0),c=point(u1,v1),d=point(u0,v1);
         const emit=(p:V3) => this.vertex(p,normal(subtract(p,[x,y,z])),color);
+        emit(a);emit(b);emit(c);emit(a);emit(c);emit(d);
+      }
+    }
+  }
+  ellipsoid(x:number,y:number,z:number,rx:number,ry:number,rz:number,color:RGB,segments=12,rings=7) {
+    for(let j=0;j<rings;j++){
+      const v0=-Math.PI/2+j*Math.PI/rings,v1=-Math.PI/2+(j+1)*Math.PI/rings;
+      for(let i=0;i<segments;i++){
+        const u0=i*Math.PI*2/segments,u1=(i+1)*Math.PI*2/segments;
+        const point=(u:number,v:number):V3=>[x+rx*Math.cos(v)*Math.cos(u),y+ry*Math.sin(v),z+rz*Math.cos(v)*Math.sin(u)];
+        const emit=(p:V3)=>this.vertex(p,normal([(p[0]-x)/rx**2,(p[1]-y)/ry**2,(p[2]-z)/rz**2]),color);
+        const a=point(u0,v0),b=point(u1,v0),c=point(u1,v1),d=point(u0,v1);
         emit(a);emit(b);emit(c);emit(a);emit(c);emit(d);
       }
     }
