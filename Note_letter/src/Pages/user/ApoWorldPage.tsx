@@ -24,7 +24,21 @@ export default function ApoWorldPage() {
   const [selected, setSelected] = useState<WorldLandmark | null>(null);
   const [visited, setVisited] = useState<string[]>([]);
   const [models, setModels] = useState<{loaded:number;total:number}|null>(null);
-  const [showHelp, setShowHelp] = useState(true);
+  // Small first-visit prompt; neither the help drawer nor the avatar picker
+  // should cover the 3D world unless the player explicitly opens them.
+  const [showHelp, setShowHelp] = useState(false);
+  const [showAvatars, setShowAvatars] = useState(false);
+  const [showIntro, setShowIntro] = useState(() => {
+    try { return localStorage.getItem('apo-world:onboarded:v1') !== 'yes'; }
+    catch { return true; }
+  });
+  const beginExploring = () => {
+    setShowIntro(false);
+    setShowHelp(false);
+    setShowAvatars(false);
+    try { localStorage.setItem('apo-world:onboarded:v1', 'yes'); } catch { /* storage optional */ }
+    canvasRef.current?.focus();
+  };
   const [avatar, setAvatar] = useState<WorldAvatar>(() => {
     try {
       const stored=localStorage.getItem('apo-world:avatar:v1');
@@ -65,6 +79,8 @@ export default function ApoWorldPage() {
   const interact = () => {
     worldRef.current?.interact();
     setShowHelp(false);
+    setShowAvatars(false);
+    setShowIntro(false);
   };
 
   return (
@@ -79,8 +95,8 @@ export default function ApoWorldPage() {
         </div>
         <div className="apo-top-actions">
           <span className="apo-solo"><span aria-hidden="true">●</span> Solo exploration</span>
-          <button type="button" aria-label="Choose character" title="Choose character" onClick={() => setShowHelp(true)}><Users size={19} /></button>
-          <button type="button" aria-label="How to play" title="How to play" onClick={() => setShowHelp(v => !v)}><HelpCircle size={19} /></button>
+          <button type="button" aria-label="Choose character" title="Choose character" onClick={() => { setShowIntro(false); setShowHelp(false); setShowAvatars(v=>!v); }}><Users size={19} /></button>
+          <button type="button" aria-label="How to play" title="How to play" onClick={() => { setShowIntro(false); setShowAvatars(false); setShowHelp(v=>!v); }}><HelpCircle size={19} /></button>
           <button type="button" aria-label="Return to start" title="Return to start" onClick={() => { worldRef.current?.reset(); setSelected(null); }}><RotateCcw size={18} /></button>
         </div>
       </header>
@@ -123,12 +139,27 @@ export default function ApoWorldPage() {
           <span className="apo-interact-sparkle" aria-hidden="true">✦</span>
         </button>}
 
-        {ready && showHelp && <aside className="apo-help-card" aria-label="How to play Apo Letter World">
-          <button type="button" aria-label="Close controls guide" onClick={() => setShowHelp(false)} className="apo-help-close"><X size={16} /></button>
-          <span className="apo-kicker">Your adventure begins here</span>
+        {ready && showIntro && !showHelp && !showAvatars && <aside className="apo-welcome-pill" aria-label="Welcome to Apo Letter World">
+          <span><strong>Explore Mt. Apo Village</strong><small>WASD to walk · Drag to look · E to interact</small></span>
+          <button type="button" onClick={beginExploring}>Start exploring <span aria-hidden="true">✦</span></button>
+        </aside>}
+
+        {ready && showHelp && <aside className="apo-help-card apo-compact-panel" aria-label="How to play Apo Letter World">
+          <button type="button" aria-label="Close controls guide" onClick={() => {setShowHelp(false);canvasRef.current?.focus();}} className="apo-help-close"><X size={16} /></button>
+          <span className="apo-kicker">Explore freely</span>
           <h1>Walk into a world of letters.</h1>
-          <p>Explore this real-time 3D village inspired by Mt. Apo. Discover places that connect to your existing letters.</p>
-          <div className="apo-avatar-heading">Choose your 3D character</div>
+          <p>Visit the Plaza, Post Office, Library, and village paths. Press E near a place to interact.</p>
+          <div className="apo-help-keys"><span>W A S D / Arrow keys</span><strong>Walk</strong></div>
+          <div className="apo-help-keys"><span>Drag / Swipe</span><strong>Look around</strong></div>
+          <div className="apo-help-keys"><span>E / Interact</span><strong>Visit place</strong></div>
+          <div className="apo-help-keys"><span>Shift / Space</span><strong>Run / Jump</strong></div>
+          <button type="button" className="apo-start-button" onClick={beginExploring}>Start exploring <span aria-hidden="true">✦</span></button>
+        </aside>}
+
+        {ready && showAvatars && <aside className="apo-help-card apo-compact-panel" aria-label="Choose your 3D character">
+          <button type="button" aria-label="Close character selection" onClick={() => {setShowAvatars(false);canvasRef.current?.focus();}} className="apo-help-close"><X size={16} /></button>
+          <span className="apo-kicker">Your adventure, your style</span>
+          <h2 className="apo-avatar-title">Choose your 3D character</h2>
           <div className="apo-avatar-picker" role="group" aria-label="Select 3D character model">
             {WORLD_AVATARS.map(option => <button
               key={option.id}
@@ -142,11 +173,7 @@ export default function ApoWorldPage() {
               <strong>{option.label}</strong>
             </button>)}
           </div>
-          <div className="apo-help-keys"><span>W A S D / Arrow keys</span><strong>Move · release to stop</strong></div>
-          <div className="apo-help-keys"><span>Drag / Swipe</span><strong>Look around</strong></div>
-          <div className="apo-help-keys"><span>E / Interact</span><strong>Visit a place</strong></div>
-          <div className="apo-help-keys"><span>Shift / Space</span><strong>Run / Jump</strong></div>
-          <button type="button" className="apo-start-button" onClick={() => { setShowHelp(false); canvasRef.current?.focus(); }}>Start exploring <span aria-hidden="true">✦</span></button>
+          <button type="button" className="apo-start-button" onClick={beginExploring}>Continue exploring <span aria-hidden="true">✦</span></button>
         </aside>}
 
         {selected && <aside className="apo-activity" aria-label="World location details">

@@ -1,6 +1,7 @@
 import { WORLD_LANDMARKS, groundHeight, type WorldAvatar, type WorldController, type WorldLandmark, type WorldMove } from './apoWorldEngine';
 import { APO_MODEL_ASSETS, type ApoAssetName } from './apoAssetCatalog';
 import { addApoLandscapeDetail } from './apoLandscapeDetail';
+import { buildApoVillageArt, SCENIC_COTTAGES } from './apoVillageArt';
 
 type Events={
   onNearby:(location:WorldLandmark|null)=>void;
@@ -10,7 +11,9 @@ type Events={
   onError:(error:string)=>void;
   onAssets?:(loaded:number,total:number)=>void;
   reduceMotion:boolean;
+  isCurrent?:()=>boolean;
 };
+let rendererSequence=0;
 
 type ModelRecord={object:any;mixer:any;clips:any[];activeAction:any;activeName:string};
 const clamp=(value:number,min:number,max:number)=>Math.max(min,Math.min(max,value));
@@ -29,11 +32,17 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
     // @ts-ignore Pinned MIT JavaScript vendor file without type declarations.
     import('../vendor/three/loaders/GLTFLoader.js'),
   ]);
+  if(events.isCurrent&&!events.isCurrent())throw Error('Apo World mount was superseded');
   const GLTFLoader=loaderModule.GLTFLoader;
   if(!GLTFLoader||!THREE.WebGLRenderer)throw Error('Three.js GLB renderer unavailable');
   let renderer:any;
-  try{renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'default'});}
+  // Antialiasing is a major cost on headless/software devices and small mobiles.
+  const reducedAntialias=Boolean(navigator.webdriver)||window.innerWidth<680;
+  try{renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:!reducedAntialias,powerPreference:'default'});}
   catch{throw Error('3D graphics could not start on this device');}
+  const rendererId=String(++rendererSequence);
+  canvas.dataset.apoRendererOwner=rendererId;
+  const ownsCanvas=()=>canvas.dataset.apoRendererOwner===rendererId;
   const scene=new THREE.Scene();
   // Transparent canvas reveals the atmospheric CSS sky instead of flat cyan.
   scene.background=null;
@@ -48,7 +57,7 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   const automated=Boolean(navigator.webdriver);
   const lowPower=software||automated||window.innerWidth<680||(navigator.hardwareConcurrency||8)<=4;
   const softwareProfile=software||automated;
-  renderer.setPixelRatio(softwareProfile?.72:lowPower?1.0:Math.min(window.devicePixelRatio||1,1.6));
+  renderer.setPixelRatio(softwareProfile?.52:lowPower?.9:Math.min(window.devicePixelRatio||1,1.5));
   renderer.outputEncoding=THREE.sRGBEncoding;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure=0.96;
@@ -179,6 +188,7 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   }
   const houses:[number,number,'post'|'library'][]=[[-17,-11,'post'],[17,-14,'library']];
   const houseFallbacks=houses.map(([hx,hz,style])=>fallbackHouse(hx,hz,style));
+  const scenicCottageCollisions:Array<[number,number]> = [];
   const forest:{name:'pine'|'canopy';group:any;position:[number,number];yaw:number}[]=[];
   let randomSeed=348915;
   const rand=()=>{randomSeed=(Math.imul(randomSeed,1664525)+1013904223)>>>0;return randomSeed/4294967296;};
@@ -216,6 +226,9 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   canvas.dataset.apoGrassCount=String(meadow.grassCount);
   canvas.dataset.apoFernCount=String(meadow.fernCount);
   canvas.dataset.apoStoneCount=String(meadow.rockCount);
+  // Keep first 3D frame fast: village embellishments are attached only
+  // after the first successful render, never during startup on software WebGL.
+  let villageArtFrame=0;
 
   // High-resolution continuous massif replaces the old repeated cone mountains.
   // Distinct broad ridges, ridgeline erosion and an uplifted summit create a
@@ -407,6 +420,20 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
       scene.remove(houseFallbacks[ix]);
       const [hx,hz]=houses[ix];
       pivot.position.set(hx,groundHeight(hx,hz),hz);scene.add(pivot);
+      // Additional authored stone/timber houses reuse the downloaded GLB
+      // hierarchy; no extra model requests or placeholder box houses.
+      const cottages=softwareProfile?[]:
+        SCENIC_COTTAGES.filter((_c,i)=>(name==='postOffice'?i<2:i>=2) && (!lowPower||i%2===0));
+      for(const cottage of cottages){
+        const copy=pivot.clone(true);
+        copy.position.set(cottage.x,groundHeight(cottage.x,cottage.z),cottage.z);
+        copy.rotation.y=cottage.rotation;
+        copy.scale.setScalar(cottage.scale);
+        copy.name='Apo scenic timber cottage';
+        scene.add(copy);
+        scenicCottageCollisions.push([cottage.x,cottage.z]);
+      }
+      canvas.dataset.apoScenicCottages=String(scenicCottageCollisions.length);
     }else if(name==='pine'||name==='canopy'){
       for(const tree of forest){
         if(tree.name!==name)continue;
@@ -435,8 +462,13 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   let ready=false,previousTime=0;
   const render=(time:number)=>{
     if(disposed)return;
+    if(!ownsCanvas()||(events.isCurrent&&!events.isCurrent())){
+      dispose();return;
+    }
     frame=window.requestAnimationFrame(render);
-    const interval=softwareProfile?1000/17:lowPower?1000/24:1000/42;
+    // Software rasterizers can block the DOM thread; 12 FPS is still enough
+    // to exercise controls and show a smooth-enough low-power fallback.
+    const interval=softwareProfile?1000/12:lowPower?1000/22:1000/40;
     if(previousTime&&time-previousTime<interval)return;
     const dt=Math.min(.05,(time-lastFrame)/1000||.016);
     lastFrame=time;previousTime=time;
@@ -451,7 +483,9 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
       const fx=Math.sin(orbit),fz=-Math.cos(orbit),sx=Math.cos(orbit),sz=Math.sin(orbit);
       const dx=(side*sx+f*fx)/mag,dz=(side*sz+f*fz)/mag;
       const speed=input('sprint')?7.4:4.4;
-      const blocked=(px:number,pz:number)=>houses.some(([bx,bz])=>Math.hypot(px-bx,pz-bz)<5.3);
+      const blocked=(px:number,pz:number)=>
+        houses.some(([bx,bz])=>Math.hypot(px-bx,pz-bz)<5.3) ||
+        scenicCottageCollisions.some(([bx,bz])=>Math.hypot(px-bx,pz-bz)<3.9);
       const nx=clamp(x+dx*speed*dt,-36,36),nz=clamp(z+dz*speed*dt,-33,32);
       if(!blocked(nx,z))x=nx;if(!blocked(x,nz))z=nz;
       avatarYaw=Math.atan2(-dx,-dz);
@@ -486,6 +520,17 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
     if(!ready){
       canvas.dataset.apoRenderer='three';
       ready=true;events.onReady();
+      villageArtFrame=window.requestAnimationFrame(()=>{
+        if(disposed)return;
+        try{
+          const detail=buildApoVillageArt(THREE,scene,{groundHeight,lowPower,softwareProfile});
+          canvas.dataset.apoVillageLanterns=String(detail.lanternCount);
+          canvas.dataset.apoVillageFlowers=String(detail.flowerCount);
+          canvas.dataset.apoVillageSignage='2';
+        }catch(error){
+          console.error('Apo World optional village art could not initialize',error);
+        }
+      });
     }
     const nearest=nearby();
     if(nearest?.id!==nearId){nearId=nearest?.id||null;events.onNearby(nearest);}
@@ -496,6 +541,7 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   const dispose=()=>{
     if(disposed)return;disposed=true;
     window.cancelAnimationFrame(frame);
+    window.cancelAnimationFrame(villageArtFrame);
     window.removeEventListener('keydown',keyDown);window.removeEventListener('keyup',keyUp);
     window.removeEventListener('blur',clearInput);window.removeEventListener('pagehide',clearInput);
     window.removeEventListener('contextmenu',clearInput,true);
@@ -526,11 +572,18 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
     for(const material of materialSet)material.dispose();
     for(const geometry of geometrySet)geometry.dispose();
     renderer.dispose();
-    delete canvas.dataset.apoRenderer;
-    delete canvas.dataset.apoPlayerModel;
-    delete canvas.dataset.apoGrassCount;
-    delete canvas.dataset.apoFernCount;
-    delete canvas.dataset.apoStoneCount;
+    if(ownsCanvas()){
+      delete canvas.dataset.apoRendererOwner;
+      delete canvas.dataset.apoRenderer;
+      delete canvas.dataset.apoPlayerModel;
+      delete canvas.dataset.apoGrassCount;
+      delete canvas.dataset.apoFernCount;
+      delete canvas.dataset.apoStoneCount;
+      delete canvas.dataset.apoVillageLanterns;
+      delete canvas.dataset.apoVillageFlowers;
+      delete canvas.dataset.apoVillageSignage;
+      delete canvas.dataset.apoScenicCottages;
+    }
   };
   return {
     setMove:(move,active)=>{buttons[move]=active;},

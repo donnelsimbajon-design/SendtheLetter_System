@@ -43,6 +43,34 @@
 .apo-interact-prompt small { margin-top:2px; font-size:10px; color:#778578; }
 .apo-interact-sparkle { color:#cb9452; font-size:25px; }
 .apo-help-card,.apo-activity { position:absolute; z-index:5; top:88px; right:clamp(12px,3vw,42px); width:min(350px,calc(100% - 24px)); max-height:calc(100% - 125px); overflow-y:auto; border:1px solid #efe0c8; border-radius:26px; background:rgba(255,250,240,.97); padding:22px; box-shadow:0 20px 58px #2c42343b; backdrop-filter:blur(16px); }
+/* Exploration-first HUD: the artwork fills the screen instead of a permanent
+   tutorial sidebar. These panels open only on explicit user actions. */
+.apo-welcome-pill { position:absolute; top:86px; right:18px; z-index:5;
+  display:flex; flex-direction:column; align-items:stretch; gap:11px;
+  width:min(290px,calc(100% - 36px)); padding:14px 16px;
+  border:1px solid rgba(236,225,205,.9); border-radius:19px;
+  background:rgba(255,250,240,.9); backdrop-filter:blur(12px);
+  box-shadow:0 12px 30px #20372922; }
+.apo-welcome-pill strong,.apo-welcome-pill small { display:block; }
+.apo-welcome-pill strong { font:700 16px Georgia,serif; color:#284a39; }
+.apo-welcome-pill small { font-size:10px; margin-top:4px; color:#597463; }
+.apo-welcome-pill button { border:0; border-radius:12px; padding:10px 13px;
+  background:#305342; color:white; font-size:12px; font-weight:750; cursor:pointer; }
+.apo-welcome-pill button:hover { background:#436c54; }
+.apo-help-card.apo-compact-panel { width:min(295px,calc(100% - 24px));
+  padding:17px; max-height:calc(100% - 115px); }
+.apo-compact-panel h1 { font-size:23px; }
+.apo-compact-panel p { font-size:12px; line-height:1.45; }
+.apo-avatar-title { margin:10px 0 16px; font:700 21px/1.15 Georgia,serif; color:#304c3e; }
+.apo-compact-panel .apo-avatar-option { min-height:74px; }
+.apo-compact-panel .apo-help-keys { padding:7px 0; }
+@media(max-width:680px) {
+  .apo-welcome-pill { top:72px; right:10px; padding:10px 12px;
+    width:min(240px,calc(100% - 20px)); }
+  .apo-welcome-pill strong { font-size:14px; }
+  .apo-welcome-pill small { font-size:9px; }
+  .apo-help-card.apo-compact-panel { top:73px; right:9px; padding:14px; }
+}
 .apo-help-close,.apo-activity-close { position:absolute; top:12px; right:12px; border:0; display:grid; place-items:center; width:30px; height:30px; border-radius:50%; color:#4b6253; background:#eae9dc; cursor:pointer; }
 .apo-kicker { color:#ae7c57; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:.13em; }
 .apo-help-card h1,.apo-activity h2 { margin:11px 0 9px; color:#304c3e; font:700 28px/1.12 Georgia,serif; }

@@ -81,6 +81,10 @@ test('3D village loads and offers real controls, landmarks and writing links', a
   // Grass and fern clusters must be actual GPU-instanced 3D geometry, not a backdrop.
   await expect.poll(async() => Number(await canvas.getAttribute('data-apo-grass-count'))).toBeGreaterThan(250);
   await expect.poll(async() => Number(await canvas.getAttribute('data-apo-fern-count'))).toBeGreaterThan(15);
+  // The approved village visual reference requires actual in-scene detail.
+  await expect(canvas).toHaveAttribute('data-apo-village-lanterns','8',{timeout:20000});
+  await expect.poll(async()=>Number(await canvas.getAttribute('data-apo-village-flowers'))).toBeGreaterThanOrEqual(24);
+  await expect(canvas).toHaveAttribute('data-apo-village-signage','2');
   // Save an actual WebGL frame, not an AI concept render, for manual art review.
   await expect(page.getByTestId('apo-model-status')).toContainText('3D assets active:',{timeout:35000});
   await expect(canvas).toHaveAttribute('data-apo-player-model','explorer',{timeout:35000});
@@ -130,15 +134,32 @@ test('W release and lost browser focus never leave the character moving forever'
 test('three original 3D avatar models can be selected and persist across reloads', async ({ page }) => {
   await signedIn(page);
   await page.goto('/world');
+  await expect(page.getByRole('complementary', { name: 'How to play Apo Letter World' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Choose character' }).click();
   const picker = page.getByRole('group', { name: 'Select 3D character model' });
   await expect(picker).toBeVisible();
   await picker.getByRole('button', { name: 'Highland Ranger' }).click();
   await expect(picker.getByRole('button', { name: 'Highland Ranger' })).toHaveAttribute('aria-pressed', 'true');
   expect(await page.evaluate(() => localStorage.getItem('apo-world:avatar:v1'))).toBe('ranger');
   await page.reload();
+  await page.getByRole('button', { name: 'Choose character' }).click();
   await expect(picker.getByRole('button', { name: 'Highland Ranger' })).toHaveAttribute('aria-pressed', 'true');
   await picker.getByRole('button', { name: 'Story Traveler' }).click();
   expect(await page.evaluate(() => localStorage.getItem('apo-world:avatar:v1'))).toBe('traveler');
+});
+
+test('world opens with a compact, dismissible welcome rather than a blocking tutorial', async ({page})=>{
+  await signedIn(page);
+  await page.goto('/world');
+  await expect(page.getByRole('complementary', { name: 'Welcome to Apo Letter World' })).toBeVisible({timeout:20000});
+  await expect(page.getByRole('complementary', { name: 'How to play Apo Letter World' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Start exploring' }).click();
+  await expect(page.getByRole('complementary', { name: 'Welcome to Apo Letter World' })).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem('apo-world:onboarded:v1'))).toBe('yes');
+  await page.reload();
+  await expect(page.getByRole('complementary', { name: 'Welcome to Apo Letter World' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'How to play' }).click();
+  await expect(page.getByRole('heading', { name: 'Walk into a world of letters.' })).toBeVisible();
 });
 
 test('mobile virtual controls keep 3D world within the viewport', async ({ page }, testInfo) => {
@@ -173,4 +194,19 @@ test('grass respects roads, Letter Plaza and house entrances',async({page})=>{
     };
   });
   expect(validity).toEqual({plaza:false,mainTrail:false,postOffice:false,library:false,forest:true});
+});
+
+test('reference-inspired cottages preserve the accessible central village layout', async ({ page }) => {
+  await page.goto('/try');
+  const result = await page.evaluate(async () => {
+    const {SCENIC_COTTAGES} = await import('/src/game/apoVillageArt.ts');
+    return SCENIC_COTTAGES.map(({x,z}) => ({x,z}));
+  });
+  expect(result).toHaveLength(4);
+  for(const cottage of result) {
+    expect(Math.abs(cottage.x)).toBeGreaterThan(25);
+    expect(Math.abs(cottage.x)).toBeLessThan(37);
+    expect(cottage.z).toBeGreaterThanOrEqual(-30);
+    expect(cottage.z).toBeLessThanOrEqual(10);
+  }
 });
