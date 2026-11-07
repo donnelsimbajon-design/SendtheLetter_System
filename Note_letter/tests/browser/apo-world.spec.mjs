@@ -81,6 +81,10 @@ test('3D village loads and offers real controls, landmarks and writing links', a
   // Grass and fern clusters must be actual GPU-instanced 3D geometry, not a backdrop.
   await expect.poll(async() => Number(await canvas.getAttribute('data-apo-grass-count'))).toBeGreaterThan(250);
   await expect.poll(async() => Number(await canvas.getAttribute('data-apo-fern-count'))).toBeGreaterThan(15);
+  // The approved village visual reference requires actual in-scene detail.
+  await expect(canvas).toHaveAttribute('data-apo-village-lanterns','8');
+  await expect.poll(async()=>Number(await canvas.getAttribute('data-apo-village-flowers'))).toBeGreaterThanOrEqual(48);
+  await expect(canvas).toHaveAttribute('data-apo-village-signage','2');
   // Save an actual WebGL frame, not an AI concept render, for manual art review.
   await expect(page.getByTestId('apo-model-status')).toContainText('3D assets active:',{timeout:35000});
   await expect(canvas).toHaveAttribute('data-apo-player-model','explorer',{timeout:35000});
@@ -173,4 +177,19 @@ test('grass respects roads, Letter Plaza and house entrances',async({page})=>{
     };
   });
   expect(validity).toEqual({plaza:false,mainTrail:false,postOffice:false,library:false,forest:true});
+});
+
+test('reference-inspired cottages preserve the accessible central village layout', async ({ page }) => {
+  await page.goto('/try');
+  const result = await page.evaluate(async () => {
+    const {SCENIC_COTTAGES} = await import('/src/game/apoVillageArt.ts');
+    return SCENIC_COTTAGES.map(({x,z}) => ({x,z}));
+  });
+  expect(result).toHaveLength(4);
+  for(const cottage of result) {
+    expect(Math.abs(cottage.x)).toBeGreaterThan(25);
+    expect(Math.abs(cottage.x)).toBeLessThan(37);
+    expect(cottage.z).toBeGreaterThanOrEqual(-30);
+    expect(cottage.z).toBeLessThanOrEqual(10);
+  }
 });
