@@ -148,8 +148,7 @@ export async function loadApoGlb(url:string,targetHeight:number,signal?:AbortSig
       if(indices.length>360_000)throw Error('Model exceeds triangle budget');
       for(let i=0;i<indices.length;i+=3){
         const ids=indices.slice(i,i+3);if(ids.length<3)break;
-        const p=ids.map(id=>point(transform,...positions[id]));
-        const edgeA=p.map(()=>0);void edgeA;
+        const p=ids.map(id=>point(transform,positions[id][0],positions[id][1],positions[id][2]));
         const ax=p[1][0]-p[0][0],ay=p[1][1]-p[0][1],az=p[1][2]-p[0][2];
         const bx=p[2][0]-p[0][0],by=p[2][1]-p[0][1],bz=p[2][2]-p[0][2];
         const face=normalize(ay*bz-az*by,az*bx-ax*bz,ax*by-ay*bx);
