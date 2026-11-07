@@ -11,7 +11,9 @@ type Events={
   onError:(error:string)=>void;
   onAssets?:(loaded:number,total:number)=>void;
   reduceMotion:boolean;
+  isCurrent?:()=>boolean;
 };
+let rendererSequence=0;
 
 type ModelRecord={object:any;mixer:any;clips:any[];activeAction:any;activeName:string};
 const clamp=(value:number,min:number,max:number)=>Math.max(min,Math.min(max,value));
@@ -30,6 +32,7 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
     // @ts-ignore Pinned MIT JavaScript vendor file without type declarations.
     import('../vendor/three/loaders/GLTFLoader.js'),
   ]);
+  if(events.isCurrent&&!events.isCurrent())throw Error('Apo World mount was superseded');
   const GLTFLoader=loaderModule.GLTFLoader;
   if(!GLTFLoader||!THREE.WebGLRenderer)throw Error('Three.js GLB renderer unavailable');
   let renderer:any;
@@ -37,6 +40,9 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   const reducedAntialias=Boolean(navigator.webdriver)||window.innerWidth<680;
   try{renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:!reducedAntialias,powerPreference:'default'});}
   catch{throw Error('3D graphics could not start on this device');}
+  const rendererId=String(++rendererSequence);
+  canvas.dataset.apoRendererOwner=rendererId;
+  const ownsCanvas=()=>canvas.dataset.apoRendererOwner===rendererId;
   const scene=new THREE.Scene();
   // Transparent canvas reveals the atmospheric CSS sky instead of flat cyan.
   scene.background=null;
@@ -456,6 +462,9 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   let ready=false,previousTime=0;
   const render=(time:number)=>{
     if(disposed)return;
+    if(!ownsCanvas()||(events.isCurrent&&!events.isCurrent())){
+      dispose();return;
+    }
     frame=window.requestAnimationFrame(render);
     // Software rasterizers can block the DOM thread; 12 FPS is still enough
     // to exercise controls and show a smooth-enough low-power fallback.
@@ -563,15 +572,18 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
     for(const material of materialSet)material.dispose();
     for(const geometry of geometrySet)geometry.dispose();
     renderer.dispose();
-    delete canvas.dataset.apoRenderer;
-    delete canvas.dataset.apoPlayerModel;
-    delete canvas.dataset.apoGrassCount;
-    delete canvas.dataset.apoFernCount;
-    delete canvas.dataset.apoStoneCount;
-    delete canvas.dataset.apoVillageLanterns;
-    delete canvas.dataset.apoVillageFlowers;
-    delete canvas.dataset.apoVillageSignage;
-    delete canvas.dataset.apoScenicCottages;
+    if(ownsCanvas()){
+      delete canvas.dataset.apoRendererOwner;
+      delete canvas.dataset.apoRenderer;
+      delete canvas.dataset.apoPlayerModel;
+      delete canvas.dataset.apoGrassCount;
+      delete canvas.dataset.apoFernCount;
+      delete canvas.dataset.apoStoneCount;
+      delete canvas.dataset.apoVillageLanterns;
+      delete canvas.dataset.apoVillageFlowers;
+      delete canvas.dataset.apoVillageSignage;
+      delete canvas.dataset.apoScenicCottages;
+    }
   };
   return {
     setMove:(move,active)=>{buttons[move]=active;},
