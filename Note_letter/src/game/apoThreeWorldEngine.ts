@@ -185,7 +185,9 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   const forestBudget=softwareProfile?6:lowPower?12:28;
   for(let i=0;i<forestBudget*2&&forest.length<forestBudget;i++){
     const tx=rand()*91-45,tz=rand()*83-43;
-    const kind: 'pine'|'canopy'=rand()<.73?'pine':'canopy';
+    // Low-power mode skips the canopy download, so use detailed imported pines
+    // rather than leaving spherical placeholder canopy trees on mobile.
+    const kind: 'pine'|'canopy'=lowPower?'pine':rand()<.73?'pine':'canopy';
     const yaw=rand()*Math.PI*2;
     if((Math.abs(tx)<11&&tz>-17)||Math.hypot(tx+17,tz+11)<12||
       Math.hypot(tx-17,tz+14)<12||Math.hypot(tx-14,tz+28)<10)continue;
