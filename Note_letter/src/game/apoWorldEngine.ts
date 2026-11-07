@@ -359,6 +359,53 @@ function villageStatic():Float32Array {
     if(Math.abs(x)<3&&z>2)continue;
     flower(m,x,z,[COLORS.white,COLORS.lavender,COLORS.rose,COLORS.gold][Math.floor(rand()*4)]);
   }
+  // Original sculpted environment assets: temperate broadleaf canopy, ferns,
+  // small granite outcrops, stone trails, timber benches and a forest pond.
+  for(let i=0;i<33;i++){
+    const x=rand()*91-45,z=rand()*81-43;
+    if(Math.abs(x)<11&&z>-20 || Math.hypot(x+17,z+11)<13 ||
+      Math.hypot(x-17,z+14)<14 || Math.hypot(x-14,z+28)<10)continue;
+    broadleaf(m,x,z,5.5+rand()*3.8,1.8+rand()*.85,i%9===0);
+  }
+  for(let i=0;i<65;i++){
+    const x=rand()*85-42,z=rand()*72-36;
+    if(Math.abs(x)<2.8&&z>2)continue;
+    fern(m,x,z,.7+rand()*.9);
+  }
+  for(let i=0;i<31;i++){
+    const x=rand()*86-43,z=rand()*81-40;
+    if(Math.abs(x)<3.5&&z>1)continue;
+    weatheredRock(m,x,z,.55+rand()*.72);
+  }
+  // Uneven cobblestones on the walkways, all real raised 3D stones.
+  for(let i=0;i<85;i++){
+    const z=29-rand()*27,x=(rand()-.5)*2.9;
+    const y=groundHeight(x,z);
+    m.ellipsoid(x,y+.024,z,.18+rand()*.20,.039,.20+rand()*.17,
+      mix(COLORS.stoneWarm,COLORS.dirtLight,rand()*.48),8,4);
+  }
+  // A shallow mountain pond and planted banks beside the distant trail.
+  const pondX=-29,pondZ=-34,pondY=groundHeight(pondX,pondZ)+.027;
+  for(let i=0;i<32;i++){
+    const a=i*Math.PI*2/32,b=(i+1)*Math.PI*2/32;
+    m.tri([pondX,pondY,pondZ],
+      [pondX+6*Math.cos(a),pondY,pondZ+3.7*Math.sin(a)],
+      [pondX+6*Math.cos(b),pondY,pondZ+3.7*Math.sin(b)],COLORS.lake);
+    m.ellipsoid(pondX+6.1*Math.cos(a),pondY+.04,pondZ+3.8*Math.sin(a),
+      .48,.19,.43,i%3===0?COLORS.stoneWarm:COLORS.moss,8,5);
+  }
+  for(const bx of [-8,8]){
+    const bz=13,by=groundHeight(bx,bz);
+    shadow(m,bx,bz,.94);
+    for(const sx of [-.72,.72]){
+      m.box(bx+sx,by+.50,bz,.12,.95,.82,COLORS.woodDark);
+      m.box(bx+sx,by+1.15,bz+.26,.10,.69,.13,COLORS.woodDark);
+    }
+    for(let slat=0;slat<3;slat++){
+      m.box(bx,by+1.01,bz-.24+slat*.23,1.85,.105,.16,COLORS.barkLight);
+      m.box(bx,by+1.36+slat*.20,bz+.30,1.85,.14,.10,COLORS.barkLight);
+    }
+  }
   // Hillside stones and small bushes, using smooth geometry rather than cube props.
   for(let i=0;i<50;i++){
     const x=rand()*86-43,z=rand()*79-39,y=groundHeight(x,z);
