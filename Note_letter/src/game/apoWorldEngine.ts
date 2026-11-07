@@ -499,17 +499,33 @@ attribute vec3 a_color;
 uniform mat4 u_view;
 uniform mat4 u_projection;
 uniform vec4 u_pose;
+uniform vec2 u_gait;
+uniform float u_character;
 varying vec3 v_color;
 varying float v_fog;
 void main(){
+  // GPU-driven leg/arm articulation while moving; zero deformation at rest.
+  vec3 local=a_position;
+  if(u_character>0.5){
+    float stride=sin(u_gait.x)*u_gait.y;
+    if(local.y<0.91 && abs(local.x)>0.10){
+      local.z+=sign(local.x)*stride*0.27*smoothstep(0.96,0.16,local.y);
+      local.y+=abs(stride)*0.045*(1.0-smoothstep(0.1,0.75,local.y));
+    }
+    if(local.y>0.78 && local.y<1.58 && abs(local.x)>0.43){
+      local.z-=sign(local.x)*stride*0.17;
+    }
+  }
   float s=sin(u_pose.w),c=cos(u_pose.w);
-  vec3 p=vec3(a_position.x*c-a_position.z*s,a_position.y,a_position.x*s+a_position.z*c)+u_pose.xyz;
+  vec3 p=vec3(local.x*c-local.z*s,local.y,local.x*s+local.z*c)+u_pose.xyz;
   vec3 n=normalize(vec3(a_normal.x*c-a_normal.z*s,a_normal.y,a_normal.x*s+a_normal.z*c));
   vec4 view=u_view*vec4(p,1.0);
   gl_Position=u_projection*view;
-  float light=0.66+0.43*max(0.0,dot(n,normalize(vec3(-0.45,0.85,0.48))));
-  v_color=clamp(a_color*light+vec3(0.025),0.0,1.0);
-  v_fog=clamp((-view.z-37.0)/129.0,0.0,0.83);
+  float lambert=max(0.0,dot(n,normalize(vec3(-0.47,0.91,0.36))));
+  float fill=max(0.0,dot(n,normalize(vec3(0.38,0.52,-0.68))));
+  float light=0.63+0.53*lambert+0.11*fill;
+  v_color=clamp(a_color*light+vec3(0.022,0.025,0.018),0.0,1.0);
+  v_fog=clamp((-view.z-54.0)/155.0,0.0,0.78);
 }`;
 const fragmentShader=String.raw`
 precision mediump float;
@@ -517,7 +533,7 @@ varying vec3 v_color;
 varying float v_fog;
 void main(){
   vec3 daylight=pow(v_color,vec3(0.96));
-  gl_FragColor=vec4(mix(daylight,vec3(0.72,0.83,0.87),v_fog),1.0);
+  gl_FragColor=vec4(mix(daylight,vec3(0.77,0.84,0.81),v_fog),1.0);
 }`;
 function compile(gl:WebGLRenderingContext,type:number,src:string):WebGLShader {
   const shader=gl.createShader(type);
@@ -569,6 +585,7 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
   // Attribute locations are queried only *after* the shader program is linked.
   let position=-1,normalAttr=-1,colorAttr=-1;
   let poseUniform:WebGLUniformLocation|null=null,viewUniform:WebGLUniformLocation|null=null,projectionUniform:WebGLUniformLocation|null=null;
+  let gaitUniform:WebGLUniformLocation|null=null,characterUniform:WebGLUniformLocation|null=null;
   let world:GPUBuffer,player:GPUBuffer,alexis:GPUBuffer,iver:GPUBuffer;
   try {
     const vs=compile(gl,gl.VERTEX_SHADER,vertexShader);
@@ -585,6 +602,8 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
     poseUniform=gl.getUniformLocation(program,'u_pose');
     viewUniform=gl.getUniformLocation(program,'u_view');
     projectionUniform=gl.getUniformLocation(program,'u_projection');
+    gaitUniform=gl.getUniformLocation(program,'u_gait');
+    characterUniform=gl.getUniformLocation(program,'u_character');
     world=createGPU(gl,villageStatic());
     player=createGPU(gl,characterMesh('player'));
     alexis=createGPU(gl,characterMesh('alexis'));
@@ -598,12 +617,14 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
     events.onError('We could not start this 3D world. Please try again with WebGL enabled.');
     return {setMove:()=>{},jump:()=>{},interact:()=>events.onInteract(null),reset:()=>{},dispose:()=>{}};
   }
-  const draw=(mesh:GPUBuffer,pose:[number,number,number,number])=>{
+  const draw=(mesh:GPUBuffer,pose:[number,number,number,number],gait:[number,number]=[0,0])=>{
     gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);
     gl.vertexAttribPointer(position,3,gl.FLOAT,false,36,0);gl.enableVertexAttribArray(position);
     gl.vertexAttribPointer(normalAttr,3,gl.FLOAT,false,36,12);gl.enableVertexAttribArray(normalAttr);
     gl.vertexAttribPointer(colorAttr,3,gl.FLOAT,false,36,24);gl.enableVertexAttribArray(colorAttr);
     gl.uniform4f(poseUniform,pose[0],pose[1],pose[2],pose[3]);
+    gl.uniform2f(gaitUniform,gait[0],gait[1]);
+    gl.uniform1f(characterUniform,gait[1]>0?1:0);
     gl.drawArrays(gl.TRIANGLES,0,mesh.count);
   };
   const resize=()=>{
