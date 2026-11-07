@@ -21,7 +21,7 @@ This is *not* a photorealistic Unreal-like renderer. Three.js supports PBR mater
 Source files:
 - `Note_letter/src/game/apoThreeWorldEngine.ts`: enhanced Three.js renderer, GLTFLoader, PBR materials, skinned animation, lighting and world models.
 - `Note_letter/src/game/apoWorldEntry.ts`: lazy enhanced-engine entry with legacy WebGL fallback.
-- `Note_letter/public/vendor/three/`: pinned MIT Three.js runtime and glTF loader.
+- `Note_letter/src/vendor/three/`: pinned MIT Three.js runtime and glTF loader.
 - `Note_letter/src/game/apoGlbLoader.ts`: legacy WebGL1-compatible minimal GLB geometry parser (fallback).
 - `Note_letter/src/game/apoAssetCatalog.ts`: curated GLB sources and scale targets.
 - `Note_letter/src/game/apoWorldEngine.ts`: responsive rendering, terrain, collisions, camera, fallback models and replacement of model instances.
@@ -63,3 +63,5 @@ References:
 ## Next production-quality milestone
 
 The Three.js PBR renderer, authored GLB textures and native skeletal AnimationMixer are now integrated without expanding the frontend npm lockfile. Next vendor the optimized GLB assets under same-origin URLs, improve authored highland terrain, add streaming LOD/occlusion and performance telemetry, consider moving the vendored runtime to an audited npm-managed @react-three/fiber + drei implementation, and author collision meshes. A cinematic concept image alone cannot substitute for these actual 3D deliverables.
+
+**Terrain rendering update:** The Three.js scene now sculpts a continuous, mountain-scale elevation mesh with ridges and summit color blending, rather than repeating cone silhouettes. All game terrain and mountains remain geometrical 3D surfaces.

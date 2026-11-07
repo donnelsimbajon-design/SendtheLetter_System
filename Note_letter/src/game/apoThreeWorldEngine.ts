@@ -197,20 +197,40 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
       plant.position.set(xx,y+.2,zz);scene.add(plant);
     }
   }
-  // Mt. Apo-inspired massif, separate from playable terrain.
-  const mountainMat=material(0x607e77);
-  for(const [mx,mz,mr,mh] of [[-48,-115,49,47],[5,-126,62,60],[58,-125,53,49]]){
-    const geom=new THREE.ConeGeometry(mr,mh,48,11);
-    const p=geom.attributes.position;
-    for(let i=0;i<p.count;i++){
-      const height=p.getY(i),wobble=Math.sin(p.getX(i)*.092+p.getZ(i)*.15)*3+
-        Math.sin(p.getZ(i)*.06+p.getX(i)*.036)*2;
-      p.setY(i,height+wobble);
-    }
-    geom.computeVertexNormals();
-    const peak=new THREE.Mesh(geom,mountainMat);peak.position.set(mx,mh*.44,mz);
-    peak.receiveShadow=true;scene.add(peak);
+  // High-resolution continuous massif replaces the old repeated cone mountains.
+  // Distinct broad ridges, ridgeline erosion and an uplifted summit create a
+  // Mt. Apo-inspired highland silhouette without any image-plane backdrop.
+  const massifGeo=new THREE.PlaneGeometry(250,128,112,56);
+  massifGeo.rotateX(-Math.PI/2);
+  const mountains=massifGeo.attributes.position, mountainTint:number[]=[];
+  const valleyGreen=new THREE.Color(0x365c4a);
+  const mountainSlate=new THREE.Color(0x71827d);
+  const summitStone=new THREE.Color(0xa5a399);
+  const bell=(x:number,z:number,cx:number,cz:number,rx:number,rz:number,h:number)=>{
+    const dx=(x-cx)/rx,dz=(z-cz)/rz;
+    return h*Math.exp(-.65*(dx*dx+dz*dz));
+  };
+  for(let i=0;i<mountains.count;i++){
+    const mx=mountains.getX(i),mz=mountains.getZ(i)-127;
+    const near=clamp((-mz-65)/40,0,1);
+    const shoulder=near*near*(3-2*near);
+    const peaks=bell(mx,mz,-58,-139,48,48,45)
+      +bell(mx,mz,2,-146,51,52,71)+bell(mx,mz,64,-137,50,51,51)
+      +bell(mx,mz,19,-170,63,37,24);
+    const ridges=(Math.sin(mx*.14+mz*.067)*3.8+
+      Math.cos(mx*.28-mz*.095)*2.0+Math.sin(mx*.41+mz*.33)*1.1);
+    const elevation=Math.max(0,(peaks+ridges)*shoulder);
+    mountains.setY(i,elevation);
+    const color=valleyGreen.clone().lerp(mountainSlate,clamp((elevation-10)/36,0,1))
+      .lerp(summitStone,clamp((elevation-48)/32,0,1));
+    mountainTint.push(color.r,color.g,color.b);
   }
+  massifGeo.setAttribute('color',new THREE.Float32BufferAttribute(mountainTint,3));
+  massifGeo.computeVertexNormals();
+  const massif=new THREE.Mesh(massifGeo,new THREE.MeshStandardMaterial({
+    vertexColors:true,roughness:1,metalness:0,side:THREE.DoubleSide
+  }));
+  massif.receiveShadow=true;scene.add(massif);
 
   const playerAnchor=new THREE.Group();scene.add(playerAnchor);
   const defaultOutfit=material(0x49604b);
