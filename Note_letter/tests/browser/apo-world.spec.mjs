@@ -58,7 +58,7 @@ test('signing in from the protected world returns to the actual 3D scene', async
   await expect(page.getByTestId('apo-3d-canvas')).toBeVisible();
 });
 
-test('3D village loads and offers real controls, landmarks and writing links', async ({ page }) => {
+test('3D village loads and offers real controls, landmarks and writing links', async ({ page }, testInfo) => {
   // Software WebGL on shared CI runners can initialize more slowly than hardware GPUs.
   test.setTimeout(75_000);
   await signedIn(page);
@@ -67,8 +67,23 @@ test('3D village loads and offers real controls, landmarks and writing links', a
   await expect(canvas).toBeVisible();
   // On CI Chromium SwiftShader provides WebGL; failure must be visible, not a fake 2D screenshot.
   await expect(page.getByText('Mt. Apo-inspired Highlands')).toBeVisible({ timeout: 15000 });
-  expect(await canvas.evaluate(el => Boolean(el.getContext('webgl')))).toBeTruthy();
+  // A silent switch to the old white-tree/T-pose renderer is not an acceptable pass.
+  await expect.poll(async()=>{
+    const status=await canvas.evaluate(el=>({
+      active:el.getAttribute('data-apo-renderer'),
+      bootError:el.getAttribute('data-apo-boot-error'),
+      renderError:el.getAttribute('data-apo-render-error')
+    }));
+    if(status.bootError||status.renderError)throw Error('Enhanced 3D runtime: '+(status.bootError||status.renderError));
+    return status.active;
+  },{timeout:20000}).toBe('three');
+  expect(await canvas.evaluate(el => Boolean(el.getContext('webgl2') || el.getContext('webgl')))).toBeTruthy();
+  // Save an actual WebGL frame, not an AI concept render, for manual art review.
+  await expect(page.getByTestId('apo-model-status')).toContainText('3D assets active:',{timeout:35000});
+  await expect(canvas).toHaveAttribute('data-apo-player-model','explorer',{timeout:35000});
   await page.getByRole('button', { name: 'Start exploring' }).click();
+  // Capture the unobstructed 3D terrain on each viewport (not just the tutorial modal).
+  await page.screenshot({path:`test-results/apo-three-world-${testInfo.project.name}.png`});
   const before = await page.getByTestId('world-position').textContent();
   await page.keyboard.down('w');
   await page.waitForTimeout(650);

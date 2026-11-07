@@ -4,6 +4,9 @@
  * authenticated letters/messages are accessed by navigation, never copied here.
  * Draw-call-light geometry and no runtime third-party or remote asset downloads.
  */
+import { loadApoGlb } from './apoGlbLoader';
+import { APO_MODEL_ASSETS, type ApoAssetName } from './apoAssetCatalog';
+
 export type WorldMove = 'forward' | 'back' | 'left' | 'right' | 'sprint';
 export type WorldAvatar = 'explorer' | 'ranger' | 'traveler';
 export const WORLD_AVATARS: { id: WorldAvatar; label: string; description: string }[] = [
@@ -48,12 +51,13 @@ type WorldEvents = {
   onPosition: (position: { x: number; z: number }) => void;
   onReady: () => void;
   onError: (message: string) => void;
+  onAssets?: (loaded: number, total: number) => void;
   reduceMotion: boolean;
 };
 
 const COLORS: Record<string, RGB> = {
-  meadow: [0.39, 0.64, 0.39], leaf: [0.22, 0.47, 0.32],
-  pine: [0.13, 0.34, 0.29], mint: [0.36, 0.61, 0.43],
+  meadow: [0.33, 0.54, 0.36], leaf: [0.20, 0.42, 0.29],
+  pine: [0.14, 0.32, 0.25], mint: [0.40, 0.58, 0.39],
   bark: [0.43, 0.31, 0.22], barkLight: [0.56, 0.39, 0.26],
   dirt: [0.75, 0.62, 0.43], dirtLight: [0.86, 0.75, 0.56],
   cream: [0.95, 0.86, 0.69], paper: [0.99, 0.94, 0.81],
@@ -87,10 +91,15 @@ const normal = (v: V3): V3 => { const d = len(v) || 1; return [v[0]/d, v[1]/d, v
 const smooth = (t: number) => t*t*(3-2*t);
 
 export function groundHeight(x: number, z: number): number {
-  const edge = smooth(clamp((Math.abs(x) - 19) / 28, 0, 1)) * 5.1;
-  const distance = smooth(clamp((-z - 16) / 29, 0, 1)) * 4.5;
-  return 0.12 * Math.sin(x * 0.32) * Math.cos(z * 0.26) +
-    0.075 * Math.sin(x * 0.81 + z * 0.55) + edge + distance;
+  // Protect the accessible plaza and walking paths while the highland perimeter
+  // gains the wide, varied slopes seen in Mt. Apo's forested foothills.
+  const rim=smooth(clamp((Math.hypot(x*.75,(z+1)*.58)-12)/27,0,1));
+  const left=smooth(clamp((Math.abs(x)-19)/28,0,1))*6.1;
+  const north=smooth(clamp((-z-16)/29,0,1))*6.5;
+  const ridges=(Math.sin(x*.19+z*.07)*Math.cos(z*.16)+
+    .55*Math.sin(x*.42-z*.23)+.26*Math.sin(x*.86+z*.43))*rim*1.20;
+  const local=.10*Math.sin(x*.32)*Math.cos(z*.26)+.055*Math.sin(x*.81+z*.55);
+  return left+north+ridges+local;
 }
 
 class Mesh {
@@ -158,13 +167,15 @@ class Mesh {
     }
   }
   terrain(size=50,depth=49) {
-    const steps=88;
+    const steps=112;
     for(let i=0;i<steps;i++)for(let j=0;j<steps;j++){
       const x0=-size+i*size*2/steps,x1=-size+(i+1)*size*2/steps;
       const z0=-depth+j*depth*2/steps,z1=-depth+(j+1)*depth*2/steps;
       const at=(x:number,z:number):V3=>[x,groundHeight(x,z)-.13,z];
-      const shade=.1*Math.sin(x0*.41+z0*.25)+.06*Math.sin(z0*.9);
-      const c=mix(COLORS.meadow,COLORS.mint,clamp(.4+shade,0,1));
+      const grain=.10*Math.sin(x0*.41+z0*.25)+.06*Math.sin(z0*.9)+
+        .055*Math.sin(x0*2.12-z0*1.79);
+      const grass=clamp(.34+grain+Math.max(0,groundHeight(x0,z0)-1.8)*.027,0,1);
+      const c=mix(COLORS.meadow,COLORS.mint,grass);
       // Upward-facing terrain normals are essential for correct sun lighting.
       this.tri(at(x0,z0),at(x1,z1),at(x1,z0),c);
       this.tri(at(x0,z0),at(x0,z1),at(x1,z1),c);
@@ -314,7 +325,7 @@ function mailbox(mesh:Mesh,x:number,z:number) {
   mesh.box(x,y+1.78,z+.29,.51,.11,.05,COLORS.paper);
   roof(mesh,x,y+1.96,z,.85,.59,.22,COLORS.roofAlt);
 }
-function villageStatic():Float32Array {
+function villageStatic(useRealTrees=false,useRealBuildings=false):Float32Array {
   const m=new Mesh();
   const rand=seeded(4924);
   m.terrain();
@@ -343,8 +354,10 @@ function villageStatic():Float32Array {
   m.cylinder(0,plazaY+.72,9.5,1.04,.31,COLORS.gold,18);
   m.box(0,plazaY+1.5,9.5,1.5,1,.18,COLORS.paper);
   m.box(0,plazaY+1.5,9.63,.22,.20,.06,COLORS.rose);
-  house(m,-17,-11,9.1,7,5.4,'post');
-  house(m,17,-14,9.4,7.4,5.7,'library');
+  if(!useRealBuildings){
+    house(m,-17,-11,9.1,7,5.4,'post');
+    house(m,17,-14,9.4,7.4,5.7,'library');
+  }
   house(m,27,-27,6,5,3.7,'cabin');
   house(m,-27,-22,6.7,5.6,3.8,'cabin');
   for(const [x,z] of [[-14,-6],[14,-10],[12,-24],[-7,3],[8,3],[-19,-22],[3,-33]]) mailbox(m,x,z);
@@ -352,7 +365,7 @@ function villageStatic():Float32Array {
     const x=rand()*92-46,z=rand()*82-44;
     if(Math.abs(x)<9&&z>-16 || Math.hypot(x+17,z+11)<10 || Math.hypot(x-17,z+14)<11 ||
       Math.hypot(x-14,z+28)<9 || Math.hypot(x+27,z+22)<9)continue;
-    pine(m,x,z,4.5+rand()*6.7,1.3+rand()*1.4);
+    if(!useRealTrees)pine(m,x,z,4.5+rand()*6.7,1.3+rand()*1.4);
   }
   for(let i=0;i<95;i++){
     const x=rand()*79-40,z=rand()*65-35;
@@ -365,7 +378,7 @@ function villageStatic():Float32Array {
     const x=rand()*91-45,z=rand()*81-43;
     if(Math.abs(x)<11&&z>-20 || Math.hypot(x+17,z+11)<13 ||
       Math.hypot(x-17,z+14)<14 || Math.hypot(x-14,z+28)<10)continue;
-    broadleaf(m,x,z,5.5+rand()*3.8,1.8+rand()*.85,i%9===0);
+    if(!useRealTrees)broadleaf(m,x,z,5.5+rand()*3.8,1.8+rand()*.85,i%9===0);
   }
   for(let i=0;i<65;i++){
     const x=rand()*85-42,z=rand()*72-36;
@@ -573,6 +586,7 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
   const keyboardMoves=emptyMoves(),touchMoves=emptyMoves(),moves=emptyMoves();
   const keyActivity:Record<WorldMove,number>={forward:0,back:0,left:0,right:0,sprint:0};
   let disposed=false,frame=0,last=0,lastPositionUpdate=0,ready=false;
+  let lastRendered=0;
   let x=0,z=18,avatarYaw=0,orbit=0,distance=8.9,jumpHeight=0,jumpSpeed=0;
   let chosenAvatar:WorldAvatar='explorer',stridePhase=0,strideBlend=0;
   let nearId:WorldLandmark['id']|null=null;
@@ -590,6 +604,22 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
   let poseUniform:WebGLUniformLocation|null=null,viewUniform:WebGLUniformLocation|null=null,projectionUniform:WebGLUniformLocation|null=null;
   let gaitUniform:WebGLUniformLocation|null=null,characterUniform:WebGLUniformLocation|null=null;
   let world:GPUBuffer,players:Record<WorldAvatar,GPUBuffer>,alexis:GPUBuffer,iver:GPUBuffer,postmaster:GPUBuffer,hiker:GPUBuffer;
+  let detailedWorld:GPUBuffer|null=null;
+  const realModels:Partial<Record<ApoAssetName,GPUBuffer>>={};
+  const assetAbort=new AbortController();
+  const forestPositions:{x:number;z:number;kind:'pine'|'canopy';yaw:number}[]=[];
+  const forestRandom=seeded(77342);
+  // Keep imported GLBs sparse enough for software GPUs and low-end Android:
+  // 3D forests need natural spacing, not dozens of costly identical draw calls.
+  const treeBudget=window.innerWidth<680?21:34;
+  for(let i=0;i<treeBudget;i++){
+    const px=forestRandom()*94-47,pz=forestRandom()*82-44;
+    const kind=forestRandom()>.65?'canopy':'pine';
+    const yaw=forestRandom()*Math.PI*2;
+    if((Math.abs(px)<10&&pz>-18) || Math.hypot(px+17,pz+11)<11 ||
+      Math.hypot(px-17,pz+14)<11 || Math.hypot(px-14,pz+28)<8)continue;
+    forestPositions.push({x:px,z:pz,kind,yaw});
+  }
   try {
     const vs=compile(gl,gl.VERTEX_SHADER,vertexShader);
     const fs=compile(gl,gl.FRAGMENT_SHADER,fragmentShader);
@@ -626,6 +656,38 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
     events.onError('We could not start this 3D world. Please try again with WebGL enabled.');
     return {setMove:()=>{},setAvatar:()=>{},jump:()=>{},interact:()=>events.onInteract(null),reset:()=>{},dispose:()=>{}};
   }
+  // Load GLB assets in parallel, never blocking first playable frame.
+  // Temporary fallback models remain in GPU memory until the route is disposed.
+  // An individual unavailable CDN asset cannot prevent exploration.
+  const allAssets=(Object.keys(APO_MODEL_ASSETS) as ApoAssetName[]);
+  const requestedAssets=window.innerWidth<680
+    ? allAssets.filter(name=>name!=='alexis'&&name!=='iver'&&name!=='canopy')
+    : allAssets;
+  void Promise.allSettled(requestedAssets.map(async name=>{
+    const asset=APO_MODEL_ASSETS[name];
+    const geometry=await loadApoGlb(asset.url,asset.height,assetAbort.signal);
+    return {name,geometry};
+  })).then(results=>{
+    if(disposed)return;
+    let imported=0;
+    for(const result of results){
+      if(result.status!=='fulfilled')continue;
+      try{
+        const {name,geometry}=result.value;
+        const gpu=createGPU(gl,geometry);
+        realModels[name]=gpu;buffers.push(gpu);imported++;
+      }catch{/* Failure is restricted to this model only. */}
+    }
+    const hasForest=!!(realModels.pine||realModels.canopy);
+    const hasVillage=!!(realModels.postOffice&&realModels.library);
+    if(hasForest||hasVillage){
+      try{
+        detailedWorld=createGPU(gl,villageStatic(hasForest,hasVillage));
+        buffers.push(detailedWorld);
+      }catch{/* Keep the existing complete world as fallback. */}
+    }
+    events.onAssets?.(imported,requestedAssets.length);
+  });
   const draw=(mesh:GPUBuffer,pose:[number,number,number,number],gait:[number,number]=[0,0])=>{
     gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);
     gl.vertexAttribPointer(position,3,gl.FLOAT,false,36,0);gl.enableVertexAttribArray(position);
@@ -709,6 +771,14 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
   resize();
   const render=(time:number)=>{
     if(disposed)return;
+    // Frame pacing helps the CPU-driven WebGL1 renderer stay responsive while
+    // imported GLB geometry is on screen; controls still update each visible frame.
+    const frameInterval=window.innerWidth<680?1000/30:1000/40;
+    if(lastRendered && time-lastRendered<frameInterval){
+      frame=window.requestAnimationFrame(render);
+      return;
+    }
+    lastRendered=time;
     const dt=Math.min(.05,(time-last)/1000||.016);last=time;
     if(!document.hidden){
       // Keyboard auto-repeat normally refreshes this watchdog; a missed keyup
@@ -743,15 +813,25 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
       gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
       gl.uniformMatrix4fv(viewUniform,false,lookAt([eyeX,eyeY,eyeZ],target));
       gl.uniformMatrix4fv(projectionUniform,false,perspective(Math.PI/3.25,canvas.width/Math.max(canvas.height,1),.12,260));
-      draw(world,[0,0,0,0]);
-      draw(alexis,[-5,groundHeight(-5,3),3,Math.PI],[time*.0017,.07]);
-      draw(iver,[6,groundHeight(6,1),1,Math.PI],[time*.0016,.06]);
+      draw(detailedWorld||world,[0,0,0,0]);
+      if(detailedWorld&&(realModels.pine||realModels.canopy)){
+        for(const tree of forestPositions){
+          const model=realModels[tree.kind]||realModels.pine||realModels.canopy;
+          if(model)draw(model,[tree.x,groundHeight(tree.x,tree.z),tree.z,tree.yaw]);
+        }
+      }
+      if(detailedWorld&&realModels.postOffice&&realModels.library){
+        draw(realModels.postOffice,[-17,groundHeight(-17,-11),-11,Math.PI]);
+        draw(realModels.library,[17,groundHeight(17,-14),-14,Math.PI]);
+      }
+      draw(realModels.alexis||alexis,[-5,groundHeight(-5,3),3,Math.PI],[time*.0017,.07]);
+      draw(realModels.iver||iver,[6,groundHeight(6,1),1,Math.PI],[time*.0016,.06]);
       draw(postmaster,[-10,groundHeight(-10,-5),-5,Math.PI*.91],[time*.0014,.045]);
       draw(hiker,[11,groundHeight(11,-3),-3,Math.PI*1.12],[time*.0019,.05]);
       strideBlend=events.reduceMotion?0:clamp(strideBlend+(mag?dt*6:-dt*10),0,1);
       if(mag>0)stridePhase+=dt*(moves.sprint?14.3:10.3);
       const bob=events.reduceMotion?0:strideBlend*Math.abs(Math.sin(stridePhase))*.055;
-      draw(players[chosenAvatar],[x,groundHeight(x,z)+jumpHeight+bob,z,avatarYaw],[stridePhase,strideBlend]);
+      draw(realModels[chosenAvatar]||players[chosenAvatar],[x,groundHeight(x,z)+jumpHeight+bob,z,avatarYaw],[stridePhase,strideBlend]);
       if(!ready){ready=true;events.onReady();}
       const location=closest();
       if(location?.id!==nearId){nearId=location?.id||null;events.onNearby(location);}
@@ -765,6 +845,7 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
   const reset=()=>{x=0;z=18;orbit=0;avatarYaw=0;strideBlend=0;jumpHeight=0;jumpSpeed=0;clearMovement();};
   const dispose=()=>{
     if(disposed)return;disposed=true;
+    assetAbort.abort();
     window.cancelAnimationFrame(frame);
     window.removeEventListener('keydown',keyDown);window.removeEventListener('keyup',keyUp);window.removeEventListener('blur',clearMovement);
     window.removeEventListener('pagehide',onPageHide);

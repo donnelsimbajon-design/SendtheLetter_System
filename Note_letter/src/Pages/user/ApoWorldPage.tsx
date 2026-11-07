@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Compass, Footprints, Gamepad2, HelpCircle, MapPin, RotateCcw, Sparkles, Users, X } from 'lucide-react';
 import { useWriterPreferences } from '../../store/writerPreferences';
-import { startApoWorld, WORLD_AVATARS, WORLD_LANDMARKS, type WorldAvatar, type WorldController, type WorldLandmark, type WorldMove } from '../../game/apoWorldEngine';
+import { startApoWorld } from '../../game/apoWorldEntry';
+import { WORLD_AVATARS, WORLD_LANDMARKS, type WorldAvatar, type WorldController, type WorldLandmark, type WorldMove } from '../../game/apoWorldEngine';
 import '../../apoWorld.css';
 
 const CONTROL_KEYS: { move: WorldMove; label: string; icon: string }[] = [
@@ -22,6 +23,7 @@ export default function ApoWorldPage() {
   const [location, setLocation] = useState({ x: 0, z: 18 });
   const [selected, setSelected] = useState<WorldLandmark | null>(null);
   const [visited, setVisited] = useState<string[]>([]);
+  const [models, setModels] = useState<{loaded:number;total:number}|null>(null);
   const [showHelp, setShowHelp] = useState(true);
   const [avatar, setAvatar] = useState<WorldAvatar>(() => {
     try {
@@ -38,9 +40,11 @@ export default function ApoWorldPage() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    setModels(null);
     const controller = startApoWorld(canvas, {
       reduceMotion,
       onReady: () => setReady(true),
+      onAssets: (loaded,total) => setModels({loaded,total}),
       onError: message => { setReady(false); setError(message); },
       onPosition: setLocation,
       onNearby: setNearby,
@@ -101,7 +105,7 @@ export default function ApoWorldPage() {
         {ready && <div className="apo-world-hud">
           <div className="apo-hud-place">
             <span className="apo-hud-icon"><Compass size={20} aria-hidden="true" /></span>
-            <span><strong>Mt. Apo-inspired Highlands</strong><small>Letter Plaza · Mountain Village</small></span>
+            <span><strong>Mt. Apo-inspired Highlands</strong><small>Letter Plaza · Mountain Village</small><small className="apo-model-status" data-testid="apo-model-status">{!models ? 'Loading detailed GLB models…' : models.loaded>0 ? `3D assets active: ${models.loaded}/${models.total}` : 'Offline 3D fallback active'}</small></span>
           </div>
           <div className="apo-hud-progress" aria-label={'Discovered ' + visited.length + ' of ' + WORLD_LANDMARKS.length + ' places'}>
             <span className="apo-hud-progress-label"><MapPin size={14} aria-hidden="true" /> Places discovered</span>
