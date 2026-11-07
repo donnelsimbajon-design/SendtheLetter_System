@@ -174,17 +174,9 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   const forest:{name:'pine'|'canopy';group:any;position:[number,number];yaw:number}[]=[];
   let randomSeed=348915;
   const rand=()=>{randomSeed=(Math.imul(randomSeed,1664525)+1013904223)>>>0;return randomSeed/4294967296;};
-  const forestBudget=softwareProfile?10:lowPower?14:36;
-  const featuredTrees:Array<[number,number,'pine'|'canopy']>=[
-    [-13,6,'canopy'],[14,6,'pine'],[-25,1,'pine'],[25,2,'canopy'],
-    [-9,-25,'pine'],[9,-28,'canopy']
-  ];
-  for(const [tx,tz,kind] of featuredTrees){
-    if(forest.length>=forestBudget)break;
-    const group=fallbackTree(tx,tz,forest.length+6,kind==='canopy');
-    scene.add(group); // duplicate-safe: add() is idempotent for the same parent.
-    forest.push({name:kind,group,position:[tx,tz],yaw:(forest.length*.73)%6.28});
-  }
+  // Keep a strict model draw-call budget in low-power / software WebGL.
+  // Extra dense forest layers are reserved for an instanced/LOD renderer.
+  const forestBudget=softwareProfile?6:lowPower?12:28;
   for(let i=0;i<forestBudget*2&&forest.length<forestBudget;i++){
     const tx=rand()*91-45,tz=rand()*83-43;
     const kind: 'pine'|'canopy'=rand()<.73?'pine':'canopy';
@@ -351,9 +343,8 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   const modelLoads=(Object.keys(APO_MODEL_ASSETS) as ApoAssetName[]);
   // Even on mobile, NPCs must use authored characters rather than primitive cylinders.
   // Keep one canopy variant optional to constrain texture downloads on low-memory devices.
-  // Always load both kinds of foliage; otherwise untextured fallback lollipop
-  // trees can remain visible next to detailed imported models.
-  const allowed=modelLoads;
+  // Mobile devices prioritize pine foliage; avoid loading all texture variants.
+  const allowed=lowPower?modelLoads.filter(n=>n!=='canopy'):modelLoads;
   const priority:ApoAssetName[]=['explorer','postOffice','pine','alexis','iver','library','ranger','traveler','canopy'];
   const toLoad=priority.filter(name=>allowed.includes(name));
   const loaded=new Set<ApoAssetName>();
