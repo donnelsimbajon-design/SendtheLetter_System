@@ -14,6 +14,6 @@ export const APO_MODEL_ASSETS:Record<ApoAssetName,{url:string;height:number;orig
   iver:{url:source('Ultimate Modular Men Pack-glb','Casual Character.glb'),height:2.45,origin:'Quaternius — Ultimate Modular Men (CC0)'},
   pine:{url:'https://raw.githubusercontent.com/anshaneja5/skyline-run/0c41526d8d4130c37c15e219c2c3737fa8cb4ad8/public/assets/models/tree1.glb',height:9,origin:'Quaternius — Stylized Nature MegaKit (CC0)'},
   canopy:{url:'https://raw.githubusercontent.com/anshaneja5/skyline-run/0c41526d8d4130c37c15e219c2c3737fa8cb4ad8/public/assets/models/tree2.glb',height:8.8,origin:'Quaternius — Stylized Nature MegaKit (CC0)'},
-  postOffice:{url:source('Medieval Village Pack-glb','Fantasy House.glb'),height:5.6,origin:'Quaternius — Medieval Village Pack (CC0)'},
+  postOffice:{url:source('Medieval Village Pack-glb','Fantasy House-dcPho4SUA3.glb'),height:5.6,origin:'Quaternius — Medieval Village Pack (CC0)'},
   library:{url:source('Medieval Village Pack-glb','Fantasy House-BH2XHWUNmF.glb'),height:5.8,origin:'Quaternius — Medieval Village Pack (CC0)'},
 };

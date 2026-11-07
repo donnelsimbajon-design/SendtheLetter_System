@@ -36,7 +36,7 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   const scene=new THREE.Scene();
   // Transparent canvas reveals the atmospheric CSS sky instead of flat cyan.
   scene.background=null;
-  scene.fog=new THREE.FogExp2(0xb8cfc9,.0058);
+  scene.fog=new THREE.FogExp2(0x8ca79c,.00265);
   const camera=new THREE.PerspectiveCamera(58,1,.12,320);
   const gl=renderer.getContext();
   const debug=gl.getExtension('WEBGL_debug_renderer_info');
@@ -75,7 +75,9 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
     groundPos.setY(i,groundHeight(x,z)-.15);
     const noise=.12*Math.sin(x*.19+z*.43)+.07*Math.sin(x*1.47-z*1.08);
     const shade=clamp(.63+noise+.06*Math.max(0,groundHeight(x,z)),.48,.92);
-    tint.push(shade*.59,shade*.84,shade*.54);
+    // MeshStandardMaterial expects linear vertex colours; brighter sRGB-like
+    // inputs were clipping to white under sun/hemisphere lighting.
+    tint.push(shade*.14,shade*.29,shade*.13);
   }
   groundGeo.setAttribute('color',new THREE.Float32BufferAttribute(tint,3));
   groundGeo.computeVertexNormals();
@@ -83,7 +85,7 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   ground.receiveShadow=true;
   scene.add(ground);
 
-  const pathMaterial=new THREE.MeshStandardMaterial({color:0xc4b296,roughness:1,metalness:0,side:THREE.DoubleSide});
+  const pathMaterial=new THREE.MeshStandardMaterial({color:0x9f8163,roughness:1,metalness:0,side:THREE.DoubleSide});
   function path(points:[number,number][],width:number){
     const vertices:number[]=[];
     for(let segment=0;segment<points.length-1;segment++){
@@ -113,7 +115,7 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
 
   function material(color:number,roughness=.82){return new THREE.MeshStandardMaterial({color,roughness,metalness:0});}
   const timber=material(0x70513d),darkWood=material(0x422d25),stone=material(0xb8b4a7);
-  const parchment=material(0xf7e8bf),roofMat=material(0x6e5247);
+  const parchment=material(0xe8cca0),roofMat=material(0x6e5247);
   function cube(parent:any,w:number,h:number,d:number,mat:any,x=0,y=0,z=0){
     const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
     mesh.position.set(x,y,z);mesh.castShadow=!lowPower;mesh.receiveShadow=true;parent.add(mesh);return mesh;
@@ -123,7 +125,7 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
     mesh.position.set(x,y,z);mesh.castShadow=!lowPower;mesh.receiveShadow=true;parent.add(mesh);return mesh;
   }
   const plazaY=groundHeight(0,9.5);
-  const circles=material(0xe5d7b7);
+  const circles=material(0x9a886c);
   for(const r of [4.3,5.2,6.1]){
     const ring=new THREE.Mesh(new THREE.TorusGeometry(r,.095,9,88),circles);
     ring.rotation.x=Math.PI/2;ring.position.set(0,plazaY+.045,9.5);
@@ -172,7 +174,17 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   const forest:{name:'pine'|'canopy';group:any;position:[number,number];yaw:number}[]=[];
   let randomSeed=348915;
   const rand=()=>{randomSeed=(Math.imul(randomSeed,1664525)+1013904223)>>>0;return randomSeed/4294967296;};
-  const forestBudget=softwareProfile?6:lowPower?12:28;
+  const forestBudget=softwareProfile?10:lowPower?14:36;
+  const featuredTrees:Array<[number,number,'pine'|'canopy']>=[
+    [-13,6,'canopy'],[14,6,'pine'],[-25,1,'pine'],[25,2,'canopy'],
+    [-9,-25,'pine'],[9,-28,'canopy']
+  ];
+  for(const [tx,tz,kind] of featuredTrees){
+    if(forest.length>=forestBudget)break;
+    const group=fallbackTree(tx,tz,forest.length+6,kind==='canopy');
+    scene.add(group); // duplicate-safe: add() is idempotent for the same parent.
+    forest.push({name:kind,group,position:[tx,tz],yaw:(forest.length*.73)%6.28});
+  }
   for(let i=0;i<forestBudget*2&&forest.length<forestBudget;i++){
     const tx=rand()*91-45,tz=rand()*83-43;
     const kind: 'pine'|'canopy'=rand()<.73?'pine':'canopy';
@@ -339,7 +351,9 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   const modelLoads=(Object.keys(APO_MODEL_ASSETS) as ApoAssetName[]);
   // Even on mobile, NPCs must use authored characters rather than primitive cylinders.
   // Keep one canopy variant optional to constrain texture downloads on low-memory devices.
-  const allowed=lowPower?modelLoads.filter(n=>n!=='canopy'):modelLoads;
+  // Always load both kinds of foliage; otherwise untextured fallback lollipop
+  // trees can remain visible next to detailed imported models.
+  const allowed=modelLoads;
   const priority:ApoAssetName[]=['explorer','postOffice','pine','alexis','iver','library','ranger','traveler','canopy'];
   const toLoad=priority.filter(name=>allowed.includes(name));
   const loaded=new Set<ApoAssetName>();
