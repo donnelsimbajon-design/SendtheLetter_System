@@ -569,7 +569,9 @@ function createGPU(gl:WebGLRenderingContext, data:Float32Array):GPUBuffer {
 
 /** Mount and run a self-contained 3D scene. Cleanup releases every GPU resource. */
 export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):WorldController {
-  const moves:Record<WorldMove,boolean>={forward:false,back:false,left:false,right:false,sprint:false};
+  const emptyMoves=():Record<WorldMove,boolean>=>({forward:false,back:false,left:false,right:false,sprint:false});
+  const keyboardMoves=emptyMoves(),touchMoves=emptyMoves(),moves=emptyMoves();
+  const keyActivity:Record<WorldMove,number>={forward:0,back:0,left:0,right:0,sprint:0};
   let disposed=false,frame=0,last=0,lastPositionUpdate=0,ready=false;
   let x=0,z=18,avatarYaw=0,orbit=0,distance=8.9,jumpHeight=0,jumpSpeed=0;
   let chosenAvatar:WorldAvatar='explorer',stridePhase=0,strideBlend=0;
@@ -651,21 +653,35 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
   };
   const interact=()=>events.onInteract(closest());
   const jump=()=>{if(!disposed&&jumpHeight===0&&jumpSpeed===0)jumpSpeed=5.8;};
+  // Separate physical-key and touch input so neither can leave a phantom
+  // movement state when a pointer is cancelled or a browser menu steals focus.
+  const keyMap:Record<string,WorldMove>={'w':'forward','arrowup':'forward','s':'back','arrowdown':'back','a':'left','arrowleft':'left','d':'right','arrowright':'right','shift':'sprint'};
+  const clearMovement=()=>{
+    for(const move of Object.keys(moves) as WorldMove[]){
+      keyboardMoves[move]=false;touchMoves[move]=false;moves[move]=false;
+    }
+    strideBlend=0;
+  };
   const keyDown=(event:KeyboardEvent)=>{
     const target=event.target as HTMLElement|null;
-    if(event.altKey||event.ctrlKey||event.metaKey||target?.isContentEditable||target?.closest('button,a,input,textarea,select,[role="dialog"]'))return;
-    const key=event.key.toLowerCase();
-    const keyMap:Record<string,WorldMove>={'w':'forward','arrowup':'forward','s':'back','arrowdown':'back','a':'left','arrowleft':'left','d':'right','arrowright':'right','shift':'sprint'};
-    if(keyMap[key]){moves[keyMap[key]]=true;event.preventDefault();}
+    if(event.altKey||event.ctrlKey||event.metaKey||target?.isContentEditable||
+      target?.closest('button,a,input,textarea,select,[role="dialog"]'))return;
+    const key=event.key.toLowerCase(),movement=keyMap[key];
+    if(movement){
+      keyboardMoves[movement]=true;keyActivity[movement]=performance.now();
+      event.preventDefault();
+    }
     if((key==='e'||key==='enter')&&!event.repeat){interact();event.preventDefault();}
-    if((key===' '||key==='space')&&!event.repeat&&!(target?.closest('button,a'))){jump();event.preventDefault();}
+    if((key===' '||key==='space')&&!event.repeat){jump();event.preventDefault();}
   };
   const keyUp=(event:KeyboardEvent)=>{
-    const key=event.key.toLowerCase();
-    const keyMap:Record<string,WorldMove>={'w':'forward','arrowup':'forward','s':'back','arrowdown':'back','a':'left','arrowleft':'left','d':'right','arrowright':'right','shift':'sprint'};
-    if(keyMap[key])moves[keyMap[key]]=false;
+    // Always process release, even if focus moved to a button after keydown.
+    const movement=keyMap[event.key.toLowerCase()];
+    if(movement){keyboardMoves[movement]=false;moves[movement]=touchMoves[movement];}
   };
-  const blur=()=>{Object.keys(moves).forEach(k=>{moves[k as WorldMove]=false;});};
+  const onVisibilityChange=()=>{if(document.hidden)clearMovement();};
+  const onContextMenu=()=>clearMovement();
+  const onPageHide=()=>clearMovement();
   const pointerDown=(e:PointerEvent)=>{
     pointerId=e.pointerId;lastPointerX=e.clientX;canvas.setPointerCapture(e.pointerId);
   };
@@ -678,7 +694,10 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
   const contextLost=(event:Event)=>{event.preventDefault();events.onError('The 3D graphics context was lost. Reload the world to continue.');};
   window.addEventListener('keydown',keyDown);
   window.addEventListener('keyup',keyUp);
-  window.addEventListener('blur',blur);
+  window.addEventListener('blur',clearMovement);
+  window.addEventListener('pagehide',onPageHide);
+  window.addEventListener('contextmenu',onContextMenu,true);
+  document.addEventListener('visibilitychange',onVisibilityChange);
   canvas.addEventListener('pointerdown',pointerDown);
   canvas.addEventListener('pointermove',pointerMove);
   canvas.addEventListener('pointerup',pointerUp);
@@ -692,6 +711,13 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
     if(disposed)return;
     const dt=Math.min(.05,(time-last)/1000||.016);last=time;
     if(!document.hidden){
+      // Keyboard auto-repeat normally refreshes this watchdog; a missed keyup
+      // or browser context menu cannot make the avatar walk forever.
+      const now=performance.now();
+      for(const move of Object.keys(moves) as WorldMove[]){
+        if(keyboardMoves[move] && now-keyActivity[move]>2200)keyboardMoves[move]=false;
+        moves[move]=keyboardMoves[move]||touchMoves[move];
+      }
       const forward=Number(moves.forward)-Number(moves.back);
       const side=Number(moves.right)-Number(moves.left);
       const mag=Math.hypot(side,forward);
@@ -736,16 +762,19 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
     frame=window.requestAnimationFrame(render);
   };
   frame=window.requestAnimationFrame(render);
-  const reset=()=>{x=0;z=18;orbit=0;avatarYaw=0;strideBlend=0;jumpHeight=0;jumpSpeed=0;blur();};
+  const reset=()=>{x=0;z=18;orbit=0;avatarYaw=0;strideBlend=0;jumpHeight=0;jumpSpeed=0;clearMovement();};
   const dispose=()=>{
     if(disposed)return;disposed=true;
     window.cancelAnimationFrame(frame);
-    window.removeEventListener('keydown',keyDown);window.removeEventListener('keyup',keyUp);window.removeEventListener('blur',blur);
+    window.removeEventListener('keydown',keyDown);window.removeEventListener('keyup',keyUp);window.removeEventListener('blur',clearMovement);
+    window.removeEventListener('pagehide',onPageHide);
+    window.removeEventListener('contextmenu',onContextMenu,true);
+    document.removeEventListener('visibilitychange',onVisibilityChange);
     window.removeEventListener('resize',resize);observer?.disconnect();
     canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);
     canvas.removeEventListener('pointerup',pointerUp);canvas.removeEventListener('pointercancel',pointerUp);
     canvas.removeEventListener('wheel',wheel);canvas.removeEventListener('webglcontextlost',contextLost);
     buffers.forEach(b=>gl.deleteBuffer(b.buffer));if(program)gl.deleteProgram(program);
   };
-  return {setMove:(key,active)=>{moves[key]=active;},setAvatar:(avatar)=>{if(avatar in players)chosenAvatar=avatar;},jump,interact,reset,dispose};
+  return {setMove:(key,active)=>{touchMoves[key]=active;},setAvatar:(avatar)=>{if(avatar in players)chosenAvatar=avatar;},jump,interact,reset,dispose};
 }
