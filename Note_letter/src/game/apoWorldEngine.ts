@@ -586,6 +586,7 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
   const keyboardMoves=emptyMoves(),touchMoves=emptyMoves(),moves=emptyMoves();
   const keyActivity:Record<WorldMove,number>={forward:0,back:0,left:0,right:0,sprint:0};
   let disposed=false,frame=0,last=0,lastPositionUpdate=0,ready=false;
+  let lastRendered=0;
   let x=0,z=18,avatarYaw=0,orbit=0,distance=8.9,jumpHeight=0,jumpSpeed=0;
   let chosenAvatar:WorldAvatar='explorer',stridePhase=0,strideBlend=0;
   let nearId:WorldLandmark['id']|null=null;
@@ -608,7 +609,10 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
   const assetAbort=new AbortController();
   const forestPositions:{x:number;z:number;kind:'pine'|'canopy';yaw:number}[]=[];
   const forestRandom=seeded(77342);
-  for(let i=0;i<66;i++){
+  // Keep imported GLBs sparse enough for software GPUs and low-end Android:
+  // 3D forests need natural spacing, not dozens of costly identical draw calls.
+  const treeBudget=window.innerWidth<680?21:34;
+  for(let i=0;i<treeBudget;i++){
     const px=forestRandom()*94-47,pz=forestRandom()*82-44;
     const kind=forestRandom()>.65?'canopy':'pine';
     const yaw=forestRandom()*Math.PI*2;
@@ -767,6 +771,14 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
   resize();
   const render=(time:number)=>{
     if(disposed)return;
+    // Frame pacing helps the CPU-driven WebGL1 renderer stay responsive while
+    // imported GLB geometry is on screen; controls still update each visible frame.
+    const frameInterval=window.innerWidth<680?1000/30:1000/40;
+    if(lastRendered && time-lastRendered<frameInterval){
+      frame=window.requestAnimationFrame(render);
+      return;
+    }
+    lastRendered=time;
     const dt=Math.min(.05,(time-last)/1000||.016);last=time;
     if(!document.hidden){
       // Keyboard auto-repeat normally refreshes this watchdog; a missed keyup
