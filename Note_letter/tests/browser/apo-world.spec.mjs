@@ -134,15 +134,32 @@ test('W release and lost browser focus never leave the character moving forever'
 test('three original 3D avatar models can be selected and persist across reloads', async ({ page }) => {
   await signedIn(page);
   await page.goto('/world');
+  await expect(page.getByRole('complementary', { name: 'How to play Apo Letter World' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Choose character' }).click();
   const picker = page.getByRole('group', { name: 'Select 3D character model' });
   await expect(picker).toBeVisible();
   await picker.getByRole('button', { name: 'Highland Ranger' }).click();
   await expect(picker.getByRole('button', { name: 'Highland Ranger' })).toHaveAttribute('aria-pressed', 'true');
   expect(await page.evaluate(() => localStorage.getItem('apo-world:avatar:v1'))).toBe('ranger');
   await page.reload();
+  await page.getByRole('button', { name: 'Choose character' }).click();
   await expect(picker.getByRole('button', { name: 'Highland Ranger' })).toHaveAttribute('aria-pressed', 'true');
   await picker.getByRole('button', { name: 'Story Traveler' }).click();
   expect(await page.evaluate(() => localStorage.getItem('apo-world:avatar:v1'))).toBe('traveler');
+});
+
+test('world opens with a compact, dismissible welcome rather than a blocking tutorial', async ({page})=>{
+  await signedIn(page);
+  await page.goto('/world');
+  await expect(page.getByRole('complementary', { name: 'Welcome to Apo Letter World' })).toBeVisible({timeout:20000});
+  await expect(page.getByRole('complementary', { name: 'How to play Apo Letter World' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Start exploring' }).click();
+  await expect(page.getByRole('complementary', { name: 'Welcome to Apo Letter World' })).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem('apo-world:onboarded:v1'))).toBe('yes');
+  await page.reload();
+  await expect(page.getByRole('complementary', { name: 'Welcome to Apo Letter World' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'How to play' }).click();
+  await expect(page.getByRole('heading', { name: 'Walk into a world of letters.' })).toBeVisible();
 });
 
 test('mobile virtual controls keep 3D world within the viewport', async ({ page }, testInfo) => {
