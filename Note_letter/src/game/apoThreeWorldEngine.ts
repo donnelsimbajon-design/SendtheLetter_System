@@ -33,6 +33,7 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   let renderer:any;
   try{renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'default'});}
   catch{throw Error('3D graphics could not start on this device');}
+  canvas.dataset.apoRenderer='three';
   const scene=new THREE.Scene();
   scene.background=new THREE.Color(0xbdd6d7);
   scene.fog=new THREE.FogExp2(0xb8cfc9,.0058);
@@ -433,6 +434,7 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
       // Models can share materials / textures; renderer disposal releases GPU allocations.
     });
     renderer.dispose();
+    delete canvas.dataset.apoRenderer;
   };
   return {
     setMove:(move,active)=>{buttons[move]=active;},
