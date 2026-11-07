@@ -56,8 +56,8 @@ type WorldEvents = {
 };
 
 const COLORS: Record<string, RGB> = {
-  meadow: [0.39, 0.64, 0.39], leaf: [0.22, 0.47, 0.32],
-  pine: [0.13, 0.34, 0.29], mint: [0.36, 0.61, 0.43],
+  meadow: [0.33, 0.54, 0.36], leaf: [0.20, 0.42, 0.29],
+  pine: [0.14, 0.32, 0.25], mint: [0.40, 0.58, 0.39],
   bark: [0.43, 0.31, 0.22], barkLight: [0.56, 0.39, 0.26],
   dirt: [0.75, 0.62, 0.43], dirtLight: [0.86, 0.75, 0.56],
   cream: [0.95, 0.86, 0.69], paper: [0.99, 0.94, 0.81],
@@ -91,10 +91,15 @@ const normal = (v: V3): V3 => { const d = len(v) || 1; return [v[0]/d, v[1]/d, v
 const smooth = (t: number) => t*t*(3-2*t);
 
 export function groundHeight(x: number, z: number): number {
-  const edge = smooth(clamp((Math.abs(x) - 19) / 28, 0, 1)) * 5.1;
-  const distance = smooth(clamp((-z - 16) / 29, 0, 1)) * 4.5;
-  return 0.12 * Math.sin(x * 0.32) * Math.cos(z * 0.26) +
-    0.075 * Math.sin(x * 0.81 + z * 0.55) + edge + distance;
+  // Protect the accessible plaza and walking paths while the highland perimeter
+  // gains the wide, varied slopes seen in Mt. Apo's forested foothills.
+  const rim=smooth(clamp((Math.hypot(x*.75,(z+1)*.58)-12)/27,0,1));
+  const left=smooth(clamp((Math.abs(x)-19)/28,0,1))*6.1;
+  const north=smooth(clamp((-z-16)/29,0,1))*6.5;
+  const ridges=(Math.sin(x*.19+z*.07)*Math.cos(z*.16)+
+    .55*Math.sin(x*.42-z*.23)+.26*Math.sin(x*.86+z*.43))*rim*1.20;
+  const local=.10*Math.sin(x*.32)*Math.cos(z*.26)+.055*Math.sin(x*.81+z*.55);
+  return left+north+ridges+local;
 }
 
 class Mesh {
@@ -162,13 +167,15 @@ class Mesh {
     }
   }
   terrain(size=50,depth=49) {
-    const steps=88;
+    const steps=112;
     for(let i=0;i<steps;i++)for(let j=0;j<steps;j++){
       const x0=-size+i*size*2/steps,x1=-size+(i+1)*size*2/steps;
       const z0=-depth+j*depth*2/steps,z1=-depth+(j+1)*depth*2/steps;
       const at=(x:number,z:number):V3=>[x,groundHeight(x,z)-.13,z];
-      const shade=.1*Math.sin(x0*.41+z0*.25)+.06*Math.sin(z0*.9);
-      const c=mix(COLORS.meadow,COLORS.mint,clamp(.4+shade,0,1));
+      const grain=.10*Math.sin(x0*.41+z0*.25)+.06*Math.sin(z0*.9)+
+        .055*Math.sin(x0*2.12-z0*1.79);
+      const grass=clamp(.34+grain+Math.max(0,groundHeight(x0,z0)-1.8)*.027,0,1);
+      const c=mix(COLORS.meadow,COLORS.mint,grass);
       // Upward-facing terrain normals are essential for correct sun lighting.
       this.tri(at(x0,z0),at(x1,z1),at(x1,z0),c);
       this.tri(at(x0,z0),at(x0,z1),at(x1,z1),c);
