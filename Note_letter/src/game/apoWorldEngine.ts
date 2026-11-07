@@ -571,13 +571,14 @@ function createGPU(gl:WebGLRenderingContext, data:Float32Array):GPUBuffer {
 export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):WorldController {
   const moves:Record<WorldMove,boolean>={forward:false,back:false,left:false,right:false,sprint:false};
   let disposed=false,frame=0,last=0,lastPositionUpdate=0,ready=false;
-  let x=0,z=18,avatarYaw=0,orbit=0,distance=11,jumpHeight=0,jumpSpeed=0;
+  let x=0,z=18,avatarYaw=0,orbit=0,distance=8.9,jumpHeight=0,jumpSpeed=0;
+  let chosenAvatar:WorldAvatar='explorer',stridePhase=0,strideBlend=0;
   let nearId:WorldLandmark['id']|null=null;
   let pointerId:number|null=null,lastPointerX=0;
   const gl=canvas.getContext('webgl',{alpha:true,antialias:true,depth:true,powerPreference:'default',premultipliedAlpha:false});
   if(!gl){
     events.onError('3D graphics are unavailable on this device. Turn on hardware acceleration or try another browser.');
-    return {setMove:()=>{},jump:()=>{},interact:()=>events.onInteract(null),reset:()=>{},dispose:()=>{}};
+    return {setMove:()=>{},setAvatar:()=>{},jump:()=>{},interact:()=>events.onInteract(null),reset:()=>{},dispose:()=>{}};
   }
   const buffers:GPUBuffer[]=[];
   let program:WebGLProgram|null=null;
@@ -586,7 +587,7 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
   let position=-1,normalAttr=-1,colorAttr=-1;
   let poseUniform:WebGLUniformLocation|null=null,viewUniform:WebGLUniformLocation|null=null,projectionUniform:WebGLUniformLocation|null=null;
   let gaitUniform:WebGLUniformLocation|null=null,characterUniform:WebGLUniformLocation|null=null;
-  let world:GPUBuffer,player:GPUBuffer,alexis:GPUBuffer,iver:GPUBuffer;
+  let world:GPUBuffer,players:Record<WorldAvatar,GPUBuffer>,alexis:GPUBuffer,iver:GPUBuffer,postmaster:GPUBuffer,hiker:GPUBuffer;
   try {
     const vs=compile(gl,gl.VERTEX_SHADER,vertexShader);
     const fs=compile(gl,gl.FRAGMENT_SHADER,fragmentShader);
@@ -605,17 +606,23 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
     gaitUniform=gl.getUniformLocation(program,'u_gait');
     characterUniform=gl.getUniformLocation(program,'u_character');
     world=createGPU(gl,villageStatic());
-    player=createGPU(gl,characterMesh('player'));
+    players={
+      explorer:createGPU(gl,characterMesh('explorer')),
+      ranger:createGPU(gl,characterMesh('ranger')),
+      traveler:createGPU(gl,characterMesh('traveler')),
+    };
     alexis=createGPU(gl,characterMesh('alexis'));
     iver=createGPU(gl,characterMesh('iver'));
-    buffers.push(world,player,alexis,iver);
+    postmaster=createGPU(gl,characterMesh('postmaster'));
+    hiker=createGPU(gl,characterMesh('hiker'));
+    buffers.push(world,...Object.values(players),alexis,iver,postmaster,hiker);
     gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);
     gl.clearColor(.71,.84,.88,0);
   }catch{
     buffers.forEach(b=>gl.deleteBuffer(b.buffer));
     if(program)gl.deleteProgram(program);
     events.onError('We could not start this 3D world. Please try again with WebGL enabled.');
-    return {setMove:()=>{},jump:()=>{},interact:()=>events.onInteract(null),reset:()=>{},dispose:()=>{}};
+    return {setMove:()=>{},setAvatar:()=>{},jump:()=>{},interact:()=>events.onInteract(null),reset:()=>{},dispose:()=>{}};
   }
   const draw=(mesh:GPUBuffer,pose:[number,number,number,number],gait:[number,number]=[0,0])=>{
     gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);
@@ -705,16 +712,20 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
         jumpSpeed=jumpHeight===0?0:jumpSpeed-15.4*dt;
       }
       const eyeX=x+Math.sin(orbit)*distance,eyeZ=z+Math.cos(orbit)*distance;
-      const eyeY=groundHeight(eyeX,eyeZ)+distance*.57+1.8;
-      const target:V3=[x,groundHeight(x,z)+1.65,z-2.4];
+      const eyeY=groundHeight(eyeX,eyeZ)+distance*.36+1.85;
+      const target:V3=[x,groundHeight(x,z)+1.55,z-1.9];
       gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
       gl.uniformMatrix4fv(viewUniform,false,lookAt([eyeX,eyeY,eyeZ],target));
       gl.uniformMatrix4fv(projectionUniform,false,perspective(Math.PI/3.25,canvas.width/Math.max(canvas.height,1),.12,260));
       draw(world,[0,0,0,0]);
-      draw(alexis,[-5,groundHeight(-5,3),3,Math.PI]);
-      draw(iver,[6,groundHeight(6,1),1,Math.PI]);
-      const bob=events.reduceMotion?0:mag?Math.sin(time*.015)*.065:Math.sin(time*.002)*.017;
-      draw(player,[x,groundHeight(x,z)+jumpHeight+bob,z,avatarYaw]);
+      draw(alexis,[-5,groundHeight(-5,3),3,Math.PI],[time*.0017,.07]);
+      draw(iver,[6,groundHeight(6,1),1,Math.PI],[time*.0016,.06]);
+      draw(postmaster,[-10,groundHeight(-10,-5),-5,Math.PI*.91],[time*.0014,.045]);
+      draw(hiker,[11,groundHeight(11,-3),-3,Math.PI*1.12],[time*.0019,.05]);
+      strideBlend=events.reduceMotion?0:clamp(strideBlend+(mag?dt*6:-dt*10),0,1);
+      if(mag>0)stridePhase+=dt*(moves.sprint?14.3:10.3);
+      const bob=events.reduceMotion?0:strideBlend*Math.abs(Math.sin(stridePhase))*.055;
+      draw(players[chosenAvatar],[x,groundHeight(x,z)+jumpHeight+bob,z,avatarYaw],[stridePhase,strideBlend]);
       if(!ready){ready=true;events.onReady();}
       const location=closest();
       if(location?.id!==nearId){nearId=location?.id||null;events.onNearby(location);}
@@ -725,7 +736,7 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
     frame=window.requestAnimationFrame(render);
   };
   frame=window.requestAnimationFrame(render);
-  const reset=()=>{x=0;z=18;orbit=0;avatarYaw=0;jumpHeight=0;jumpSpeed=0;blur();};
+  const reset=()=>{x=0;z=18;orbit=0;avatarYaw=0;strideBlend=0;jumpHeight=0;jumpSpeed=0;blur();};
   const dispose=()=>{
     if(disposed)return;disposed=true;
     window.cancelAnimationFrame(frame);
@@ -736,5 +747,5 @@ export function startApoWorld(canvas:HTMLCanvasElement,events:WorldEvents):World
     canvas.removeEventListener('wheel',wheel);canvas.removeEventListener('webglcontextlost',contextLost);
     buffers.forEach(b=>gl.deleteBuffer(b.buffer));if(program)gl.deleteProgram(program);
   };
-  return {setMove:(key,active)=>{moves[key]=active;},jump,interact,reset,dispose};
+  return {setMove:(key,active)=>{moves[key]=active;},setAvatar:(avatar)=>{if(avatar in players)chosenAvatar=avatar;},jump,interact,reset,dispose};
 }
