@@ -13,6 +13,7 @@ const Login = () => {
   const requested = params.get('returnTo') || '/dashboard';
   const safeInternalReturn = requested.startsWith('/') && !requested.startsWith('//') && !/[\\\r\n]/.test(requested) && (
     /^\/dashboard(?:\/[^?#]*)?(?:\?[^#]*)?$/.test(requested) ||
+    /^\/world(?:\?[^#]*)?$/.test(requested) ||
     /^\/writers\/[^/?#]+(?:\?[^#]*)?$/.test(requested) ||
     /^\/letters\/[^/?#]+(?:\?[^#]*)?$/.test(requested) ||
     /^\/\?s=[a-f0-9]{48}$/.test(requested)

@@ -141,6 +141,7 @@ export default function ApoWorldPage() {
           </div>
           <div className="apo-control-actions">
             <button type="button" aria-label="Run while moving" onPointerDown={() => press('sprint',true)} onPointerUp={() => press('sprint',false)} onPointerCancel={() => press('sprint',false)} onPointerLeave={() => press('sprint',false)}>Run</button>
+            <button type="button" aria-label="Jump" disabled={!ready} onClick={() => worldRef.current?.jump()}>Jump</button>
             <button type="button" onClick={interact} disabled={!nearby || !ready} aria-label="Interact with nearby landmark"><Gamepad2 size={19} /> Interact</button>
           </div>
         </div>

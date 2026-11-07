@@ -19,6 +19,45 @@ test('Apo world is protected behind the existing sign-in', async ({ page }) => {
   await expect(page).toHaveURL(/\/login\?returnTo=/);
   await expect(page.getByRole('heading', { name: 'Your space is waiting.' })).toBeVisible();
 });
+test('expired JWT is cleared locally without requesting a doomed /session', async ({ page }) => {
+  let sessionRequests = 0;
+  await page.addInitScript(profile => {
+    const jwt = [
+      btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' })),
+      btoa(JSON.stringify({ id: profile.id, exp: 1 })),
+      'test-signature',
+    ].join('.');
+    localStorage.setItem('token', jwt);
+    localStorage.setItem('user', JSON.stringify(profile));
+  }, user);
+  await page.route('**/api/auth/session', route => {
+    sessionRequests++;
+    return route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ message: 'Expired token' }) });
+  });
+  await page.goto('/world');
+  await expect(page).toHaveURL(/\/login\?returnTo=%2Fworld/);
+  await expect(page.getByText('Your sign-in expired. Please sign in again to continue.')).toBeVisible();
+  expect(sessionRequests).toBe(0);
+  expect(await page.evaluate(() => localStorage.getItem('token'))).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem('user'))).toBeNull();
+});
+
+test('signing in from the protected world returns to the actual 3D scene', async ({ page }) => {
+  await page.route('**/api/auth/login', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'Content-Type', 'access-control-allow-methods': 'POST, OPTIONS' },
+    body: JSON.stringify({ token: 'apo-world-browser-test', user }),
+  }));
+  await page.goto('/world');
+  await expect(page).toHaveURL(/\/login\?returnTo=%2Fworld/);
+  await page.getByRole('textbox', { name: 'Email address' }).fill('apo@example.test');
+  await page.getByLabel('Password', { exact: true }).fill('test-password');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page).toHaveURL(/\/world$/);
+  await expect(page.getByTestId('apo-3d-canvas')).toBeVisible();
+});
+
 test('3D village loads and offers real controls, landmarks and writing links', async ({ page }) => {
   // Software WebGL on shared CI runners can initialize more slowly than hardware GPUs.
   test.setTimeout(75_000);
@@ -60,5 +99,7 @@ test('mobile virtual controls keep 3D world within the viewport', async ({ page 
   await expect.poll(() => page.getByTestId('world-position').textContent()).not.toBe(before);
   const widths = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, scroll: document.documentElement.scrollWidth }));
   expect(widths.scroll).toBeLessThanOrEqual(widths.viewport + 2);
+  await expect(page.getByRole('button', { name: 'Jump' })).toBeVisible();
+  await page.getByRole('button', { name: 'Jump' }).click();
   await expect(page.getByRole('button', { name: 'Interact with nearby landmark' })).toBeVisible();
 });
