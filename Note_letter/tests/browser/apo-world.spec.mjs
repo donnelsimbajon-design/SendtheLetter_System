@@ -78,6 +78,9 @@ test('3D village loads and offers real controls, landmarks and writing links', a
     return status.active;
   },{timeout:20000}).toBe('three');
   expect(await canvas.evaluate(el => Boolean(el.getContext('webgl2') || el.getContext('webgl')))).toBeTruthy();
+  // Grass and fern clusters must be actual GPU-instanced 3D geometry, not a backdrop.
+  await expect.poll(async() => Number(await canvas.getAttribute('data-apo-grass-count'))).toBeGreaterThan(250);
+  await expect.poll(async() => Number(await canvas.getAttribute('data-apo-fern-count'))).toBeGreaterThan(15);
   // Save an actual WebGL frame, not an AI concept render, for manual art review.
   await expect(page.getByTestId('apo-model-status')).toContainText('3D assets active:',{timeout:35000});
   await expect(canvas).toHaveAttribute('data-apo-player-model','explorer',{timeout:35000});
@@ -155,4 +158,19 @@ test('mobile virtual controls keep 3D world within the viewport', async ({ page 
   await expect(page.getByRole('button', { name: 'Jump' })).toBeVisible();
   await page.getByRole('button', { name: 'Jump' }).click();
   await expect(page.getByRole('button', { name: 'Interact with nearby landmark' })).toBeVisible();
+});
+
+test('grass respects roads, Letter Plaza and house entrances',async({page})=>{
+  await page.goto('/try');
+  const validity=await page.evaluate(async()=>{
+    const {isVegetationSafe}=await import('/src/game/apoLandscapeDetail.ts');
+    return {
+      plaza:isVegetationSafe(0,9.5),
+      mainTrail:isVegetationSafe(0,21),
+      postOffice:isVegetationSafe(-17,-11),
+      library:isVegetationSafe(17,-14),
+      forest:isVegetationSafe(-30,10)
+    };
+  });
+  expect(validity).toEqual({plaza:false,mainTrail:false,postOffice:false,library:false,forest:true});
 });
