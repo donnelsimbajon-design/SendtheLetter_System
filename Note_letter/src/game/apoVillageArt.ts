@@ -208,7 +208,20 @@ export function buildApoVillageArt(
       new THREE.PlaneGeometry(3.9,1.05),
       new THREE.MeshStandardMaterial({map:signMap,side:THREE.DoubleSide,roughness:.78})
     );
-    board.position.set(config.x,groundHeight(config.x,config.z)+3.65,config.z);
+    const signY=groundHeight(config.x,config.z)+3.25;
+    const back=new THREE.Mesh(new THREE.BoxGeometry(4.08,1.18,.17),oak);
+    back.position.set(config.x,signY,config.z);
+    scene.add(back);
+    for(const dx of [-1.8,1.8]){
+      const x=config.x+dx,z=config.z,y=groundHeight(x,z);
+      const support=new THREE.Mesh(new THREE.BoxGeometry(.17,3.35,.17),oakLight);
+      support.position.set(x,y+1.675,z);
+      scene.add(support);
+    }
+    const trim=new THREE.Mesh(new THREE.BoxGeometry(4.08,.065,.20),bronze);
+    trim.position.set(config.x,signY+.57,config.z);
+    scene.add(trim);
+    board.position.set(config.x,signY,config.z+.10);
     board.name='Apo '+config.title+' sign';
     scene.add(board);
   }
