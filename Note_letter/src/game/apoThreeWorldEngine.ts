@@ -312,7 +312,9 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   const loader=new GLTFLoader();
   loader.setCrossOrigin('anonymous');
   const modelLoads=(Object.keys(APO_MODEL_ASSETS) as ApoAssetName[]);
-  const toLoad=lowPower?modelLoads.filter(n=>n==='explorer'||n==='ranger'||n==='traveler'||n==='pine'||n==='postOffice'||n==='library'):modelLoads;
+  // Even on mobile, NPCs must use authored characters rather than primitive cylinders.
+  // Keep one canopy variant optional to constrain texture downloads on low-memory devices.
+  const toLoad=lowPower?modelLoads.filter(n=>n!=='canopy'):modelLoads;
   const loaded=new Set<ApoAssetName>();
   // Each authored GLB retains skinned hierarchy and texture maps under GLTFLoader.
   void Promise.allSettled(toLoad.map(async(name)=>{
@@ -431,10 +433,26 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
     canvas.removeEventListener('contextmenu',onContextMenu);canvas.removeEventListener('wheel',wheel);
     observer?.disconnect();window.removeEventListener('resize',resize);
     for(const record of Object.values(realModels))record?.mixer?.stopAllAction();
-    scene.traverse((object:any)=>{
-      if(object.geometry&&object.geometry.dispose)object.geometry.dispose();
-      // Models can share materials / textures; renderer disposal releases GPU allocations.
-    });
+    // Dispose shared geometries, materials and all attached maps exactly once.
+    const geometrySet=new Set<any>(),materialSet=new Set<any>(),textureSet=new Set<any>();
+    const collect=(object:any)=>{
+      if(object.geometry?.dispose)geometrySet.add(object.geometry);
+      const materials=object.material?(Array.isArray(object.material)?object.material:[object.material]):[];
+      for(const material of materials){
+        if(!material?.dispose)continue;
+        materialSet.add(material);
+        for(const value of Object.values(material)){
+          if((value as any)?.isTexture && (value as any).dispose)textureSet.add(value);
+        }
+      }
+    };
+    scene.traverse(collect);
+    for(const record of Object.values(realModels))record?.object?.traverse(collect);
+    for(const fallback of [...houseFallbacks,...forest.map(tree=>tree.group),fallbackPlayer])
+      fallback?.traverse(collect);
+    for(const texture of textureSet)texture.dispose();
+    for(const material of materialSet)material.dispose();
+    for(const geometry of geometrySet)geometry.dispose();
     renderer.dispose();
     delete canvas.dataset.apoRenderer;
   };
