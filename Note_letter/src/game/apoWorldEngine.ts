@@ -4,6 +4,9 @@
  * authenticated letters/messages are accessed by navigation, never copied here.
  * Draw-call-light geometry and no runtime third-party or remote asset downloads.
  */
+import { loadApoGlb } from './apoGlbLoader';
+import { APO_MODEL_ASSETS, type ApoAssetName } from './apoAssetCatalog';
+
 export type WorldMove = 'forward' | 'back' | 'left' | 'right' | 'sprint';
 export type WorldAvatar = 'explorer' | 'ranger' | 'traveler';
 export const WORLD_AVATARS: { id: WorldAvatar; label: string; description: string }[] = [
@@ -48,6 +51,7 @@ type WorldEvents = {
   onPosition: (position: { x: number; z: number }) => void;
   onReady: () => void;
   onError: (message: string) => void;
+  onAssets?: (loaded: number, total: number) => void;
   reduceMotion: boolean;
 };
 
@@ -314,7 +318,7 @@ function mailbox(mesh:Mesh,x:number,z:number) {
   mesh.box(x,y+1.78,z+.29,.51,.11,.05,COLORS.paper);
   roof(mesh,x,y+1.96,z,.85,.59,.22,COLORS.roofAlt);
 }
-function villageStatic():Float32Array {
+function villageStatic(useRealTrees=false,useRealBuildings=false):Float32Array {
   const m=new Mesh();
   const rand=seeded(4924);
   m.terrain();
@@ -343,8 +347,10 @@ function villageStatic():Float32Array {
   m.cylinder(0,plazaY+.72,9.5,1.04,.31,COLORS.gold,18);
   m.box(0,plazaY+1.5,9.5,1.5,1,.18,COLORS.paper);
   m.box(0,plazaY+1.5,9.63,.22,.20,.06,COLORS.rose);
-  house(m,-17,-11,9.1,7,5.4,'post');
-  house(m,17,-14,9.4,7.4,5.7,'library');
+  if(!useRealBuildings){
+    house(m,-17,-11,9.1,7,5.4,'post');
+    house(m,17,-14,9.4,7.4,5.7,'library');
+  }
   house(m,27,-27,6,5,3.7,'cabin');
   house(m,-27,-22,6.7,5.6,3.8,'cabin');
   for(const [x,z] of [[-14,-6],[14,-10],[12,-24],[-7,3],[8,3],[-19,-22],[3,-33]]) mailbox(m,x,z);
@@ -352,7 +358,7 @@ function villageStatic():Float32Array {
     const x=rand()*92-46,z=rand()*82-44;
     if(Math.abs(x)<9&&z>-16 || Math.hypot(x+17,z+11)<10 || Math.hypot(x-17,z+14)<11 ||
       Math.hypot(x-14,z+28)<9 || Math.hypot(x+27,z+22)<9)continue;
-    pine(m,x,z,4.5+rand()*6.7,1.3+rand()*1.4);
+    if(!useRealTrees)pine(m,x,z,4.5+rand()*6.7,1.3+rand()*1.4);
   }
   for(let i=0;i<95;i++){
     const x=rand()*79-40,z=rand()*65-35;
@@ -365,7 +371,7 @@ function villageStatic():Float32Array {
     const x=rand()*91-45,z=rand()*81-43;
     if(Math.abs(x)<11&&z>-20 || Math.hypot(x+17,z+11)<13 ||
       Math.hypot(x-17,z+14)<14 || Math.hypot(x-14,z+28)<10)continue;
-    broadleaf(m,x,z,5.5+rand()*3.8,1.8+rand()*.85,i%9===0);
+    if(!useRealTrees)broadleaf(m,x,z,5.5+rand()*3.8,1.8+rand()*.85,i%9===0);
   }
   for(let i=0;i<65;i++){
     const x=rand()*85-42,z=rand()*72-36;
