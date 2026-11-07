@@ -1,6 +1,7 @@
 import { WORLD_LANDMARKS, groundHeight, type WorldAvatar, type WorldController, type WorldLandmark, type WorldMove } from './apoWorldEngine';
 import { APO_MODEL_ASSETS, type ApoAssetName } from './apoAssetCatalog';
 import { addApoLandscapeDetail } from './apoLandscapeDetail';
+import { buildApoVillageArt, SCENIC_COTTAGES } from './apoVillageArt';
 
 type Events={
   onNearby:(location:WorldLandmark|null)=>void;
@@ -179,6 +180,7 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   }
   const houses:[number,number,'post'|'library'][]=[[-17,-11,'post'],[17,-14,'library']];
   const houseFallbacks=houses.map(([hx,hz,style])=>fallbackHouse(hx,hz,style));
+  const scenicCottageCollisions:Array<[number,number]> = [];
   const forest:{name:'pine'|'canopy';group:any;position:[number,number];yaw:number}[]=[];
   let randomSeed=348915;
   const rand=()=>{randomSeed=(Math.imul(randomSeed,1664525)+1013904223)>>>0;return randomSeed/4294967296;};
@@ -216,6 +218,10 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   canvas.dataset.apoGrassCount=String(meadow.grassCount);
   canvas.dataset.apoFernCount=String(meadow.fernCount);
   canvas.dataset.apoStoneCount=String(meadow.rockCount);
+  const villageArt=buildApoVillageArt(THREE,scene,{groundHeight,lowPower});
+  canvas.dataset.apoVillageLanterns=String(villageArt.lanternCount);
+  canvas.dataset.apoVillageFlowers=String(villageArt.flowerCount);
+  canvas.dataset.apoVillageSignage='2';
 
   // High-resolution continuous massif replaces the old repeated cone mountains.
   // Distinct broad ridges, ridgeline erosion and an uplifted summit create a
@@ -407,6 +413,19 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
       scene.remove(houseFallbacks[ix]);
       const [hx,hz]=houses[ix];
       pivot.position.set(hx,groundHeight(hx,hz),hz);scene.add(pivot);
+      // Additional authored stone/timber houses reuse the downloaded GLB
+      // hierarchy; no extra model requests or placeholder box houses.
+      const cottages=SCENIC_COTTAGES.filter((_c,i)=>name==='postOffice'?i<2:i>=2);
+      for(const cottage of cottages){
+        const copy=pivot.clone(true);
+        copy.position.set(cottage.x,groundHeight(cottage.x,cottage.z),cottage.z);
+        copy.rotation.y=cottage.rotation;
+        copy.scale.setScalar(cottage.scale);
+        copy.name='Apo scenic timber cottage';
+        scene.add(copy);
+        scenicCottageCollisions.push([cottage.x,cottage.z]);
+      }
+      canvas.dataset.apoScenicCottages=String(scenicCottageCollisions.length);
     }else if(name==='pine'||name==='canopy'){
       for(const tree of forest){
         if(tree.name!==name)continue;
@@ -451,7 +470,9 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
       const fx=Math.sin(orbit),fz=-Math.cos(orbit),sx=Math.cos(orbit),sz=Math.sin(orbit);
       const dx=(side*sx+f*fx)/mag,dz=(side*sz+f*fz)/mag;
       const speed=input('sprint')?7.4:4.4;
-      const blocked=(px:number,pz:number)=>houses.some(([bx,bz])=>Math.hypot(px-bx,pz-bz)<5.3);
+      const blocked=(px:number,pz:number)=>
+        houses.some(([bx,bz])=>Math.hypot(px-bx,pz-bz)<5.3) ||
+        scenicCottageCollisions.some(([bx,bz])=>Math.hypot(px-bx,pz-bz)<3.9);
       const nx=clamp(x+dx*speed*dt,-36,36),nz=clamp(z+dz*speed*dt,-33,32);
       if(!blocked(nx,z))x=nx;if(!blocked(x,nz))z=nz;
       avatarYaw=Math.atan2(-dx,-dz);
@@ -531,6 +552,10 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
     delete canvas.dataset.apoGrassCount;
     delete canvas.dataset.apoFernCount;
     delete canvas.dataset.apoStoneCount;
+    delete canvas.dataset.apoVillageLanterns;
+    delete canvas.dataset.apoVillageFlowers;
+    delete canvas.dataset.apoVillageSignage;
+    delete canvas.dataset.apoScenicCottages;
   };
   return {
     setMove:(move,active)=>{buttons[move]=active;},
