@@ -51,9 +51,9 @@ function nameTexture(THREE:any,label:string){
 }
 export function buildApoVillageArt(
   THREE:any,scene:any,
-  options:{groundHeight:(x:number,z:number)=>number;lowPower:boolean}
+  options:{groundHeight:(x:number,z:number)=>number;lowPower:boolean;softwareProfile:boolean}
 ):{lanternCount:number;flowerCount:number;cottageCount:number} {
-  const {groundHeight,lowPower}=options;
+  const {groundHeight,lowPower,softwareProfile}=options;
   const newMaterial=(hex:number)=>new THREE.MeshStandardMaterial({color:hex,roughness:.87,metalness:0});
   const oak=newMaterial(0x5d4030),oakLight=newMaterial(0x8a6849);
   const stone=newMaterial(0xa79c86),bronze=newMaterial(0xb29561);
@@ -62,7 +62,7 @@ export function buildApoVillageArt(
   });
 
   // Low, irregular granite edging around the Letter Plaza ring.
-  const stoneCount=lowPower?44:88;
+  const stoneCount=softwareProfile?24:lowPower?44:88;
   const edge=new THREE.InstancedMesh(
     new THREE.DodecahedronGeometry(.36,1),stone,stoneCount
   );
@@ -105,20 +105,20 @@ export function buildApoVillageArt(
 
   // Flower clusters: physical stems, foliage, and five-petal blossoms,
   // instanced so a whole garden occupies just a few GPU draw calls.
-  const perGarden=lowPower?6:12,flowers=gardenSpots.length*perGarden;
+  const perGarden=softwareProfile?3:lowPower?6:12,flowers=gardenSpots.length*perGarden;
   const stem=new THREE.InstancedMesh(
     new THREE.CylinderGeometry(.024,.035,.52,5),newMaterial(0x45663c),flowers
   );
   const leaf=new THREE.InstancedMesh(
-    new THREE.SphereGeometry(.14,7,5),newMaterial(0x46753e),flowers*2
+    new THREE.IcosahedronGeometry(.14,0),newMaterial(0x46753e),flowers*2
   );
   const petals=new THREE.InstancedMesh(
-    new THREE.SphereGeometry(.092,7,5),
+    new THREE.IcosahedronGeometry(.092,0),
     new THREE.MeshStandardMaterial({color:0xffffff,roughness:.92}),
     flowers*5
   );
   const cores=new THREE.InstancedMesh(
-    new THREE.SphereGeometry(.07,7,5),newMaterial(0xe6b449),flowers
+    new THREE.IcosahedronGeometry(.07,0),newMaterial(0xe6b449),flowers
   );
   const petalsColors=[0xd58b9c,0xd0a8da,0xf5d49b,0xf7e8d4,0xce7580];
   const instanceColor=new THREE.Color();

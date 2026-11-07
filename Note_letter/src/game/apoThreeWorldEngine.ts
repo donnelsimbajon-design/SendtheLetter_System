@@ -218,10 +218,9 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   canvas.dataset.apoGrassCount=String(meadow.grassCount);
   canvas.dataset.apoFernCount=String(meadow.fernCount);
   canvas.dataset.apoStoneCount=String(meadow.rockCount);
-  const villageArt=buildApoVillageArt(THREE,scene,{groundHeight,lowPower});
-  canvas.dataset.apoVillageLanterns=String(villageArt.lanternCount);
-  canvas.dataset.apoVillageFlowers=String(villageArt.flowerCount);
-  canvas.dataset.apoVillageSignage='2';
+  // Keep first 3D frame fast: village embellishments are attached only
+  // after the first successful render, never during startup on software WebGL.
+  let villageArtFrame=0;
 
   // High-resolution continuous massif replaces the old repeated cone mountains.
   // Distinct broad ridges, ridgeline erosion and an uplifted summit create a
@@ -415,7 +414,8 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
       pivot.position.set(hx,groundHeight(hx,hz),hz);scene.add(pivot);
       // Additional authored stone/timber houses reuse the downloaded GLB
       // hierarchy; no extra model requests or placeholder box houses.
-      const cottages=SCENIC_COTTAGES.filter((_c,i)=>name==='postOffice'?i<2:i>=2);
+      const cottages=softwareProfile?[]:
+        SCENIC_COTTAGES.filter((_c,i)=>(name==='postOffice'?i<2:i>=2) && (!lowPower||i%2===0));
       for(const cottage of cottages){
         const copy=pivot.clone(true);
         copy.position.set(cottage.x,groundHeight(cottage.x,cottage.z),cottage.z);
@@ -507,6 +507,17 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
     if(!ready){
       canvas.dataset.apoRenderer='three';
       ready=true;events.onReady();
+      villageArtFrame=window.requestAnimationFrame(()=>{
+        if(disposed)return;
+        try{
+          const detail=buildApoVillageArt(THREE,scene,{groundHeight,lowPower,softwareProfile});
+          canvas.dataset.apoVillageLanterns=String(detail.lanternCount);
+          canvas.dataset.apoVillageFlowers=String(detail.flowerCount);
+          canvas.dataset.apoVillageSignage='2';
+        }catch(error){
+          console.error('Apo World optional village art could not initialize',error);
+        }
+      });
     }
     const nearest=nearby();
     if(nearest?.id!==nearId){nearId=nearest?.id||null;events.onNearby(nearest);}
@@ -517,6 +528,7 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   const dispose=()=>{
     if(disposed)return;disposed=true;
     window.cancelAnimationFrame(frame);
+    window.cancelAnimationFrame(villageArtFrame);
     window.removeEventListener('keydown',keyDown);window.removeEventListener('keyup',keyUp);
     window.removeEventListener('blur',clearInput);window.removeEventListener('pagehide',clearInput);
     window.removeEventListener('contextmenu',clearInput,true);

@@ -82,8 +82,8 @@ test('3D village loads and offers real controls, landmarks and writing links', a
   await expect.poll(async() => Number(await canvas.getAttribute('data-apo-grass-count'))).toBeGreaterThan(250);
   await expect.poll(async() => Number(await canvas.getAttribute('data-apo-fern-count'))).toBeGreaterThan(15);
   // The approved village visual reference requires actual in-scene detail.
-  await expect(canvas).toHaveAttribute('data-apo-village-lanterns','8');
-  await expect.poll(async()=>Number(await canvas.getAttribute('data-apo-village-flowers'))).toBeGreaterThanOrEqual(48);
+  await expect(canvas).toHaveAttribute('data-apo-village-lanterns','8',{timeout:20000});
+  await expect.poll(async()=>Number(await canvas.getAttribute('data-apo-village-flowers'))).toBeGreaterThanOrEqual(24);
   await expect(canvas).toHaveAttribute('data-apo-village-signage','2');
   // Save an actual WebGL frame, not an AI concept render, for manual art review.
   await expect(page.getByTestId('apo-model-status')).toContainText('3D assets active:',{timeout:35000});
