@@ -33,7 +33,9 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   const GLTFLoader=loaderModule.GLTFLoader;
   if(!GLTFLoader||!THREE.WebGLRenderer)throw Error('Three.js GLB renderer unavailable');
   let renderer:any;
-  try{renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'default'});}
+  // Antialiasing is a major cost on headless/software devices and small mobiles.
+  const reducedAntialias=Boolean(navigator.webdriver)||window.innerWidth<680;
+  try{renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:!reducedAntialias,powerPreference:'default'});}
   catch{throw Error('3D graphics could not start on this device');}
   const scene=new THREE.Scene();
   // Transparent canvas reveals the atmospheric CSS sky instead of flat cyan.
@@ -49,7 +51,7 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   const automated=Boolean(navigator.webdriver);
   const lowPower=software||automated||window.innerWidth<680||(navigator.hardwareConcurrency||8)<=4;
   const softwareProfile=software||automated;
-  renderer.setPixelRatio(softwareProfile?.72:lowPower?1.0:Math.min(window.devicePixelRatio||1,1.6));
+  renderer.setPixelRatio(softwareProfile?.52:lowPower?.9:Math.min(window.devicePixelRatio||1,1.5));
   renderer.outputEncoding=THREE.sRGBEncoding;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure=0.96;
@@ -455,7 +457,9 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   const render=(time:number)=>{
     if(disposed)return;
     frame=window.requestAnimationFrame(render);
-    const interval=softwareProfile?1000/17:lowPower?1000/24:1000/42;
+    // Software rasterizers can block the DOM thread; 12 FPS is still enough
+    // to exercise controls and show a smooth-enough low-power fallback.
+    const interval=softwareProfile?1000/12:lowPower?1000/22:1000/40;
     if(previousTime&&time-previousTime<interval)return;
     const dt=Math.min(.05,(time-lastFrame)/1000||.016);
     lastFrame=time;previousTime=time;
