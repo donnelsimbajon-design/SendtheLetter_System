@@ -130,7 +130,11 @@ export function addApoLandscapeDetail(THREE:any,scene:any,options:LandscapeOptio
     new THREE.Color(0xa8a16c),new THREE.Color(0x789454)
   ];
   for(let attempt=0;attempt<grassBudget*12&&grassCount<grassBudget;attempt++){
-    const x=random()*94-47,z=random()*89-44;
+    // Keep a natural meadow around the village and visible trail edges;
+    // a uniform scatter across the entire map looks almost empty at spawn.
+    const villageMeadow=random()<.7;
+    const x=villageMeadow?random()*58-29:random()*94-47;
+    const z=villageMeadow?random()*60-28:random()*89-44;
     if(!isVegetationSafe(x,z))continue;
     const y=groundHeight(x,z);
     if(y>10.5||y<-.9)continue;
