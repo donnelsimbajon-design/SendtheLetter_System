@@ -140,8 +140,8 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   path([[-10,-6],[-15,-18],[-6,-26]],2.4);
 
   function material(color:number,roughness=.82){return new THREE.MeshStandardMaterial({color,roughness,metalness:0});}
-  const timber=material(0x70513d),darkWood=material(0x422d25),stone=material(0xb8b4a7);
-  const parchment=material(0xf7e8bf),roofMat=material(0x6e5247);
+  const timber=material(0x70513d),darkWood=material(0x422d25),stone=material(0x867e73);
+  const parchment=material(0xe2cfa7),roofMat=material(0x6e5247);
   function cube(parent:any,w:number,h:number,d:number,mat:any,x=0,y=0,z=0){
     const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
     mesh.position.set(x,y,z);mesh.castShadow=!lowPower;mesh.receiveShadow=true;parent.add(mesh);return mesh;
@@ -151,18 +151,28 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
     mesh.position.set(x,y,z);mesh.castShadow=!lowPower;mesh.receiveShadow=true;parent.add(mesh);return mesh;
   }
   const plazaY=groundHeight(0,9.5);
-  const circles=material(0xe5d7b7);
+  // Weathered granite plaza edging, not glowing white torus rings.
+  const circles=material(0x887966,.98);
   for(const r of [4.3,5.2,6.1]){
-    const ring=new THREE.Mesh(new THREE.TorusGeometry(r,.095,9,88),circles);
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(r,.065,7,88),circles);
     ring.rotation.x=Math.PI/2;ring.position.set(0,plazaY+.045,9.5);
     scene.add(ring);
   }
   const fountain=new THREE.Group();
   fountain.position.set(0,plazaY,9.5);
   cylinder(fountain,1.55,1.7,.55,stone,0,.27,0,40);
-  cylinder(fountain,1,1.15,.35,material(0xc3a469),0,.71,0,32);
-  cube(fountain,1.45,1.02,.15,parchment,0,1.52,0);
-  cube(fountain,.28,.20,.035,material(0xb8655c),0,1.52,-.10);
+  cylinder(fountain,1.12,1.21,.32,material(0x9d917d),0,.70,0,32);
+  // A substantial three-dimensional stone-and-timber village letter monument.
+  cube(fountain,1.33,.82,.54,darkWood,0,1.31,0);
+  cube(fountain,1.10,.62,.055,parchment,0,1.31,-.305);
+  cube(fountain,1.48,.11,.64,material(0x78604a),0,1.79,0);
+  const seal=new THREE.Mesh(
+    new THREE.CylinderGeometry(.11,.11,.045,14),
+    material(0x9d5346,.75)
+  );
+  seal.rotation.x=Math.PI/2;
+  seal.position.set(0,1.31,-.365);
+  fountain.add(seal);
   scene.add(fountain);
 
   function fallbackTree(x:number,z:number,seed:number,canopy=false):any{
