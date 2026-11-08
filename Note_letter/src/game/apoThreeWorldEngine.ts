@@ -1,6 +1,7 @@
 import { WORLD_LANDMARKS, groundHeight, type WorldAvatar, type WorldController, type WorldLandmark, type WorldMove } from './apoWorldEngine';
 import { APO_MODEL_ASSETS, type ApoAssetName } from './apoAssetCatalog';
 import { addApoLandscapeDetail } from './apoLandscapeDetail';
+import { enhanceApoGroundMaterials } from './apoGroundSurface';
 import { buildApoVillageArt, SCENIC_COTTAGES } from './apoVillageArt';
 
 type Events={
@@ -46,8 +47,8 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   const scene=new THREE.Scene();
   // Transparent canvas reveals the atmospheric CSS sky instead of flat cyan.
   scene.background=null;
-  scene.fog=new THREE.FogExp2(0xb8cfc9,.0058);
-  const camera=new THREE.PerspectiveCamera(58,1,.12,320);
+  scene.fog=new THREE.FogExp2(0x9cb6a9,.0036);
+  const camera=new THREE.PerspectiveCamera(55,1,.12,320);
   const gl=renderer.getContext();
   const debug=gl.getExtension('WEBGL_debug_renderer_info');
   const gpuLabel=debug?String(gl.getParameter(debug.UNMASKED_RENDERER_WEBGL)||''):'';
@@ -91,9 +92,12 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
       groundHeight(x,z+.42)-groundHeight(x,z-.42)
     );
     const soil=clamp((slope-.26)*.65+Math.max(0,Math.sin(x*.31+z*.17)-.66)*.17,0,.42);
-    const r=shade*.14*(1-soil)+shade*.24*soil;
-    const g=shade*.29*(1-soil)+shade*.22*soil;
-    const b=shade*.13*(1-soil)+shade*.12*soil;
+    // Subtle slope-based colour tint multiplies the detailed tiled forest-floor
+    // texture. This is deliberately much closer to white than the old flat
+    // green vertex colours, which would darken a PBR colour map excessively.
+    const r=.72+shade*.18+soil*.08;
+    const g=.75+shade*.18-soil*.08;
+    const b=.69+shade*.16+soil*.03;
     tint.push(r,g,b);
   }
   groundGeo.setAttribute('color',new THREE.Float32BufferAttribute(tint,3));
@@ -102,9 +106,10 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   ground.receiveShadow=true;
   scene.add(ground);
 
-  const pathMaterial=new THREE.MeshStandardMaterial({color:0xa58f73,roughness:1,metalness:0,side:THREE.DoubleSide});
+  const pathMaterial=new THREE.MeshStandardMaterial({color:0xe9ddc7,roughness:1,metalness:0,side:THREE.DoubleSide});
   function path(points:[number,number][],width:number){
-    const vertices:number[]=[];
+    const vertices:number[]=[],uvs:number[]=[];
+    let travelled=0;
     for(let segment=0;segment<points.length-1;segment++){
       const [ax,az]=points[segment],[bx,bz]=points[segment+1];
       const dx=bx-ax,dz=bz-az,dist=Math.hypot(dx,dz)||1;
@@ -117,10 +122,14 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
         };
         const a=point(t0,1),b=point(t1,1),c=point(t1,-1),d=point(t0,-1);
         vertices.push(...a,...b,...c,...a,...c,...d);
+        const v0=(travelled+dist*t0)/3.3,v1=(travelled+dist*t1)/3.3;
+        uvs.push(0,v0,0,v1,1,v1,0,v0,1,v1,1,v0);
       }
+      travelled+=dist;
     }
     const geometry=new THREE.BufferGeometry();
     geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+    geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
     geometry.computeVertexNormals();
     const mesh=new THREE.Mesh(geometry,pathMaterial);mesh.receiveShadow=true;scene.add(mesh);
   }
@@ -228,7 +237,7 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   canvas.dataset.apoStoneCount=String(meadow.rockCount);
   // Keep first 3D frame fast: village embellishments are attached only
   // after the first successful render, never during startup on software WebGL.
-  let villageArtFrame=0;
+  let villageArtFrame=0,groundSurfaceFrame=0;
 
   // High-resolution continuous massif replaces the old repeated cone mountains.
   // Distinct broad ridges, ridgeline erosion and an uplifted summit create a
@@ -322,7 +331,7 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
   const recent:Record<WorldMove,number>={forward:0,back:0,left:0,right:0,sprint:0};
   const keyMap:Record<string,WorldMove>={w:'forward',arrowup:'forward',s:'back',arrowdown:'back',a:'left',arrowleft:'left',d:'right',arrowright:'right',shift:'sprint'};
   const clearInput=()=>{for(const key of Object.keys(buttons) as WorldMove[]){buttons[key]=false;keyboard[key]=false;}};
-  let x=0,z=18,orbit=0,distance=8.6,avatarYaw=0,jumpHeight=0,jumpSpeed=0;
+  let x=0,z=18,orbit=0,distance=7.6,avatarYaw=0,jumpHeight=0,jumpSpeed=0;
   let pointerId:number|null=null,lastPointerX=0,nearId:WorldLandmark['id']|null=null;
   const keyDown=(e:KeyboardEvent)=>{
     const el=e.target as HTMLElement|null;
@@ -530,6 +539,18 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
         }catch(error){
           console.error('Apo World optional village art could not initialize',error);
         }
+        // Avoid a startup stall on mobile software GPU: apply colour and bump
+        // texture maps on a later frame, after the game is already interactive.
+        groundSurfaceFrame=window.requestAnimationFrame(()=>{
+          if(disposed||!ownsCanvas())return;
+          try{
+            const surface=enhanceApoGroundMaterials(THREE,grassMaterial,pathMaterial,{lowPower,softwareProfile});
+            canvas.dataset.apoTerrainTextures=String(surface.textureCount);
+            canvas.dataset.apoTerrainTile=String(surface.tileSize);
+          }catch(error){
+            console.warn('Apo World ground texture fallback',error);
+          }
+        });
       });
     }
     const nearest=nearby();
@@ -542,6 +563,7 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
     if(disposed)return;disposed=true;
     window.cancelAnimationFrame(frame);
     window.cancelAnimationFrame(villageArtFrame);
+    window.cancelAnimationFrame(groundSurfaceFrame);
     window.removeEventListener('keydown',keyDown);window.removeEventListener('keyup',keyUp);
     window.removeEventListener('blur',clearInput);window.removeEventListener('pagehide',clearInput);
     window.removeEventListener('contextmenu',clearInput,true);
@@ -583,6 +605,8 @@ export async function mountApoThreeWorld(canvas:HTMLCanvasElement,events:Events)
       delete canvas.dataset.apoVillageFlowers;
       delete canvas.dataset.apoVillageSignage;
       delete canvas.dataset.apoScenicCottages;
+      delete canvas.dataset.apoTerrainTextures;
+      delete canvas.dataset.apoTerrainTile;
     }
   };
   return {
