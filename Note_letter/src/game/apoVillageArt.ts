@@ -56,9 +56,9 @@ export function buildApoVillageArt(
   const {groundHeight,lowPower,softwareProfile}=options;
   const newMaterial=(hex:number)=>new THREE.MeshStandardMaterial({color:hex,roughness:.87,metalness:0});
   const oak=newMaterial(0x5d4030),oakLight=newMaterial(0x8a6849);
-  const stone=newMaterial(0xa79c86),bronze=newMaterial(0xb29561);
+  const stone=newMaterial(0x847b6c),bronze=newMaterial(0x998256);
   const glass=new THREE.MeshStandardMaterial({
-    color:0xf7dfac,emissive:0xd39442,emissiveIntensity:.65,roughness:.36,metalness:0
+    color:0xe4bc77,emissive:0x967448,emissiveIntensity:.24,roughness:.36,metalness:0
   });
 
   // Low, irregular granite edging around the Letter Plaza ring.
