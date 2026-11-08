@@ -81,6 +81,11 @@ test('3D village loads and offers real controls, landmarks and writing links', a
   // Grass and fern clusters must be actual GPU-instanced 3D geometry, not a backdrop.
   await expect.poll(async() => Number(await canvas.getAttribute('data-apo-grass-count'))).toBeGreaterThan(250);
   await expect.poll(async() => Number(await canvas.getAttribute('data-apo-fern-count'))).toBeGreaterThan(15);
+  // These are actual tiling PBR maps on 3D geometry, not 2D screenshots.
+  await expect(canvas).toHaveAttribute('data-apo-terrain-textures','2',{timeout:25000});
+  const tileSize=Number(await canvas.getAttribute('data-apo-terrain-tile'));
+  expect(tileSize).toBeGreaterThanOrEqual(128);
+  expect(tileSize).toBeLessThanOrEqual(384);
   // The approved village visual reference requires actual in-scene detail.
   await expect(canvas).toHaveAttribute('data-apo-village-lanterns','8',{timeout:20000});
   await expect.poll(async()=>Number(await canvas.getAttribute('data-apo-village-flowers'))).toBeGreaterThanOrEqual(24);
@@ -209,4 +214,17 @@ test('reference-inspired cottages preserve the accessible central village layout
     expect(cottage.z).toBeGreaterThanOrEqual(-30);
     expect(cottage.z).toBeLessThanOrEqual(10);
   }
+});
+
+test('forest floor noise is truly seamless for repeated 3D terrain texture tiles',async({page})=>{
+  await page.goto('/try');
+  const result=await page.evaluate(async()=>{
+    const {tiledNoise}=await import('/src/game/apoGroundSurface.ts');
+    const point=tiledNoise(.625,2.35,4,14);
+    const tiled=tiledNoise(4.625,6.35,4,14);
+    const different=tiledNoise(.875,2.35,4,14);
+    return {point,tiled,different};
+  });
+  expect(result.tiled).toBeCloseTo(result.point,7);
+  expect(result.different).not.toBeCloseTo(result.point,4);
 });
