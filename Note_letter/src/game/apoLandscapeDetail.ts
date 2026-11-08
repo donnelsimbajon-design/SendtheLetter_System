@@ -210,12 +210,12 @@ export function addApoLandscapeDetail(THREE:any,scene:any,options:LandscapeOptio
 
   const rocks=new THREE.InstancedMesh(
     new THREE.DodecahedronGeometry(.8,1),
-    new THREE.MeshStandardMaterial({color:0xb1b0a3,roughness:1,metalness:0}),
+    new THREE.MeshStandardMaterial({color:0x8c8b7b,roughness:1,metalness:0}),
     rockBudget
   );
   rocks.frustumCulled=false;
   let rockCount=0;
-  const rockTones=[0xb2b1a2,0x9d9e8b,0xb6a894,0x8e9b83];
+  const rockTones=[0xa8a391,0x8c897a,0x9f9081,0x7a8772];
   for(let attempt=0;attempt<rockBudget*18&&rockCount<rockBudget;attempt++){
     const x=random()*89-44.5,z=random()*87-43.5;
     if(!isVegetationSafe(x,z))continue;
