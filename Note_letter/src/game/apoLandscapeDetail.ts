@@ -59,6 +59,35 @@ function flowerlikeGeometry(THREE:any,fern:boolean){
   const triangle=(a:[number,number,number],b:[number,number,number],c:[number,number,number],ca:[number,number,number],cb:[number,number,number],cc:[number,number,number])=>{
     push(a,ca);push(b,cb);push(c,cc);
   };
+  if(!fern){
+    // Long, narrow, curved, tapered blades. Unlike the old broad triangles,
+    // these bend gently and make a meadow rather than a forest of green spikes.
+    for(let blade=0;blade<8;blade++){
+      const angle=blade*Math.PI*2/8+.23;
+      const outward=Math.cos(angle),forward=Math.sin(angle);
+      const sideX=-forward,sideZ=outward;
+      const height=.32+(blade%4)*.075;
+      const width=.025+(blade%3)*.006;
+      const colour=(t:number)=>shade(t,blade);
+      const edge=(t:number,side:number):[number,number,number]=>{
+        const bend=.08*t+.19*t*t;
+        const thin=width*Math.pow(1-t,.75);
+        return [outward*bend+sideX*side*thin,height*t,
+                forward*bend+sideZ*side*thin];
+      };
+      for(let seg=0;seg<3;seg++){
+        const a=seg/3,b=(seg+1)/3;
+        const l0=edge(a,1),r0=edge(a,-1),l1=edge(b,1),r1=edge(b,-1);
+        triangle(l0,r0,l1,colour(a),colour(a),colour(b));
+        triangle(r0,r1,l1,colour(a),colour(b),colour(b));
+      }
+    }
+    const geometry=new THREE.BufferGeometry();
+    geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+    geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+    geometry.computeVertexNormals();
+    return geometry;
+  }
   const blades=fern?6:5;
   for(let blade=0;blade<blades;blade++){
     const theta=blade*Math.PI*2/blades+.25;
