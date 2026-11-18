@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Mountain } from 'lucide-react';
 import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { getImageUrl } from '../lib/utils';
@@ -10,6 +9,36 @@ import MessageDock from './MessageDock';
 import { useInboxStore } from '../store/inboxStore';
 import ProfileDropdown from './ProfileDropdown';
 import { useWriterPreferences } from '../store/writerPreferences';
+
+/** A warm illustrated Mt. Apo badge, designed for the SendTheLetter mascot rail. */
+function ApoWorldIcon() {
+  return (
+    <svg viewBox="0 0 48 48" width="42" height="42" fill="none" aria-hidden="true"
+      className="h-[42px] w-[42px] drop-shadow-[0_2px_3px_rgba(56,66,46,.12)]">
+      <defs>
+        <linearGradient id="apo-nav-sky" x1="24" y1="4" x2="24" y2="44" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#FCF5E7" />
+          <stop offset="1" stopColor="#EDE8D8" />
+        </linearGradient>
+        <linearGradient id="apo-nav-mountain" x1="14" y1="20" x2="34" y2="40" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#71917B" />
+          <stop offset="1" stopColor="#365E4D" />
+        </linearGradient>
+      </defs>
+      <rect x="2" y="2" width="44" height="44" rx="16" fill="url(#apo-nav-sky)" />
+      <circle cx="35" cy="14" r="5" fill="#E5B979" />
+      <path d="M6 34 19 15l6.5 9L31 19l11 15v7H6Z" fill="url(#apo-nav-mountain)" />
+      <path d="m14.7 21 4.3-6 4.4 6.1-3.7-1.2-2.2 3.7Z" fill="#F4EEE0" />
+      <path d="m26.4 25.4 4.6-6.4 4.9 6.6-4-1.5-2.4 3Z" fill="#F2EADB" />
+      <path d="M6 35c7-5 12 3 19-1 7-4 12-2 17 1v6H6Z" fill="#294B3D" />
+      <path d="M13 32.5h18v10H13Z" fill="#F9EEDD" stroke="#CDA67A" strokeWidth="1" />
+      <path d="m13 33 9 6 9-6" stroke="#CDA67A" strokeWidth="1.2" strokeLinejoin="round" />
+      <path d="M13 42.5h18" stroke="#CDA67A" strokeWidth=".8" />
+      <circle cx="22" cy="38.7" r="2.3" fill="#BA716A" />
+      <path d="m21 38.5 1 .9 1-.9" stroke="#FCEBDC" strokeWidth=".75" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 const navigation = [
   { to: '/dashboard', label: 'Overview', mascot: 'lumi', end: true },
@@ -127,7 +156,7 @@ export default function DashboardLayout() {
           </Link>
           <NavLink to="/world" aria-label="Enter 3D Apo Letter World" title="Apo Letter World"
             className={({ isActive }) => railLink(isActive)}>
-            <Mountain size={25} aria-hidden="true" className="text-[#47775f]" />
+            <ApoWorldIcon />
           </NavLink>
 
           <Link to="/dashboard/notes?compose=1" aria-label="Write a new letter" title="Write a letter"
