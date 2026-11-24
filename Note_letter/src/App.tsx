@@ -5,6 +5,7 @@ import socketService from './services/socketService';
 import { useWriterPreferences } from './store/writerPreferences';
 import { useAuthStore } from './store/authStore';
 import DashboardLayout from './components/DashboardLayout';
+import PublicLayout from './components/PublicLayout';
 import UserNotePage from './Pages/user/UserNotePage';
 import CommunityPage from './Pages/user/CommunityPage';
 import ProfilePage from './Pages/user/ProfilePage';
@@ -81,11 +82,13 @@ function App() {
     return (
         <Router>
             <Routes>
-                <Route path="/" element={<Landing />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/services" element={<Services />} />
+                <Route element={<PublicLayout />}>
+                    <Route path="/" element={<Landing />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/services" element={<Services />} />
+                    <Route path="/contact" element={<Contact />} />
+                </Route>
                 <Route path="/try" element={<TryLetterPage />} />
-                <Route path="/contact" element={<Contact />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/forgot-password" element={<PasswordRecoveryPage mode="request" />} />
