@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { getRevealGroupProps, getRevealItemProps, getRevealProps, usePublicMotionDisabled } from '../hooks/usePublicReveal';
 import { useAuthStore } from '../store/authStore';
 import CharacterBadge from '../components/CharacterBadge';
 import LetterOpeningEnvelope from '../components/LetterOpeningEnvelope';
@@ -79,33 +81,21 @@ const Home = () => {
   const selectedTemplateLink = isAuthenticated ? composePath : '/try?template=' + selected.value;
   const exploreLink = isAuthenticated ? '/dashboard/community' : '/services';
 
+  const motionDisabled = usePublicMotionDisabled();
+  const heroCopy = getRevealProps(motionDisabled);
+  const heroArt = getRevealProps(motionDisabled, { delay: 0.1 });
+  const sectionIntro = getRevealProps(motionDisabled);
+  const cardGroup = getRevealGroupProps(motionDisabled);
+  const cardItem = getRevealItemProps(motionDisabled);
+  const previewCard = getRevealProps(motionDisabled, { delay: 0.1 });
+  const cta = getRevealProps(motionDisabled);
+
   return (
     <div className="min-h-screen min-w-0 overflow-x-clip bg-background text-foreground">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-primary focus:px-5 focus:py-3 focus:text-sm focus:font-bold focus:text-primary-foreground">Skip to main content</a>
-      <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur-xl">
-        <div className="mx-auto flex min-h-[72px] max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-2 sm:px-8 md:min-h-[80px]">
-          <Link to="/" aria-label="SendTheLetter home" className="inline-flex shrink-0 items-center">
-            <img src="/sendtheletter-logo.svg" alt="SendTheLetter" className="h-10 w-[156px] object-contain object-left min-[380px]:w-[180px] sm:h-12 sm:w-[218px]" />
-          </Link>
-          <nav aria-label="Main navigation" className="hidden items-center gap-7 text-sm font-semibold text-muted-foreground lg:flex">
-            <Link className="transition-colors hover:text-foreground" to="/about">Our story</Link>
-            <Link className="transition-colors hover:text-foreground" to="/services">The experience</Link>
-            <Link className="transition-colors hover:text-foreground" to="/contact">Contact</Link>
-          </nav>
-          <div className="flex shrink-0 items-center gap-2">
-            <Link to={isAuthenticated ? '/dashboard' : '/login'} className="hidden rounded-full px-4 py-3 text-sm font-semibold transition-colors hover:bg-muted sm:inline-flex">
-              {isAuthenticated ? 'My space' : 'Sign in'}
-            </Link>
-            <Link to={startLink} className="inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:px-6 sm:text-sm">
-              {isAuthenticated ? 'Write a letter' : 'Start writing'}
-            </Link>
-          </div>
-        </div>
-      </header>
-
       <main id="main-content" tabIndex={-1}>
         <section className="relative mx-auto grid max-w-7xl min-w-0 items-center gap-10 px-5 pb-16 pt-12 sm:px-8 sm:pb-20 sm:pt-20 lg:grid-cols-[minmax(0,1.04fr)_minmax(0,.96fr)] lg:gap-9 lg:pb-24 lg:pt-24">
-          <div className="relative z-10 min-w-0">
+          <motion.div {...heroCopy} className="relative z-10 min-w-0">
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-[11px] font-bold tracking-wide text-muted-foreground sm:px-4">
               <CharacterBadge name="tala" tone="gold" size="xs" />
               A little space for big feelings
@@ -139,9 +129,9 @@ const Home = () => {
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">Private drafts and public stories</p>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div data-testid="home-letter-hero" className="relative min-w-0 px-0 pb-4 pt-3 sm:px-2 sm:pt-5">
+          <motion.div {...heroArt} data-testid="home-letter-hero" className="relative min-w-0 px-0 pb-4 pt-3 sm:px-2 sm:pt-5">
             <p className="text-center text-[11px] font-bold uppercase tracking-[.19em] text-[#a16f54]">A little letter for you</p>
             <div className="stl-home-letter-stage relative mt-4 min-w-0">
               <LetterOpeningEnvelope opened={homeEnvelopeOpen} showCompanion={false} className="stl-home-envelope" />
@@ -161,20 +151,20 @@ const Home = () => {
                 {homeEnvelopeOpen ? 'Seal again' : 'Open envelope'}
               </button>
             </div>
-          </div>
+          </motion.div>
         </section>
 
         <section id="starting-points" className="border-y border-border bg-card/75">
           <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-20">
-            <div className="mx-auto max-w-2xl text-center">
+            <motion.div {...sectionIntro} className="mx-auto max-w-2xl text-center">
               <p className="text-xs font-bold uppercase tracking-[.2em] text-[hsl(var(--accent))]">Not sure where to start?</p>
               <h2 className="mt-4 font-editorial text-3xl leading-tight sm:text-5xl">A few words can open the door.</h2>
               <p className="mt-4 text-sm leading-7 text-muted-foreground sm:text-base">Choose a starting point. We will open a matching writing template when you enter your space.</p>
-            </div>
+            </motion.div>
             <div className="mt-10 grid items-stretch gap-6 lg:grid-cols-[.9fr_1.1fr] lg:gap-8">
-              <div role="group" aria-label="Choose a letter starting point" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
+              <motion.div {...cardGroup} role="group" aria-label="Choose a letter starting point" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
                 {startingPoints.map((point, index) => (
-                  <button key={point.value} type="button" aria-pressed={index === selectedIndex} onClick={() => setSelectedIndex(index)}
+                  <motion.button {...cardItem} key={point.value} type="button" aria-pressed={index === selectedIndex} onClick={() => setSelectedIndex(index)}
                     className={'stl-depth-choice flex min-h-[80px] w-full items-center gap-4 rounded-2xl border p-4 text-left transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ' +
                       (index === selectedIndex ? 'border-primary bg-background shadow-md' : 'border-border bg-card hover:bg-muted/60')}>
                     <CharacterBadge name={point.mascot} tone="paper" size="md" />
@@ -183,10 +173,10 @@ const Home = () => {
                       <span className="mt-1 block text-xs text-muted-foreground">{point.eyebrow}</span>
                     </span>
                     <span aria-hidden="true" className={'h-3 w-3 rounded-full border-2 ' + (index === selectedIndex ? 'border-primary bg-primary' : 'border-border bg-transparent')} />
-                  </button>
+                  </motion.button>
                 ))}
-              </div>
-              <div className={'stl-depth-card relative flex min-h-[340px] flex-col overflow-hidden rounded-[2rem] p-5 sm:p-8 ' + selected.tone}>
+              </motion.div>
+              <motion.div {...previewCard} className={'stl-depth-card relative flex min-h-[340px] flex-col overflow-hidden rounded-[2rem] p-5 sm:p-8 ' + selected.tone}>
                 <p className="mb-3 text-xs font-bold uppercase tracking-[.18em] text-[#344A3C]/80">A peek at your first page</p>
                 <div className="stl-depth-paper paper-grain flex flex-1 flex-col rounded-[1.5rem] border border-[#E4DACE] bg-[#FFFCF7] px-6 py-7 text-[#2F4137] shadow-[0_16px_40px_-28px_rgba(38,59,53,.35)] sm:px-9 sm:py-9" aria-live="polite">
                   <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#7B887B]">{selected.eyebrow}</p>
@@ -198,33 +188,33 @@ const Home = () => {
                   Open this writing template
                   <CharacterBadge name="piko" tone="paper" size="xs" />
                 </Link>
-              </div>
+              </motion.div>
             </div>
           </div>
         </section>
 
         <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-24">
-          <div className="max-w-2xl">
+          <motion.div {...sectionIntro} className="max-w-2xl">
             <p className="text-xs font-bold uppercase tracking-[.2em] text-[hsl(var(--accent))]">A softer way to connect</p>
             <h2 className="mt-4 font-editorial text-4xl leading-tight sm:text-5xl">Simple enough to begin. Meaningful enough to keep.</h2>
-          </div>
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
+          </motion.div>
+          <motion.div {...cardGroup} className="mt-10 grid gap-4 md:grid-cols-3">
             {paths.map((step) => (
-              <article key={step.number} className="stl-depth-card group rounded-[1.75rem] border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:shadow-md sm:p-7">
+              <motion.article {...cardItem} key={step.number} className="stl-depth-card group rounded-[1.75rem] border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:shadow-md sm:p-7">
                 <div className="flex items-start justify-between gap-3">
                   <CharacterBadge name={step.mascot} tone={step.tone} size="lg" />
                   <span className="font-editorial text-2xl text-muted-foreground/55">{step.number}</span>
                 </div>
                 <h3 className="mt-7 font-editorial text-2xl leading-snug">{step.heading}</h3>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">{step.body}</p>
-              </article>
+              </motion.article>
             ))}
-          </div>
+          </motion.div>
         </section>
 
         <section className="relative overflow-hidden border-y border-border bg-primary text-primary-foreground">
           <div className="paper-grain pointer-events-none absolute inset-0 opacity-20" aria-hidden="true" />
-          <div className="relative mx-auto flex max-w-7xl flex-col items-start justify-between gap-7 px-5 py-14 sm:px-8 sm:py-16 lg:flex-row lg:items-center">
+          <motion.div {...cta} className="relative mx-auto flex max-w-7xl flex-col items-start justify-between gap-7 px-5 py-14 sm:px-8 sm:py-16 lg:flex-row lg:items-center">
             <div className="max-w-2xl">
               <p className="text-xs font-bold uppercase tracking-[.2em] opacity-70">Whenever you are ready</p>
               <h2 className="mt-4 font-editorial text-3xl leading-tight sm:text-5xl">There is room here for your words.</h2>
@@ -234,7 +224,7 @@ const Home = () => {
               <CharacterBadge name="lumi" tone="paper" size="xs" />
               Begin your letter
             </Link>
-          </div>
+          </motion.div>
         </section>
       </main>
 
